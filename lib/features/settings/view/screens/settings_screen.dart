@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
@@ -12,8 +13,9 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).colorScheme.surface.withValues(alpha: 0.97),
+      backgroundColor: Theme.of(
+        context,
+      ).colorScheme.surface.withValues(alpha: 0.97),
       body: SafeArea(
         child: BlocBuilder<SettingsCubit, SettingsState>(
           builder: (context, state) {
@@ -32,7 +34,9 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildSettingsContent(
-      BuildContext context, AppSettingsModel settings) {
+    BuildContext context,
+    AppSettingsModel settings,
+  ) {
     final l10n = context.l10n;
     final cubit = context.read<SettingsCubit>();
     final theme = Theme.of(context);
@@ -76,8 +80,9 @@ class SettingsScreen extends StatelessWidget {
                         width: 70,
                         height: 70,
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.onPrimary
-                              .withValues(alpha: 0.2),
+                          color: theme.colorScheme.onPrimary.withValues(
+                            alpha: 0.2,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -104,8 +109,9 @@ class SettingsScreen extends StatelessWidget {
                               l10n?.translate('settings.description') ??
                                   'خصص تجربتك مع التطبيق',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onPrimary
-                                    .withValues(alpha: 0.9),
+                                color: theme.colorScheme.onPrimary.withValues(
+                                  alpha: 0.9,
+                                ),
                               ),
                             ),
                           ],
@@ -129,7 +135,8 @@ class SettingsScreen extends StatelessWidget {
               SettingsSection(
                 title: l10n?.translate('settings.theme') ?? 'السمة',
                 icon: Icons.palette_outlined,
-                subtitle: l10n?.translate('settings.theme_subtitle') ??
+                subtitle:
+                    l10n?.translate('settings.theme_subtitle') ??
                     'تخصيص مظهر التطبيق',
                 children: [
                   _buildThemeSelector(context, settings, cubit),
@@ -143,20 +150,21 @@ class SettingsScreen extends StatelessWidget {
               SettingsSection(
                 title: l10n?.translate('settings.language') ?? 'اللغة',
                 icon: Icons.language_outlined,
-                subtitle: l10n?.translate('settings.language_subtitle') ??
+                subtitle:
+                    l10n?.translate('settings.language_subtitle') ??
                     'تغيير لغة التطبيق',
-                children: [
-                  _buildLanguageSelector(context, settings, cubit),
-                ],
+                children: [_buildLanguageSelector(context, settings, cubit)],
               ),
               const SizedBox(height: 24),
               SettingsSection(
                 title: l10n?.translate('settings.about_app') ?? 'حول التطبيق',
                 icon: Icons.info_outline,
-                subtitle: l10n?.translate('settings.about_subtitle') ??
+                subtitle:
+                    l10n?.translate('settings.about_subtitle') ??
                     'معلومات عن التطبيق',
                 children: [
                   _buildAboutTile(context),
+                  _buildFeedbackTile(context),
                 ],
               ),
               const SizedBox(height: 100),
@@ -190,8 +198,8 @@ class SettingsScreen extends StatelessWidget {
           settings.themeMode == ThemeMode.system
               ? l10n?.translate('settings.system_theme') ?? 'حسب النظام'
               : settings.themeMode == ThemeMode.light
-                  ? l10n?.translate('settings.light_theme') ?? 'فاتح'
-                  : l10n?.translate('settings.dark_theme') ?? 'داكن',
+              ? l10n?.translate('settings.light_theme') ?? 'فاتح'
+              : l10n?.translate('settings.dark_theme') ?? 'داكن',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             fontSize: 14,
@@ -208,8 +216,8 @@ class SettingsScreen extends StatelessWidget {
           settings.themeMode == ThemeMode.light
               ? Icons.light_mode
               : settings.themeMode == ThemeMode.dark
-                  ? Icons.dark_mode
-                  : Icons.brightness_auto,
+              ? Icons.dark_mode
+              : Icons.brightness_auto,
           color: theme.colorScheme.primary,
           size: 22,
         ),
@@ -323,9 +331,12 @@ class SettingsScreen extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: Text(
                       l10n?.translate('common.cancel') ?? 'إلغاء',
@@ -380,7 +391,7 @@ class SettingsScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isSelected
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.surfaceContainerHighest ,
+                      : theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -396,8 +407,9 @@ class SettingsScreen extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     color: theme.colorScheme.onSurface,
                   ),
                 ),
@@ -439,10 +451,7 @@ class SettingsScreen extends StatelessWidget {
           color: theme.colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          Icons.translate,
-          color: theme.colorScheme.primary,
-        ),
+        child: Icon(Icons.translate, color: theme.colorScheme.primary),
       ),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () => _showLanguageDialog(context, settings, cubit),
@@ -460,8 +469,9 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            Text(l10n?.translate('settings.select_language') ?? 'اختر اللغة'),
+        title: Text(
+          l10n?.translate('settings.select_language') ?? 'اختر اللغة',
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SingleChildScrollView(
           child: Column(
@@ -534,10 +544,7 @@ class SettingsScreen extends StatelessWidget {
       child: RadioListTile<String>(
         title: Row(
           children: [
-            Text(
-              flagCode,
-              style: const TextStyle(fontSize: 18),
-            ),
+            Text(flagCode, style: const TextStyle(fontSize: 18)),
             const SizedBox(width: 12),
             Text(
               title,
@@ -574,10 +581,7 @@ class SettingsScreen extends StatelessWidget {
           color: theme.colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          Icons.format_size,
-          color: theme.colorScheme.primary,
-        ),
+        child: Icon(Icons.format_size, color: theme.colorScheme.primary),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -594,8 +598,11 @@ class SettingsScreen extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
-              child: Icon(Icons.remove,
-                  size: 16, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.remove,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -626,8 +633,11 @@ class SettingsScreen extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
-              child:
-                  Icon(Icons.add, size: 16, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.add,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
             ),
           ),
         ],
@@ -640,7 +650,8 @@ class SettingsScreen extends StatelessWidget {
             l10n?.translate('settings.sample_text') ??
                 'نموذج للنص بالحجم المختار',
             style: theme.textTheme.bodyLarge?.copyWith(
-              fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 14) *
+              fontSize:
+                  (theme.textTheme.bodyLarge?.fontSize ?? 14) *
                   settings.fontSize,
             ),
           ),
@@ -670,18 +681,17 @@ class SettingsScreen extends StatelessWidget {
 
     return SwitchListTile(
       title: Text(l10n?.translate('settings.show_basmala') ?? 'إظهار البسملة'),
-      subtitle: Text(l10n?.translate('settings.show_basmala_description') ??
-          'إظهار البسملة في بداية السور'),
+      subtitle: Text(
+        l10n?.translate('settings.show_basmala_description') ??
+            'إظهار البسملة في بداية السور',
+      ),
       secondary: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: theme.colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          Icons.menu_book,
-          color: theme.colorScheme.primary,
-        ),
+        child: Icon(Icons.menu_book, color: theme.colorScheme.primary),
       ),
       value: settings.showBasmala,
       onChanged: (value) => cubit.setShowBasmala(value),
@@ -695,18 +705,17 @@ class SettingsScreen extends StatelessWidget {
 
     return ListTile(
       title: Text(l10n?.translate('settings.about_app') ?? 'حول التطبيق'),
-      subtitle: Text(l10n?.translate('settings.app_description') ??
-          'تطبيق وذكّر لمساعدتك في شعائر الإسلام'),
+      subtitle: Text(
+        l10n?.translate('settings.app_description') ??
+            'تطبيق وذكّر لمساعدتك في شعائر الإسلام',
+      ),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: theme.colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          Icons.info_outline,
-          color: theme.colorScheme.primary,
-        ),
+        child: Icon(Icons.info_outline, color: theme.colorScheme.primary),
       ),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () => _showAboutDialog(context),
@@ -729,10 +738,7 @@ class SettingsScreen extends StatelessWidget {
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                Icons.info_outline,
-                color: theme.colorScheme.primary,
-              ),
+              child: Icon(Icons.info_outline, color: theme.colorScheme.primary),
             ),
             const SizedBox(width: 12),
             Text(l10n?.translate('settings.about_app') ?? 'حول التطبيق'),
@@ -775,11 +781,15 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text(l10n?.translate('settings.app_description') ??
-                'تطبيق وذكّر لمساعدتك في شعائر الإسلام'),
+            Text(
+              l10n?.translate('settings.app_description') ??
+                  'تطبيق وذكّر لمساعدتك في شعائر الإسلام',
+            ),
             const SizedBox(height: 8),
-            Text(l10n?.translate('settings.copyright') ??
-                '© 2025 جميع الحقوق محفوظة'),
+            Text(
+              l10n?.translate('settings.copyright') ??
+                  '© 2025 جميع الحقوق محفوظة',
+            ),
           ],
         ),
         actions: [
@@ -790,5 +800,56 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildFeedbackTile(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+
+    return ListTile(
+      title: Text(l10n?.translate('settings.feedback') ?? 'إرسال تعليق'),
+      subtitle: Text(
+        l10n?.translate('settings.feedback_description') ??
+            'شاركنا رأيك لتحسين التطبيق',
+      ),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(Icons.feedback_outlined, color: theme.colorScheme.primary),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: () => _openFeedbackForm(context),
+    );
+  }
+
+  void _openFeedbackForm(BuildContext context) async {
+    final l10n = context.l10n;
+    final url = Uri.parse('https://forms.gle/DVtTnGBukUqKhNxi9');
+
+    try {
+      // Open directly in external browser
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // If external browser fails, try platform default
+      try {
+        await launchUrl(url, mode: LaunchMode.platformDefault);
+      } catch (e) {
+        // Show error if nothing works
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n?.translate('settings.feedback_error') ??
+                    'لا يمكن فتح نموذج التعليقات: ${url.toString()}',
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
   }
 }

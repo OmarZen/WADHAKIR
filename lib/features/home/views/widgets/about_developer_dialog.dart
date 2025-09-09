@@ -199,24 +199,12 @@ Widget _circleIconButton(
       tooltip: tooltip,
       onPressed: () async {
         try {
-          // First try to open in app browser
-          final inAppSuccess = await launchUrl(
-            url,
-            mode: LaunchMode.inAppWebView,
-            webViewConfiguration: const WebViewConfiguration(
-              enableJavaScript: true,
-              enableDomStorage: true,
-            ),
-          );
-
-          // If in-app browser fails, try external browser
-          if (!inAppSuccess) {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
-          }
+          // Open directly in external browser
+          await launchUrl(url, mode: LaunchMode.externalApplication);
         } catch (e) {
-          // If all fails, try one more time with external browser
+          // If external browser fails, try platform default
           try {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
+            await launchUrl(url, mode: LaunchMode.platformDefault);
           } catch (e) {
             // Show error if nothing works
             ScaffoldMessenger.of(context).showSnackBar(

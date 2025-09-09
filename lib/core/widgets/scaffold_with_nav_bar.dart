@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -11,7 +12,6 @@ import 'package:wadhakir/features/quran/views/screens/quran_screen.dart';
 import 'package:wadhakir/features/azkar/views/screens/azkar_screen.dart';
 import 'package:wadhakir/features/radio/views/widgets/radio_player_bar.dart';
 
-
 class ScaffoldWithNavBar extends StatefulWidget {
   const ScaffoldWithNavBar({super.key});
 
@@ -23,6 +23,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _animationController;
+  bool _showRadioPlayer = true;
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -31,18 +32,41 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     SettingsScreen(),
   ];
 
+  bool _hasSetupRadioListener = false;
+  StreamSubscription? _radioSubscription;
+
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
     );
     _animationController.forward();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Setup RadioCubit listener only once
+    if (!_hasSetupRadioListener) {
+      _radioSubscription = context.read<RadioCubit>().stream.listen((state) {
+        if (state is RadioLoaded &&
+            state.current != null &&
+            !_showRadioPlayer) {
+          setState(() {
+            _showRadioPlayer = true;
+          });
+        }
+      });
+      _hasSetupRadioListener = true;
+    }
+  }
+
+  @override
   void dispose() {
+    _radioSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -81,7 +105,10 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
       extendBody: true,
       bottomSheet: BlocBuilder<RadioCubit, RadioState>(
         builder: (context, state) {
-          if (state is! RadioLoaded || state.current == null) {
+          // Hide widget if not in RadioLoaded state, or current is null, or _showRadioPlayer is false
+          if (state is! RadioLoaded ||
+              state.current == null ||
+              !_showRadioPlayer) {
             return const SizedBox.shrink();
           }
           return SafeArea(
@@ -109,6 +136,9 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
                       onPressed: () async {
                         final cubit = context.read<RadioCubit>();
                         await cubit.stop();
+                        setState(() {
+                          _showRadioPlayer = false;
+                        });
                       },
                     ),
                   ),

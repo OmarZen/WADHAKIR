@@ -156,7 +156,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(14),
-            onTap: () {},
+            onTap: () => _showPalestineDuaDialog(context),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               child: Text(
@@ -171,6 +171,120 @@ class PalestineSupportCardWidget extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _showPalestineDuaDialog(BuildContext context) async {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          backgroundColor: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        icon: const Icon(Icons.close),
+                      ),
+                      const Spacer(),
+                      Text(
+                        l10n?.translate('home.palestine_duah') ?? 'دعاء لفلسطين',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        FontAwesomeIcons.handsPraying,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDuaCard(
+                    theme,
+                    'اللَّهُمَّ أَصْلِحْ أُمَّةَ مُحَمَّدٍ، اللَّهُمَّ فَرِّجْ عَنْ أُمَّةِ مُحَمَّدٍ، اللَّهُمَّ ارْحَمْ أُمَّةَ مُحَمَّدٍ',
+                    'اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDuaCard(
+                    theme,
+                    'دعاء للمظلومين',
+                    'اللهم كن لإخواننا في فلسطين وأنت خير الناصرين، اللهم انصرهم على من ظلمهم، اللهم أنزل عليهم الصبر والسكينة، وثبت أقدامهم، وانصرهم على القوم الظالمين.',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildDuaCard(
+                    theme,
+                    'دعاء للشهداء',
+                    'اللهم تقبل شهداء فلسطين في الشهداء، وارفع درجاتهم في عليين، واجعل قبورهم روضة من رياض الجنة، واجمعنا بهم في مستقر رحمتك.',
+                  ),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.center,
+                    child: TextButton.icon(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.check_circle_outline, color: theme.colorScheme.primary),
+                      label: Text(
+                        l10n?.translate('home.close') ?? 'إغلاق',
+                        style: TextStyle(color: theme.colorScheme.primary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDuaCard(ThemeData theme, String title, String content) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.primary.withValues(alpha: 0.05),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title.isNotEmpty) ...[  
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 16,
+              height: 1.5,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
     );
   }

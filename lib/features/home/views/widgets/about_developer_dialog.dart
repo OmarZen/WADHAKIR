@@ -47,8 +47,9 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.25),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.25,
+                        ),
                         width: 2,
                       ),
                       boxShadow: [
@@ -65,8 +66,9 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.08),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.08,
+                          ),
                           child: Icon(
                             Icons.account_circle_rounded,
                             color: theme.colorScheme.primary,
@@ -116,7 +118,8 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                       icon: FontAwesomeIcons.youtube,
                       tooltip: 'YouTube',
                       url: Uri.parse(
-                          'https://www.youtube.com/channel/UCZm5Gb5AcrZsPRF5bIjXCJw'),
+                        'https://www.youtube.com/channel/UCZm5Gb5AcrZsPRF5bIjXCJw',
+                      ),
                     ),
                     const SizedBox(width: 12),
                     _circleIconButton(
@@ -131,7 +134,8 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                       icon: FontAwesomeIcons.linkedin,
                       tooltip: 'LinkedIn',
                       url: Uri.parse(
-                          'https://www.linkedin.com/in/omarwaleedzenhom/'),
+                        'https://www.linkedin.com/in/omarwaleedzenhom/',
+                      ),
                     ),
                     const SizedBox(width: 12),
                     _circleIconButton(
@@ -180,8 +184,9 @@ Widget _circleIconButton(
     decoration: BoxDecoration(
       color: theme.colorScheme.surface,
       shape: BoxShape.circle,
-      border:
-          Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.25)),
+      border: Border.all(
+        color: theme.colorScheme.primary.withValues(alpha: 0.25),
+      ),
       boxShadow: [
         BoxShadow(
           color: Colors.black.withValues(alpha: 0.06),
@@ -193,8 +198,31 @@ Widget _circleIconButton(
     child: IconButton(
       tooltip: tooltip,
       onPressed: () async {
-        if (await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
+        try {
+          // First try to open in app browser
+          final inAppSuccess = await launchUrl(
+            url,
+            mode: LaunchMode.inAppWebView,
+            webViewConfiguration: const WebViewConfiguration(
+              enableJavaScript: true,
+              enableDomStorage: true,
+            ),
+          );
+
+          // If in-app browser fails, try external browser
+          if (!inAppSuccess) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          }
+        } catch (e) {
+          // If all fails, try one more time with external browser
+          try {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } catch (e) {
+            // Show error if nothing works
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not open link: ${url.toString()}')),
+            );
+          }
         }
       },
       icon: Icon(icon, color: theme.colorScheme.primary),

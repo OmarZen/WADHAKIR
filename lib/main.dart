@@ -11,11 +11,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/data/models/hasanat_day_summary.dart';
 import 'package:wadhakir/features/quran/cubit/quran_cubit.dart';
+import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:wadhakir/core/localization/language_manager.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
 import 'package:wadhakir/domain/usecases/get_surahs_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_radios_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_basmala_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
@@ -25,6 +27,7 @@ import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/repositories/quran_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_place_of_revelation.dart';
+import 'package:wadhakir/data/repositories/radio_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_surah_by_number_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_verses_by_surah_usecase.dart';
@@ -158,6 +161,12 @@ class MyApp extends StatelessWidget {
             settingsCubit: context.read<SettingsCubit>(),
             getPlaceOfRevelationUseCase: getPlaceOfRevelationUseCase,
           ),
+          lazy: false,
+        ),
+        BlocProvider<RadioCubit>(
+          create: (_) =>
+              RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
+                ..loadStations(),
           lazy: false,
         ),
       ],

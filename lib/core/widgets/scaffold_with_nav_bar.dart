@@ -1,11 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
+import 'package:wadhakir/features/radio/cubit/radio_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import '../../features/settings/view/screens/settings_screen.dart';
 import 'package:wadhakir/features/home/views/screens/home_screen.dart';
 import 'package:wadhakir/features/quran/views/screens/quran_screen.dart';
 import 'package:wadhakir/features/azkar/views/screens/azkar_screen.dart';
+import 'package:wadhakir/features/radio/views/widgets/radio_player_bar.dart';
+
 
 class ScaffoldWithNavBar extends StatefulWidget {
   const ScaffoldWithNavBar({super.key});
@@ -71,12 +76,48 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     return Scaffold(
       body: FadeTransition(
         opacity: _animationController,
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: _screens,
-        ),
+        child: IndexedStack(index: _selectedIndex, children: _screens),
       ),
       extendBody: true,
+      bottomSheet: BlocBuilder<RadioCubit, RadioState>(
+        builder: (context, state) {
+          if (state is! RadioLoaded || state.current == null) {
+            return const SizedBox.shrink();
+          }
+          return SafeArea(
+            child: Stack(
+              children: [
+                const RadioPlayerBar(),
+                Positioned(
+                  right: 18,
+                  top: 6,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: IconButton(
+                      visualDensity: const VisualDensity(
+                        horizontal: -2,
+                        vertical: -2,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black.withValues(alpha: 0.06),
+                        minimumSize: const Size(32, 32),
+                        padding: EdgeInsets.zero,
+                      ),
+                      iconSize: 18,
+                      tooltip: 'Close',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () async {
+                        final cubit = context.read<RadioCubit>();
+                        await cubit.stop();
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.only(
           left: size.width * 0.04,

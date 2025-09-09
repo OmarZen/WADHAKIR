@@ -105,7 +105,7 @@ class RadioCubit extends Cubit<RadioState> {
     await _player.stop();
     final currentState = state;
     if (currentState is RadioLoaded) {
-      emit(currentState.copyWith(isPlaying: false));
+      emit(currentState.copyWith(isPlaying: false, current: null));
     }
   }
 
@@ -115,7 +115,7 @@ class RadioCubit extends Cubit<RadioState> {
     if (currentState.stations.isEmpty) return;
     final safeIndex =
         (index % currentState.stations.length + currentState.stations.length) %
-            currentState.stations.length;
+        currentState.stations.length;
     final target = currentState.stations[safeIndex];
     await playStation(target);
   }
@@ -153,13 +153,16 @@ class RadioCubit extends Cubit<RadioState> {
     // When not playing, emit zeros.
     final playing$ = _player.playingStream.startWith(_player.playing);
     final pos$ = _player.positionStream.startWith(Duration.zero);
-    return Rx.combineLatest2<bool, Duration, double>(playing$, pos$,
-        (isPlaying, pos) {
+    return Rx.combineLatest2<bool, Duration, double>(playing$, pos$, (
+      isPlaying,
+      pos,
+    ) {
       if (!isPlaying) return 0.0;
       final ms = pos.inMilliseconds;
       final vol = (currentVolume ?? 0.5).clamp(0.0, 1.0);
       // Multi-frequency composite for a natural feel
-      final v = 0.5 +
+      final v =
+          0.5 +
           0.25 * math.sin(ms * 0.008) +
           0.15 * math.sin(ms * 0.014 + 1.3) +
           0.10 * math.sin(ms * 0.021 + 2.6);

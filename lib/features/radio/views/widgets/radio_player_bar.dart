@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 
 class RadioPlayerBar extends StatelessWidget {
   const RadioPlayerBar({super.key});
@@ -27,7 +26,9 @@ class RadioPlayerBar extends StatelessWidget {
           child: Container(
             margin: EdgeInsets.all(size.width * 0.04),
             padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04, vertical: size.height * 0.015),
+              horizontal: size.width * 0.04,
+              vertical: size.height * 0.015,
+            ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
@@ -83,17 +84,22 @@ class RadioPlayerBar extends StatelessWidget {
                         backgroundColor: theme.colorScheme.primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(playing
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded),
+                          Icon(
+                            playing
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                          ),
                           SizedBox(width: 6),
-                          Text(playing
-                              ? (l10n?.translate('radio.pause') ?? 'Pause')
-                              : (l10n?.translate('radio.play') ?? 'Play')),
+                          Text(
+                            playing
+                                ? (l10n?.translate('radio.pause') ?? 'Pause')
+                                : (l10n?.translate('radio.play') ?? 'Play'),
+                          ),
                         ],
                       ),
                     );
@@ -149,7 +155,7 @@ class _NowPlayingSheet extends StatelessWidget {
                 color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 24,
                 offset: const Offset(0, -8),
-              )
+              ),
             ],
           ),
           child: Padding(
@@ -248,7 +254,6 @@ class _NowPlayingSheet extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: size.height * 0.02),
-                    _FakeProgressBar(),
                   ],
                 );
               },
@@ -442,27 +447,6 @@ class _RadioIconBox extends StatelessWidget {
   }
 }
 
-class _FakeProgressBar extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return ProgressBar(
-      progress: const Duration(seconds: 20),
-      total: const Duration(minutes: 3),
-      buffered: const Duration(seconds: 40),
-      barHeight: 6,
-      timeLabelLocation: TimeLabelLocation.below,
-      baseBarColor: Colors.grey.withValues(alpha: 0.3),
-      bufferedBarColor: Colors.grey.withValues(alpha: 0.4),
-      progressBarColor: Theme.of(context).colorScheme.primary,
-      thumbColor: Theme.of(context).colorScheme.primary,
-      thumbRadius: 6,
-      onSeek: (_) {},
-      timeLabelTextStyle: TextStyle(fontSize: size.width * 0.03),
-    );
-  }
-}
-
 class _AudioLevelVisualizer extends StatelessWidget {
   final double height;
   const _AudioLevelVisualizer({required this.height});
@@ -479,8 +463,8 @@ class _AudioLevelVisualizer extends StatelessWidget {
         builder: (context, snapshot) {
           final level = (snapshot.data ?? 0.0).clamp(0.0, 1.0);
           final bars = 24;
-          final colorA = theme.colorScheme.primary.withValues(alpha: 0.85);
-          final colorB = theme.colorScheme.secondary.withValues(alpha: 0.85);
+          final colorA = theme.colorScheme.primary.withValues(alpha: 0.45);
+          final colorB = theme.colorScheme.onSurface.withValues(alpha: 0.85);
           return Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: List.generate(bars, (i) {

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
-import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
-import 'package:wadhakir/domain/usecases/get_radios_usecase.dart';
 import 'package:wadhakir/features/home/views/screens/home_screen.dart';
-import 'package:wadhakir/data/repositories/radio_repository_impl.dart';
 import 'package:wadhakir/features/radio/views/screens/radio_screen.dart';
 import 'package:wadhakir/features/campus/views/screens/qibla_screen.dart';
 import 'package:wadhakir/features/settings/view/screens/settings_screen.dart';
@@ -16,14 +12,10 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppConstants.homeRoute:
-        return MaterialPageRoute(
-          builder: (_) => const ScaffoldWithNavBar(),
-        );
+        return MaterialPageRoute(builder: (_) => const ScaffoldWithNavBar());
 
       case AppConstants.homeScreenRoute:
-        return MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
 
       case AppConstants.surahDetailsRoute:
         final args = settings.arguments as Map<String, dynamic>;
@@ -33,39 +25,23 @@ class AppRouter {
         );
 
       case AppConstants.prayerTimesRoute:
-        return MaterialPageRoute(
-          builder: (_) => const PrayerTimesScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => const PrayerTimesScreen());
 
       case AppConstants.settingsRoute:
-        return MaterialPageRoute(
-          builder: (_) => const SettingsScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
 
       case AppConstants.campusRoute:
-        return MaterialPageRoute(
-          builder: (_) => const QiblaScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => const QiblaScreen());
 
       case AppConstants.radioRoute:
-        return MaterialPageRoute(
-          builder: (_) => BlocProvider(
-            create: (context) =>
-                RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
-                  ..loadStations(),
-            child: const RadioScreen(),
-          ),
-        );
+        return MaterialPageRoute(builder: (_) => const RadioScreen());
 
       // Add other routes as they are implemented
 
       default:
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(
-              child: Text('Route not found!'),
-            ),
-          ),
+          builder: (_) =>
+              const Scaffold(body: Center(child: Text('Route not found!'))),
         );
     }
   }

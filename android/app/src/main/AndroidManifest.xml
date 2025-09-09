@@ -11,7 +11,7 @@
 
     
     <application
-        android:label="wadhakir"
+        android:label="Wadhakir"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

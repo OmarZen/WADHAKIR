@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
-import 'package:wadhakir/features/radio/views/widgets/radio_player_bar.dart';
 import 'package:wadhakir/features/radio/views/widgets/radio_station_list_item.dart';
 
 class RadioScreen extends StatefulWidget {
@@ -68,15 +67,19 @@ class _RadioScreenState extends State<RadioScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n?.translate('radio.title') ?? 'Radio'),
-        centerTitle: true,
+      appBar: _CustomRadioAppBar(
+        title: l10n?.translate('radio.title') ?? 'Radio',
+        onRefresh: () => context.read<RadioCubit>().loadStations(),
       ),
       body: Column(
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(
-                size.width * 0.04, size.width * 0.04, size.width * 0.04, 8),
+              size.width * 0.04,
+              size.width * 0.04,
+              size.width * 0.04,
+              8,
+            ),
             child: Container(
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
@@ -86,7 +89,7 @@ class _RadioScreenState extends State<RadioScreen> {
                     color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 6),
-                  )
+                  ),
                 ],
                 border: Border.all(
                   color: theme.colorScheme.primary.withValues(alpha: 0.12),
@@ -95,8 +98,10 @@ class _RadioScreenState extends State<RadioScreen> {
               child: Row(
                 children: [
                   const SizedBox(width: 10),
-                  Icon(Icons.search_rounded,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.8)),
+                  Icon(
+                    Icons.search_rounded,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -108,15 +113,15 @@ class _RadioScreenState extends State<RadioScreen> {
                         border: InputBorder.none,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 0),
+                          vertical: 12,
+                          horizontal: 0,
+                        ),
                       ),
                     ),
                   ),
                   if (_query.isNotEmpty)
                     IconButton(
-                      style: IconButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                      ),
+                      style: IconButton.styleFrom(padding: EdgeInsets.zero),
                       tooltip: l10n?.translate('radio.clear') ?? 'Clear',
                       icon: const Icon(Icons.close_rounded),
                       color: theme.colorScheme.primary,
@@ -137,7 +142,9 @@ class _RadioScreenState extends State<RadioScreen> {
           ),
           Padding(
             padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04, vertical: 6),
+              horizontal: size.width * 0.04,
+              vertical: 6,
+            ),
             child: Container(
               height: 52,
               decoration: BoxDecoration(
@@ -158,8 +165,10 @@ class _RadioScreenState extends State<RadioScreen> {
                       child: ChoiceChip(
                         showCheckmark: false,
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity:
-                            const VisualDensity(horizontal: -2, vertical: -2),
+                        visualDensity: const VisualDensity(
+                          horizontal: -2,
+                          vertical: -2,
+                        ),
                         label: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -188,8 +197,9 @@ class _RadioScreenState extends State<RadioScreen> {
                         backgroundColor: theme.colorScheme.surface,
                         shape: StadiumBorder(
                           side: BorderSide(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.18),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.18,
+                            ),
                           ),
                         ),
                       ),
@@ -211,20 +221,25 @@ class _RadioScreenState extends State<RadioScreen> {
                 }
                 if (state is RadioLoaded) {
                   final filtered = _applyCategory(state)
-                      .where((s) =>
-                          s.name.toLowerCase().contains(_query.toLowerCase()))
+                      .where(
+                        (s) =>
+                            s.name.toLowerCase().contains(_query.toLowerCase()),
+                      )
                       .toList();
 
                   if (filtered.isEmpty) {
                     return Center(
-                        child: Text(
-                            l10n?.translate('radio.no_results') ?? 'No results'));
+                      child: Text(
+                        l10n?.translate('radio.no_results') ?? 'No results',
+                      ),
+                    );
                   }
 
                   return ListView.separated(
                     padding: EdgeInsets.symmetric(
-                        horizontal: size.width * 0.04,
-                        vertical: size.height * 0.01),
+                      horizontal: size.width * 0.04,
+                      vertical: size.height * 0.01,
+                    ),
                     itemCount: filtered.length,
                     separatorBuilder: (_, __) =>
                         SizedBox(height: size.height * 0.012),
@@ -245,7 +260,7 @@ class _RadioScreenState extends State<RadioScreen> {
               },
             ),
           ),
-          const RadioPlayerBar(),
+          // Player bar is now global at the app scaffold level
           SizedBox(height: size.height * 0.01),
         ],
       ),
@@ -352,7 +367,7 @@ class _RadioScreenState extends State<RadioScreen> {
           'ياسر القرشي',
           'يحيى حوا',
           'يوسف الشويعي',
-          'يوسف بن نوح أحمد'
+          'يوسف بن نوح أحمد',
         };
         return list.where((s) => names.any((n) => s.name.contains(n))).toList();
       case 'ruqiah':
@@ -421,7 +436,8 @@ class _RadioScreenState extends State<RadioScreen> {
       case 'seerah':
         return list
             .where(
-                (s) => s.name.contains('السيرة') || s.name.contains('الصحابة'))
+              (s) => s.name.contains('السيرة') || s.name.contains('الصحابة'),
+            )
             .toList();
       case 'seasons':
         return list.where((s) {
@@ -435,15 +451,98 @@ class _RadioScreenState extends State<RadioScreen> {
         }).toList();
       case 'featured':
         return list
-            .where((s) =>
-                s.name.contains('تراتيل') ||
-                s.name.contains('الإذاعة العامة') ||
-                s.name.contains('تلاوات') ||
-                s.name.contains('سورة'))
+            .where(
+              (s) =>
+                  s.name.contains('تراتيل') ||
+                  s.name.contains('الإذاعة العامة') ||
+                  s.name.contains('تلاوات') ||
+                  s.name.contains('سورة'),
+            )
             .toList();
       case 'all':
       default:
         return list;
     }
+  }
+}
+
+class _CustomRadioAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
+  final String title;
+  final VoidCallback? onRefresh;
+
+  const _CustomRadioAppBar({required this.title, this.onRefresh});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(110);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final Color primary = theme.colorScheme.primary;
+    final Color onPrimary = theme.colorScheme.onPrimary;
+
+    return Material(
+      elevation: 0,
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [primary, Color.lerp(primary, Colors.black, 0.15)!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(24),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
+            child: Row(
+              children: [
+                if (Navigator.of(context).canPop())
+                  IconButton(
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                    icon: Icon(Icons.arrow_back_rounded, color: onPrimary),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                  )
+                else
+                  Icon(Icons.radio_rounded, color: onPrimary, size: 28),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: onPrimary,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Refresh',
+                  icon: Icon(Icons.refresh_rounded, color: onPrimary),
+                  onPressed: onRefresh,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

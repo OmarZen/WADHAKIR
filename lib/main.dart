@@ -175,7 +175,7 @@ class MyApp extends StatelessWidget {
             previous != current && current is SettingsLoaded,
         builder: (context, state) {
           // Default settings if not loaded yet
-          var themeMode = ThemeMode.system;
+          var themeMode = ThemeMode.light;
           var locale = const Locale('ar');
 
           // Update with loaded settings if available

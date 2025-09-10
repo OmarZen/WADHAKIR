@@ -21,8 +21,9 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     // Get theme setting
     final themeInt = _sharedPreferences.getInt(AppConstants.themeKey);
-    final ThemeMode themeMode =
-        themeInt != null ? ThemeMode.values[themeInt] : ThemeMode.system;
+    final ThemeMode themeMode = themeInt != null
+        ? ThemeMode.values[themeInt]
+        : ThemeMode.light;
 
     // Get language setting
     final languageCode =
@@ -33,13 +34,12 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
         _sharedPreferences.getBool(AppConstants.showBasmalaKey) ?? true;
     final fontSize =
         _sharedPreferences.getDouble(AppConstants.fontSizeKey) ?? 1.0;
-    
+
     _cachedSettings = AppSettingsModel(
       themeMode: themeMode,
       languageCode: languageCode,
       showBasmala: showBasmala,
       fontSize: fontSize,
-      
     );
 
     _settingsController.add(_cachedSettings!);
@@ -81,8 +81,6 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     _cachedSettings = settings.copyWith(fontSize: fontSize);
     _settingsController.add(_cachedSettings!);
   }
-
- 
 
   @override
   Stream<AppSettingsModel> get settingsStream => _settingsController.stream;

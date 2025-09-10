@@ -1,4 +1,4 @@
-package com.example.wadhakir
+package com.bloom.wadhakir
 
 import io.flutter.embedding.android.FlutterActivity
 

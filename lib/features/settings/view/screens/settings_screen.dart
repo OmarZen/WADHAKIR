@@ -165,6 +165,9 @@ class SettingsScreen extends StatelessWidget {
                 children: [
                   _buildAboutTile(context),
                   _buildFeedbackTile(context),
+                  _buildWebsiteTile(context),
+                  _buildPrivacyTile(context),
+                  _buildRateAppTile(context),
                 ],
               ),
               const SizedBox(height: 100),
@@ -844,6 +847,164 @@ class SettingsScreen extends StatelessWidget {
               content: Text(
                 l10n?.translate('settings.feedback_error') ??
                     'لا يمكن فتح نموذج التعليقات: ${url.toString()}',
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Widget _buildWebsiteTile(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+
+    return ListTile(
+      title: Text(l10n?.translate('settings.website') ?? 'موقع التطبيق'),
+      subtitle: Text(
+        l10n?.translate('settings.website_description') ??
+            'زيارة موقع التطبيق الرسمي',
+      ),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(Icons.language, color: theme.colorScheme.primary),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: () => _openWebsite(context),
+    );
+  }
+
+  Widget _buildPrivacyTile(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+
+    return ListTile(
+      title: Text(l10n?.translate('settings.privacy') ?? 'سياسة الخصوصية'),
+      subtitle: Text(
+        l10n?.translate('settings.privacy_description') ??
+            'اطلع على سياسة الخصوصية',
+      ),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.privacy_tip_outlined,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: () => _openPrivacyPolicy(context),
+    );
+  }
+
+  void _openWebsite(BuildContext context) async {
+    final l10n = context.l10n;
+    final url = Uri.parse('https://wadhakir.vercel.app/');
+
+    try {
+      // Open directly in external browser
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // If external browser fails, try platform default
+      try {
+        await launchUrl(url, mode: LaunchMode.platformDefault);
+      } catch (e) {
+        // Show error if nothing works
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n?.translate('settings.website_error') ??
+                    'لا يمكن فتح موقع التطبيق: ${url.toString()}',
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  void _openPrivacyPolicy(BuildContext context) async {
+    final l10n = context.l10n;
+    final url = Uri.parse('https://wadhakir.vercel.app/privacy');
+
+    try {
+      // Open directly in external browser
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // If external browser fails, try platform default
+      try {
+        await launchUrl(url, mode: LaunchMode.platformDefault);
+      } catch (e) {
+        // Show error if nothing works
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n?.translate('settings.privacy_error') ??
+                    'لا يمكن فتح سياسة الخصوصية: ${url.toString()}',
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Widget _buildRateAppTile(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+
+    return ListTile(
+      title: Text(l10n?.translate('settings.rate_app') ?? 'قيّم التطبيق'),
+      subtitle: Text(
+        l10n?.translate('settings.rate_app_description') ??
+            'قيّم التطبيق في متجر التطبيقات',
+      ),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(Icons.star_rate, color: theme.colorScheme.primary),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: () => _openPlayStore(context),
+    );
+  }
+
+  void _openPlayStore(BuildContext context) async {
+    final l10n = context.l10n;
+    final url = Uri.parse(
+      'https://play.google.com/store/apps/details?id=com.bloom.wadhakir',
+    );
+
+    try {
+      // Open directly in external browser
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      // If external browser fails, try platform default
+      try {
+        await launchUrl(url, mode: LaunchMode.platformDefault);
+      } catch (e) {
+        // Show error if nothing works
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                l10n?.translate('settings.rate_app_error') ??
+                    'لا يمكن فتح متجر التطبيقات: ${url.toString()}',
               ),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),

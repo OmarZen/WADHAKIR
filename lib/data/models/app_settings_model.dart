@@ -16,7 +16,7 @@ class AppSettingsModel extends Equatable {
 
   factory AppSettingsModel.defaultSettings() {
     return const AppSettingsModel(
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       languageCode: 'ar',
       showBasmala: true,
       fontSize: 1.0, // 1.0 is the default, can be scaled up or down
@@ -39,10 +39,5 @@ class AppSettingsModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-        themeMode,
-        languageCode,
-        showBasmala,
-        fontSize,
-      ];
+  List<Object?> get props => [themeMode, languageCode, showBasmala, fontSize];
 }

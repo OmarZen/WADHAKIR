@@ -24,10 +24,11 @@ class RadioLoaded extends RadioState {
     List<RadioStationModel>? stations,
     RadioStationModel? current,
     bool? isPlaying,
+    bool clearCurrent = false,
   }) {
     return RadioLoaded(
       stations: stations ?? this.stations,
-      current: current ?? this.current,
+      current: clearCurrent ? null : (current ?? this.current),
       isPlaying: isPlaying ?? this.isPlaying,
     );
   }

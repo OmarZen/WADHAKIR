@@ -105,7 +105,7 @@ class RadioCubit extends Cubit<RadioState> {
     await _player.stop();
     final currentState = state;
     if (currentState is RadioLoaded) {
-      emit(currentState.copyWith(isPlaying: false, current: null));
+      emit(currentState.copyWith(isPlaying: false, clearCurrent: true));
     }
   }
 

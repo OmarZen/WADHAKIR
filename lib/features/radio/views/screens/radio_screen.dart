@@ -250,8 +250,16 @@ class _RadioScreenState extends State<RadioScreen> {
                       return RadioStationListItem(
                         station: station,
                         isActive: isActive,
-                        onTap: () =>
-                            context.read<RadioCubit>().playStation(station),
+                        onTap: () {
+                          final cubit = context.read<RadioCubit>();
+                          // If this station is already playing, toggle play/pause
+                          if (state.current?.id == station.id) {
+                            cubit.togglePlayPause();
+                          } else {
+                            // Otherwise, play the new station
+                            cubit.playStation(station);
+                          }
+                        },
                       );
                     },
                   );

@@ -34,7 +34,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 34  // Keep at 34 to avoid forced edge-to-edge until properly tested
+        targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -60,9 +60,4 @@ android {
 
 flutter {
     source = "../.."
-}
-
-dependencies {
-    // AndroidX Core for edge-to-edge support
-    implementation("androidx.core:core-ktx:1.12.0")
 }

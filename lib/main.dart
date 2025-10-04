@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -39,12 +38,6 @@ void main() async {
   // Initialize widgets binding and preserve splash screen
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
-  // Configure edge-to-edge for Android 15+ compatibility
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
-  );
 
   // Load environment variables
   try {

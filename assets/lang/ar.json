@@ -103,7 +103,8 @@
     "copy": "نسخ",
     "share": "مشاركة",
     "text_copied": "تم النسخ",
-    "app_name": "وذكّر"
+    "app_name": "وذكّر",
+    "auto_move": "الانتقال التلقائي"
   },
   "settings": {
     "title": "الإعدادات",

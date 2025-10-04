@@ -16,24 +16,31 @@ class RadioLoaded extends RadioState {
   final List<RadioStationModel> stations;
   final RadioStationModel? current;
   final bool isPlaying;
+  final bool isLoading;
 
-  const RadioLoaded(
-      {required this.stations, this.current, this.isPlaying = false});
+  const RadioLoaded({
+    required this.stations,
+    this.current,
+    this.isPlaying = false,
+    this.isLoading = false,
+  });
 
   RadioLoaded copyWith({
     List<RadioStationModel>? stations,
     RadioStationModel? current,
     bool? isPlaying,
+    bool? isLoading,
   }) {
     return RadioLoaded(
       stations: stations ?? this.stations,
       current: current ?? this.current,
       isPlaying: isPlaying ?? this.isPlaying,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 
   @override
-  List<Object?> get props => [stations, current, isPlaying];
+  List<Object?> get props => [stations, current, isPlaying, isLoading];
 }
 
 class RadioError extends RadioState {

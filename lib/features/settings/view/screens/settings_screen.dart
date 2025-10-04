@@ -544,26 +544,54 @@ class SettingsScreen extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: RadioListTile<String>(
-        title: Row(
-          children: [
-            Text(flagCode, style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? theme.colorScheme.primary : null,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => onChanged(languageCode),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+          child: Row(
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outline,
+                    width: 2,
+                  ),
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
+                ),
+                child: isSelected
+                    ? Icon(
+                        Icons.check,
+                        size: 12,
+                        color: theme.colorScheme.onPrimary,
+                      )
+                    : null,
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Text(flagCode, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: isSelected ? theme.colorScheme.primary : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        value: languageCode,
-        groupValue: currentLanguage,
-        onChanged: onChanged,
-        activeColor: theme.colorScheme.primary,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -698,7 +726,8 @@ class SettingsScreen extends StatelessWidget {
       ),
       value: settings.showBasmala,
       onChanged: (value) => cubit.setShowBasmala(value),
-      activeColor: theme.colorScheme.primary,
+      activeThumbColor: theme.colorScheme.primary,
+      activeTrackColor: theme.colorScheme.primary.withValues(alpha: 0.5),
     );
   }
 
@@ -779,7 +808,7 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Center(
               child: Text(
-                l10n?.translate('settings.version') ?? 'الإصدار 1.0.0',
+                l10n?.translate('settings.version') ?? 'الإصدار 1.1.0',
                 style: theme.textTheme.bodyMedium,
               ),
             ),

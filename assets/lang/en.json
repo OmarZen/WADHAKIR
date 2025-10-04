@@ -103,7 +103,8 @@
     "copy": "Copy",
     "share": "Share",
     "text_copied": "Text copied",
-    "app_name": "Wadhakir"
+    "app_name": "Wadhakir",
+    "auto_move": "Auto Move"
   },
   "settings": {
     "title": "Settings",

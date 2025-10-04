@@ -245,13 +245,23 @@ class _RadioScreenState extends State<RadioScreen> {
                         SizedBox(height: size.height * 0.012),
                     itemBuilder: (_, i) {
                       final station = filtered[i];
-                      final isActive =
-                          state.current?.id == station.id && state.isPlaying;
+                      final isCurrentStation = state.current?.id == station.id;
+                      final isActive = isCurrentStation && state.isPlaying;
+                      final isLoading = isCurrentStation && state.isLoading;
+
                       return RadioStationListItem(
                         station: station,
                         isActive: isActive,
-                        onTap: () =>
-                            context.read<RadioCubit>().playStation(station),
+                        isLoading: isLoading,
+                        onTap: () {
+                          if (isCurrentStation && state.isPlaying) {
+                            // If this station is currently playing, pause it
+                            context.read<RadioCubit>().togglePlayPause();
+                          } else {
+                            // Otherwise, play this station
+                            context.read<RadioCubit>().playStation(station);
+                          }
+                        },
                       );
                     },
                   );

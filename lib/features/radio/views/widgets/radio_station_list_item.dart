@@ -4,13 +4,16 @@ import 'package:wadhakir/data/models/radio_station_model.dart';
 class RadioStationListItem extends StatelessWidget {
   final RadioStationModel station;
   final bool isActive;
+  final bool isLoading;
   final VoidCallback onTap;
 
-  const RadioStationListItem(
-      {super.key,
-      required this.station,
-      required this.onTap,
-      this.isActive = false});
+  const RadioStationListItem({
+    super.key,
+    required this.station,
+    required this.onTap,
+    this.isActive = false,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +22,7 @@ class RadioStationListItem extends StatelessWidget {
     final iconData = _selectIconForStation(station);
 
     return InkWell(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       borderRadius: BorderRadius.circular(16),
       child: Ink(
         decoration: BoxDecoration(
@@ -70,6 +73,7 @@ class RadioStationListItem extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: size.width * 0.040,
+                    color: isLoading ? Colors.grey : null,
                   ),
                 ),
               ),
@@ -83,10 +87,24 @@ class RadioStationListItem extends StatelessWidget {
                       : theme.colorScheme.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  isActive ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  color: isActive ? Colors.white : theme.colorScheme.primary,
-                ),
+                child: isLoading
+                    ? Padding(
+                        padding: EdgeInsets.all(size.width * 0.02),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isActive ? Colors.white : theme.colorScheme.primary,
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        isActive
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        color: isActive
+                            ? Colors.white
+                            : theme.colorScheme.primary,
+                      ),
               ),
             ],
           ),

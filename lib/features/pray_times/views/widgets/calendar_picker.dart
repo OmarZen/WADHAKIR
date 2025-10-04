@@ -135,7 +135,7 @@ class _CalendarPickerState extends State<CalendarPicker>
                                     _isHijriMode = value;
                                   });
                                 },
-                                activeColor: theme.primaryColor,
+                                activeThumbColor: theme.primaryColor,
                               ),
                               Text(
                                 l10n?.translate('prayer_times.hijri') ?? 'هجري',

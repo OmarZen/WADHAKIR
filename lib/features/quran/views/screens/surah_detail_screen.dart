@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/data/models/verse_model.dart';
 import 'package:wadhakir/data/models/surah_model.dart';
 import 'package:wadhakir/features/quran/cubit/quran_cubit.dart';
 import 'package:wadhakir/features/quran/cubit/quran_state.dart';
-import 'package:wadhakir/features/quran/views/widgets/verse_item.dart';
+import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
+import 'package:wadhakir/features/quran/views/widgets/verse_item.dart';
 
 // Color scheme for Quran details
 const Color quranMeccanColor = Color(0xFF3498DB); // Blue for Meccan surahs
@@ -303,8 +303,6 @@ class _SurahDetailScreenState extends State<SurahDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 1)),
     );
-
-    // TODO: Implement bookmark storage in repository
   }
 
   void _handleSharePressed(VerseModel verse) async {

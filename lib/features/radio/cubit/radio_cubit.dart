@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:developer';
 import 'dart:math' as math;
 import 'package:bloc/bloc.dart';
 import 'package:rxdart/rxdart.dart';
@@ -12,10 +14,32 @@ class RadioCubit extends Cubit<RadioState> {
   final GetRadiosUseCase getRadiosUseCase;
   final AudioPlayer _player = AudioPlayer();
   double? currentVolume;
+  StreamSubscription? _playerStateSubscription;
 
   RadioCubit(this.getRadiosUseCase) : super(RadioInitial()) {
     _initAudioSession();
     _initVolumeListener();
+    _initPlayerStateListener();
+  }
+
+  void _initPlayerStateListener() {
+    _playerStateSubscription = _player.playerStateStream.listen((playerState) {
+      final currentState = state;
+      if (currentState is RadioLoaded) {
+        final isPlaying = playerState.playing;
+        final isLoading =
+            playerState.processingState == ProcessingState.loading ||
+            playerState.processingState == ProcessingState.buffering;
+
+        // Only emit if state actually changed
+        if (currentState.isPlaying != isPlaying ||
+            currentState.isLoading != isLoading) {
+          emit(
+            currentState.copyWith(isPlaying: isPlaying, isLoading: isLoading),
+          );
+        }
+      }
+    });
   }
 
   Future<void> _initAudioSession() async {
@@ -23,7 +47,8 @@ class RadioCubit extends Cubit<RadioState> {
       final session = await AudioSession.instance;
       await session.configure(const AudioSessionConfiguration.music());
       await session.setActive(true);
-      // Handle audio focus/interruptions if needed
+
+      // Handle audio focus/interruptions
       session.interruptionEventStream.listen((event) async {
         final currentState = state;
         if (currentState is RadioLoaded) {
@@ -31,14 +56,25 @@ class RadioCubit extends Cubit<RadioState> {
             // Pause on interruption begin
             if (_player.playing) {
               await _player.pause();
-              emit(currentState.copyWith(isPlaying: false));
+              // State will be updated by player state listener
             }
           } else {
-            // Optionally resume on end
+            // Could optionally resume on end, but let user control it
           }
         }
       });
-    } catch (_) {}
+
+      // Handle becoming noisy (headphones unplugged)
+      session.becomingNoisyEventStream.listen((_) async {
+        final currentState = state;
+        if (currentState is RadioLoaded && _player.playing) {
+          await _player.pause();
+          // State will be updated by player state listener
+        }
+      });
+    } catch (e) {
+      log('AudioSession init error: $e');
+    }
   }
 
   void _initVolumeListener() {
@@ -49,55 +85,105 @@ class RadioCubit extends Cubit<RadioState> {
   }
 
   Future<void> loadStations({String? language}) async {
+    // Preserve current playback state
+    final currentState = state;
+    RadioStationModel? currentStation;
+    bool isPlaying = false;
+    bool isLoading = false;
+
+    if (currentState is RadioLoaded) {
+      currentStation = currentState.current;
+      isPlaying = currentState.isPlaying;
+      isLoading = currentState.isLoading;
+    }
+
     emit(RadioLoading());
     try {
       final stations = await getRadiosUseCase(language: language);
-      emit(RadioLoaded(stations: stations, current: null, isPlaying: false));
+
+      // Find the current station in the new list (in case it was updated)
+      RadioStationModel? updatedCurrentStation;
+      if (currentStation != null) {
+        updatedCurrentStation = stations.firstWhere(
+          (station) => station.id == currentStation!.id,
+          orElse: () => currentStation!,
+        );
+      }
+
+      emit(
+        RadioLoaded(
+          stations: stations,
+          current: updatedCurrentStation,
+          isPlaying: isPlaying,
+          isLoading: isLoading,
+        ),
+      );
     } catch (e) {
       emit(RadioError(e.toString()));
     }
   }
 
   Future<void> playStation(RadioStationModel station) async {
+    final currentState = state;
+    if (currentState is! RadioLoaded) return;
+
     try {
-      // Optimistic UI: show current selection immediately
-      final currentState = state;
-      if (currentState is RadioLoaded) {
-        emit(currentState.copyWith(current: station, isPlaying: false));
+      // Show loading state immediately
+      emit(
+        currentState.copyWith(
+          current: station,
+          isPlaying: false,
+          isLoading: true,
+        ),
+      );
+
+      // Stop current playback if any
+      if (_player.playing) {
+        await _player.stop();
       }
+
+      // Set URL and start playback
       await _player.setUrl(station.url);
       await _player.play();
-      final afterPlay = state;
-      if (afterPlay is RadioLoaded) {
-        emit(afterPlay.copyWith(isPlaying: true));
-      }
+
+      // Player state listener will handle updating isPlaying and isLoading
     } catch (e) {
-      emit(RadioError('Failed to play: ${e.toString()}'));
+      // Revert loading state on error
+      final errorState = state;
+      if (errorState is RadioLoaded) {
+        emit(errorState.copyWith(isLoading: false));
+      }
+      emit(RadioError('Failed to play station: ${e.toString()}'));
     }
   }
 
   Future<void> togglePlayPause() async {
     final currentState = state;
-    if (currentState is RadioLoaded) {
+    if (currentState is! RadioLoaded || currentState.isLoading) return;
+
+    try {
+      // Show loading state immediately
+      emit(currentState.copyWith(isLoading: true));
+
       if (_player.playing) {
-        // Optimistic update: reflect UI immediately
-        emit(currentState.copyWith(isPlaying: false));
-        try {
-          await _player.pause();
-        } catch (_) {
-          // Revert if pause fails
-          final st = state;
-          if (st is RadioLoaded) emit(st.copyWith(isPlaying: true));
-        }
+        await _player.pause();
       } else {
-        emit(currentState.copyWith(isPlaying: true));
-        try {
-          await _player.play();
-        } catch (_) {
-          final st = state;
-          if (st is RadioLoaded) emit(st.copyWith(isPlaying: false));
+        if (currentState.current == null) {
+          // No station selected, can't play
+          emit(currentState.copyWith(isLoading: false));
+          return;
         }
+        await _player.play();
       }
+
+      // Player state listener will handle updating isPlaying and isLoading
+    } catch (e) {
+      // Revert loading state on error
+      final errorState = state;
+      if (errorState is RadioLoaded) {
+        emit(errorState.copyWith(isLoading: false));
+      }
+      emit(RadioError('Failed to toggle playback: ${e.toString()}'));
     }
   }
 
@@ -140,8 +226,25 @@ class RadioCubit extends Cubit<RadioState> {
     return idx >= 0 ? idx : 0;
   }
 
+  // Helper getters for current playback state
+  RadioStationModel? get currentStation {
+    final currentState = state;
+    return currentState is RadioLoaded ? currentState.current : null;
+  }
+
+  bool get isCurrentlyPlaying {
+    final currentState = state;
+    return currentState is RadioLoaded ? currentState.isPlaying : false;
+  }
+
+  bool get isCurrentlyLoading {
+    final currentState = state;
+    return currentState is RadioLoaded ? currentState.isLoading : false;
+  }
+
   @override
   Future<void> close() {
+    _playerStateSubscription?.cancel();
     FlutterVolumeController.removeListener();
     _player.dispose();
     return super.close();

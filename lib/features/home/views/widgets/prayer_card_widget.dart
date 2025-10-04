@@ -59,42 +59,47 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
             {
               'name': l10n?.translate('home.fajr') ?? 'الفجر',
               'time': prayerTimes.fajr,
-              'icon': Icons.wb_sunny_outlined
+              'icon': Icons.wb_sunny_outlined,
             },
             {
               'name': l10n?.translate('home.dhuhr') ?? 'الظهر',
               'time': prayerTimes.dhuhr,
-              'icon': Icons.wb_sunny
+              'icon': Icons.wb_sunny,
             },
             {
               'name': l10n?.translate('home.asr') ?? 'العصر',
               'time': prayerTimes.asr,
-              'icon': Icons.wb_sunny
+              'icon': Icons.wb_sunny,
             },
             {
               'name': l10n?.translate('home.maghrib') ?? 'المغرب',
               'time': prayerTimes.maghrib,
-              'icon': Icons.nightlight_round
+              'icon': Icons.nightlight_round,
             },
             {
               'name': l10n?.translate('home.isha') ?? 'العشاء',
               'time': prayerTimes.isha,
-              'icon': Icons.nightlight_round
+              'icon': Icons.nightlight_round,
             },
           ];
 
           DateTime? nextPrayerTime;
+          String? nextPrayerName;
 
           for (final prayer in prayers) {
             final prayerTime = prayer['time'] as DateTime;
             if (prayerTime.isAfter(now)) {
               nextPrayerTime = prayerTime;
+              nextPrayerName = prayer['name'] as String;
               break;
             }
           }
 
           // If no next prayer today, use first prayer tomorrow
-          nextPrayerTime ??= prayerTimes.fajr.add(const Duration(days: 1));
+          if (nextPrayerTime == null) {
+            nextPrayerTime = prayerTimes.fajr.add(const Duration(days: 1));
+            nextPrayerName = l10n?.translate('home.fajr') ?? 'الفجر';
+          }
 
           final items = [
             {
@@ -153,8 +158,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.access_time_rounded,
-                              color: theme.colorScheme.primary),
+                          Icon(
+                            Icons.access_time_rounded,
+                            color: theme.colorScheme.primary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             l10n?.translate('home.prayer_times') ??
@@ -166,12 +173,14 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(
-                              context, AppConstants.prayerTimesRoute);
+                            context,
+                            AppConstants.prayerTimesRoute,
+                          );
                         },
                         child: Text(
                           l10n?.translate('home.view_all') ?? 'عرض الكل',
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -185,14 +194,14 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                         _PrayerTile(
                           label: item['label'] as String,
                           time: item['time'] as DateTime,
-                          isNext: (item['time'] as DateTime)
-                              .isAtSameMomentAs(nextPrayerTime),
+                          isNext: (item['label'] as String) == nextPrayerName,
                           iconData: item['icon'] as IconData,
                           color: item['color'] as Color,
                           context: context,
                           prayerName: item['label'] as String,
-                          prayerTime: DateFormat('hh:mm a')
-                              .format(item['time'] as DateTime),
+                          prayerTime: DateFormat(
+                            'hh:mm a',
+                          ).format(item['time'] as DateTime),
                           animation: const AlwaysStoppedAnimation(1.0),
                           delay: item['delay'] as double,
                         ),
@@ -224,8 +233,11 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.hourglass_bottom,
-                          size: 16, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.hourglass_bottom,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         '${rh.toString().padLeft(2, '0')}:${rm.toString().padLeft(2, '0')}:${rs.toString().padLeft(2, '0')} ${l10n?.translate('home.remaining') ?? 'متبقي'}',
@@ -263,9 +275,7 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                child: const Center(child: CircularProgressIndicator()),
               ),
               SizedBox(width: size.width * 0.04),
               Expanded(
@@ -358,9 +368,7 @@ class _PrayerTile extends StatelessWidget {
                     ? color.withValues(alpha: 0.9)
                     : Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: color.withValues(alpha: 0.25),
-                ),
+                border: Border.all(color: color.withValues(alpha: 0.25)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -376,8 +384,9 @@ class _PrayerTile extends StatelessWidget {
                           offset: const Offset(0, 3),
                         ),
                       ],
-                      color:
-                          isNext ? Colors.white : color.withValues(alpha: 0.1),
+                      color: isNext
+                          ? Colors.white
+                          : color.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -421,8 +430,10 @@ class _PrayerTile extends StatelessWidget {
                 right: 60,
                 top: 8,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,

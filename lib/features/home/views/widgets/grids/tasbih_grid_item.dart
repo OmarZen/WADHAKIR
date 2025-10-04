@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
 class TasbihGridItem extends StatelessWidget {
@@ -32,8 +33,10 @@ class TasbihGridItem extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: theme.colorScheme.primary.withValues(alpha: 0.12),
                 ),
-                child: Icon(Icons.format_list_numbered_rounded,
-                    color: theme.colorScheme.primary),
+                child: Icon(
+                  Icons.format_list_numbered_rounded,
+                  color: theme.colorScheme.primary,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -80,15 +83,21 @@ class TasbihGridItem extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.menu_book_rounded,
-                        color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.menu_book_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
-                    Text(l10n?.translate('home.tasbih') ?? 'تسابيح',
-                        style: theme.textTheme.titleLarge),
+                    Text(
+                      l10n?.translate('home.tasbih') ?? 'تسابيح',
+                      style: theme.textTheme.titleLarge,
+                    ),
                   ],
                 ),
               ),
@@ -106,10 +115,11 @@ class TasbihGridItem extends StatelessWidget {
                     final reference = item['reference'] as String?;
                     final benefit = item['benefit'] as String?;
                     return _AzkarCard(
-                        text: text,
-                        repeat: repeat,
-                        reference: reference,
-                        benefit: benefit);
+                      text: text,
+                      repeat: repeat,
+                      reference: reference,
+                      benefit: benefit,
+                    );
                   },
                 ),
               ),
@@ -127,8 +137,12 @@ class _AzkarCard extends StatefulWidget {
   final String? reference;
   final String? benefit;
 
-  const _AzkarCard(
-      {required this.text, required this.repeat, this.reference, this.benefit});
+  const _AzkarCard({
+    required this.text,
+    required this.repeat,
+    this.reference,
+    this.benefit,
+  });
 
   @override
   State<_AzkarCard> createState() => _AzkarCardState();
@@ -137,18 +151,46 @@ class _AzkarCard extends StatefulWidget {
 class _AzkarCardState extends State<_AzkarCard> {
   int completed = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCounter();
+  }
+
+  String get _counterKey => 'tasbih_${widget.text.hashCode}';
+
+  Future<void> _loadCounter() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedCount = prefs.getInt(_counterKey) ?? 0;
+    if (mounted) {
+      setState(() => completed = savedCount);
+    }
+  }
+
+  Future<void> _saveCounter() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_counterKey, completed);
+  }
+
   void _increment() {
     if (completed < widget.repeat) {
       setState(() => completed += 1);
+      _saveCounter();
     }
+  }
+
+  void _reset() {
+    setState(() => completed = 0);
+    _saveCounter();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
-    final double progress =
-        widget.repeat <= 0 ? 0 : (completed / widget.repeat).clamp(0.0, 1.0);
+    final double progress = widget.repeat <= 0
+        ? 0
+        : (completed / widget.repeat).clamp(0.0, 1.0);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
@@ -160,7 +202,8 @@ class _AzkarCardState extends State<_AzkarCard> {
             color: theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.18)),
+              color: theme.colorScheme.primary.withValues(alpha: 0.18),
+            ),
           ),
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -169,46 +212,71 @@ class _AzkarCardState extends State<_AzkarCard> {
               Row(
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.2)),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Text(
-                        l10n?.translate('home.repeat') ?? 'التكرار: ${widget.repeat}',
-                        style: theme.textTheme.labelMedium),
+                      l10n?.translate('home.repeat') ??
+                          'التكرار: ${widget.repeat}',
+                      style: theme.textTheme.labelMedium,
+                    ),
                   ),
                   const Spacer(),
+                  // Reset button
+                  IconButton(
+                    onPressed: completed > 0 ? _reset : null,
+                    icon: Icon(
+                      Icons.refresh_rounded,
+                      size: 20,
+                      color: completed > 0
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.primary.withValues(alpha: 0.3),
+                    ),
+                    tooltip: l10n?.translate('home.reset') ?? 'إعادة تعيين',
+                  ),
+                  const SizedBox(width: 4),
                   _ProgressButton(
-                      progress: progress,
-                      label: '$completed/${widget.repeat}',
-                      onTap: _increment),
+                    progress: progress,
+                    label: '$completed/${widget.repeat}',
+                    onTap: _increment,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(widget.text,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.titleMedium?.copyWith(height: 1.6)),
+              Text(
+                widget.text,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(height: 1.6),
+              ),
               if (widget.reference != null) ...[
                 const SizedBox(height: 8),
-                Text(widget.reference!,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall),
+                Text(
+                  widget.reference!,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall,
+                ),
               ],
               if (widget.benefit != null) ...[
                 const SizedBox(height: 6),
                 Container(
                   decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12)),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   padding: const EdgeInsets.all(8),
-                  child: Text(widget.benefit!,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall),
+                  child: Text(
+                    widget.benefit!,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ),
               ],
             ],
@@ -224,8 +292,11 @@ class _ProgressButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _ProgressButton(
-      {required this.progress, required this.label, required this.onTap});
+  const _ProgressButton({
+    required this.progress,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +309,8 @@ class _ProgressButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.24)),
+            color: theme.colorScheme.primary.withValues(alpha: 0.24),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -249,10 +321,12 @@ class _ProgressButton extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: progress,
                 strokeWidth: 3,
-                backgroundColor:
-                    theme.colorScheme.primary.withValues(alpha: 0.15),
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.15,
+                ),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  theme.colorScheme.primary,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -274,20 +348,26 @@ class _IslamicDivider extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-              child: Divider(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2))),
+            child: Divider(
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
+          ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 8),
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3))),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
+              ),
+            ),
             child: Icon(Icons.star, size: 12, color: theme.colorScheme.primary),
           ),
           Expanded(
-              child: Divider(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2))),
+            child: Divider(
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
+          ),
         ],
       ),
     );

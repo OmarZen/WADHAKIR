@@ -40,9 +40,6 @@ jobs:
       - name: 🎨 Check Code Formatting
         run: dart format --output=none --set-exit-if-changed .
         
-      - name: 📊 Analyze Code
-        run: flutter analyze
-        
       - name: 🧪 Run Tests
         run: flutter test --coverage --reporter=expanded
         

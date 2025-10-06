@@ -1,0 +1,32 @@
+{
+  "name": "wadhakir-dev-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development tools for Wadhakir Flutter app",
+  "scripts": {
+    "format": "dart format .",
+    "analyze": "flutter analyze",
+    "test": "flutter test",
+    "check": "npm run format && npm run analyze && npm run test",
+    "commit": "git-cz",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.8.1",
+    "@commitlint/config-conventional": "^17.8.1",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^8.0.3"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-commit": "npm run check"
+    }
+  }
+}

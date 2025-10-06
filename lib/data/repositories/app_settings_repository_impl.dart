@@ -21,9 +21,8 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     // Get theme setting
     final themeInt = _sharedPreferences.getInt(AppConstants.themeKey);
-    final ThemeMode themeMode = themeInt != null
-        ? ThemeMode.values[themeInt]
-        : ThemeMode.light;
+    final ThemeMode themeMode =
+        themeInt != null ? ThemeMode.values[themeInt] : ThemeMode.light;
 
     // Get language setting
     final languageCode =

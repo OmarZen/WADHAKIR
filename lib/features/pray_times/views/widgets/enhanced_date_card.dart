@@ -172,7 +172,8 @@ class EnhancedDateCard extends StatelessWidget {
                                     SizedBox(
                                       width: size.width * 0.08,
                                       child: Divider(
-                                        color: Colors.white.withValues(alpha: 0.5),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.5),
                                         thickness: 1,
                                       ),
                                     ),
@@ -181,13 +182,15 @@ class EnhancedDateCard extends StatelessWidget {
                                           EdgeInsets.symmetric(horizontal: 4),
                                       child: IslamicIcons.ornamentIcon(
                                         size: size.width * 0.03,
-                                        color: Colors.white.withValues(alpha: 0.7),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.7),
                                       ),
                                     ),
                                     SizedBox(
                                       width: size.width * 0.08,
                                       child: Divider(
-                                        color: Colors.white.withValues(alpha: 0.5),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.5),
                                         thickness: 1,
                                       ),
                                     ),

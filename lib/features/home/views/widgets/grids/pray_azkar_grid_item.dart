@@ -192,9 +192,8 @@ class _AzkarCardState extends State<_AzkarCard> {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    final double progress = widget.repeat <= 0
-        ? 0
-        : (completed / widget.repeat).clamp(0.0, 1.0);
+    final double progress =
+        widget.repeat <= 0 ? 0 : (completed / widget.repeat).clamp(0.0, 1.0);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),

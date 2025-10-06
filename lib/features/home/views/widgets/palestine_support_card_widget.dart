@@ -34,7 +34,8 @@ class PalestineSupportCardWidget extends StatelessWidget {
                           _flagPill(theme, context),
                           const SizedBox(width: 8),
                           Text(
-                            l10n?.translate('home.free_palestine') ?? 'فلسطين حرة',
+                            l10n?.translate('home.free_palestine') ??
+                                'فلسطين حرة',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleLarge,
@@ -48,7 +49,8 @@ class PalestineSupportCardWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        l10n?.translate('home.palestine_support') ?? 'اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين.',
+                        l10n?.translate('home.palestine_support') ??
+                            'اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين.',
                         style: theme.textTheme.bodyLarge,
                       ),
                       const SizedBox(height: 12),
@@ -120,7 +122,8 @@ class PalestineSupportCardWidget extends StatelessWidget {
           CountryFlag.fromCountryCode('PS', width: 24, height: 16),
           const SizedBox(width: 8),
           Text(
-            l10n?.translate('home.palestine_support_call_to_action') ?? 'دعاء ونصرة',
+            l10n?.translate('home.palestine_support_call_to_action') ??
+                'دعاء ونصرة',
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w700,
@@ -185,9 +188,11 @@ class PalestineSupportCardWidget extends StatelessWidget {
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
         child: Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           backgroundColor: theme.colorScheme.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
@@ -204,7 +209,8 @@ class PalestineSupportCardWidget extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        l10n?.translate('home.palestine_duah') ?? 'دعاء لفلسطين',
+                        l10n?.translate('home.palestine_duah') ??
+                            'دعاء لفلسطين',
                         style: theme.textTheme.titleLarge,
                       ),
                       const SizedBox(width: 8),
@@ -238,7 +244,8 @@ class PalestineSupportCardWidget extends StatelessWidget {
                     alignment: Alignment.center,
                     child: TextButton.icon(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.check_circle_outline, color: theme.colorScheme.primary),
+                      icon: Icon(Icons.check_circle_outline,
+                          color: theme.colorScheme.primary),
                       label: Text(
                         l10n?.translate('home.close') ?? 'إغلاق',
                         style: TextStyle(color: theme.colorScheme.primary),
@@ -259,13 +266,14 @@ class PalestineSupportCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: theme.colorScheme.primary.withValues(alpha: 0.05),
-        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+        border:
+            Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (title.isNotEmpty) ...[  
+          if (title.isNotEmpty) ...[
             Text(
               title,
               style: TextStyle(

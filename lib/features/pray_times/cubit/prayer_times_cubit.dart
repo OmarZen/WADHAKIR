@@ -67,7 +67,6 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         selectedDate: today,
       ));
 
-      
       // Start a timer to update the UI every minute for the countdown
       _startTimer();
     } catch (e) {
@@ -121,13 +120,10 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     return time.add(Duration(minutes: minutes));
   }
 
-
   // Refresh prayer times and notifications
   Future<void> refreshPrayerTimes() async {
     await loadPrayerTimes();
   }
-
- 
 
   // Change the selected date
   void selectDate(DateTime date) async {

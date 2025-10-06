@@ -5,7 +5,6 @@ import 'grids/pray_azkar_grid_item.dart';
 import 'grids/allah_names_grid_item.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
-
 class MoreIslamicExcerptsWidget extends StatelessWidget {
   const MoreIslamicExcerptsWidget({super.key});
 
@@ -26,7 +25,8 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
                   color: theme.colorScheme.primary),
               const SizedBox(width: 8),
               Text(
-                l10n?.translate('home.more_islamic_excerpts') ?? 'مقتطفات إسلامية',
+                l10n?.translate('home.more_islamic_excerpts') ??
+                    'مقتطفات إسلامية',
                 style: theme.textTheme.headlineSmall,
               ),
             ],

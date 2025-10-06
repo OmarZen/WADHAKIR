@@ -135,8 +135,7 @@ class SettingsScreen extends StatelessWidget {
               SettingsSection(
                 title: l10n?.translate('settings.theme') ?? 'السمة',
                 icon: Icons.palette_outlined,
-                subtitle:
-                    l10n?.translate('settings.theme_subtitle') ??
+                subtitle: l10n?.translate('settings.theme_subtitle') ??
                     'تخصيص مظهر التطبيق',
                 children: [
                   _buildThemeSelector(context, settings, cubit),
@@ -150,8 +149,7 @@ class SettingsScreen extends StatelessWidget {
               SettingsSection(
                 title: l10n?.translate('settings.language') ?? 'اللغة',
                 icon: Icons.language_outlined,
-                subtitle:
-                    l10n?.translate('settings.language_subtitle') ??
+                subtitle: l10n?.translate('settings.language_subtitle') ??
                     'تغيير لغة التطبيق',
                 children: [_buildLanguageSelector(context, settings, cubit)],
               ),
@@ -159,8 +157,7 @@ class SettingsScreen extends StatelessWidget {
               SettingsSection(
                 title: l10n?.translate('settings.about_app') ?? 'حول التطبيق',
                 icon: Icons.info_outline,
-                subtitle:
-                    l10n?.translate('settings.about_subtitle') ??
+                subtitle: l10n?.translate('settings.about_subtitle') ??
                     'معلومات عن التطبيق',
                 children: [
                   _buildAboutTile(context),
@@ -201,8 +198,8 @@ class SettingsScreen extends StatelessWidget {
           settings.themeMode == ThemeMode.system
               ? l10n?.translate('settings.system_theme') ?? 'حسب النظام'
               : settings.themeMode == ThemeMode.light
-              ? l10n?.translate('settings.light_theme') ?? 'فاتح'
-              : l10n?.translate('settings.dark_theme') ?? 'داكن',
+                  ? l10n?.translate('settings.light_theme') ?? 'فاتح'
+                  : l10n?.translate('settings.dark_theme') ?? 'داكن',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             fontSize: 14,
@@ -219,8 +216,8 @@ class SettingsScreen extends StatelessWidget {
           settings.themeMode == ThemeMode.light
               ? Icons.light_mode
               : settings.themeMode == ThemeMode.dark
-              ? Icons.dark_mode
-              : Icons.brightness_auto,
+                  ? Icons.dark_mode
+                  : Icons.brightness_auto,
           color: theme.colorScheme.primary,
           size: 22,
         ),
@@ -410,9 +407,8 @@ class SettingsScreen extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                     color: theme.colorScheme.onSurface,
                   ),
                 ),
@@ -582,9 +578,8 @@ class SettingsScreen extends StatelessWidget {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                     color: isSelected ? theme.colorScheme.primary : null,
                   ),
                 ),
@@ -681,8 +676,7 @@ class SettingsScreen extends StatelessWidget {
             l10n?.translate('settings.sample_text') ??
                 'نموذج للنص بالحجم المختار',
             style: theme.textTheme.bodyLarge?.copyWith(
-              fontSize:
-                  (theme.textTheme.bodyLarge?.fontSize ?? 14) *
+              fontSize: (theme.textTheme.bodyLarge?.fontSize ?? 14) *
                   settings.fontSize,
             ),
           ),

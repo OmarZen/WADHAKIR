@@ -22,12 +22,12 @@ class QuranCubit extends Cubit<QuranState> {
     required GetVersesBySurahUseCase getVersesBySurahUseCase,
     required SettingsCubit settingsCubit,
     required GetPlaceOfRevelationUseCase getPlaceOfRevelationUseCase,
-  }) : _getSurahsUseCase = getSurahsUseCase,
-       _getSurahByNumberUseCase = getSurahByNumberUseCase,
-       _getVersesBySurahUseCase = getVersesBySurahUseCase,
-       _settingsCubit = settingsCubit,
-       _getPlaceOfRevelationUseCase = getPlaceOfRevelationUseCase,
-       super(const QuranInitial());
+  })  : _getSurahsUseCase = getSurahsUseCase,
+        _getSurahByNumberUseCase = getSurahByNumberUseCase,
+        _getVersesBySurahUseCase = getVersesBySurahUseCase,
+        _settingsCubit = settingsCubit,
+        _getPlaceOfRevelationUseCase = getPlaceOfRevelationUseCase,
+        super(const QuranInitial());
 
   Future<void> loadSurahs() async {
     emit(const QuranLoading());
@@ -44,21 +44,22 @@ class QuranCubit extends Cubit<QuranState> {
     try {
       final surah = await _getSurahByNumberUseCase(surahNumber);
       final verses = await _getVersesBySurahUseCase(surahNumber);
-      
+
       // Get settings from SettingsCubit
       final settingsState = _settingsCubit.state;
       bool showBasmala = false;
-      
+
       if (settingsState is SettingsLoaded) {
         final AppSettingsModel settings = settingsState.settings;
         showBasmala = settings.showBasmala;
       }
-      
+
       emit(SurahDetailsLoaded(
         surah: surah,
         verses: verses,
         basmala: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-        showBasmala: showBasmala && surahNumber != 9, // Surah At-Tawbah (9) doesn't start with Basmala
+        showBasmala: showBasmala &&
+            surahNumber != 9, // Surah At-Tawbah (9) doesn't start with Basmala
       ));
     } catch (e) {
       emit(QuranError(e.toString()));
@@ -73,6 +74,5 @@ class QuranCubit extends Cubit<QuranState> {
     } catch (e) {
       emit(QuranError(e.toString()));
     }
-
   }
-} 
+}

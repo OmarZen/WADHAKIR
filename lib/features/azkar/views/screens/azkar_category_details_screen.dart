@@ -270,7 +270,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          context.l10n?.translate('azkar.auto_move') ?? 'Auto move',
+                          context.l10n?.translate('azkar.auto_move') ??
+                              'Auto move',
                           style: TextStyle(
                             fontSize: 14,
                             color: _categoryColor,

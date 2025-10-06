@@ -101,9 +101,8 @@ class RadioStationListItem extends StatelessWidget {
                         isActive
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
-                        color: isActive
-                            ? Colors.white
-                            : theme.colorScheme.primary,
+                        color:
+                            isActive ? Colors.white : theme.colorScheme.primary,
                       ),
               ),
             ],

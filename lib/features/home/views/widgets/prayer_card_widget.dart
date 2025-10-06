@@ -384,9 +384,8 @@ class _PrayerTile extends StatelessWidget {
                           offset: const Offset(0, 3),
                         ),
                       ],
-                      color: isNext
-                          ? Colors.white
-                          : color.withValues(alpha: 0.1),
+                      color:
+                          isNext ? Colors.white : color.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(

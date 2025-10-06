@@ -83,7 +83,8 @@ class _CountdownTimerState extends State<CountdownTimer>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              l10n?.translate('prayer_times.time_until_next_prayer') ?? 'الوقت المتبقي حتى',
+              l10n?.translate('prayer_times.time_until_next_prayer') ??
+                  'الوقت المتبقي حتى',
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.9),
                 fontSize: size.width * 0.04,

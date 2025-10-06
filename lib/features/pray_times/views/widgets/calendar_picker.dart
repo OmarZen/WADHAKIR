@@ -117,7 +117,8 @@ class _CalendarPickerState extends State<CalendarPicker>
                           Row(
                             children: [
                               Text(
-                                l10n?.translate('prayer_times.gregorian') ?? 'ميلادي',
+                                l10n?.translate('prayer_times.gregorian') ??
+                                    'ميلادي',
                                 style: TextStyle(
                                   fontSize: size.width * 0.035,
                                   color: !_isHijriMode

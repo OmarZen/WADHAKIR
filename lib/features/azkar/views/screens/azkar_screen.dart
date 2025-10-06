@@ -92,8 +92,9 @@ class _AzkarScreenState extends State<AzkarScreen>
                     );
                   }
                   return Center(
-                    child: Text(context.l10n?.translate('azkar.no_data_available') ??
-                        'No data available'),
+                    child: Text(
+                        context.l10n?.translate('azkar.no_data_available') ??
+                            'No data available'),
                   );
                 },
               ),

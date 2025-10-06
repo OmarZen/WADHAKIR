@@ -9,4 +9,4 @@ class GetCalculationMethodUseCase {
   Future<CalculationMethod> call() async {
     return await _repository.getCalculationMethod();
   }
-} 
+}

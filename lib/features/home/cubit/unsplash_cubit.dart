@@ -105,13 +105,11 @@ class UnsplashCubit extends Cubit<UnsplashState> {
             await _loadLocalImages();
           }
         } else {
-          log(
-              'Empty results from Unsplash API, falling back to local images');
+          log('Empty results from Unsplash API, falling back to local images');
           await _loadLocalImages();
         }
       } else {
-        log(
-            'Failed to fetch from Unsplash: ${response.statusCode} - ${response.body}');
+        log('Failed to fetch from Unsplash: ${response.statusCode} - ${response.body}');
         await _loadLocalImages();
       }
     } catch (error) {

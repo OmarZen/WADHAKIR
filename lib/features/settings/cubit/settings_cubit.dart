@@ -9,7 +9,6 @@ import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 
-
 class SettingsCubit extends Cubit<SettingsState> {
   final GetSettingsUseCase _getSettingsUseCase;
   final GetSettingsStreamUseCase _getSettingsStreamUseCase;

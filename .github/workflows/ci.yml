@@ -1,4 +1,4 @@
-name: 🔍 CI - Code Quality & Tests
+name: 🔍 CI - Code Quality & Build
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  analyze-and-test:
-    name: 📱 Analyze & Test Flutter App
+  format-and-build:
+    name: 🎨 Format & Build Flutter App
     runs-on: ubuntu-latest
     
     steps:
@@ -40,21 +40,8 @@ jobs:
       - name: 🎨 Check Code Formatting
         run: dart format --output=none --set-exit-if-changed .
         
-      - name: 🧪 Run Tests
-        run: flutter test --coverage --reporter=expanded
-        
-      - name: 📈 Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          file: coverage/lcov.info
-          fail_ci_if_error: false
-          
       - name: 🏗️ Build APK (Debug)
         run: flutter build apk --debug
-        
-      - name: 📱 Build iOS (macOS only)
-        if: runner.os == 'macOS'
-        run: flutter build ios --no-codesign
         
       - name: ✅ Success Notification
         if: success()

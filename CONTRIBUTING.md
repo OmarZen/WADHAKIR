@@ -26,15 +26,14 @@ We use a **Git Flow** inspired workflow:
 
 ### Supporting Branches
 - **`feature/*`** - New features (branch from `develop`)
-- **`fix/*`** - Bug fixes (branch from `develop`) 
-- **`hotfix/*`** - Critical production fixes (branch from `main`)
+- **`fix/*`** - Bug fixes (branch from `develop` or `main` for critical fixes) 
 - **`release/*`** - Release preparation (branch from `develop`)
 
 ### Branch Naming Convention
 ```bash
 feature/prayer-reminder
 fix/qibla-direction-bug
-hotfix/v1.2.1-crash-fix
+fix/critical-crash-fix
 release/v1.3.0
 chore/update-dependencies
 ```
@@ -96,7 +95,7 @@ Open a Pull Request to `develop` branch using our PR template.
 - [ ] Added/updated tests for new features
 
 ### PR Requirements
-- **Target branch**: `develop` (unless it's a hotfix)
+- **Target branch**: `develop` (unless it's a critical production fix to `main`)
 - **Title**: Follow conventional commit format
 - **Description**: Use our PR template
 - **Reviews**: At least 1 approval required
@@ -121,14 +120,14 @@ Open a Pull Request to `develop` branch using our PR template.
    ```
 7. Merge `main` back to `develop`
 
-### Hotfixes
+### Critical Production Fixes
 1. Branch from `main`:
    ```bash
    git checkout main
-   git checkout -b hotfix/v1.2.1-critical-fix
+   git checkout -b fix/critical-issue
    ```
 2. Fix the issue
-3. Update version in `pubspec.yaml`
+3. Update version in `pubspec.yaml` (patch version)
 4. Create PR to `main`
 5. After merge, tag and merge back to `develop`
 

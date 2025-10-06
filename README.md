@@ -68,7 +68,6 @@ We use a **Git Flow** inspired workflow. Please read our [Contributing Guideline
 - `develop` - Integration branch (default)
 - `feature/*` - New features
 - `fix/*` - Bug fixes
-- `hotfix/*` - Critical production fixes
 - `release/*` - Release preparation
 
 ### Commit Convention

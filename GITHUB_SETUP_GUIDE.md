@@ -104,8 +104,7 @@ After configuration, you'll have:
 ### **Example Branches Created**:
 - ✨ `feature/prayer-notifications` - Feature development example
 - 🐛 `fix/qibla-direction-accuracy` - Bug fix example  
-- 🚨 `hotfix/v1.1.1-app-crash-fix` - Emergency production fix example
-- 📦 `release/v1.2.0` - Release preparation example
+-  `release/v1.2.0` - Release preparation example
 
 ---
 
@@ -211,7 +210,7 @@ You can also configure these settings via:
 1. **GitHub Documentation**: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository
 2. **Workflow Examples**: Check your created branches for templates
 3. **Issues**: Create GitHub issue using templates
-4. **Emergency**: Use hotfix workflow immediately
+4. **Emergency**: Use critical fix workflow immediately
 
 ---
 

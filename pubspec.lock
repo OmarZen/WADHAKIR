@@ -245,10 +245,10 @@ packages:
     dependency: "direct main"
     description:
       name: country_flags
-      sha256: "78a7bf8aabd7ae1a90087f0c517471ac9ebfe07addc652692f58da0f0f833196"
+      sha256: dbc4f76e7c801619b2d841023e0327191ba00663f1f1b4770394e9bc6632c444
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.0"
+    version: "2.2.0"
   cross_file:
     dependency: transitive
     description:

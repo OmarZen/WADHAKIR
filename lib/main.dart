@@ -43,8 +43,8 @@ void main() async {
   try {
     await dotenv.load(fileName: '.env');
   } catch (e) {
-    debugPrint('Error loading .env file: $e');
-    // Continue without .env file - hardcoded values will be used as fallback
+    // Silently continue without .env file - hardcoded values will be used as fallback
+    // This is expected in CI/CD environments and for developers who haven't set up .env yet
   }
 
   // Initialize Hive

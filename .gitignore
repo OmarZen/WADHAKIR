@@ -11,7 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-.env
+# .env - now tracked with safe placeholder values
 uploads-keystore.jks
 android/key.properties
 

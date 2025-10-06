@@ -1,0 +1,61 @@
+name: 🔍 CI - Code Quality & Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  analyze-and-test:
+    name: 📱 Analyze & Test Flutter App
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+          
+      - name: 📦 Get Dependencies
+        run: flutter pub get
+        
+      - name: 🔍 Verify Flutter Installation
+        run: flutter doctor -v
+        
+      - name: 🎨 Check Code Formatting
+        run: dart format --output=none --set-exit-if-changed .
+        
+      - name: 📊 Analyze Code
+        run: flutter analyze --fatal-infos
+        
+      - name: 🧪 Run Tests
+        run: flutter test --coverage --reporter=expanded
+        
+      - name: 📈 Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: coverage/lcov.info
+          fail_ci_if_error: false
+          
+      - name: 🏗️ Build APK (Debug)
+        run: flutter build apk --debug
+        
+      - name: 📱 Build iOS (macOS only)
+        if: runner.os == 'macOS'
+        run: flutter build ios --no-codesign
+        
+      - name: ✅ Success Notification
+        if: success()
+        run: echo "🎉 All checks passed! Ready for review."

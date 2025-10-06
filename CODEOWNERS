@@ -1,0 +1,27 @@
+# Wadhakir Development Team 👥
+
+This file defines who is responsible for reviewing changes to different parts of the codebase.
+
+# Global Owners
+* @OmarZen
+
+# Core App
+/lib/ @OmarZen
+
+# Platform Specific
+/android/ @OmarZen
+/ios/ @OmarZen
+
+# Documentation
+*.md @OmarZen
+/docs/ @OmarZen
+
+# Configuration
+/pubspec.yaml @OmarZen
+/analysis_options.yaml @OmarZen
+
+# CI/CD
+/.github/ @OmarZen
+
+# Assets
+/assets/ @OmarZen

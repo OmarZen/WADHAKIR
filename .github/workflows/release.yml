@@ -1,0 +1,72 @@
+name: 🚀 Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-and-release:
+    name: 🏗️ Build & Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+          
+      - name: 📦 Get Dependencies
+        run: flutter pub get
+        
+      - name: 🧪 Run Tests
+        run: flutter test
+        
+      - name: 🏗️ Build APK (Release)
+        run: flutter build apk --release
+        
+      - name: 🏗️ Build App Bundle (Release)
+        run: flutter build appbundle --release
+        
+      - name: 📝 Extract Release Notes
+        id: extract_notes
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          if [ -f "CHANGELOG.md" ]; then
+            # Extract notes between current version and previous version
+            sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | head -n -1 > release_notes.txt
+          else
+            echo "Release $VERSION" > release_notes.txt
+          fi
+          
+      - name: 🎉 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: release_notes.txt
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: ✅ Release Complete
+        run: echo "🎉 Release published successfully!"

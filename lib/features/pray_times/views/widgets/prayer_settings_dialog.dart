@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:wadhakir/core/widgets/islamic_icons.dart';
 import 'package:adhan/adhan.dart' show CalculationMethod, Madhab;
 import 'package:wadhakir/core/localization/app_localizations.dart';
@@ -518,6 +519,7 @@ class PrayerSettingsDialog extends StatelessWidget {
   void _updateLocation(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
+
     // Show loading indicator
     scaffoldMessenger.showSnackBar(
       SnackBar(
@@ -551,18 +553,35 @@ class PrayerSettingsDialog extends StatelessWidget {
             content: Text(l10n?.translate('prayer_times.location_updated') ??
                 'تم تحديث الموقع بنجاح'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      // Show error message
+      // Show error message with specific handling for location services
       if (context.mounted) {
+        final errorMessage = e.toString().contains('disabled')
+            ? l10n?.translate('prayer_times.location_services_disabled') ??
+                'خدمات الموقع معطلة. يرجى تفعيل خدمات الموقع في إعدادات الجهاز للحصول على أوقات الصلاة بدقة.'
+            : l10n?.translate('prayer_times.location_update_failed') ??
+                'فشل تحديث الموقع: $e';
+
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text(
-                l10n?.translate('prayer_times.location_update_failed') ??
-                    'فشل تحديث الموقع: $e'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+            action: e.toString().contains('disabled')
+                ? SnackBarAction(
+                    label: l10n?.translate('prayer_times.open_settings') ??
+                        'فتح الإعدادات',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      // Open location settings
+                      Geolocator.openLocationSettings();
+                    },
+                  )
+                : null,
           ),
         );
       }

@@ -323,9 +323,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   // Methods for location handling
   Future<String> getCurrentLocationName() async {
     try {
-      // Here you would get the current location name
-      // For now returning a placeholder
-      return "المدينة الحالية";
+      return await _repository.getCurrentLocationName();
     } catch (e) {
       debugPrint('Error getting current location name: $e');
       return "غير معروف";
@@ -334,12 +332,22 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
   Future<void> updateLocation() async {
     try {
-      // Here you would update the location
-      // For now just refreshing prayer times
+      // Check if location services are enabled
+      final isEnabled = await _repository.isLocationServiceEnabled();
+
+      if (!isEnabled) {
+        throw Exception(
+            'Location services are disabled. Please enable location services in your device settings to get accurate prayer times.');
+      }
+
+      // Force update location
+      await _repository.forceLocationUpdate();
+
+      // Refresh prayer times with new location
       await refreshPrayerTimes();
     } catch (e) {
       debugPrint('Error updating location: $e');
-      throw Exception('فشل تحديث الموقع');
+      rethrow;
     }
   }
 

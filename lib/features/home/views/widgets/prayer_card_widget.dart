@@ -184,6 +184,43 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     ],
                   ),
                 ),
+                // City name display
+                FutureBuilder<String>(
+                  future:
+                      context.read<PrayerTimesCubit>().getCurrentLocationName(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData &&
+                        snapshot.data != null &&
+                        !snapshot.data!.contains('°')) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4.0, vertical: 4.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              size: 16,
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.7),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              snapshot.data!,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.7),
+                                fontFamily: 'Almarai',
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,

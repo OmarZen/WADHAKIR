@@ -30,4 +30,8 @@ abstract class PrayerTimesRepository {
   Future<void> forceLocationUpdate();
 
   Future<bool> isLocationServiceEnabled();
+
+  Future<bool> isUsingFallbackLocation();
+
+  Future<bool> isFirstTimeUser();
 }

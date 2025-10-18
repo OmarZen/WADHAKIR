@@ -1,6 +1,7 @@
 import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
@@ -141,12 +142,15 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
         // Try to load last saved location
         final savedCoordinates = await _loadLastSavedLocation();
         if (savedCoordinates != null) {
+          debugPrint('Using last saved location');
           _coordinates = savedCoordinates;
           return _coordinates!;
         }
-        // If no saved location, throw exception to prompt user
-        throw Exception(
-            'Location services are disabled. Please enable location services to get accurate prayer times.');
+        // If no saved location, use Mecca as default (don't throw exception)
+        debugPrint(
+            'No saved location found. Using Mecca coordinates as default.');
+        _coordinates = Coordinates(21.422487, 39.826206);
+        return _coordinates!;
       }
 
       // Request permission if needed
@@ -176,7 +180,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
       // Default to Mecca coordinates as final fallback
       debugPrint('Using Mecca coordinates as fallback');
-      return Coordinates(21.422487, 39.826206);
+      _coordinates = Coordinates(21.422487, 39.826206);
+      return _coordinates!;
     }
   }
 
@@ -186,6 +191,30 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setDouble(_lastLatitudeKey, coordinates.latitude);
       await prefs.setDouble(_lastLongitudeKey, coordinates.longitude);
+
+      // Try to get and save the location name (city)
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          coordinates.latitude,
+          coordinates.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final placemark = placemarks.first;
+          // Get city name - try locality first, then administrativeArea
+          final cityName = placemark.locality ??
+              placemark.administrativeArea ??
+              placemark.subAdministrativeArea ??
+              'موقع غير معروف';
+
+          await prefs.setString(_lastLocationNameKey, cityName);
+          debugPrint('Saved location name: $cityName');
+        }
+      } catch (e) {
+        debugPrint('Error getting location name: $e');
+        // Don't fail if we can't get the name, just save coordinates
+      }
+
       debugPrint(
           'Saved location: ${coordinates.latitude}, ${coordinates.longitude}');
     } catch (e) {
@@ -276,6 +305,39 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       return await Geolocator.isLocationServiceEnabled();
     } catch (e) {
       debugPrint('Error checking location service status: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isUsingFallbackLocation() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      if (!serviceEnabled) {
+        // Check if we have saved location
+        final savedCoordinates = await _loadLastSavedLocation();
+        // We're using fallback if services are disabled and no saved location
+        return savedCoordinates == null;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('Error checking fallback location status: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isFirstTimeUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasLocation = prefs.containsKey(_lastLatitudeKey) &&
+          prefs.containsKey(_lastLongitudeKey);
+      return !hasLocation;
+    } catch (e) {
+      debugPrint('Error checking first time user: $e');
       return false;
     }
   }

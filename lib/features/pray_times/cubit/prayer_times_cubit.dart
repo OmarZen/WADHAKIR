@@ -330,6 +330,24 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     }
   }
 
+  Future<bool> isUsingFallbackLocation() async {
+    try {
+      return await _repository.isUsingFallbackLocation();
+    } catch (e) {
+      debugPrint('Error checking fallback location: $e');
+      return false;
+    }
+  }
+
+  Future<bool> isFirstTimeUser() async {
+    try {
+      return await _repository.isFirstTimeUser();
+    } catch (e) {
+      debugPrint('Error checking first time user: $e');
+      return false;
+    }
+  }
+
   Future<void> updateLocation() async {
     try {
       // Check if location services are enabled

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/widgets/islamic_icons.dart';
 import 'package:adhan/adhan.dart' show CalculationMethod, Madhab;
 import 'package:wadhakir/core/localization/app_localizations.dart';

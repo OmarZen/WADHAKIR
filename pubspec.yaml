@@ -52,6 +52,7 @@ dependencies:
   # Qibla compass
   flutter_compass: ^0.8.1
   geolocator: ^13.0.4
+  geocoding: ^3.0.0
   vector_math: ^2.1.4
   adhan: ^2.0.0+1
   hijri: ^3.0.0

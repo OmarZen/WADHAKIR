@@ -1,6 +1,6 @@
+import 'package:intl/intl.dart';
 import 'package:adhan/adhan.dart';
 import 'package:equatable/equatable.dart';
-import 'package:intl/intl.dart';
 
 class PrayerTimesModel extends Equatable {
   final DateTime fajr;
@@ -24,6 +24,46 @@ class PrayerTimesModel extends Equatable {
     required this.calculationMethod,
     required this.coordinates,
   });
+
+  Map<String, dynamic> toJson() {
+    final timeFormat = DateFormat('HH:mm');
+    return {
+      'fajr': timeFormat.format(fajr),
+      'sunrise': timeFormat.format(sunrise),
+      'dhuhr': timeFormat.format(dhuhr),
+      'asr': timeFormat.format(asr),
+      'maghrib': timeFormat.format(maghrib),
+      'isha': timeFormat.format(isha),
+      'date': date.toIso8601String(),
+    };
+  }
+
+  factory PrayerTimesModel.fromJson(Map<String, dynamic> json) {
+    final now = DateTime.now();
+
+    DateTime parseTime(String time) {
+      final parts = time.split(':');
+      return DateTime(
+        now.year,
+        now.month,
+        now.day,
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+    }
+
+    return PrayerTimesModel(
+      fajr: parseTime(json['fajr']),
+      sunrise: parseTime(json['sunrise']),
+      dhuhr: parseTime(json['dhuhr']),
+      asr: parseTime(json['asr']),
+      maghrib: parseTime(json['maghrib']),
+      isha: parseTime(json['isha']),
+      date: DateTime.parse(json['date']),
+      calculationMethod: CalculationMethod.egyptian,
+      coordinates: Coordinates(0, 0), // Default coordinates
+    );
+  }
 
   factory PrayerTimesModel.fromPrayerTimes(
     PrayerTimes prayerTimes, {

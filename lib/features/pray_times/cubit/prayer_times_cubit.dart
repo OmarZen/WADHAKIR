@@ -10,6 +10,7 @@ import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
+import 'package:wadhakir/features/prayer_times/presentation/widgets/prayer_times_home_widget.dart';
 
 class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   final GetPrayerTimesUseCase _getPrayerTimesUseCase;
@@ -62,10 +63,22 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       // Apply time adjustments to all loaded prayer times
       final adjustedPrayerTimes = _applyTimeAdjustments(prayerTimes);
 
+      // Update state
       emit(PrayerTimesLoaded(
         prayerTimes: adjustedPrayerTimes,
         selectedDate: today,
       ));
+
+      // Update home screen widget with today's prayer times
+      final dateKey = DateTime(today.year, today.month, today.day);
+      final todayPrayerTimes = adjustedPrayerTimes[dateKey];
+      if (todayPrayerTimes != null) {
+        debugPrint(
+            'Updating widget with prayer times for: ${dateKey.toString()}');
+        await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
+      } else {
+        debugPrint('No prayer times found for today: ${dateKey.toString()}');
+      }
 
       // Start a timer to update the UI every minute for the countdown
       _startTimer();
@@ -122,10 +135,30 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
   // Refresh prayer times and notifications
   Future<void> refreshPrayerTimes() async {
-    await loadPrayerTimes();
-  }
+    try {
+      await loadPrayerTimes();
 
-  // Change the selected date
+      // Ensure widget is updated with latest data
+      if (state is PrayerTimesLoaded) {
+        final currentState = state as PrayerTimesLoaded;
+        final today = DateTime.now();
+        final dateKey = DateTime(today.year, today.month, today.day);
+
+        final todayPrayerTimes = currentState.prayerTimes[dateKey];
+        if (todayPrayerTimes != null) {
+          debugPrint(
+              'Refreshing widget with prayer times for: ${dateKey.toString()}');
+          await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
+        } else {
+          debugPrint(
+              'No prayer times found for today during refresh: ${dateKey.toString()}');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error refreshing prayer times: $e');
+    }
+  } // Change the selected date
+
   void selectDate(DateTime date) async {
     if (state is PrayerTimesLoaded) {
       final currentState = state as PrayerTimesLoaded;

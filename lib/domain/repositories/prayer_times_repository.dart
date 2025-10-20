@@ -24,4 +24,14 @@ abstract class PrayerTimesRepository {
   Future<Madhab> getMadhab();
 
   Future<void> setMadhab(Madhab madhab);
+
+  Future<String> getCurrentLocationName();
+
+  Future<void> forceLocationUpdate();
+
+  Future<bool> isLocationServiceEnabled();
+
+  Future<bool> isUsingFallbackLocation();
+
+  Future<bool> isFirstTimeUser();
 }

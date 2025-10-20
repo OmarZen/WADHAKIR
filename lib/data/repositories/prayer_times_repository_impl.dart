@@ -1,5 +1,6 @@
 import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
@@ -8,6 +9,9 @@ import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
 class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   static const String _calculationMethodKey = 'prayer_times_calculation_method';
   static const String _madhabKey = 'prayer_times_madhab';
+  static const String _lastLatitudeKey = 'prayer_times_last_latitude';
+  static const String _lastLongitudeKey = 'prayer_times_last_longitude';
+  static const String _lastLocationNameKey = 'prayer_times_last_location_name';
 
   Coordinates? _coordinates;
 
@@ -88,9 +92,9 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
     final prefs = await SharedPreferences.getInstance();
     final methodIndex = prefs.getInt(_calculationMethodKey);
 
-    // Default to Muslim World League if not set
+    // Default to Egyptian (الهيئة المصرية العامة للمساحة) if not set
     if (methodIndex == null) {
-      return CalculationMethod.muslim_world_league;
+      return CalculationMethod.egyptian;
     }
 
     // Convert the index back to a CalculationMethod enum
@@ -131,8 +135,22 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
     try {
       // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
       if (!serviceEnabled) {
-        throw Exception('Location services are disabled');
+        debugPrint(
+            'Location services are disabled. Attempting to load last saved location.');
+        // Try to load last saved location
+        final savedCoordinates = await _loadLastSavedLocation();
+        if (savedCoordinates != null) {
+          debugPrint('Using last saved location');
+          _coordinates = savedCoordinates;
+          return _coordinates!;
+        }
+        // If no saved location, use Mecca as default (don't throw exception)
+        debugPrint(
+            'No saved location found. Using Mecca coordinates as default.');
+        _coordinates = Coordinates(21.422487, 39.826206);
+        return _coordinates!;
       }
 
       // Request permission if needed
@@ -144,11 +162,222 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       );
 
       _coordinates = Coordinates(position.latitude, position.longitude);
+
+      // Save the new location for future use
+      await _saveLastLocation(_coordinates!);
+
       return _coordinates!;
     } catch (e) {
       debugPrint('Error getting coordinates: $e');
-      // Default to Mecca coordinates as fallback
-      return Coordinates(21.422487, 39.826206);
+
+      // Try to load last saved location before falling back to Mecca
+      final savedCoordinates = await _loadLastSavedLocation();
+      if (savedCoordinates != null) {
+        debugPrint('Using last saved location');
+        _coordinates = savedCoordinates;
+        return _coordinates!;
+      }
+
+      // Default to Mecca coordinates as final fallback
+      debugPrint('Using Mecca coordinates as fallback');
+      _coordinates = Coordinates(21.422487, 39.826206);
+      return _coordinates!;
+    }
+  }
+
+  /// Save the last known location to SharedPreferences
+  Future<void> _saveLastLocation(Coordinates coordinates) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_lastLatitudeKey, coordinates.latitude);
+      await prefs.setDouble(_lastLongitudeKey, coordinates.longitude);
+
+      // Try to get and save the location name (city)
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          coordinates.latitude,
+          coordinates.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          final placemark = placemarks.first;
+          String? cityName;
+
+          // Try different fields in order of preference
+          if (placemark.locality?.isNotEmpty ?? false) {
+            cityName = placemark.locality;
+          } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
+            cityName = placemark.subAdministrativeArea;
+          } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
+            cityName = placemark.administrativeArea;
+          }
+
+          if (cityName != null && cityName.isNotEmpty) {
+            await prefs.setString(_lastLocationNameKey, cityName);
+            debugPrint('Saved location name: $cityName');
+          } else {
+            debugPrint('No valid location name found in placemark data');
+            await prefs.remove(_lastLocationNameKey); // Clear any old name
+          }
+        }
+      } catch (e) {
+        debugPrint('Error getting location name: $e');
+        await prefs.remove(_lastLocationNameKey); // Clear any old name on error
+      }
+
+      debugPrint(
+          'Saved location: ${coordinates.latitude}, ${coordinates.longitude}');
+    } catch (e) {
+      debugPrint('Error saving location: $e');
+    }
+  }
+
+  /// Load the last saved location from SharedPreferences
+  Future<Coordinates?> _loadLastSavedLocation() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final latitude = prefs.getDouble(_lastLatitudeKey);
+      final longitude = prefs.getDouble(_lastLongitudeKey);
+
+      if (latitude != null && longitude != null) {
+        debugPrint('Loaded saved location: $latitude, $longitude');
+        return Coordinates(latitude, longitude);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error loading saved location: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<String> getCurrentLocationName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final coordinates = _coordinates ?? await _loadLastSavedLocation();
+
+      if (coordinates != null) {
+        try {
+          // Always try to get fresh location name from geocoding
+          final placemarks = await placemarkFromCoordinates(
+            coordinates.latitude,
+            coordinates.longitude,
+          );
+
+          if (placemarks.isNotEmpty) {
+            final placemark = placemarks.first;
+            String? cityName;
+
+            // Try different fields in order of preference
+            if (placemark.locality?.isNotEmpty ?? false) {
+              cityName = placemark.locality;
+            } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
+              cityName = placemark.subAdministrativeArea;
+            } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
+              cityName = placemark.administrativeArea;
+            }
+
+            if (cityName != null && cityName.isNotEmpty) {
+              // Save the resolved name
+              await prefs.setString(_lastLocationNameKey, cityName);
+              return cityName;
+            }
+          }
+        } catch (e) {
+          debugPrint('Error getting location name: $e');
+          // On error, try to fall back to saved name
+          final savedLocationName = prefs.getString(_lastLocationNameKey);
+          if (savedLocationName != null && savedLocationName.isNotEmpty) {
+            return savedLocationName;
+          }
+        }
+
+        // If geocoding fails and no saved name, return formatted coordinates
+        return '${coordinates.latitude.toStringAsFixed(2)}°, ${coordinates.longitude.toStringAsFixed(2)}°';
+      }
+
+      return 'موقع غير محدد';
+    } catch (e) {
+      debugPrint('Error getting location name: $e');
+      return 'موقع غير محدد';
+    }
+  }
+
+  @override
+  Future<void> forceLocationUpdate() async {
+    try {
+      // Clear cached coordinates to force refresh
+      _coordinates = null;
+
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      if (!serviceEnabled) {
+        throw Exception(
+            'Location services are disabled. Please enable location services in your device settings.');
+      }
+
+      // Request permission if needed
+      await requestLocationPermission();
+
+      // Get the current position
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      _coordinates = Coordinates(position.latitude, position.longitude);
+
+      // Save the new location
+      await _saveLastLocation(_coordinates!);
+
+      debugPrint(
+          'Location updated successfully: ${_coordinates!.latitude}, ${_coordinates!.longitude}');
+    } catch (e) {
+      debugPrint('Error forcing location update: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> isLocationServiceEnabled() async {
+    try {
+      return await Geolocator.isLocationServiceEnabled();
+    } catch (e) {
+      debugPrint('Error checking location service status: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isUsingFallbackLocation() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      if (!serviceEnabled) {
+        // Check if we have saved location
+        final savedCoordinates = await _loadLastSavedLocation();
+        // We're using fallback if services are disabled and no saved location
+        return savedCoordinates == null;
+      }
+
+      return false;
+    } catch (e) {
+      debugPrint('Error checking fallback location status: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> isFirstTimeUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasLocation = prefs.containsKey(_lastLatitudeKey) &&
+          prefs.containsKey(_lastLongitudeKey);
+      return !hasLocation;
+    } catch (e) {
+      debugPrint('Error checking first time user: $e');
+      return false;
     }
   }
 }

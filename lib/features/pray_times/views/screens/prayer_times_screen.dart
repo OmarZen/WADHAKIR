@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/widgets/islamic_icons.dart';
 import 'package:adhan/adhan.dart' show CalculationMethod;
@@ -63,6 +64,7 @@ class _PrayerTimesScreenContent extends StatefulWidget {
 class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+  bool _hasCheckedLocation = false;
 
   @override
   void initState() {
@@ -72,6 +74,35 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
       duration: const Duration(milliseconds: 800),
     );
     _animationController.forward();
+
+    // Check location services after a short delay to let the screen load
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _checkLocationServices();
+    });
+  }
+
+  Future<void> _checkLocationServices() async {
+    if (!mounted || _hasCheckedLocation) return;
+    _hasCheckedLocation = true;
+
+    final cubit = context.read<PrayerTimesCubit>();
+
+    // For existing users, check if they're using fallback
+    final isUsingFallback = await cubit.isUsingFallbackLocation();
+
+    if (isUsingFallback && mounted) {
+      _showLocationDisabledDialog();
+    }
+  }
+
+  void _showLocationDisabledDialog() {
+    final l10n = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => LocationDisabledDialog(l10n: l10n),
+    );
   }
 
   @override
@@ -401,6 +432,11 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
                           methodName =
                               l10n?.translate('prayer_times.north_america') ??
                                   'الجمعية الإسلامية لأمريكا الشمالية';
+                          break;
+                        case CalculationMethod.moon_sighting_committee:
+                          methodName = l10n?.translate(
+                                  'prayer_times.moon_sighting_committee') ??
+                              'لجنة رؤية الهلال';
                           break;
                         default:
                           methodName = l10n?.translate(
@@ -1014,4 +1050,229 @@ class DividerPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+// Location Disabled Dialog Widget
+class LocationDisabledDialog extends StatelessWidget {
+  final AppLocalizations? l10n;
+
+  const LocationDisabledDialog({super.key, this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.08,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with icon
+            Container(
+              padding: EdgeInsets.all(size.width * 0.05),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFFE67E22),
+                    const Color(0xFFE67E22).withValues(alpha: 0.8),
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(size.width * 0.03),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.location_off,
+                      color: Colors.white,
+                      size: size.width * 0.08,
+                    ),
+                  ),
+                  SizedBox(width: size.width * 0.04),
+                  Expanded(
+                    child: Text(
+                      l10n?.translate(
+                              'prayer_times.location_services_disabled_title') ??
+                          'خدمات الموقع معطلة',
+                      style: TextStyle(
+                        fontSize: size.width * 0.045,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'Almarai',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Padding(
+              padding: EdgeInsets.all(size.width * 0.05),
+              child: Column(
+                children: [
+                  // Info icon and message
+                  Icon(
+                    Icons.info_outline,
+                    size: size.width * 0.15,
+                    color: const Color(0xFFE67E22),
+                  ),
+                  SizedBox(height: size.height * 0.02),
+
+                  Text(
+                    l10n?.translate('prayer_times.using_mecca_location') ??
+                        'يتم استخدام موقع مكة المكرمة كموقع افتراضي',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: size.width * 0.042,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                      fontFamily: 'Almarai',
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.015),
+
+                  Text(
+                    l10n?.translate('prayer_times.enable_location_message') ??
+                        'للحصول على أوقات الصلاة الدقيقة لموقعك الحالي، يرجى تفعيل خدمات الموقع من إعدادات جهازك.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: size.width * 0.038,
+                      color: Colors.grey[700],
+                      height: 1.5,
+                      fontFamily: 'Almarai',
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.01),
+
+                  // Mecca coordinates info
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: size.height * 0.015),
+                    padding: EdgeInsets.all(size.width * 0.04),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE67E22).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFE67E22).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: const Color(0xFFE67E22),
+                          size: size.width * 0.05,
+                        ),
+                        SizedBox(width: size.width * 0.02),
+                        Text(
+                          l10n?.translate('prayer_times.mecca_location') ??
+                              'مكة المكرمة (21.42°, 39.83°)',
+                          style: TextStyle(
+                            fontSize: size.width * 0.036,
+                            color: const Color(0xFFE67E22),
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Almarai',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Action buttons
+            Container(
+              padding: EdgeInsets.fromLTRB(
+                size.width * 0.04,
+                0,
+                size.width * 0.04,
+                size.width * 0.04,
+              ),
+              child: Column(
+                children: [
+                  // Open Settings button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        await Geolocator.openLocationSettings();
+                      },
+                      icon: const Icon(Icons.settings),
+                      label: Text(
+                        l10n?.translate(
+                                'prayer_times.open_location_settings') ??
+                            'فتح إعدادات الموقع',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Almarai',
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE67E22),
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(
+                          vertical: size.height * 0.018,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.01),
+
+                  // Close button
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        l10n?.translate('prayer_times.continue_with_mecca') ??
+                            'المتابعة بموقع مكة',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.grey[600],
+                          fontFamily: 'Almarai',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

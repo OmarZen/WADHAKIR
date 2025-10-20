@@ -78,7 +78,12 @@ class UnsplashCubit extends Cubit<UnsplashState> {
       final url = Uri.parse(
           'https://api.unsplash.com/search/photos/?client_id=$apiKey&query=Mosque&orientation=landscape&per_page=20');
 
-      final response = await http.get(url);
+      // Add timeout to prevent long waits
+      final response = await http.get(url).timeout(const Duration(seconds: 10),
+          onTimeout: () {
+        log('Unsplash API request timed out after 10 seconds');
+        throw TimeoutException('Connection timeout');
+      });
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

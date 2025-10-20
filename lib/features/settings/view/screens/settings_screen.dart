@@ -339,7 +339,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      l10n?.translate('common.cancel') ?? 'إلغاء',
+                      l10n?.translate('settings.cancel') ?? 'إلغاء',
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: theme.colorScheme.primary,
                       ),

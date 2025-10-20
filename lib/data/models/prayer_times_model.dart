@@ -1,6 +1,6 @@
+import 'package:intl/intl.dart';
 import 'package:adhan/adhan.dart';
 import 'package:equatable/equatable.dart';
-import 'package:intl/intl.dart';
 
 class PrayerTimesModel extends Equatable {
   final DateTime fajr;

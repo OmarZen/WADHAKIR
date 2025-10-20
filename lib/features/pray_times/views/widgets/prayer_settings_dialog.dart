@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/widgets/islamic_icons.dart';
 import 'package:adhan/adhan.dart' show CalculationMethod, Madhab;
@@ -230,7 +231,7 @@ class PrayerSettingsDialog extends StatelessWidget {
                       'رابطة العالم الإسلامي',
                   subtitle: l10n?.translate(
                           'prayer_times.muslim_world_league_description') ??
-                      'المعيار المستخدم في أغلب الدول الإسلامية',
+                      'زاوية الفجر: 18، زاوية العشاء: 17',
                   isSelected:
                       currentMethod == CalculationMethod.muslim_world_league,
                   onTap: () => _setCalculationMethod(
@@ -241,7 +242,7 @@ class PrayerSettingsDialog extends StatelessWidget {
                       'الهيئة المصرية العامة للمساحة',
                   subtitle:
                       l10n?.translate('prayer_times.egyptian_description') ??
-                          'المعيار المستخدم في مصر وأجزاء من أفريقيا',
+                          'زاوية الفجر: 19.5، زاوية العشاء: 17.5',
                   isSelected: currentMethod == CalculationMethod.egyptian,
                   onTap: () => _setCalculationMethod(
                       context, CalculationMethod.egyptian),
@@ -251,7 +252,7 @@ class PrayerSettingsDialog extends StatelessWidget {
                       'جامعة العلوم الإسلامية، كراتشي',
                   subtitle:
                       l10n?.translate('prayer_times.karachi_description') ??
-                          'المعيار المستخدم في باكستان وأجزاء من آسيا',
+                          'زاوية الفجر: 18، زاوية العشاء: 18',
                   isSelected: currentMethod == CalculationMethod.karachi,
                   onTap: () =>
                       _setCalculationMethod(context, CalculationMethod.karachi),
@@ -261,17 +262,84 @@ class PrayerSettingsDialog extends StatelessWidget {
                       'جامعة أم القرى، مكة المكرمة',
                   subtitle:
                       l10n?.translate('prayer_times.umm_al_qura_description') ??
-                          'المعيار المستخدم في المملكة العربية السعودية',
+                          'زاوية الفجر: 18، الفترة بعد المغرب: 90 دقيقة',
                   isSelected: currentMethod == CalculationMethod.umm_al_qura,
                   onTap: () => _setCalculationMethod(
                       context, CalculationMethod.umm_al_qura),
                 ),
                 _CalculationMethodTile(
+                  title: l10n?.translate('prayer_times.dubai') ??
+                      'دولة الإمارات العربية المتحدة',
+                  subtitle: l10n?.translate('prayer_times.dubai_description') ??
+                      'زاوية الفجر والعشاء: 18.2',
+                  isSelected: currentMethod == CalculationMethod.dubai,
+                  onTap: () =>
+                      _setCalculationMethod(context, CalculationMethod.dubai),
+                ),
+                _CalculationMethodTile(
+                  title: l10n?.translate('prayer_times.qatar') ?? 'دولة قطر',
+                  subtitle: l10n?.translate('prayer_times.qatar_description') ??
+                      'نسخة معدلة من طريقة أم القرى. زاوية الفجر: 18، فترة العشاء: 90',
+                  isSelected: currentMethod == CalculationMethod.qatar,
+                  onTap: () =>
+                      _setCalculationMethod(context, CalculationMethod.qatar),
+                ),
+                _CalculationMethodTile(
+                  title:
+                      l10n?.translate('prayer_times.kuwait') ?? 'دولة الكويت',
+                  subtitle:
+                      l10n?.translate('prayer_times.kuwait_description') ??
+                          'زاوية الفجر: 18، زاوية العشاء: 17.5',
+                  isSelected: currentMethod == CalculationMethod.kuwait,
+                  onTap: () =>
+                      _setCalculationMethod(context, CalculationMethod.kuwait),
+                ),
+                _CalculationMethodTile(
+                  title:
+                      l10n?.translate('prayer_times.moon_sighting_committee') ??
+                          'لجنة رؤية الهلال',
+                  subtitle: l10n?.translate(
+                          'prayer_times.moon_sighting_committee_description') ??
+                      'زاوية الفجر: 18، زاوية العشاء: 18، مع تعديلات موسمية',
+                  isSelected: currentMethod ==
+                      CalculationMethod.moon_sighting_committee,
+                  onTap: () => _setCalculationMethod(
+                      context, CalculationMethod.moon_sighting_committee),
+                ),
+                _CalculationMethodTile(
+                  title:
+                      l10n?.translate('prayer_times.singapore') ?? 'سنغافورة',
+                  subtitle:
+                      l10n?.translate('prayer_times.singapore_description') ??
+                          'زاوية الفجر: 20، زاوية العشاء: 18',
+                  isSelected: currentMethod == CalculationMethod.singapore,
+                  onTap: () => _setCalculationMethod(
+                      context, CalculationMethod.singapore),
+                ),
+                _CalculationMethodTile(
+                  title: l10n?.translate('prayer_times.turkey') ?? 'تركيا',
+                  subtitle:
+                      l10n?.translate('prayer_times.turkey_description') ??
+                          'زاوية الفجر: 18، زاوية العشاء: 17',
+                  isSelected: currentMethod == CalculationMethod.turkey,
+                  onTap: () =>
+                      _setCalculationMethod(context, CalculationMethod.turkey),
+                ),
+                _CalculationMethodTile(
+                  title: l10n?.translate('prayer_times.tehran') ?? 'طهران',
+                  subtitle: l10n
+                          ?.translate('prayer_times.tehran_description') ??
+                      'زاوية الفجر: 17.7، زاوية العشاء: 14، زاوية المغرب: 4.5',
+                  isSelected: currentMethod == CalculationMethod.tehran,
+                  onTap: () =>
+                      _setCalculationMethod(context, CalculationMethod.tehran),
+                ),
+                _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.north_america') ??
-                      'الجمعية الإسلامية لأمريكا الشمالية',
+                      'أمريكا الشمالية (ISNA)',
                   subtitle: l10n?.translate(
                           'prayer_times.north_america_description') ??
-                      'المعيار المستخدم في الولايات المتحدة وكندا',
+                      'زاوية الفجر: 15، زاوية العشاء: 15 (غير موصى به)',
                   isSelected: currentMethod == CalculationMethod.north_america,
                   onTap: () => _setCalculationMethod(
                       context, CalculationMethod.north_america),
@@ -518,6 +586,7 @@ class PrayerSettingsDialog extends StatelessWidget {
   void _updateLocation(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
+
     // Show loading indicator
     scaffoldMessenger.showSnackBar(
       SnackBar(
@@ -551,18 +620,35 @@ class PrayerSettingsDialog extends StatelessWidget {
             content: Text(l10n?.translate('prayer_times.location_updated') ??
                 'تم تحديث الموقع بنجاح'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
       }
     } catch (e) {
-      // Show error message
+      // Show error message with specific handling for location services
       if (context.mounted) {
+        final errorMessage = e.toString().contains('disabled')
+            ? l10n?.translate('prayer_times.location_services_disabled') ??
+                'خدمات الموقع معطلة. يرجى تفعيل خدمات الموقع في إعدادات الجهاز للحصول على أوقات الصلاة بدقة.'
+            : l10n?.translate('prayer_times.location_update_failed') ??
+                'فشل تحديث الموقع: $e';
+
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text(
-                l10n?.translate('prayer_times.location_update_failed') ??
-                    'فشل تحديث الموقع: $e'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+            action: e.toString().contains('disabled')
+                ? SnackBarAction(
+                    label: l10n?.translate('prayer_times.open_settings') ??
+                        'فتح الإعدادات',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      // Open location settings
+                      Geolocator.openLocationSettings();
+                    },
+                  )
+                : null,
           ),
         );
       }

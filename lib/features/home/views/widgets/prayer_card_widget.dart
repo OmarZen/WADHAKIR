@@ -184,6 +184,8 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     ],
                   ),
                 ),
+                // City name display
+                _LocationNameWidget(theme: theme),
                 const SizedBox(height: 8),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -459,5 +461,75 @@ class _PrayerTile extends StatelessWidget {
     );
 
     return tile;
+  }
+}
+
+// Location Name Widget - separated to avoid context issues
+class _LocationNameWidget extends StatefulWidget {
+  final ThemeData theme;
+
+  const _LocationNameWidget({required this.theme});
+
+  @override
+  State<_LocationNameWidget> createState() => _LocationNameWidgetState();
+}
+
+class _LocationNameWidgetState extends State<_LocationNameWidget> {
+  String? _locationName;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocationName();
+  }
+
+  Future<void> _loadLocationName() async {
+    try {
+      final cubit = context.read<PrayerTimesCubit>();
+      final name = await cubit.getCurrentLocationName();
+      if (mounted) {
+        setState(() {
+          _locationName = name;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading || _locationName == null || _locationName!.contains('°')) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.location_on,
+            size: 16,
+            color: widget.theme.colorScheme.primary.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            _locationName!,
+            style: TextStyle(
+              fontSize: 14,
+              color: widget.theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              fontFamily: 'Almarai',
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

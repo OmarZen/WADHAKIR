@@ -81,6 +81,7 @@ dependencies:
   google_nav_bar: ^5.0.7
   font_awesome_flutter: ^10.9.1
   country_flags: ^2.1.1
+  home_widget: ^0.8.1
 
 dev_dependencies:
   flutter_test:

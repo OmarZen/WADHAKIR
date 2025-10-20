@@ -33,11 +33,15 @@ import 'package:wadhakir/domain/usecases/get_surah_by_number_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_verses_by_surah_usecase.dart';
 import 'package:wadhakir/core/localization/app_localizations_delegate.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
+import 'package:wadhakir/features/prayer_times/presentation/widgets/prayer_times_home_widget.dart';
 
 void main() async {
   // Initialize widgets binding and preserve splash screen
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Initialize home widget
+  await PrayerTimesHomeWidget.setupBackgroundCallback();
 
   // Load environment variables
   try {

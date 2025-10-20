@@ -1,7 +1,7 @@
 import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
@@ -201,18 +201,28 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
         if (placemarks.isNotEmpty) {
           final placemark = placemarks.first;
-          // Get city name - try locality first, then administrativeArea
-          final cityName = placemark.locality ??
-              placemark.administrativeArea ??
-              placemark.subAdministrativeArea ??
-              'موقع غير معروف';
+          String? cityName;
 
-          await prefs.setString(_lastLocationNameKey, cityName);
-          debugPrint('Saved location name: $cityName');
+          // Try different fields in order of preference
+          if (placemark.locality?.isNotEmpty ?? false) {
+            cityName = placemark.locality;
+          } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
+            cityName = placemark.subAdministrativeArea;
+          } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
+            cityName = placemark.administrativeArea;
+          }
+
+          if (cityName != null && cityName.isNotEmpty) {
+            await prefs.setString(_lastLocationNameKey, cityName);
+            debugPrint('Saved location name: $cityName');
+          } else {
+            debugPrint('No valid location name found in placemark data');
+            await prefs.remove(_lastLocationNameKey); // Clear any old name
+          }
         }
       } catch (e) {
         debugPrint('Error getting location name: $e');
-        // Don't fail if we can't get the name, just save coordinates
+        await prefs.remove(_lastLocationNameKey); // Clear any old name on error
       }
 
       debugPrint(
@@ -244,16 +254,45 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   Future<String> getCurrentLocationName() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // Try to get saved location name
-      final savedLocationName = prefs.getString(_lastLocationNameKey);
-      if (savedLocationName != null && savedLocationName.isNotEmpty) {
-        return savedLocationName;
-      }
-
-      // If no saved name, return coordinates
       final coordinates = _coordinates ?? await _loadLastSavedLocation();
+
       if (coordinates != null) {
+        try {
+          // Always try to get fresh location name from geocoding
+          final placemarks = await placemarkFromCoordinates(
+            coordinates.latitude,
+            coordinates.longitude,
+          );
+
+          if (placemarks.isNotEmpty) {
+            final placemark = placemarks.first;
+            String? cityName;
+
+            // Try different fields in order of preference
+            if (placemark.locality?.isNotEmpty ?? false) {
+              cityName = placemark.locality;
+            } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
+              cityName = placemark.subAdministrativeArea;
+            } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
+              cityName = placemark.administrativeArea;
+            }
+
+            if (cityName != null && cityName.isNotEmpty) {
+              // Save the resolved name
+              await prefs.setString(_lastLocationNameKey, cityName);
+              return cityName;
+            }
+          }
+        } catch (e) {
+          debugPrint('Error getting location name: $e');
+          // On error, try to fall back to saved name
+          final savedLocationName = prefs.getString(_lastLocationNameKey);
+          if (savedLocationName != null && savedLocationName.isNotEmpty) {
+            return savedLocationName;
+          }
+        }
+
+        // If geocoding fails and no saved name, return formatted coordinates
         return '${coordinates.latitude.toStringAsFixed(2)}°, ${coordinates.longitude.toStringAsFixed(2)}°';
       }
 

@@ -802,7 +802,7 @@ class SettingsScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Center(
               child: Text(
-                l10n?.translate('settings.version') ?? 'الإصدار 1.0.1+2',
+                l10n?.translate('settings.version') ?? 'الإصدار 1.1.0',
                 style: theme.textTheme.bodyMedium,
               ),
             ),

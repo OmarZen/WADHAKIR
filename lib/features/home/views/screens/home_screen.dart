@@ -3,12 +3,6 @@ import 'package:hijri/hijri_calendar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_cubit.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
-import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
-import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
-import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
-import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
-import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
-import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/features/home/views/widgets/hadith_card_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/prayer_card_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/welcome_section_widget.dart';
@@ -20,28 +14,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Create prayer times dependencies
-    final repository = PrayerTimesRepositoryImpl();
-    final getPrayerTimesUseCase = GetPrayerTimesUseCase(repository);
-    final getPrayerTimesRangeUseCase = GetPrayerTimesRangeUseCase(repository);
-    final getCalculationMethodUseCase = GetCalculationMethodUseCase(repository);
-    final setCalculationMethodUseCase = SetCalculationMethodUseCase(repository);
-
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => UnsplashCubit()..fetchMosqueImages(),
-        ),
-        BlocProvider(
-          create: (context) => PrayerTimesCubit(
-            getPrayerTimesUseCase,
-            getPrayerTimesRangeUseCase,
-            getCalculationMethodUseCase,
-            setCalculationMethodUseCase,
-            repository: repository,
-          )..loadPrayerTimes(),
-        ),
-      ],
+    return BlocProvider(
+      create: (context) => UnsplashCubit()..fetchMosqueImages(),
       child: const HomeScreenContent(),
     );
   }

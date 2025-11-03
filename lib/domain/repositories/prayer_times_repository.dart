@@ -1,25 +1,25 @@
-import 'package:adhan/adhan.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 
 abstract class PrayerTimesRepository {
   Future<PrayerTimesModel> getPrayerTimes({
     required DateTime date,
-    CalculationMethod? calculationMethod,
+    CalculationParameters? calculationParameters,
     Madhab? madhab,
   });
 
   Future<Map<DateTime, PrayerTimesModel>> getPrayerTimesForRange({
     required DateTime startDate,
     required DateTime endDate,
-    CalculationMethod? calculationMethod,
+    CalculationParameters? calculationParameters,
     Madhab? madhab,
   });
 
   Future<void> requestLocationPermission();
 
-  Future<CalculationMethod> getCalculationMethod();
+  Future<CalculationParameters> getCalculationParameters();
 
-  Future<void> setCalculationMethod(CalculationMethod method);
+  Future<void> setCalculationParameters(CalculationParameters parameters);
 
   Future<Madhab> getMadhab();
 

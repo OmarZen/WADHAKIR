@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
@@ -123,7 +123,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       maghrib: adjustedMaghrib,
       isha: adjustedIsha,
       date: model.date,
-      calculationMethod: model.calculationMethod,
+      calculationParameters: model.calculationParameters,
       coordinates: model.coordinates,
     );
   }
@@ -219,9 +219,9 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   }
 
   // Change calculation method
-  Future<void> setCalculationMethod(CalculationMethod method) async {
+  Future<void> setCalculationMethod(CalculationParameters parameters) async {
     try {
-      await _setCalculationMethodUseCase(method);
+      await _setCalculationMethodUseCase(parameters);
 
       // Reload prayer times with new method
       await loadPrayerTimes();
@@ -230,8 +230,8 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     }
   }
 
-  // Get the current calculation method
-  Future<CalculationMethod> getCalculationMethod() async {
+  // Get the current calculation parameters
+  Future<CalculationParameters> getCalculationMethod() async {
     return await _getCalculationMethodUseCase();
   }
 

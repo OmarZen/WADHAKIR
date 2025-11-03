@@ -2,17 +2,13 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/widgets/islamic_icons.dart';
-import 'package:adhan/adhan.dart' show CalculationMethod;
 import 'package:wadhakir/core/localization/app_localizations.dart';
-import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
+import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
-import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
-import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
-import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
-import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/countdown_timer.dart';
 import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/prayer_settings_dialog.dart';
@@ -33,23 +29,9 @@ class PrayerTimesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Injecting dependencies manually for now (could be replaced with a proper DI solution)
-    final repository = PrayerTimesRepositoryImpl();
-    final getPrayerTimesUseCase = GetPrayerTimesUseCase(repository);
-    final getPrayerTimesRangeUseCase = GetPrayerTimesRangeUseCase(repository);
-    final getCalculationMethodUseCase = GetCalculationMethodUseCase(repository);
-    final setCalculationMethodUseCase = SetCalculationMethodUseCase(repository);
-
-    return BlocProvider(
-      create: (context) => PrayerTimesCubit(
-        getPrayerTimesUseCase,
-        getPrayerTimesRangeUseCase,
-        getCalculationMethodUseCase,
-        setCalculationMethodUseCase,
-        repository: repository,
-      )..loadPrayerTimes(),
-      child: const _PrayerTimesScreenContent(),
-    );
+    // Use the global PrayerTimesCubit from the app-level provider
+    // No need to create a new instance here
+    return const _PrayerTimesScreenContent();
   }
 }
 
@@ -398,7 +380,7 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
                         context, size, prayerTimes, isToday, fadeAnimation),
 
                 // Information about calculation method
-                FutureBuilder<CalculationMethod>(
+                FutureBuilder<CalculationParameters>(
                   future:
                       context.read<PrayerTimesCubit>().getCalculationMethod(),
                   builder: (context, snapshot) {
@@ -406,43 +388,12 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
                             'prayer_times.loading_calculation_method') ??
                         'جاري التحميل...';
 
-                    if (snapshot.hasData) {
-                      switch (snapshot.data) {
-                        case CalculationMethod.muslim_world_league:
-                          methodName = l10n?.translate(
-                                  'prayer_times.muslim_world_league') ??
-                              'رابطة العالم الإسلامي';
-                          break;
-                        case CalculationMethod.egyptian:
-                          methodName =
-                              l10n?.translate('prayer_times.egyptian') ??
-                                  'الهيئة المصرية العامة للمساحة';
-                          break;
-                        case CalculationMethod.karachi:
-                          methodName =
-                              l10n?.translate('prayer_times.karachi') ??
-                                  'جامعة العلوم الإسلامية، كراتشي';
-                          break;
-                        case CalculationMethod.umm_al_qura:
-                          methodName =
-                              l10n?.translate('prayer_times.umm_al_qura') ??
-                                  'جامعة أم القرى، مكة المكرمة';
-                          break;
-                        case CalculationMethod.north_america:
-                          methodName =
-                              l10n?.translate('prayer_times.north_america') ??
-                                  'الجمعية الإسلامية لأمريكا الشمالية';
-                          break;
-                        case CalculationMethod.moon_sighting_committee:
-                          methodName = l10n?.translate(
-                                  'prayer_times.moon_sighting_committee') ??
-                              'لجنة رؤية الهلال';
-                          break;
-                        default:
-                          methodName = l10n?.translate(
-                                  'prayer_times.default_calculation_method') ??
-                              'طريقة الحساب الافتراضية';
-                      }
+                    if (snapshot.hasData && snapshot.data != null) {
+                      // Get method name from CalculationParameters using mapper
+                      final methodKey =
+                          CalculationMethodMapper.getMethodName(snapshot.data!);
+                      methodName =
+                          CalculationMethodMapper.getArabicName(methodKey);
                     }
 
                     return Container(

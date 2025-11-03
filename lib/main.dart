@@ -28,11 +28,17 @@ import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/repositories/quran_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_place_of_revelation.dart';
 import 'package:wadhakir/data/repositories/radio_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_surah_by_number_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_verses_by_surah_usecase.dart';
 import 'package:wadhakir/core/localization/app_localizations_delegate.dart';
+import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
+import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 import 'package:wadhakir/features/prayer_times/presentation/widgets/prayer_times_home_widget.dart';
 
 void main() async {
@@ -70,6 +76,7 @@ void main() async {
   // Create repositories
   final appSettingsRepository = AppSettingsRepositoryImpl(sharedPreferences);
   final quranRepository = QuranRepositoryImpl();
+  final prayerTimesRepository = PrayerTimesRepositoryImpl();
 
   // Create settings use cases
   final getSettingsUseCase = GetSettingsUseCase(appSettingsRepository);
@@ -90,6 +97,15 @@ void main() async {
     quranRepository,
   );
 
+  // Create prayer times use cases
+  final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
+  final getPrayerTimesRangeUseCase =
+      GetPrayerTimesRangeUseCase(prayerTimesRepository);
+  final getCalculationMethodUseCase =
+      GetCalculationMethodUseCase(prayerTimesRepository);
+  final setCalculationMethodUseCase =
+      SetCalculationMethodUseCase(prayerTimesRepository);
+
   runApp(
     MyApp(
       // Settings
@@ -104,6 +120,12 @@ void main() async {
       getSurahByNumberUseCase: getSurahByNumberUseCase,
       getVersesBySurahUseCase: getVersesBySurahUseCase,
       getPlaceOfRevelationUseCase: getPlaceOfRevelationUseCase,
+      // Prayer Times
+      getPrayerTimesUseCase: getPrayerTimesUseCase,
+      getPrayerTimesRangeUseCase: getPrayerTimesRangeUseCase,
+      getCalculationMethodUseCase: getCalculationMethodUseCase,
+      setCalculationMethodUseCase: setCalculationMethodUseCase,
+      prayerTimesRepository: prayerTimesRepository,
     ),
   );
 
@@ -126,6 +148,13 @@ class MyApp extends StatelessWidget {
   final GetVersesBySurahUseCase getVersesBySurahUseCase;
   final GetPlaceOfRevelationUseCase getPlaceOfRevelationUseCase;
 
+  // Prayer Times
+  final GetPrayerTimesUseCase getPrayerTimesUseCase;
+  final GetPrayerTimesRangeUseCase getPrayerTimesRangeUseCase;
+  final GetCalculationMethodUseCase getCalculationMethodUseCase;
+  final SetCalculationMethodUseCase setCalculationMethodUseCase;
+  final PrayerTimesRepositoryImpl prayerTimesRepository;
+
   const MyApp({
     super.key,
     // Settings
@@ -140,6 +169,12 @@ class MyApp extends StatelessWidget {
     required this.getSurahByNumberUseCase,
     required this.getVersesBySurahUseCase,
     required this.getPlaceOfRevelationUseCase,
+    // Prayer Times
+    required this.getPrayerTimesUseCase,
+    required this.getPrayerTimesRangeUseCase,
+    required this.getCalculationMethodUseCase,
+    required this.setCalculationMethodUseCase,
+    required this.prayerTimesRepository,
   });
 
   @override
@@ -170,6 +205,16 @@ class MyApp extends StatelessWidget {
         BlocProvider<RadioCubit>(
           create: (_) => RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
             ..loadStations(),
+          lazy: false,
+        ),
+        BlocProvider<PrayerTimesCubit>(
+          create: (_) => PrayerTimesCubit(
+            getPrayerTimesUseCase,
+            getPrayerTimesRangeUseCase,
+            getCalculationMethodUseCase,
+            setCalculationMethodUseCase,
+            repository: prayerTimesRepository,
+          )..loadPrayerTimes(),
           lazy: false,
         ),
       ],

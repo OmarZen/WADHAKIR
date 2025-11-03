@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
-import 'package:adhan/adhan.dart';
 import 'package:equatable/equatable.dart';
+import 'package:adhan_dart/adhan_dart.dart';
+import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
 
 class PrayerTimesModel extends Equatable {
   final DateTime fajr;
@@ -10,7 +11,7 @@ class PrayerTimesModel extends Equatable {
   final DateTime maghrib;
   final DateTime isha;
   final DateTime date;
-  final CalculationMethod calculationMethod;
+  final CalculationParameters calculationParameters;
   final Coordinates coordinates;
 
   const PrayerTimesModel({
@@ -21,7 +22,7 @@ class PrayerTimesModel extends Equatable {
     required this.maghrib,
     required this.isha,
     required this.date,
-    required this.calculationMethod,
+    required this.calculationParameters,
     required this.coordinates,
   });
 
@@ -60,26 +61,29 @@ class PrayerTimesModel extends Equatable {
       maghrib: parseTime(json['maghrib']),
       isha: parseTime(json['isha']),
       date: DateTime.parse(json['date']),
-      calculationMethod: CalculationMethod.egyptian,
-      coordinates: Coordinates(0, 0), // Default coordinates
+      calculationParameters:
+          CalculationMethodMapper.getParameters('muslim_world_league'),
+      coordinates: const Coordinates(0, 0), // Default coordinates
     );
   }
 
   factory PrayerTimesModel.fromPrayerTimes(
     PrayerTimes prayerTimes, {
-    required CalculationMethod calculationMethod,
+    required CalculationParameters calculationParameters,
     required Coordinates coordinates,
     required DateTime date,
   }) {
+    // Convert UTC times to local time
+    // adhan_dart returns times in UTC, we need to convert to local timezone
     return PrayerTimesModel(
-      fajr: prayerTimes.fajr,
-      sunrise: prayerTimes.sunrise,
-      dhuhr: prayerTimes.dhuhr,
-      asr: prayerTimes.asr,
-      maghrib: prayerTimes.maghrib,
-      isha: prayerTimes.isha,
+      fajr: prayerTimes.fajr.toLocal(),
+      sunrise: prayerTimes.sunrise.toLocal(),
+      dhuhr: prayerTimes.dhuhr.toLocal(),
+      asr: prayerTimes.asr.toLocal(),
+      maghrib: prayerTimes.maghrib.toLocal(),
+      isha: prayerTimes.isha.toLocal(),
       date: date,
-      calculationMethod: calculationMethod,
+      calculationParameters: calculationParameters,
       coordinates: coordinates,
     );
   }
@@ -98,11 +102,14 @@ class PrayerTimesModel extends Equatable {
     if (now.isBefore(isha)) return isha;
 
     // If all prayers for today have passed, return tomorrow's Fajr
-    final dateComponents =
-        DateComponents.from(date.add(const Duration(days: 1)));
-    final params = calculationMethod.getParameters();
-    final prayerTimes = PrayerTimes(coordinates, dateComponents, params);
-    return prayerTimes.fajr;
+    final tomorrowDate = date.add(const Duration(days: 1));
+    final tomorrowPrayerTimes = PrayerTimes(
+      coordinates: coordinates,
+      date: tomorrowDate,
+      calculationParameters: calculationParameters,
+      precision: true,
+    );
+    return tomorrowPrayerTimes.fajr.toLocal();
   }
 
   String get nextPrayerName {
@@ -128,12 +135,14 @@ class PrayerTimesModel extends Equatable {
     // Find current prayer time (the last prayer that occurred)
     if (now.isBefore(fajr)) {
       // Before Fajr, use Isha from yesterday
-      final yesterdayComponents =
-          DateComponents.from(date.subtract(const Duration(days: 1)));
-      final params = calculationMethod.getParameters();
-      final yesterdayPrayers =
-          PrayerTimes(coordinates, yesterdayComponents, params);
-      currentPrayer = yesterdayPrayers.isha;
+      final yesterdayDate = date.subtract(const Duration(days: 1));
+      final yesterdayPrayers = PrayerTimes(
+        coordinates: coordinates,
+        date: yesterdayDate,
+        calculationParameters: calculationParameters,
+        precision: true,
+      );
+      currentPrayer = yesterdayPrayers.isha.toLocal();
     } else if (now.isBefore(sunrise)) {
       currentPrayer = fajr;
     } else if (now.isBefore(dhuhr)) {
@@ -162,7 +171,7 @@ class PrayerTimesModel extends Equatable {
         maghrib,
         isha,
         date,
-        calculationMethod,
+        calculationParameters,
         coordinates
       ];
 }

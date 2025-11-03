@@ -1,9 +1,10 @@
-import 'package:adhan/adhan.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
+import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
 import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
 
 class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
@@ -18,27 +19,30 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   @override
   Future<PrayerTimesModel> getPrayerTimes({
     required DateTime date,
-    CalculationMethod? calculationMethod,
+    CalculationParameters? calculationParameters,
     Madhab? madhab,
   }) async {
     // Ensure we have coordinates
     final coordinates = await _getCoordinates();
 
-    // Get calculation method and madhab (either from parameters or saved preferences)
-    final method = calculationMethod ?? await getCalculationMethod();
+    // Get calculation parameters and madhab (either from parameters or saved preferences)
+    final params = calculationParameters ?? await getCalculationParameters();
     final madhabValue = madhab ?? await getMadhab();
 
-    // Set up parameters for prayer calculation
-    final params = method.getParameters();
+    // Set madhab on parameters
     params.madhab = madhabValue;
 
-    // Calculate prayer times
-    final dateComponents = DateComponents.from(date);
-    final prayerTimes = PrayerTimes(coordinates, dateComponents, params);
+    // Calculate prayer times using adhan_dart
+    final prayerTimes = PrayerTimes(
+      coordinates: coordinates,
+      date: date,
+      calculationParameters: params,
+      precision: true, // Use second-level precision
+    );
 
     return PrayerTimesModel.fromPrayerTimes(
       prayerTimes,
-      calculationMethod: method,
+      calculationParameters: params,
       coordinates: coordinates,
       date: date,
     );
@@ -48,7 +52,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   Future<Map<DateTime, PrayerTimesModel>> getPrayerTimesForRange({
     required DateTime startDate,
     required DateTime endDate,
-    CalculationMethod? calculationMethod,
+    CalculationParameters? calculationParameters,
     Madhab? madhab,
   }) async {
     // Calculate the number of days in the range
@@ -60,7 +64,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       final date = startDate.add(Duration(days: i));
       final prayerTimesForDay = await getPrayerTimes(
         date: date,
-        calculationMethod: calculationMethod,
+        calculationParameters: calculationParameters,
         madhab: madhab,
       );
 
@@ -88,43 +92,44 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   }
 
   @override
-  Future<CalculationMethod> getCalculationMethod() async {
+  Future<CalculationParameters> getCalculationParameters() async {
     final prefs = await SharedPreferences.getInstance();
-    final methodIndex = prefs.getInt(_calculationMethodKey);
+    final methodName = prefs.getString(_calculationMethodKey);
 
-    // Default to Egyptian (الهيئة المصرية العامة للمساحة) if not set
-    if (methodIndex == null) {
-      return CalculationMethod.egyptian;
+    // Default to Muslim World League if not set
+    if (methodName == null) {
+      return CalculationMethodMapper.getParameters('muslim_world_league');
     }
 
-    // Convert the index back to a CalculationMethod enum
-    return CalculationMethod.values[methodIndex];
+    return CalculationMethodMapper.getParameters(methodName);
   }
 
   @override
-  Future<void> setCalculationMethod(CalculationMethod method) async {
+  Future<void> setCalculationParameters(
+      CalculationParameters parameters) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_calculationMethodKey, method.index);
+    final methodName = CalculationMethodMapper.getMethodName(parameters);
+    await prefs.setString(_calculationMethodKey, methodName);
   }
 
   @override
   Future<Madhab> getMadhab() async {
     final prefs = await SharedPreferences.getInstance();
-    final madhabIndex = prefs.getInt(_madhabKey);
+    final madhabString = prefs.getString(_madhabKey);
 
     // Default to Shafi if not set
-    if (madhabIndex == null) {
+    if (madhabString == null || madhabString == 'shafi') {
       return Madhab.shafi;
     }
 
-    // Convert the index back to a Madhab enum
-    return Madhab.values[madhabIndex];
+    return Madhab.hanafi;
   }
 
   @override
   Future<void> setMadhab(Madhab madhab) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_madhabKey, madhab.index);
+    final madhabString = madhab == Madhab.hanafi ? 'hanafi' : 'shafi';
+    await prefs.setString(_madhabKey, madhabString);
   }
 
   Future<Coordinates> _getCoordinates() async {

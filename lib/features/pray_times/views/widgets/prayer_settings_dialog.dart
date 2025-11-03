@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/widgets/islamic_icons.dart';
-import 'package:adhan/adhan.dart' show CalculationMethod, Madhab;
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 
@@ -203,10 +204,15 @@ class PrayerSettingsDialog extends StatelessWidget {
   Widget _buildCalculationMethodsSection(
       BuildContext context, Size size, Color primaryColor) {
     return SliverToBoxAdapter(
-      child: FutureBuilder<CalculationMethod>(
+      child: FutureBuilder<CalculationParameters>(
         future: cubit.getCalculationMethod(),
         builder: (context, snapshot) {
           final currentMethod = snapshot.data;
+          String? currentMethodName;
+          if (currentMethod != null) {
+            currentMethodName =
+                CalculationMethodMapper.getMethodName(currentMethod);
+          }
           final l10n = AppLocalizations.of(context);
 
           return _SettingsSection(
@@ -232,10 +238,9 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle: l10n?.translate(
                           'prayer_times.muslim_world_league_description') ??
                       'زاوية الفجر: 18، زاوية العشاء: 17',
-                  isSelected:
-                      currentMethod == CalculationMethod.muslim_world_league,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.muslim_world_league),
+                  isSelected: currentMethodName == 'muslim_world_league',
+                  onTap: () =>
+                      _setCalculationMethod(context, 'muslim_world_league'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.egyptian') ??
@@ -243,9 +248,8 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle:
                       l10n?.translate('prayer_times.egyptian_description') ??
                           'زاوية الفجر: 19.5، زاوية العشاء: 17.5',
-                  isSelected: currentMethod == CalculationMethod.egyptian,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.egyptian),
+                  isSelected: currentMethodName == 'egyptian',
+                  onTap: () => _setCalculationMethod(context, 'egyptian'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.karachi') ??
@@ -253,9 +257,8 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle:
                       l10n?.translate('prayer_times.karachi_description') ??
                           'زاوية الفجر: 18، زاوية العشاء: 18',
-                  isSelected: currentMethod == CalculationMethod.karachi,
-                  onTap: () =>
-                      _setCalculationMethod(context, CalculationMethod.karachi),
+                  isSelected: currentMethodName == 'karachi',
+                  onTap: () => _setCalculationMethod(context, 'karachi'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.umm_al_qura') ??
@@ -263,26 +266,23 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle:
                       l10n?.translate('prayer_times.umm_al_qura_description') ??
                           'زاوية الفجر: 18، الفترة بعد المغرب: 90 دقيقة',
-                  isSelected: currentMethod == CalculationMethod.umm_al_qura,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.umm_al_qura),
+                  isSelected: currentMethodName == 'umm_al_qura',
+                  onTap: () => _setCalculationMethod(context, 'umm_al_qura'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.dubai') ??
                       'دولة الإمارات العربية المتحدة',
                   subtitle: l10n?.translate('prayer_times.dubai_description') ??
                       'زاوية الفجر والعشاء: 18.2',
-                  isSelected: currentMethod == CalculationMethod.dubai,
-                  onTap: () =>
-                      _setCalculationMethod(context, CalculationMethod.dubai),
+                  isSelected: currentMethodName == 'dubai',
+                  onTap: () => _setCalculationMethod(context, 'dubai'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.qatar') ?? 'دولة قطر',
                   subtitle: l10n?.translate('prayer_times.qatar_description') ??
                       'نسخة معدلة من طريقة أم القرى. زاوية الفجر: 18، فترة العشاء: 90',
-                  isSelected: currentMethod == CalculationMethod.qatar,
-                  onTap: () =>
-                      _setCalculationMethod(context, CalculationMethod.qatar),
+                  isSelected: currentMethodName == 'qatar',
+                  onTap: () => _setCalculationMethod(context, 'qatar'),
                 ),
                 _CalculationMethodTile(
                   title:
@@ -290,9 +290,8 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle:
                       l10n?.translate('prayer_times.kuwait_description') ??
                           'زاوية الفجر: 18، زاوية العشاء: 17.5',
-                  isSelected: currentMethod == CalculationMethod.kuwait,
-                  onTap: () =>
-                      _setCalculationMethod(context, CalculationMethod.kuwait),
+                  isSelected: currentMethodName == 'kuwait',
+                  onTap: () => _setCalculationMethod(context, 'kuwait'),
                 ),
                 _CalculationMethodTile(
                   title:
@@ -301,10 +300,9 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle: l10n?.translate(
                           'prayer_times.moon_sighting_committee_description') ??
                       'زاوية الفجر: 18، زاوية العشاء: 18، مع تعديلات موسمية',
-                  isSelected: currentMethod ==
-                      CalculationMethod.moon_sighting_committee,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.moon_sighting_committee),
+                  isSelected: currentMethodName == 'moonsighting_committee',
+                  onTap: () =>
+                      _setCalculationMethod(context, 'moonsighting_committee'),
                 ),
                 _CalculationMethodTile(
                   title:
@@ -312,27 +310,24 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle:
                       l10n?.translate('prayer_times.singapore_description') ??
                           'زاوية الفجر: 20، زاوية العشاء: 18',
-                  isSelected: currentMethod == CalculationMethod.singapore,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.singapore),
+                  isSelected: currentMethodName == 'singapore',
+                  onTap: () => _setCalculationMethod(context, 'singapore'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.turkey') ?? 'تركيا',
                   subtitle:
                       l10n?.translate('prayer_times.turkey_description') ??
                           'زاوية الفجر: 18، زاوية العشاء: 17',
-                  isSelected: currentMethod == CalculationMethod.turkey,
-                  onTap: () =>
-                      _setCalculationMethod(context, CalculationMethod.turkey),
+                  isSelected: currentMethodName == 'turkiye',
+                  onTap: () => _setCalculationMethod(context, 'turkiye'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.tehran') ?? 'طهران',
                   subtitle: l10n
                           ?.translate('prayer_times.tehran_description') ??
                       'زاوية الفجر: 17.7، زاوية العشاء: 14، زاوية المغرب: 4.5',
-                  isSelected: currentMethod == CalculationMethod.tehran,
-                  onTap: () =>
-                      _setCalculationMethod(context, CalculationMethod.tehran),
+                  isSelected: currentMethodName == 'tehran',
+                  onTap: () => _setCalculationMethod(context, 'tehran'),
                 ),
                 _CalculationMethodTile(
                   title: l10n?.translate('prayer_times.north_america') ??
@@ -340,9 +335,8 @@ class PrayerSettingsDialog extends StatelessWidget {
                   subtitle: l10n?.translate(
                           'prayer_times.north_america_description') ??
                       'زاوية الفجر: 15، زاوية العشاء: 15 (غير موصى به)',
-                  isSelected: currentMethod == CalculationMethod.north_america,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.north_america),
+                  isSelected: currentMethodName == 'north_america',
+                  onTap: () => _setCalculationMethod(context, 'north_america'),
                 ),
               ],
             ),
@@ -575,8 +569,9 @@ class PrayerSettingsDialog extends StatelessWidget {
   }
 
   // Actions
-  void _setCalculationMethod(BuildContext context, CalculationMethod method) {
-    BlocProvider.of<PrayerTimesCubit>(context).setCalculationMethod(method);
+  void _setCalculationMethod(BuildContext context, String methodName) {
+    final parameters = CalculationMethodMapper.getParameters(methodName);
+    BlocProvider.of<PrayerTimesCubit>(context).setCalculationMethod(parameters);
   }
 
   void _setMadhab(BuildContext context, Madhab madhab) {

@@ -119,7 +119,28 @@ class RadioCubit extends Cubit<RadioState> {
         ),
       );
     } catch (e) {
-      emit(RadioError(e.toString()));
+      // Handle different types of errors
+      String errorMessage;
+      String errorType;
+
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('NetworkException') ||
+          e.toString().contains('Failed host lookup') ||
+          e.toString().contains('No address associated with hostname')) {
+        errorType = 'network';
+        errorMessage = 'لا يوجد اتصال بالإنترنت';
+      } else if (e.toString().contains('TimeoutException')) {
+        errorType = 'timeout';
+        errorMessage = 'انتهت مهلة الاتصال';
+      } else if (e.toString().contains('FormatException')) {
+        errorType = 'format';
+        errorMessage = 'خطأ في تنسيق البيانات';
+      } else {
+        errorType = 'unknown';
+        errorMessage = 'حدث خطأ غير متوقع';
+      }
+
+      emit(RadioError(errorMessage, errorType: errorType));
     }
   }
 
@@ -153,7 +174,28 @@ class RadioCubit extends Cubit<RadioState> {
       if (errorState is RadioLoaded) {
         emit(errorState.copyWith(isLoading: false));
       }
-      emit(RadioError('Failed to play station: ${e.toString()}'));
+
+      // Handle different types of playback errors
+      String errorMessage;
+      String errorType;
+
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('NetworkException') ||
+          e.toString().contains('Failed host lookup')) {
+        errorType = 'network';
+        errorMessage = 'لا يوجد اتصال بالإنترنت';
+      } else if (e.toString().contains('TimeoutException')) {
+        errorType = 'timeout';
+        errorMessage = 'انتهت مهلة الاتصال';
+      } else if (e.toString().contains('Invalid audio')) {
+        errorType = 'playback';
+        errorMessage = 'تعذر تشغيل هذه الإذاعة';
+      } else {
+        errorType = 'playback';
+        errorMessage = 'فشل تشغيل الإذاعة';
+      }
+
+      emit(RadioError(errorMessage, errorType: errorType));
     }
   }
 
@@ -183,7 +225,20 @@ class RadioCubit extends Cubit<RadioState> {
       if (errorState is RadioLoaded) {
         emit(errorState.copyWith(isLoading: false));
       }
-      emit(RadioError('Failed to toggle playback: ${e.toString()}'));
+
+      String errorMessage;
+      String errorType;
+
+      if (e.toString().contains('SocketException') ||
+          e.toString().contains('NetworkException')) {
+        errorType = 'network';
+        errorMessage = 'لا يوجد اتصال بالإنترنت';
+      } else {
+        errorType = 'playback';
+        errorMessage = 'فشل التشغيل';
+      }
+
+      emit(RadioError(errorMessage, errorType: errorType));
     }
   }
 

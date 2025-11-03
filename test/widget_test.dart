@@ -10,10 +10,15 @@ import 'package:wadhakir/domain/usecases/set_font_size_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/data/repositories/quran_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_place_of_revelation.dart';
+import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_surah_by_number_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_verses_by_surah_usecase.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
+import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 // This is a basic Flutter widget test.
 //
 // To perform an interaction with a widget in your test, use the WidgetTester
@@ -25,6 +30,8 @@ void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // shared preferences
     final sharedPreferences = await SharedPreferences.getInstance();
+    final prayerTimesRepository = PrayerTimesRepositoryImpl();
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(
       MyApp(
@@ -52,6 +59,14 @@ void main() {
         getPlaceOfRevelationUseCase: GetPlaceOfRevelationUseCase(
           QuranRepositoryImpl(),
         ),
+        getPrayerTimesUseCase: GetPrayerTimesUseCase(prayerTimesRepository),
+        getPrayerTimesRangeUseCase:
+            GetPrayerTimesRangeUseCase(prayerTimesRepository),
+        getCalculationMethodUseCase:
+            GetCalculationMethodUseCase(prayerTimesRepository),
+        setCalculationMethodUseCase:
+            SetCalculationMethodUseCase(prayerTimesRepository),
+        prayerTimesRepository: prayerTimesRepository,
       ),
     );
 

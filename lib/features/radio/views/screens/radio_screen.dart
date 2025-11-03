@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
@@ -66,213 +67,253 @@ class _RadioScreenState extends State<RadioScreen> {
     final size = MediaQuery.of(context).size;
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: _CustomRadioAppBar(
-        title: l10n?.translate('radio.title') ?? 'Radio',
-        onRefresh: () => context.read<RadioCubit>().loadStations(),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              size.width * 0.04,
-              size.width * 0.04,
-              size.width * 0.04,
-              8,
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                ),
-              ),
-              child: Row(
+    return BlocListener<RadioCubit, RadioState>(
+      listener: (context, state) {
+        // Show snackbar for playback errors (so user doesn't lose the list)
+        if (state is RadioError && state.errorType == 'playback') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
                 children: [
-                  const SizedBox(width: 10),
                   Icon(
-                    Icons.search_rounded,
-                    color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                    Icons.error_outline_rounded,
+                    color: Colors.white,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      textInputAction: TextInputAction.search,
-                      onChanged: (v) => setState(() => _query = v.trim()),
-                      decoration: InputDecoration(
-                        hintText: l10n?.translate('radio.search') ?? 'Search',
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 0,
-                        ),
-                      ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(state.message)),
+                ],
+              ),
+              backgroundColor: Colors.blue.shade700,
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(
+                label: 'حسناً',
+                textColor: Colors.white,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                },
+              ),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          // Return to loaded state after showing error
+          context.read<RadioCubit>().loadStations();
+        }
+      },
+      child: Scaffold(
+        appBar: _CustomRadioAppBar(
+          title: l10n?.translate('radio.title') ?? 'Radio',
+          onRefresh: () => context.read<RadioCubit>().loadStations(),
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                size.width * 0.04,
+                size.width * 0.04,
+                size.width * 0.04,
+                8,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 6),
                     ),
+                  ],
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
                   ),
-                  if (_query.isNotEmpty)
-                    IconButton(
-                      style: IconButton.styleFrom(padding: EdgeInsets.zero),
-                      tooltip: l10n?.translate('radio.clear') ?? 'Clear',
-                      icon: const Icon(Icons.close_rounded),
-                      color: theme.colorScheme.primary,
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _query = '');
-                      },
-                    )
-                  else
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 10),
                     Icon(
                       Icons.search_rounded,
                       color: theme.colorScheme.primary.withValues(alpha: 0.8),
                     ),
-                  SizedBox(width: size.width * 0.03),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.04,
-              vertical: 6,
-            ),
-            child: Container(
-              height: 52,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                ),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  children: _categories.map((c) {
-                    final selected = _category == c['key'];
-                    return Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 6),
-                      child: ChoiceChip(
-                        showCheckmark: false,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: const VisualDensity(
-                          horizontal: -2,
-                          vertical: -2,
-                        ),
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _categoryIcons[c['key']] ?? Icons.label_rounded,
-                              size: 18,
-                              color: selected
-                                  ? Colors.white
-                                  : theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(c['label']!),
-                          ],
-                        ),
-                        selected: selected,
-                        onSelected: (_) =>
-                            setState(() => _category = c['key']!),
-                        selectedColor: theme.colorScheme.primary,
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                        backgroundColor: theme.colorScheme.surface,
-                        shape: StadiumBorder(
-                          side: BorderSide(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.18,
-                            ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        textInputAction: TextInputAction.search,
+                        onChanged: (v) => setState(() => _query = v.trim()),
+                        decoration: InputDecoration(
+                          hintText: l10n?.translate('radio.search') ?? 'Search',
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 0,
                           ),
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    if (_query.isNotEmpty)
+                      IconButton(
+                        style: IconButton.styleFrom(padding: EdgeInsets.zero),
+                        tooltip: l10n?.translate('radio.clear') ?? 'Clear',
+                        icon: const Icon(Icons.close_rounded),
+                        color: theme.colorScheme.primary,
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      )
+                    else
+                      Icon(
+                        Icons.search_rounded,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                      ),
+                    SizedBox(width: size.width * 0.03),
+                  ],
                 ),
               ),
             ),
-          ),
-          SizedBox(height: size.height * 0.01),
-          Expanded(
-            child: BlocBuilder<RadioCubit, RadioState>(
-              builder: (context, state) {
-                if (state is RadioLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is RadioError) {
-                  return Center(child: Text(state.message));
-                }
-                if (state is RadioLoaded) {
-                  final filtered = _applyCategory(state)
-                      .where(
-                        (s) =>
-                            s.name.toLowerCase().contains(_query.toLowerCase()),
-                      )
-                      .toList();
-
-                  if (filtered.isEmpty) {
-                    return Center(
-                      child: Text(
-                        l10n?.translate('radio.no_results') ?? 'No results',
-                      ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.04,
+                vertical: 6,
+              ),
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    children: _categories.map((c) {
+                      final selected = _category == c['key'];
+                      return Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 6),
+                        child: ChoiceChip(
+                          showCheckmark: false,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: const VisualDensity(
+                            horizontal: -2,
+                            vertical: -2,
+                          ),
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _categoryIcons[c['key']] ?? Icons.label_rounded,
+                                size: 18,
+                                color: selected
+                                    ? Colors.white
+                                    : theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(c['label']!),
+                            ],
+                          ),
+                          selected: selected,
+                          onSelected: (_) =>
+                              setState(() => _category = c['key']!),
+                          selectedColor: theme.colorScheme.primary,
+                          labelStyle: TextStyle(
+                            color: selected
+                                ? Colors.white
+                                : theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          backgroundColor: theme.colorScheme.surface,
+                          shape: StadiumBorder(
+                            side: BorderSide(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: size.height * 0.01),
+            Expanded(
+              child: BlocBuilder<RadioCubit, RadioState>(
+                builder: (context, state) {
+                  if (state is RadioLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is RadioError) {
+                    return _ErrorView(
+                      message: state.message,
+                      errorType: state.errorType,
+                      onRetry: () => context.read<RadioCubit>().loadStations(),
                     );
                   }
+                  if (state is RadioLoaded) {
+                    final filtered = _applyCategory(state)
+                        .where(
+                          (s) => s.name
+                              .toLowerCase()
+                              .contains(_query.toLowerCase()),
+                        )
+                        .toList();
 
-                  return ListView.separated(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: size.width * 0.04,
-                      vertical: size.height * 0.01,
-                    ),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) =>
-                        SizedBox(height: size.height * 0.012),
-                    itemBuilder: (_, i) {
-                      final station = filtered[i];
-                      final isCurrentStation = state.current?.id == station.id;
-                      final isActive = isCurrentStation && state.isPlaying;
-                      final isLoading = isCurrentStation && state.isLoading;
-
-                      return RadioStationListItem(
-                        station: station,
-                        isActive: isActive,
-                        isLoading: isLoading,
-                        onTap: () {
-                          if (isCurrentStation && state.isPlaying) {
-                            // If this station is currently playing, pause it
-                            context.read<RadioCubit>().togglePlayPause();
-                          } else {
-                            // Otherwise, play this station
-                            context.read<RadioCubit>().playStation(station);
-                          }
-                        },
+                    if (filtered.isEmpty) {
+                      return Center(
+                        child: Text(
+                          l10n?.translate('radio.no_results') ?? 'No results',
+                        ),
                       );
-                    },
-                  );
-                }
-                return const SizedBox();
-              },
+                    }
+
+                    return ListView.separated(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.04,
+                        vertical: size.height * 0.01,
+                      ),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) =>
+                          SizedBox(height: size.height * 0.012),
+                      itemBuilder: (_, i) {
+                        final station = filtered[i];
+                        final isCurrentStation =
+                            state.current?.id == station.id;
+                        final isActive = isCurrentStation && state.isPlaying;
+                        final isLoading = isCurrentStation && state.isLoading;
+
+                        return RadioStationListItem(
+                          station: station,
+                          isActive: isActive,
+                          isLoading: isLoading,
+                          onTap: () {
+                            if (isCurrentStation && state.isPlaying) {
+                              // If this station is currently playing, pause it
+                              context.read<RadioCubit>().togglePlayPause();
+                            } else {
+                              // Otherwise, play this station
+                              context.read<RadioCubit>().playStation(station);
+                            }
+                          },
+                        );
+                      },
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
             ),
-          ),
-          // Player bar is now global at the app scaffold level
-          SizedBox(height: size.height * 0.01),
-        ],
+            // Player bar is now global at the app scaffold level
+            SizedBox(height: size.height * 0.01),
+          ],
+        ),
       ),
     );
   }
@@ -484,13 +525,14 @@ class _CustomRadioAppBar extends StatelessWidget
   const _CustomRadioAppBar({required this.title, this.onRefresh});
 
   @override
-  Size get preferredSize => const Size.fromHeight(110);
+  Size get preferredSize => const Size.fromHeight(120);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final Color primary = theme.colorScheme.primary;
     final Color onPrimary = theme.colorScheme.onPrimary;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Material(
       elevation: 0,
@@ -498,59 +540,331 @@ class _CustomRadioAppBar extends StatelessWidget
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [primary, Color.lerp(primary, Colors.black, 0.15)!],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [
+              primary,
+              Color.lerp(primary,
+                  isDark ? Colors.black : const Color(0xFF0D1122), 0.3)!,
+            ],
+            begin: AlignmentDirectional.topStart,
+            end: AlignmentDirectional.bottomEnd,
           ),
           borderRadius: const BorderRadius.vertical(
-            bottom: Radius.circular(24),
+            bottom: Radius.circular(32),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 16,
+              color: primary.withValues(alpha: 0.3),
+              blurRadius: 24,
               offset: const Offset(0, 8),
+              spreadRadius: 0,
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 16),
-            child: Row(
-              children: [
-                if (Navigator.of(context).canPop())
-                  IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).backButtonTooltip,
-                    icon: Icon(Icons.arrow_back_rounded, color: onPrimary),
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  )
-                else
-                  Icon(Icons.radio_rounded, color: onPrimary, size: 28),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: onPrimary,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.2,
-                    ),
+        child: Stack(
+          children: [
+            // Animated background pattern
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(32),
+                ),
+                child: CustomPaint(
+                  painter: _WavePatternPainter(
+                    color: onPrimary.withValues(alpha: 0.05),
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Refresh',
-                  icon: Icon(Icons.refresh_rounded, color: onPrimary),
-                  onPressed: onRefresh,
-                ),
-              ],
+              ),
             ),
-          ),
+            // Content
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        SizedBox(width: 8),
+                        if (Navigator.of(context).canPop())
+                          Container(
+                            decoration: BoxDecoration(
+                              color: onPrimary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: onPrimary.withValues(alpha: 0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: IconButton(
+                              tooltip: MaterialLocalizations.of(context)
+                                  .backButtonTooltip,
+                              icon: Icon(
+                                Icons.arrow_back_rounded,
+                                color: onPrimary,
+                              ),
+                              onPressed: () => Navigator.of(context).maybePop(),
+                            ),
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: onPrimary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: onPrimary.withValues(alpha: 0.2),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: onPrimary.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.radio_rounded,
+                              color: onPrimary,
+                              size: 32,
+                            ),
+                          ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  color: onPrimary,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                  fontSize: 24,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF27AE60),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF27AE60)
+                                              .withValues(alpha: 0.5),
+                                          blurRadius: 8,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'البث المباشر',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: onPrimary.withValues(alpha: 0.9),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: onPrimary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: onPrimary.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: IconButton(
+                            tooltip: 'تحديث',
+                            icon: Icon(Icons.refresh_rounded, color: onPrimary),
+                            onPressed: onRefresh,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Custom painter for wave pattern background
+class _WavePatternPainter extends CustomPainter {
+  final Color color;
+
+  _WavePatternPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final path = Path();
+    final waveHeight = 20.0;
+    final waveLength = size.width / 4;
+
+    for (var i = 0; i < 3; i++) {
+      path.reset();
+      final yOffset = size.height * (0.3 + i * 0.2);
+
+      for (var x = -waveLength; x <= size.width + waveLength; x += 0.5) {
+        final y = yOffset +
+            waveHeight *
+                (0.5 + 0.5 * (i % 2 == 0 ? 1 : -1)) *
+                (1 + 0.3 * i) *
+                math.sin(x / waveLength);
+
+        if (x == -waveLength) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WavePatternPainter oldDelegate) => false;
+}
+
+// Error View Widget
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final String errorType;
+  final VoidCallback onRetry;
+
+  const _ErrorView({
+    required this.message,
+    required this.errorType,
+    required this.onRetry,
+  });
+
+  IconData _getErrorIcon() {
+    switch (errorType) {
+      case 'network':
+        return Icons.wifi_off_rounded;
+      case 'timeout':
+        return Icons.timer_off_rounded;
+      case 'playback':
+        return Icons.error_outline_rounded;
+      default:
+        return Icons.warning_amber_rounded;
+    }
+  }
+
+  Color _getErrorColor(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    switch (errorType) {
+      case 'network':
+        return isDark
+            ? const Color(0xFF48A7E8)
+            : const Color(0xFF3498DB); // Blue from theme
+      case 'timeout':
+        return isDark
+            ? const Color(0xFFF06050)
+            : const Color(0xFFE74C3C); // Red from theme
+      case 'playback':
+        return isDark
+            ? const Color(0xFFE67E22)
+            : const Color(0xFFD35400); // Orange from theme
+      default:
+        return isDark
+            ? const Color(0xFFF1C40F)
+            : const Color(0xFFDAA520); // Gold from theme
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final errorColor = _getErrorColor(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: errorColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getErrorIcon(),
+                size: 80,
+                color: errorColor,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              errorType == 'network'
+                  ? 'تأكد من اتصالك بالإنترنت وحاول مرة أخرى'
+                  : 'حاول مرة أخرى بعد قليل',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('إعادة المحاولة'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: errorColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

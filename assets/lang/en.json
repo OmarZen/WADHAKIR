@@ -169,7 +169,18 @@
     "before_10_min": "10 Minutes Before",
     "before_15_min": "15 Minutes Before",
     "persistent_notification_success": "✅ Persistent notification displayed successfully",
-    "notification_error": "❌ Error"
+    "notification_error": "❌ Error",
+    "adhan_sounds": "Adhan Sounds",
+    "fajr_adhan": "Fajr Adhan",
+    "fajr_adhan_subtitle": "Choose Fajr adhan sound",
+    "regular_adhan": "Other Prayers Adhan",
+    "regular_adhan_subtitle": "Choose adhan sound for Dhuhr, Asr, Maghrib and Isha",
+    "test_adhan": "Test Adhan Sound",
+    "test_fajr": "Test Fajr Adhan",
+    "test_regular": "Test Regular Prayers Adhan",
+    "default_sound_message": "System default notification sound will be used",
+    "playing_adhan": "Playing adhan for",
+    "adhan_error": "❌ Error playing adhan"
   },
   "nav_bar": {
     "home": "Home",

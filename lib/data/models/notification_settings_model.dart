@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+// Sentinel value to distinguish between "not provided" and "explicitly set to null"
+const Object _undefined = Object();
+
 /// Enum for notification timing options
 enum NotificationTiming {
   onTime,
@@ -21,12 +24,14 @@ class PrayerNotificationSettings extends Equatable {
   final NotificationTiming timing;
   final NotificationSound sound;
   final bool vibration;
+  final String? customSoundPath; // Path to custom adhan sound file
 
   const PrayerNotificationSettings({
     required this.enabled,
     required this.timing,
     required this.sound,
     required this.vibration,
+    this.customSoundPath,
   });
 
   factory PrayerNotificationSettings.defaultSettings() {
@@ -35,6 +40,7 @@ class PrayerNotificationSettings extends Equatable {
       timing: NotificationTiming.onTime,
       sound: NotificationSound.defaultSound,
       vibration: true,
+      customSoundPath: null,
     );
   }
 
@@ -43,12 +49,17 @@ class PrayerNotificationSettings extends Equatable {
     NotificationTiming? timing,
     NotificationSound? sound,
     bool? vibration,
+    Object? customSoundPath = _undefined,
   }) {
     return PrayerNotificationSettings(
       enabled: enabled ?? this.enabled,
       timing: timing ?? this.timing,
       sound: sound ?? this.sound,
       vibration: vibration ?? this.vibration,
+      // Use sentinel pattern to distinguish between "not provided" and "set to null"
+      customSoundPath: customSoundPath == _undefined
+          ? this.customSoundPath
+          : customSoundPath as String?,
     );
   }
 
@@ -58,6 +69,7 @@ class PrayerNotificationSettings extends Equatable {
       'timing': timing.index,
       'sound': sound.index,
       'vibration': vibration,
+      'customSoundPath': customSoundPath,
     };
   }
 
@@ -67,11 +79,13 @@ class PrayerNotificationSettings extends Equatable {
       timing: NotificationTiming.values[json['timing'] as int? ?? 0],
       sound: NotificationSound.values[json['sound'] as int? ?? 0],
       vibration: json['vibration'] as bool? ?? true,
+      customSoundPath: json['customSoundPath'] as String?,
     );
   }
 
   @override
-  List<Object?> get props => [enabled, timing, sound, vibration];
+  List<Object?> get props =>
+      [enabled, timing, sound, vibration, customSoundPath];
 }
 
 /// Complete notification settings model

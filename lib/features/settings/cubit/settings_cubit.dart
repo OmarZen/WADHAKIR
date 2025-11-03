@@ -134,6 +134,10 @@ class SettingsCubit extends Cubit<SettingsState> {
     required String prayerName,
     required PrayerNotificationSettings prayerSettings,
   }) async {
+    debugPrint('🔔 CUBIT: updatePrayerNotificationSettings called');
+    debugPrint('🔔 CUBIT: Prayer name: $prayerName');
+    debugPrint('🔔 CUBIT: customSoundPath: ${prayerSettings.customSoundPath}');
+
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;
       final currentNotificationSettings = currentSettings.notificationSettings;
@@ -143,34 +147,79 @@ class SettingsCubit extends Cubit<SettingsState> {
       switch (prayerName.toLowerCase()) {
         case 'fajr':
         case 'الفجر':
+          debugPrint('🔔 CUBIT: Updating Fajr settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
               fajrSettings: prayerSettings);
           break;
         case 'dhuhr':
         case 'الظهر':
+          debugPrint('🔔 CUBIT: Updating Dhuhr settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
               dhuhrSettings: prayerSettings);
           break;
         case 'asr':
         case 'العصر':
+          debugPrint('🔔 CUBIT: Updating Asr settings');
           newNotificationSettings =
               currentNotificationSettings.copyWith(asrSettings: prayerSettings);
           break;
         case 'maghrib':
         case 'المغرب':
+          debugPrint('🔔 CUBIT: Updating Maghrib settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
               maghribSettings: prayerSettings);
           break;
         case 'isha':
         case 'العشاء':
+          debugPrint('🔔 CUBIT: Updating Isha settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
               ishaSettings: prayerSettings);
           break;
         default:
+          debugPrint('🔔 CUBIT: Unknown prayer name: $prayerName');
           return;
       }
 
+      debugPrint('🔔 CUBIT: Calling setNotificationSettings...');
       await setNotificationSettings(newNotificationSettings);
+      debugPrint('🔔 CUBIT: setNotificationSettings completed');
+    } else {
+      debugPrint(
+          '🔔 CUBIT: State is not SettingsLoaded, current state: $state');
+    }
+  }
+
+  /// Update all regular prayers (Dhuhr, Asr, Maghrib, Isha) with the same sound in a single batch
+  Future<void> updateAllRegularPrayersSounds(String? customSoundPath) async {
+    debugPrint('🔔 CUBIT: updateAllRegularPrayersSounds called');
+    debugPrint('🔔 CUBIT: customSoundPath: $customSoundPath');
+
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final notificationSettings = currentSettings.notificationSettings;
+
+      debugPrint('🔔 CUBIT: Updating all 4 regular prayers in single batch');
+
+      // Update all 4 prayers at once
+      final newNotificationSettings = notificationSettings.copyWith(
+        dhuhrSettings: notificationSettings.dhuhrSettings
+            .copyWith(customSoundPath: customSoundPath),
+        asrSettings: notificationSettings.asrSettings
+            .copyWith(customSoundPath: customSoundPath),
+        maghribSettings: notificationSettings.maghribSettings
+            .copyWith(customSoundPath: customSoundPath),
+        ishaSettings: notificationSettings.ishaSettings
+            .copyWith(customSoundPath: customSoundPath),
+      );
+
+      debugPrint(
+          '🔔 CUBIT: Calling setNotificationSettings (single update)...');
+      await setNotificationSettings(newNotificationSettings);
+      debugPrint(
+          '🔔 CUBIT: All regular prayers updated successfully with sound: $customSoundPath');
+    } else {
+      debugPrint(
+          '🔔 CUBIT: State is not SettingsLoaded, current state: $state');
     }
   }
 
@@ -183,10 +232,9 @@ class SettingsCubit extends Cubit<SettingsState> {
 
       await setNotificationSettings(newNotificationSettings);
 
-      // Hide persistent notification if disabled
-      if (!enabled) {
-        await _notificationService.hidePersistentNotification();
-      }
+      // Note: The actual start/stop of persistent notification is handled
+      // by PrayerTimesCubit.scheduleNotificationsWithSettings() which gets
+      // called automatically when settings change
     }
   }
 

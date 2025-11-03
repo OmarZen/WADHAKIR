@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'adhan_player_service.dart';
 import '../../../data/models/notification_settings_model.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import '../../../domain/repositories/notification_repository.dart';
@@ -40,6 +41,9 @@ class PrayerNotificationService {
     // Handle notification actions here
     // For example: Mark prayer as done, snooze, etc.
     log('Notification action received: ${receivedAction.actionType}');
+
+    // Stop adhan playback when any action is taken
+    AdhanPlayerService().stopAdhan();
   }
 
   /// Called when a notification is created
@@ -54,6 +58,22 @@ class PrayerNotificationService {
   static Future<void> _onNotificationDisplayedMethod(
       ReceivedNotification receivedNotification) async {
     log('Notification displayed: ${receivedNotification.id}');
+
+    // Get sound path from payload
+    final soundPath = receivedNotification.payload?['soundPath'];
+    final prayerName = receivedNotification.payload?['prayer'];
+
+    log('Playing adhan for $prayerName with sound: ${soundPath ?? "default"}');
+
+    // Play adhan with volume and flip controls
+    if (soundPath != null && soundPath.isNotEmpty) {
+      AdhanPlayerService().playAdhan(
+        soundPath: soundPath,
+        onComplete: () {
+          log('Adhan playback completed for $prayerName');
+        },
+      );
+    }
   }
 
   /// Called when a notification is dismissed
@@ -61,6 +81,9 @@ class PrayerNotificationService {
   static Future<void> _onDismissActionReceivedMethod(
       ReceivedAction receivedAction) async {
     log('Notification dismissed: ${receivedAction.id}');
+
+    // Stop adhan playback when notification is dismissed
+    AdhanPlayerService().stopAdhan();
   }
 
   /// Request notification permissions
@@ -139,5 +162,57 @@ class PrayerNotificationService {
   /// Hide persistent notification
   Future<void> hidePersistentNotification() async {
     await _repository.hidePersistentNotification();
+  }
+
+  /// Send a test notification immediately (for testing volume/flip controls)
+  Future<void> sendTestNotification({
+    required String prayerName,
+    required String prayerNameArabic,
+    String? customSoundPath,
+  }) async {
+    log('🔔 Sending test notification for $prayerName');
+
+    // Ensure permissions are granted
+    final hasPermission = await hasPermissions();
+    if (!hasPermission) {
+      final granted = await requestPermissions();
+      if (!granted) {
+        throw Exception('Notification permissions not granted');
+      }
+    }
+
+    // Determine channel key based on prayer (match repository channel keys)
+    final String channelKey =
+        prayerName.toLowerCase() == 'fajr' ? 'fajr_channel' : 'prayers_channel';
+
+    // Create immediate notification
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: 999, // Test notification ID
+        channelKey: channelKey,
+        groupKey: 'prayer_notifications',
+        title: '🕌 اختبار: حان وقت صلاة $prayerNameArabic',
+        body: 'هذا إشعار تجريبي - اضغط أزرار الصوت أو اقلب الهاتف للإيقاف',
+        notificationLayout: NotificationLayout.Default,
+        payload: {
+          'prayer': prayerName,
+          'time': DateTime.now().toIso8601String(),
+          'soundPath': customSoundPath ?? '',
+          'isTest': 'true',
+        },
+        wakeUpScreen: true,
+        category: NotificationCategory.Alarm,
+        criticalAlert: prayerName.toLowerCase() == 'fajr',
+      ),
+      actionButtons: [
+        NotificationActionButton(
+          key: 'DISMISS',
+          label: 'تم',
+          actionType: ActionType.DismissAction,
+        ),
+      ],
+    );
+
+    log('🔔 Test notification sent for $prayerName');
   }
 }

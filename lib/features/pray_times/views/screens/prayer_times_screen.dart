@@ -8,8 +8,7 @@ import 'package:wadhakir/features/pray_times/views/widgets/prayer_times_error.da
 import 'package:wadhakir/features/pray_times/views/widgets/prayer_times_header.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/prayer_times_content.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/location_disabled_dialog.dart';
-import 'package:wadhakir/features/pray_times/views/widgets/prayer_times_loading.dart'
-    as loading_widget;
+import 'package:wadhakir/features/pray_times/views/widgets/prayer_times_loading.dart'  as loading_widget;
 
 class PrayerTimesScreen extends StatelessWidget {
   const PrayerTimesScreen({super.key});

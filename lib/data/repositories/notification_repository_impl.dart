@@ -147,6 +147,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
         payload: {
           'prayer': prayerName,
           'time': prayerTime.toIso8601String(),
+          'soundPath': settings.customSoundPath ?? '', // Include sound path
         },
         wakeUpScreen: true,
         category: NotificationCategory.Alarm,

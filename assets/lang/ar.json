@@ -169,7 +169,18 @@
     "before_10_min": "قبل 10 دقائق",
     "before_15_min": "قبل 15 دقيقة",
     "persistent_notification_success": "✅ تم عرض الإشعار الدائم بنجاح",
-    "notification_error": "❌ خطأ"
+    "notification_error": "❌ خطأ",
+    "adhan_sounds": "أصوات الأذان",
+    "fajr_adhan": "أذان الفجر",
+    "fajr_adhan_subtitle": "اختر صوت أذان الفجر",
+    "regular_adhan": "أذان الصلوات الأخرى",
+    "regular_adhan_subtitle": "اختر صوت أذان الظهر، العصر، المغرب والعشاء",
+    "test_adhan": "تجربة صوت الأذان",
+    "test_fajr": "تجربة أذان الفجر",
+    "test_regular": "تجربة أذان الصلوات الأخرى",
+    "default_sound_message": "سيتم استخدام صوت التنبيه الافتراضي للنظام",
+    "playing_adhan": "تشغيل أذان",
+    "adhan_error": "❌ خطأ في تشغيل الأذان"
   },
   "nav_bar": {
     "home": "الرئيسية",

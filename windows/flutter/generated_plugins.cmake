@@ -3,9 +3,11 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  awesome_notifications
   connectivity_plus
   flutter_volume_controller
   geolocator_windows
+  permission_handler_windows
   share_plus
   url_launcher_windows
 )

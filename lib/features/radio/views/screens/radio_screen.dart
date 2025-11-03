@@ -18,17 +18,17 @@ class _RadioScreenState extends State<RadioScreen> {
   String _category = 'all';
   final TextEditingController _searchController = TextEditingController();
   static const List<Map<String, String>> _categories = [
-    {'key': 'all', 'label': 'كل الإذاعات'},
-    {'key': 'readers', 'label': 'القراء'},
-    {'key': 'ruqiah', 'label': 'الرقية الشرعية'},
-    {'key': 'fatwa', 'label': 'الفتاوى'},
-    {'key': 'adhkar', 'label': 'الأدعية والأذكار'},
-    {'key': 'qiraat', 'label': 'القراءات العشر'},
-    {'key': 'tafsir', 'label': 'التفسير وعلوم القرآن'},
-    {'key': 'translations', 'label': 'ترجمات ومعاني القرآن'},
-    {'key': 'seerah', 'label': 'السيرة والقصص'},
-    {'key': 'seasons', 'label': 'مواسم الخير'},
-    {'key': 'featured', 'label': 'تلاوات مميزة'},
+    {'key': 'all', 'label': 'category_all'},
+    {'key': 'readers', 'label': 'category_readers'},
+    {'key': 'ruqiah', 'label': 'category_ruqiah'},
+    {'key': 'fatwa', 'label': 'category_fatwa'},
+    {'key': 'adhkar', 'label': 'category_adhkar'},
+    {'key': 'qiraat', 'label': 'category_qiraat'},
+    {'key': 'tafsir', 'label': 'category_tafsir'},
+    {'key': 'translations', 'label': 'category_translations'},
+    {'key': 'seerah', 'label': 'category_seerah'},
+    {'key': 'seasons', 'label': 'category_seasons'},
+    {'key': 'featured', 'label': 'category_featured'},
   ];
 
   static const Map<String, IconData> _categoryIcons = {
@@ -86,7 +86,7 @@ class _RadioScreenState extends State<RadioScreen> {
               backgroundColor: Colors.blue.shade700,
               behavior: SnackBarBehavior.floating,
               action: SnackBarAction(
-                label: 'حسناً',
+                label: l10n?.translate('radio.ok_button') ?? 'حسناً',
                 textColor: Colors.white,
                 onPressed: () {
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -214,7 +214,8 @@ class _RadioScreenState extends State<RadioScreen> {
                                     : theme.colorScheme.primary,
                               ),
                               const SizedBox(width: 6),
-                              Text(c['label']!),
+                              Text(l10n?.translate('radio.${c['label']}') ??
+                                  c['label']!),
                             ],
                           ),
                           selected: selected,
@@ -530,6 +531,7 @@ class _CustomRadioAppBar extends StatelessWidget
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final Color primary = theme.colorScheme.primary;
     final Color onPrimary = theme.colorScheme.onPrimary;
     final isDark = theme.brightness == Brightness.dark;
@@ -672,7 +674,8 @@ class _CustomRadioAppBar extends StatelessWidget
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'البث المباشر',
+                                    l10n?.translate('radio.live_broadcast') ??
+                                        'البث المباشر',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: onPrimary.withValues(alpha: 0.9),
                                       fontWeight: FontWeight.w600,
@@ -694,7 +697,8 @@ class _CustomRadioAppBar extends StatelessWidget
                             ),
                           ),
                           child: IconButton(
-                            tooltip: 'تحديث',
+                            tooltip:
+                                l10n?.translate('radio.refresh') ?? 'تحديث',
                             icon: Icon(Icons.refresh_rounded, color: onPrimary),
                             onPressed: onRefresh,
                           ),
@@ -808,6 +812,7 @@ class _ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final errorColor = _getErrorColor(context);
 
     return Center(
@@ -840,8 +845,10 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               errorType == 'network'
-                  ? 'تأكد من اتصالك بالإنترنت وحاول مرة أخرى'
-                  : 'حاول مرة أخرى بعد قليل',
+                  ? (l10n?.translate('radio.error_network_check') ??
+                      'تأكد من اتصالك بالإنترنت وحاول مرة أخرى')
+                  : (l10n?.translate('radio.error_try_again_later') ??
+                      'حاول مرة أخرى بعد قليل'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
@@ -851,7 +858,8 @@ class _ErrorView extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('إعادة المحاولة'),
+              label: Text(
+                  l10n?.translate('radio.retry_button') ?? 'إعادة المحاولة'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: errorColor,
                 foregroundColor: Colors.white,

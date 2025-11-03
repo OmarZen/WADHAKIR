@@ -4,12 +4,15 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
+import 'package:wadhakir/data/models/notification_settings_model.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
+import 'package:wadhakir/features/pray_times/services/persistent_notification_manager.dart';
 import 'package:wadhakir/features/prayer_times/presentation/widgets/prayer_times_home_widget.dart';
 
 class PrayerTimesCubit extends Cubit<PrayerTimesState> {
@@ -18,6 +21,8 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   final GetCalculationMethodUseCase _getCalculationMethodUseCase;
   final SetCalculationMethodUseCase _setCalculationMethodUseCase;
   final PrayerTimesRepository _repository;
+  final PrayerNotificationService _notificationService;
+  final PersistentNotificationManager _persistentManager;
 
   Timer? _prayerTimesTimer;
 
@@ -40,7 +45,13 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     this._getCalculationMethodUseCase,
     this._setCalculationMethodUseCase, {
     required PrayerTimesRepository repository,
+    PrayerNotificationService? notificationService,
+    PersistentNotificationManager? persistentManager,
   })  : _repository = repository,
+        _notificationService =
+            notificationService ?? PrayerNotificationService(),
+        _persistentManager =
+            persistentManager ?? PersistentNotificationManager(),
         super(const PrayerTimesInitial()) {
     // Load saved time adjustments
     _loadSavedTimeAdjustments();
@@ -76,6 +87,18 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         debugPrint(
             'Updating widget with prayer times for: ${dateKey.toString()}');
         await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
+
+        // Schedule prayer notifications for today
+        await _scheduleNotificationsForToday(todayPrayerTimes);
+
+        // Update persistent notification manager with new prayer times
+        if (_persistentManager.isActive) {
+          final locationName = await getCurrentLocationName();
+          await _persistentManager.updatePrayerTimes(
+            prayerTimes: todayPrayerTimes,
+            locationName: locationName,
+          );
+        }
       } else {
         debugPrint('No prayer times found for today: ${dateKey.toString()}');
       }
@@ -84,6 +107,78 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       _startTimer();
     } catch (e) {
       emit(PrayerTimesError(e.toString()));
+    }
+  }
+
+  /// Schedule notifications for today's prayer times
+  Future<void> _scheduleNotificationsForToday(
+      PrayerTimesModel prayerTimes) async {
+    try {
+      // This method is called automatically when prayer times are loaded
+      // Actual scheduling happens through scheduleNotificationsWithSettings
+      debugPrint('Prayer times loaded, ready to schedule notifications');
+    } catch (e) {
+      debugPrint('Error in _scheduleNotificationsForToday: $e');
+    }
+  }
+
+  /// Schedule notifications with current settings
+  /// This should be called from SettingsCubit when settings change
+  Future<void> scheduleNotificationsWithSettings(
+    NotificationSettingsModel settings,
+  ) async {
+    try {
+      if (state is! PrayerTimesLoaded) {
+        debugPrint('Cannot schedule notifications: prayer times not loaded');
+        return;
+      }
+
+      final currentState = state as PrayerTimesLoaded;
+      final today = DateTime.now();
+      final dateKey = DateTime(today.year, today.month, today.day);
+      final todayPrayerTimes = currentState.prayerTimes[dateKey];
+
+      if (todayPrayerTimes == null) {
+        debugPrint('Cannot schedule notifications: no prayer times for today');
+        return;
+      }
+
+      // Create prayer times map for notification service
+      final prayerTimesMap = {
+        'Fajr': todayPrayerTimes.fajr,
+        'Dhuhr': todayPrayerTimes.dhuhr,
+        'Asr': todayPrayerTimes.asr,
+        'Maghrib': todayPrayerTimes.maghrib,
+        'Isha': todayPrayerTimes.isha,
+      };
+
+      // Get current location name
+      final locationName = await getCurrentLocationName();
+
+      debugPrint('\n🔄 Notification Settings Changed');
+      debugPrint('Master Enabled: ${settings.masterEnabled}');
+      debugPrint(
+          'Persistent Enabled: ${settings.persistentNotificationEnabled}');
+      debugPrint('Location: $locationName');
+
+      // Schedule all prayer notifications
+      await _notificationService.schedulePrayerNotifications(
+        prayerTimes: prayerTimesMap,
+        settings: settings,
+        locationName: locationName,
+      );
+
+      // Manage persistent notification
+      if (settings.persistentNotificationEnabled) {
+        await _persistentManager.start(
+          prayerTimes: todayPrayerTimes,
+          locationName: locationName,
+        );
+      } else {
+        await _persistentManager.stop();
+      }
+    } catch (e) {
+      debugPrint('❌ Error scheduling notifications: $e');
     }
   }
 

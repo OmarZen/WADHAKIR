@@ -19,6 +19,7 @@ import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
 // This is a basic Flutter widget test.
 //
 // To perform an interaction with a widget in your test, use the WidgetTester
@@ -51,6 +52,9 @@ void main() {
           AppSettingsRepositoryImpl(sharedPreferences),
         ),
         setBasmalaUseCase: SetBasmalaUseCase(
+          AppSettingsRepositoryImpl(sharedPreferences),
+        ),
+        setNotificationSettingsUseCase: SetNotificationSettingsUseCase(
           AppSettingsRepositoryImpl(sharedPreferences),
         ),
         getSurahsUseCase: GetSurahsUseCase(QuranRepositoryImpl()),

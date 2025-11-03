@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  awesome_notifications
   flutter_volume_controller
   url_launcher_linux
 )

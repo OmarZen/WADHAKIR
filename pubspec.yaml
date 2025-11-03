@@ -60,6 +60,9 @@ dependencies:
   intl: ^0.20.2
   
   # Notifications
+  awesome_notifications: ^0.10.1
+  timezone: ^0.9.4
+  permission_handler: ^11.3.1
   rxdart: ^0.28.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0

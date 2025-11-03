@@ -78,173 +78,111 @@ class WelcomeSectionWidget extends StatelessWidget {
               children: [
                 // Top Header Row with Date and Actions
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: size.width * 0.05,
-                    right: size.width * 0.05,
-                    top: size.height * 0.02,
-                    bottom: size.height * 0.02,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.04,
+                    vertical: size.height * 0.015,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      // Date Card
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          // Day Number
-                          Container(
-                            padding: EdgeInsets.all(size.width * 0.02),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              now.day.toString(),
-                              style: TextStyle(
-                                fontSize: size.width * 0.06,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                      // Compact Date Card
+                      Flexible(
+                        flex: 1,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Day Number
+                            Container(
+                              padding: EdgeInsets.all(size.width * 0.018),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                            ),
-                          ),
-                          SizedBox(width: size.width * 0.03),
-                          // Month and Hijri Date
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Gregorian Date
-                              Text(
-                                AppDateUtils.getGregorianMonthName(
-                                    now.month, l10n),
+                              child: Text(
+                                now.day.toString(),
                                 style: TextStyle(
-                                  fontSize: size.width * 0.035,
+                                  fontSize: size.width * 0.05,
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              SizedBox(height: size.height * 0.005),
-                              // Hijri Date
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: size.width * 0.040,
-                                  vertical: size.height * 0.005,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  AppDateUtils.getShortFormattedHijriDate(
-                                      hijriDate, l10n),
-                                  style: TextStyle(
-                                    fontSize: size.width * 0.025,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
+                            ),
+                            SizedBox(width: size.width * 0.02),
+                            // Month and Hijri Date
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Gregorian Date
+                                  Text(
+                                    AppDateUtils.getGregorianMonthName(
+                                        now.month, l10n),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: size.width * 0.032,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
-                                ),
+                                  SizedBox(height: size.height * 0.003),
+                                  // Hijri Date
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: size.width * 0.025,
+                                      vertical: size.height * 0.003,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.25),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      AppDateUtils.getShortFormattedHijriDate(
+                                          hijriDate, l10n),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: size.width * 0.023,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          SizedBox(width: size.width * 0.03),
-                          // Info about the developer
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                             ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.info_outline,
-                                color: Colors.white,
-                                size: size.width * 0.06,
-                              ),
-                              onPressed: () {
-                                showAboutDeveloperDialog(context);
-                              },
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
 
-                      Spacer(),
+                      const Spacer(),
 
-                      // Action Buttons
+                      // Compact Action Buttons - at the end of the row
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Campus/Qibla Button
-                          Container(
-                            margin: EdgeInsets.only(right: size.width * 0.03),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.compass_calibration_rounded,
-                                color: Colors.white,
-                                size: size.width * 0.06,
-                              ),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/campus');
-                              },
-                              tooltip:
-                                  l10n?.translate('home.qibla') ?? 'القبلة',
-                            ),
+                          // Info Button
+                          _CompactIconButton(
+                            icon: Icons.info_outline,
+                            size: size.width * 0.05,
+                            onPressed: () => showAboutDeveloperDialog(context),
                           ),
-
+                          SizedBox(width: size.width * 0.015),
+                          // Qibla Button
+                          _CompactIconButton(
+                            icon: Icons.compass_calibration_rounded,
+                            size: size.width * 0.05,
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/campus'),
+                          ),
+                          SizedBox(width: size.width * 0.015),
                           // Radio Button
-                          Container(
-                            margin: EdgeInsets.only(right: size.width * 0.03),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.radio_rounded,
-                                color: Colors.white,
-                                size: size.width * 0.06,
-                              ),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/radio');
-                              },
-                              tooltip:
-                                  l10n?.translate('home.radio') ?? 'الراديو',
-                            ),
+                          _CompactIconButton(
+                            icon: Icons.radio_rounded,
+                            size: size.width * 0.05,
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/radio'),
                           ),
                         ],
                       ),
@@ -254,11 +192,9 @@ class WelcomeSectionWidget extends StatelessWidget {
 
                 // Welcome Message Section
                 Padding(
-                  padding: EdgeInsets.only(
-                    left: size.width * 0.05,
-                    right: size.width * 0.05,
-                    bottom: size.height * 0.03,
-                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.04,
+                  ).copyWith(bottom: size.height * 0.025),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -267,21 +203,22 @@ class WelcomeSectionWidget extends StatelessWidget {
                         l10n?.translate('home.welcome_message') ??
                             'السلام عليكم',
                         style: TextStyle(
-                          fontSize: size.width * 0.045,
+                          fontSize: size.width * 0.04,
                           color: Colors.white.withValues(alpha: 0.9),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: size.height * 0.01),
+                      SizedBox(height: size.height * 0.008),
                       Text(
                         l10n?.translate('home.app_name') ?? 'وذكّر',
                         style: TextStyle(
-                          fontSize: size.width * 0.08,
+                          fontSize: size.width * 0.072,
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontFamily: 'Almarai',
                         ),
                       ),
+                      SizedBox(height: size.height * 0.01),
 
                       // Islamic Quotes with source badge
                       Builder(
@@ -292,49 +229,48 @@ class WelcomeSectionWidget extends StatelessWidget {
                             children: [
                               Text(
                                 quote.text,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: size.width * 0.035,
+                                  fontSize: size.width * 0.032,
                                   color: Colors.white,
                                   fontWeight: FontWeight.w500,
+                                  height: 1.4,
                                 ),
                               ),
                               SizedBox(height: size.height * 0.008),
                               Container(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: size.width * 0.028,
+                                  horizontal: size.width * 0.025,
                                   vertical: size.height * 0.004,
                                 ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: Colors.white.withValues(alpha: 0.35),
                                     width: 1,
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.menu_book_rounded,
-                                      size: 14,
+                                      size: size.width * 0.032,
                                       color: Colors.white,
                                     ),
-                                    SizedBox(width: size.width * 0.01),
-                                    Text(
-                                      quote.source,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: size.width * 0.028,
-                                        fontWeight: FontWeight.w600,
+                                    SizedBox(width: size.width * 0.012),
+                                    Flexible(
+                                      child: Text(
+                                        quote.source,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: size.width * 0.026,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -429,5 +365,54 @@ class WelcomeSectionWidget extends StatelessWidget {
         },
       );
     }
+  }
+}
+
+// Compact Icon Button Widget for Header Actions
+class _CompactIconButton extends StatelessWidget {
+  final IconData icon;
+  final double size;
+  final VoidCallback onPressed;
+
+  const _CompactIconButton({
+    required this.icon,
+    required this.size,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(50),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: size,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

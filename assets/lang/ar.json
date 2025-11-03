@@ -1,4 +1,10 @@
 {
+  "common": {
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "ok": "موافق"
+  },
   "global": {
     "jan": "يناير",
     "feb": "فبراير",
@@ -146,7 +152,24 @@
     "app_description": "تطبيق وذكّر لمساعدتك في شعائر الإسلام",
     "version": "الإصدار 1.1.0",
     "copyright": "© 2025 جميع الحقوق محفوظة",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "notifications": "التنبيهات",
+    "notifications_subtitle": "تنبيهات أوقات الصلاة",
+    "enable_notifications": "تفعيل التنبيهات",
+    "enable_notifications_subtitle": "إرسال تنبيه عند حلول وقت كل صلاة",
+    "persistent_notification": "إشعار دائم للصلاة القادمة",
+    "persistent_notification_subtitle": "عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي",
+    "test_notification": "اختبار الإشعار",
+    "notification_timing": "وقت التنبيه",
+    "notification_timing_subtitle": "اختر متى تريد استلام التنبيه",
+    "customize_prayers": "تخصيص كل صلاة",
+    "customize_prayers_subtitle": "تخصيص التنبيهات لكل صلاة على حدة",
+    "on_time": "عند الأذان",
+    "before_5_min": "قبل 5 دقائق",
+    "before_10_min": "قبل 10 دقائق",
+    "before_15_min": "قبل 15 دقيقة",
+    "persistent_notification_success": "✅ تم عرض الإشعار الدائم بنجاح",
+    "notification_error": "❌ خطأ"
   },
   "nav_bar": {
     "home": "الرئيسية",
@@ -268,6 +291,29 @@
     "categories": "فئات",
     "now_playing": "الآن يتم التشغيل",
     "play": "تشغيل",
-    "pause": "إيقاف مؤقت"
+    "pause": "إيقاف مؤقت",
+    "category_all": "كل الإذاعات",
+    "category_readers": "القراء",
+    "category_ruqiah": "الرقية الشرعية",
+    "category_fatwa": "الفتاوى",
+    "category_adhkar": "الأدعية والأذكار",
+    "category_qiraat": "القراءات العشر",
+    "category_tafsir": "التفسير وعلوم القرآن",
+    "category_translations": "ترجمات ومعاني القرآن",
+    "category_seerah": "السيرة والقصص",
+    "category_seasons": "مواسم الخير",
+    "category_featured": "تلاوات مميزة",
+    "live_broadcast": "البث المباشر",
+    "refresh": "تحديث",
+    "ok_button": "حسناً",
+    "error_no_internet": "لا يوجد اتصال بالإنترنت",
+    "error_timeout": "انتهت مهلة الاتصال",
+    "error_data_format": "خطأ في تنسيق البيانات",
+    "error_unexpected": "حدث خطأ غير متوقع",
+    "error_playback_failed": "تعذر تشغيل هذه الإذاعة",
+    "error_playback_general": "فشل تشغيل الإذاعة",
+    "error_network_check": "تأكد من اتصالك بالإنترنت وحاول مرة أخرى",
+    "error_try_again_later": "حاول مرة أخرى بعد قليل",
+    "retry_button": "إعادة المحاولة"
   }
 }

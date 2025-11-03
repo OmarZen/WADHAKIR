@@ -163,7 +163,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
       // Get the current position
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
       );
 
       _coordinates = Coordinates(position.latitude, position.longitude);
@@ -327,7 +327,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
       // Get the current position
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
       );
 
       _coordinates = Coordinates(position.latitude, position.longitude);

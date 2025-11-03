@@ -1,0 +1,206 @@
+import 'package:equatable/equatable.dart';
+
+/// Enum for notification timing options
+enum NotificationTiming {
+  onTime,
+  before5Min,
+  before10Min,
+  before15Min,
+}
+
+/// Enum for notification sound options
+enum NotificationSound {
+  defaultSound,
+  adhan,
+  silent,
+}
+
+/// Model for individual prayer notification settings
+class PrayerNotificationSettings extends Equatable {
+  final bool enabled;
+  final NotificationTiming timing;
+  final NotificationSound sound;
+  final bool vibration;
+
+  const PrayerNotificationSettings({
+    required this.enabled,
+    required this.timing,
+    required this.sound,
+    required this.vibration,
+  });
+
+  factory PrayerNotificationSettings.defaultSettings() {
+    return const PrayerNotificationSettings(
+      enabled: true,
+      timing: NotificationTiming.onTime,
+      sound: NotificationSound.defaultSound,
+      vibration: true,
+    );
+  }
+
+  PrayerNotificationSettings copyWith({
+    bool? enabled,
+    NotificationTiming? timing,
+    NotificationSound? sound,
+    bool? vibration,
+  }) {
+    return PrayerNotificationSettings(
+      enabled: enabled ?? this.enabled,
+      timing: timing ?? this.timing,
+      sound: sound ?? this.sound,
+      vibration: vibration ?? this.vibration,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'enabled': enabled,
+      'timing': timing.index,
+      'sound': sound.index,
+      'vibration': vibration,
+    };
+  }
+
+  factory PrayerNotificationSettings.fromJson(Map<String, dynamic> json) {
+    return PrayerNotificationSettings(
+      enabled: json['enabled'] as bool? ?? true,
+      timing: NotificationTiming.values[json['timing'] as int? ?? 0],
+      sound: NotificationSound.values[json['sound'] as int? ?? 0],
+      vibration: json['vibration'] as bool? ?? true,
+    );
+  }
+
+  @override
+  List<Object?> get props => [enabled, timing, sound, vibration];
+}
+
+/// Complete notification settings model
+class NotificationSettingsModel extends Equatable {
+  final bool masterEnabled;
+  final bool persistentNotificationEnabled;
+  final PrayerNotificationSettings fajrSettings;
+  final PrayerNotificationSettings dhuhrSettings;
+  final PrayerNotificationSettings asrSettings;
+  final PrayerNotificationSettings maghribSettings;
+  final PrayerNotificationSettings ishaSettings;
+
+  const NotificationSettingsModel({
+    required this.masterEnabled,
+    this.persistentNotificationEnabled = false,
+    required this.fajrSettings,
+    required this.dhuhrSettings,
+    required this.asrSettings,
+    required this.maghribSettings,
+    required this.ishaSettings,
+  });
+
+  factory NotificationSettingsModel.defaultSettings() {
+    return NotificationSettingsModel(
+      masterEnabled: true,
+      persistentNotificationEnabled: false,
+      fajrSettings: PrayerNotificationSettings.defaultSettings().copyWith(
+        // Fajr is critical - use maximum importance
+        timing: NotificationTiming.onTime,
+      ),
+      dhuhrSettings: PrayerNotificationSettings.defaultSettings(),
+      asrSettings: PrayerNotificationSettings.defaultSettings(),
+      maghribSettings: PrayerNotificationSettings.defaultSettings(),
+      ishaSettings: PrayerNotificationSettings.defaultSettings(),
+    );
+  }
+
+  NotificationSettingsModel copyWith({
+    bool? masterEnabled,
+    bool? persistentNotificationEnabled,
+    PrayerNotificationSettings? fajrSettings,
+    PrayerNotificationSettings? dhuhrSettings,
+    PrayerNotificationSettings? asrSettings,
+    PrayerNotificationSettings? maghribSettings,
+    PrayerNotificationSettings? ishaSettings,
+  }) {
+    return NotificationSettingsModel(
+      masterEnabled: masterEnabled ?? this.masterEnabled,
+      persistentNotificationEnabled:
+          persistentNotificationEnabled ?? this.persistentNotificationEnabled,
+      fajrSettings: fajrSettings ?? this.fajrSettings,
+      dhuhrSettings: dhuhrSettings ?? this.dhuhrSettings,
+      asrSettings: asrSettings ?? this.asrSettings,
+      maghribSettings: maghribSettings ?? this.maghribSettings,
+      ishaSettings: ishaSettings ?? this.ishaSettings,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'masterEnabled': masterEnabled,
+      'persistentNotificationEnabled': persistentNotificationEnabled,
+      'fajrSettings': fajrSettings.toJson(),
+      'dhuhrSettings': dhuhrSettings.toJson(),
+      'asrSettings': asrSettings.toJson(),
+      'maghribSettings': maghribSettings.toJson(),
+      'ishaSettings': ishaSettings.toJson(),
+    };
+  }
+
+  factory NotificationSettingsModel.fromJson(Map<String, dynamic> json) {
+    return NotificationSettingsModel(
+      masterEnabled: json['masterEnabled'] as bool? ?? true,
+      persistentNotificationEnabled:
+          json['persistentNotificationEnabled'] as bool? ?? false,
+      fajrSettings: json['fajrSettings'] != null
+          ? PrayerNotificationSettings.fromJson(
+              json['fajrSettings'] as Map<String, dynamic>)
+          : PrayerNotificationSettings.defaultSettings(),
+      dhuhrSettings: json['dhuhrSettings'] != null
+          ? PrayerNotificationSettings.fromJson(
+              json['dhuhrSettings'] as Map<String, dynamic>)
+          : PrayerNotificationSettings.defaultSettings(),
+      asrSettings: json['asrSettings'] != null
+          ? PrayerNotificationSettings.fromJson(
+              json['asrSettings'] as Map<String, dynamic>)
+          : PrayerNotificationSettings.defaultSettings(),
+      maghribSettings: json['maghribSettings'] != null
+          ? PrayerNotificationSettings.fromJson(
+              json['maghribSettings'] as Map<String, dynamic>)
+          : PrayerNotificationSettings.defaultSettings(),
+      ishaSettings: json['ishaSettings'] != null
+          ? PrayerNotificationSettings.fromJson(
+              json['ishaSettings'] as Map<String, dynamic>)
+          : PrayerNotificationSettings.defaultSettings(),
+    );
+  }
+
+  /// Get settings for a specific prayer by name
+  PrayerNotificationSettings getSettingsForPrayer(String prayerName) {
+    switch (prayerName.toLowerCase()) {
+      case 'fajr':
+      case 'الفجر':
+        return fajrSettings;
+      case 'dhuhr':
+      case 'الظهر':
+        return dhuhrSettings;
+      case 'asr':
+      case 'العصر':
+        return asrSettings;
+      case 'maghrib':
+      case 'المغرب':
+        return maghribSettings;
+      case 'isha':
+      case 'العشاء':
+        return ishaSettings;
+      default:
+        return PrayerNotificationSettings.defaultSettings();
+    }
+  }
+
+  @override
+  List<Object?> get props => [
+        masterEnabled,
+        persistentNotificationEnabled,
+        fajrSettings,
+        dhuhrSettings,
+        asrSettings,
+        maghribSettings,
+        ishaSettings,
+      ];
+}

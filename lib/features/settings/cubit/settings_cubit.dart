@@ -7,7 +7,10 @@ import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_font_size_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
+import 'package:wadhakir/data/models/notification_settings_model.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
   final GetSettingsUseCase _getSettingsUseCase;
@@ -16,6 +19,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SetLanguageUseCase _setLanguageUseCase;
   final SetFontSizeUseCase _setFontSizeUseCase;
   final SetBasmalaUseCase _setBasmalaUseCase;
+  final SetNotificationSettingsUseCase _setNotificationSettingsUseCase;
+  final PrayerNotificationService _notificationService;
 
   StreamSubscription? _settingsSubscription;
 
@@ -26,12 +31,17 @@ class SettingsCubit extends Cubit<SettingsState> {
     required SetLanguageUseCase setLanguageUseCase,
     required SetFontSizeUseCase setFontSizeUseCase,
     required SetBasmalaUseCase setBasmalaUseCase,
+    required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
+    PrayerNotificationService? notificationService,
   })  : _getSettingsUseCase = getSettingsUseCase,
         _getSettingsStreamUseCase = getSettingsStreamUseCase,
         _setThemeModeUseCase = setThemeModeUseCase,
         _setLanguageUseCase = setLanguageUseCase,
         _setFontSizeUseCase = setFontSizeUseCase,
         _setBasmalaUseCase = setBasmalaUseCase,
+        _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
+        _notificationService =
+            notificationService ?? PrayerNotificationService(),
         super(const SettingsInitial()) {
     loadSettings();
     _listenToSettingsChanges();
@@ -83,6 +93,100 @@ class SettingsCubit extends Cubit<SettingsState> {
       await _setBasmalaUseCase(show);
     } catch (e) {
       emit(SettingsError(e.toString()));
+    }
+  }
+
+  /// Update notification settings
+  Future<void> setNotificationSettings(
+      NotificationSettingsModel settings) async {
+    try {
+      await _setNotificationSettingsUseCase(settings);
+
+      // After settings are saved, reschedule all notifications
+      // This ensures old notifications are cancelled and new ones are created
+      // Note: This requires prayer times to be loaded first
+      debugPrint(
+          'Notification settings updated, rescheduling notifications...');
+      // Settings will be updated through the stream listener
+    } catch (e) {
+      emit(SettingsError(e.toString()));
+    }
+  }
+
+  /// Toggle master notification setting
+  Future<void> toggleNotifications(bool enabled) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final newNotificationSettings =
+          currentSettings.notificationSettings.copyWith(masterEnabled: enabled);
+
+      await setNotificationSettings(newNotificationSettings);
+
+      // Cancel all notifications if disabled
+      if (!enabled) {
+        await _notificationService.cancelAllNotifications();
+      }
+    }
+  }
+
+  /// Update notification settings for a specific prayer
+  Future<void> updatePrayerNotificationSettings({
+    required String prayerName,
+    required PrayerNotificationSettings prayerSettings,
+  }) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final currentNotificationSettings = currentSettings.notificationSettings;
+
+      NotificationSettingsModel newNotificationSettings;
+
+      switch (prayerName.toLowerCase()) {
+        case 'fajr':
+        case 'الفجر':
+          newNotificationSettings = currentNotificationSettings.copyWith(
+              fajrSettings: prayerSettings);
+          break;
+        case 'dhuhr':
+        case 'الظهر':
+          newNotificationSettings = currentNotificationSettings.copyWith(
+              dhuhrSettings: prayerSettings);
+          break;
+        case 'asr':
+        case 'العصر':
+          newNotificationSettings =
+              currentNotificationSettings.copyWith(asrSettings: prayerSettings);
+          break;
+        case 'maghrib':
+        case 'المغرب':
+          newNotificationSettings = currentNotificationSettings.copyWith(
+              maghribSettings: prayerSettings);
+          break;
+        case 'isha':
+        case 'العشاء':
+          newNotificationSettings = currentNotificationSettings.copyWith(
+              ishaSettings: prayerSettings);
+          break;
+        default:
+          return;
+      }
+
+      await setNotificationSettings(newNotificationSettings);
+    }
+  }
+
+  /// Toggle persistent notification
+  Future<void> togglePersistentNotification(bool enabled) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final newNotificationSettings = currentSettings.notificationSettings
+          .copyWith(persistentNotificationEnabled: enabled);
+
+      await setNotificationSettings(newNotificationSettings);
+
+      // Hide persistent notification if disabled
+      if (!enabled) {
+        await _notificationService.hidePersistentNotification();
+      }
     }
   }
 

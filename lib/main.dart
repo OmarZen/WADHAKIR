@@ -34,11 +34,14 @@ import 'package:wadhakir/domain/usecases/get_surah_by_number_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_verses_by_surah_usecase.dart';
 import 'package:wadhakir/core/localization/app_localizations_delegate.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
+import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/prayer_times/presentation/widgets/prayer_times_home_widget.dart';
 
 void main() async {
@@ -48,6 +51,10 @@ void main() async {
 
   // Initialize home widget
   await PrayerTimesHomeWidget.setupBackgroundCallback();
+
+  // Initialize notification service
+  final notificationService = PrayerNotificationService();
+  await notificationService.initialize();
 
   // Load environment variables
   try {
@@ -89,6 +96,9 @@ void main() async {
 
   final setBasmalaUseCase = SetBasmalaUseCase(appSettingsRepository);
 
+  final setNotificationSettingsUseCase =
+      SetNotificationSettingsUseCase(appSettingsRepository);
+
   // Create quran use cases
   final getSurahsUseCase = GetSurahsUseCase(quranRepository);
   final getSurahByNumberUseCase = GetSurahByNumberUseCase(quranRepository);
@@ -115,6 +125,7 @@ void main() async {
       setLanguageUseCase: setLanguageUseCase,
       setFontSizeUseCase: setFontSizeUseCase,
       setBasmalaUseCase: setBasmalaUseCase,
+      setNotificationSettingsUseCase: setNotificationSettingsUseCase,
       // Quran
       getSurahsUseCase: getSurahsUseCase,
       getSurahByNumberUseCase: getSurahByNumberUseCase,
@@ -141,6 +152,7 @@ class MyApp extends StatelessWidget {
   final SetLanguageUseCase setLanguageUseCase;
   final SetFontSizeUseCase setFontSizeUseCase;
   final SetBasmalaUseCase setBasmalaUseCase;
+  final SetNotificationSettingsUseCase setNotificationSettingsUseCase;
 
   // Quran
   final GetSurahsUseCase getSurahsUseCase;
@@ -164,6 +176,7 @@ class MyApp extends StatelessWidget {
     required this.setLanguageUseCase,
     required this.setFontSizeUseCase,
     required this.setBasmalaUseCase,
+    required this.setNotificationSettingsUseCase,
     // Quran
     required this.getSurahsUseCase,
     required this.getSurahByNumberUseCase,
@@ -189,6 +202,7 @@ class MyApp extends StatelessWidget {
             setLanguageUseCase: setLanguageUseCase,
             setFontSizeUseCase: setFontSizeUseCase,
             setBasmalaUseCase: setBasmalaUseCase,
+            setNotificationSettingsUseCase: setNotificationSettingsUseCase,
           ),
           lazy: false,
         ),
@@ -218,38 +232,77 @@ class MyApp extends StatelessWidget {
           lazy: false,
         ),
       ],
-      child: BlocBuilder<SettingsCubit, SettingsState>(
-        buildWhen: (previous, current) =>
-            previous != current && current is SettingsLoaded,
-        builder: (context, state) {
-          // Default settings if not loaded yet
-          var themeMode = ThemeMode.light;
-          var locale = const Locale('ar');
+      child: MultiBlocListener(
+        listeners: [
+          // Listen to settings changes and reschedule notifications
+          BlocListener<SettingsCubit, SettingsState>(
+            listener: (context, state) {
+              if (state is SettingsLoaded) {
+                final prayerTimesCubit = context.read<PrayerTimesCubit>();
+                final notificationSettings =
+                    state.settings.notificationSettings;
 
-          // Update with loaded settings if available
-          if (state is SettingsLoaded) {
-            themeMode = state.settings.themeMode;
-            locale = Locale(state.settings.languageCode);
-          }
+                // Only schedule if prayer times are already loaded
+                if (prayerTimesCubit.state is PrayerTimesLoaded) {
+                  prayerTimesCubit.scheduleNotificationsWithSettings(
+                    notificationSettings,
+                  );
+                }
+              }
+            },
+          ),
+          // Listen to prayer times loaded and schedule notifications
+          BlocListener<PrayerTimesCubit, PrayerTimesState>(
+            listener: (context, state) {
+              if (state is PrayerTimesLoaded) {
+                final settingsCubit = context.read<SettingsCubit>();
 
-          return MaterialApp(
-            title: AppConstants.appName,
-            debugShowCheckedModeBanner: false,
-            theme: lightTheme,
-            darkTheme: darkTheme,
-            themeMode: themeMode,
-            localizationsDelegates: const [
-              AppLocalizationsDelegate(),
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: LanguageManager.supportedLocales,
-            locale: locale,
-            onGenerateRoute: AppRouter.onGenerateRoute,
-            home: const ScaffoldWithNavBar(),
-          );
-        },
+                // Only schedule if settings are loaded
+                if (settingsCubit.state is SettingsLoaded) {
+                  final settingsState = settingsCubit.state as SettingsLoaded;
+                  final prayerTimesCubit = context.read<PrayerTimesCubit>();
+
+                  prayerTimesCubit.scheduleNotificationsWithSettings(
+                    settingsState.settings.notificationSettings,
+                  );
+                }
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<SettingsCubit, SettingsState>(
+          buildWhen: (previous, current) =>
+              previous != current && current is SettingsLoaded,
+          builder: (context, state) {
+            // Default settings if not loaded yet
+            var themeMode = ThemeMode.light;
+            var locale = const Locale('ar');
+
+            // Update with loaded settings if available
+            if (state is SettingsLoaded) {
+              themeMode = state.settings.themeMode;
+              locale = Locale(state.settings.languageCode);
+            }
+
+            return MaterialApp(
+              title: AppConstants.appName,
+              debugShowCheckedModeBanner: false,
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              themeMode: themeMode,
+              localizationsDelegates: const [
+                AppLocalizationsDelegate(),
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: LanguageManager.supportedLocales,
+              locale: locale,
+              onGenerateRoute: AppRouter.onGenerateRoute,
+              home: const ScaffoldWithNavBar(),
+            );
+          },
+        ),
       ),
     );
   }

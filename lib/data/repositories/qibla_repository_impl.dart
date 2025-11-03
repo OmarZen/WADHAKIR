@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
-import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:vector_math/vector_math.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:wadhakir/data/models/qibla_model.dart';
 import 'package:wadhakir/domain/repositories/qibla_repository.dart';
 
@@ -61,7 +61,7 @@ class QiblaRepositoryImpl implements QiblaRepository {
     try {
       await _checkLocationPermission();
       _currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
       );
       _updateQiblaDirection(null);
     } catch (e) {

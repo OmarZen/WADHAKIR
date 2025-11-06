@@ -2,18 +2,12 @@ import 'package:wadhakir/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wadhakir/domain/usecases/get_surahs_usecase.dart';
-import 'package:wadhakir/domain/usecases/set_basmala_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_font_size_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
-import 'package:wadhakir/data/repositories/quran_repository_impl.dart';
-import 'package:wadhakir/domain/usecases/get_place_of_revelation.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
-import 'package:wadhakir/domain/usecases/get_surah_by_number_usecase.dart';
-import 'package:wadhakir/domain/usecases/get_verses_by_surah_usecase.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
@@ -51,17 +45,8 @@ void main() {
         setFontSizeUseCase: SetFontSizeUseCase(
           AppSettingsRepositoryImpl(sharedPreferences),
         ),
-        setBasmalaUseCase: SetBasmalaUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
         setNotificationSettingsUseCase: SetNotificationSettingsUseCase(
           AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        getSurahsUseCase: GetSurahsUseCase(QuranRepositoryImpl()),
-        getSurahByNumberUseCase: GetSurahByNumberUseCase(QuranRepositoryImpl()),
-        getVersesBySurahUseCase: GetVersesBySurahUseCase(QuranRepositoryImpl()),
-        getPlaceOfRevelationUseCase: GetPlaceOfRevelationUseCase(
-          QuranRepositoryImpl(),
         ),
         getPrayerTimesUseCase: GetPrayerTimesUseCase(prayerTimesRepository),
         getPrayerTimesRangeUseCase:

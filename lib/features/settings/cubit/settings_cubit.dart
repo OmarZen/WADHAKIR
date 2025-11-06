@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wadhakir/domain/usecases/set_basmala_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_font_size_usecase.dart';
@@ -18,7 +17,6 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SetThemeModeUseCase _setThemeModeUseCase;
   final SetLanguageUseCase _setLanguageUseCase;
   final SetFontSizeUseCase _setFontSizeUseCase;
-  final SetBasmalaUseCase _setBasmalaUseCase;
   final SetNotificationSettingsUseCase _setNotificationSettingsUseCase;
   final PrayerNotificationService _notificationService;
 
@@ -30,7 +28,6 @@ class SettingsCubit extends Cubit<SettingsState> {
     required SetThemeModeUseCase setThemeModeUseCase,
     required SetLanguageUseCase setLanguageUseCase,
     required SetFontSizeUseCase setFontSizeUseCase,
-    required SetBasmalaUseCase setBasmalaUseCase,
     required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
     PrayerNotificationService? notificationService,
   })  : _getSettingsUseCase = getSettingsUseCase,
@@ -38,7 +35,6 @@ class SettingsCubit extends Cubit<SettingsState> {
         _setThemeModeUseCase = setThemeModeUseCase,
         _setLanguageUseCase = setLanguageUseCase,
         _setFontSizeUseCase = setFontSizeUseCase,
-        _setBasmalaUseCase = setBasmalaUseCase,
         _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
         _notificationService =
             notificationService ?? PrayerNotificationService(),
@@ -83,14 +79,6 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setFontSize(double fontSize) async {
     try {
       await _setFontSizeUseCase(fontSize);
-    } catch (e) {
-      emit(SettingsError(e.toString()));
-    }
-  }
-
-  Future<void> setShowBasmala(bool show) async {
-    try {
-      await _setBasmalaUseCase(show);
     } catch (e) {
       emit(SettingsError(e.toString()));
     }

@@ -1,0 +1,45 @@
+# Flutter/Dart build outputs
+**/build/
+**/.dart_tool/
+**/android/.gradle/
+**/android/gradle/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/app/build/
+
+# iOS/macOS build outputs
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Pods/
+**/ios/.symlinks/
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+
+# Windows/Linux build outputs
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+
+# Example app builds (if exists)
+**/example/build/
+**/example/.dart_tool/
+**/example/android/.gradle/
+**/example/android/app/build/
+**/example/ios/Pods/
+**/example/windows/flutter/ephemeral/
+**/example/linux/flutter/ephemeral/
+**/example/macos/Flutter/ephemeral/
+
+# Large binary files
+**/*.pdb
+**/*.dll.lib
+**/*.exe
+**/*.so
+**/*.dylib
+
+# Generated files
+**/generated_plugin_registrant.dart
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.metadata
+**/pubspec.lock

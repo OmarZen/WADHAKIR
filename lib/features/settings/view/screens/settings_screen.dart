@@ -6,7 +6,6 @@ import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/features/settings/view/widgets/settings_section.dart';
 import 'package:wadhakir/features/settings/view/widgets/theme_selector_widget.dart';
-import 'package:wadhakir/features/settings/view/widgets/basmala_toggle_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/about_section_widgets.dart';
 import 'package:wadhakir/features/settings/view/widgets/language_selector_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/font_size_selector_widget.dart';
@@ -147,8 +146,6 @@ class SettingsScreen extends StatelessWidget {
                   ThemeSelectorWidget(settings: settings, cubit: cubit),
                   const Divider(),
                   FontSizeSelectorWidget(settings: settings, cubit: cubit),
-                  const Divider(),
-                  BasmalaToggleWidget(settings: settings, cubit: cubit),
                 ],
               ),
               const SizedBox(height: 24),
@@ -157,7 +154,9 @@ class SettingsScreen extends StatelessWidget {
                 icon: Icons.language_outlined,
                 subtitle: l10n?.translate('settings.language_subtitle') ??
                     'تغيير لغة التطبيق',
-                children: [LanguageSelectorWidget(settings: settings, cubit: cubit)],
+                children: [
+                  LanguageSelectorWidget(settings: settings, cubit: cubit)
+                ],
               ),
               const SizedBox(height: 24),
               SettingsSection(
@@ -166,16 +165,22 @@ class SettingsScreen extends StatelessWidget {
                 subtitle: l10n?.translate('settings.notifications_subtitle') ??
                     'تنبيهات أوقات الصلاة',
                 children: [
-                  NotificationSettingsWidgets.buildNotificationMasterToggle(context, settings, cubit),
+                  NotificationSettingsWidgets.buildNotificationMasterToggle(
+                      context, settings, cubit),
                   if (settings.notificationSettings.masterEnabled) ...[
                     const Divider(),
-                    NotificationSettingsWidgets.buildPersistentNotificationToggle(context, settings, cubit),
+                    NotificationSettingsWidgets
+                        .buildPersistentNotificationToggle(
+                            context, settings, cubit),
                     const Divider(),
-                    NotificationSettingsWidgets.buildNotificationTimingSelector(context, settings, cubit),
+                    NotificationSettingsWidgets.buildNotificationTimingSelector(
+                        context, settings, cubit),
                     const Divider(),
                     const AdhanSoundsSectionWidget(),
                     const Divider(),
-                    NotificationSettingsWidgets.buildPrayerNotificationsSettings(context, settings, cubit),
+                    NotificationSettingsWidgets
+                        .buildPrayerNotificationsSettings(
+                            context, settings, cubit),
                   ],
                 ],
               ),

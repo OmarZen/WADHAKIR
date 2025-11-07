@@ -28,7 +28,7 @@ class _QuranTopBar extends StatelessWidget {
         (defaults.textColor ?? AppColors.getTextColor(isDark));
     final Color bgColor = backgroundColor ??
         (defaults.backgroundColor ?? AppColors.getBackgroundColor(isDark));
-    final Color accentColor = defaults.accentColor ?? Colors.teal;
+    final Color accentColor = defaults.accentColor ?? const Color(0xFF20497D);
     final Color linearBg = accentColor is MaterialColor
         ? accentColor.shade100
         : accentColor.withValues(alpha: 0.15);
@@ -56,22 +56,36 @@ class _QuranTopBar extends StatelessWidget {
           children: [
             if (defaults.showBackButton ?? false)
               IconButton(
-                icon: SvgPicture.asset(
-                    defaults.backIconPath ?? AssetsPath.assets.backArrow,
-                    height: defaults.iconSize,
-                    colorFilter: ColorFilter.mode(
-                        defaults.iconColor ?? Colors.teal, BlendMode.srcIn)),
+                icon: defaults.backIcon != null
+                    ? Icon(
+                        defaults.backIcon,
+                        size: defaults.iconSize ?? 24,
+                        color: defaults.iconColor ?? const Color(0xFF20497D),
+                      )
+                    : SvgPicture.asset(
+                        defaults.backIconPath ?? AssetsPath.assets.backArrow,
+                        height: defaults.iconSize,
+                        colorFilter: ColorFilter.mode(
+                            defaults.iconColor ?? const Color(0xFF20497D),
+                            BlendMode.srcIn)),
                 onPressed: () {
                   Navigator.pop(context);
                 },
               ),
             if (defaults.showMenuButton ?? true)
               IconButton(
-                icon: SvgPicture.asset(
-                    defaults.menuIconPath ?? AssetsPath.assets.buttomSheet,
-                    height: defaults.iconSize,
-                    colorFilter: ColorFilter.mode(
-                        defaults.iconColor ?? Colors.teal, BlendMode.srcIn)),
+                icon: defaults.menuIcon != null
+                    ? Icon(
+                        defaults.menuIcon,
+                        size: defaults.iconSize ?? 24,
+                        color: defaults.iconColor ?? const Color(0xFF20497D),
+                      )
+                    : SvgPicture.asset(
+                        defaults.menuIconPath ?? AssetsPath.assets.buttomSheet,
+                        height: defaults.iconSize,
+                        colorFilter: ColorFilter.mode(
+                            defaults.iconColor ?? const Color(0xFF20497D),
+                            BlendMode.srcIn)),
                 onPressed: () {
                   _showMenuBottomSheet(context, defaults);
                 },
@@ -81,12 +95,20 @@ class _QuranTopBar extends StatelessWidget {
               children: [
                 if (defaults.showAudioButton ?? true)
                   IconButton(
-                    icon: SvgPicture.asset(
-                        defaults.audioIconPath ?? AssetsPath.assets.surahsAudio,
-                        height: defaults.iconSize,
-                        colorFilter: ColorFilter.mode(
-                            defaults.iconColor ?? Colors.teal,
-                            BlendMode.srcIn)),
+                    icon: defaults.audioIcon != null
+                        ? Icon(
+                            defaults.audioIcon,
+                            size: defaults.iconSize ?? 24,
+                            color:
+                                defaults.iconColor ?? const Color(0xFF20497D),
+                          )
+                        : SvgPicture.asset(
+                            defaults.audioIconPath ??
+                                AssetsPath.assets.surahsAudio,
+                            height: defaults.iconSize,
+                            colorFilter: ColorFilter.mode(
+                                defaults.iconColor ?? const Color(0xFF20497D),
+                                BlendMode.srcIn)),
                     onPressed: () async {
                       await AudioCtrl.instance.state.audioPlayer.stop();
                       // await AudioCtrl.instance.lastAudioSource();
@@ -173,7 +195,7 @@ class _MenuBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color textColor = style.textColor ?? AppColors.getTextColor(isDark);
-    final Color accentColor = style.accentColor ?? Colors.teal;
+    final Color accentColor = style.accentColor ?? const Color(0xFF20497D);
 
     return DefaultTabController(
       length: 3,
@@ -262,7 +284,7 @@ class _IndexTab extends StatelessWidget {
     final surahs = QuranLibrary.getAllSurahs(isArabic: false);
 
     final Color textColor = style.textColor ?? AppColors.getTextColor(isDark);
-    final Color accentColor = style.accentColor ?? Colors.teal;
+    final Color accentColor = style.accentColor ?? const Color(0xFF20497D);
 
     return DefaultTabController(
       length: 2,
@@ -320,7 +342,7 @@ class _SearchTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color textColor = AppColors.getTextColor(isDark);
-    const Color accentColor = Colors.teal;
+    const Color accentColor = Color(0xFF20497D);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Padding(
@@ -700,7 +722,7 @@ class _SurahsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color textColor = AppColors.getTextColor(isDark);
-    const Color accentColor = Colors.teal;
+    const Color accentColor = Color(0xFF20497D);
     return ListView.builder(
       itemCount: surahs.length,
       itemBuilder: (context, index) => Material(
@@ -782,7 +804,7 @@ class _JozzList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color textColor = AppColors.getTextColor(isDark);
-    const Color accentColor = Colors.teal;
+    const Color accentColor = Color(0xFF20497D);
     return ListView.builder(
       itemCount: jozzList.length,
       itemBuilder: (context, jozzIndex) => Container(

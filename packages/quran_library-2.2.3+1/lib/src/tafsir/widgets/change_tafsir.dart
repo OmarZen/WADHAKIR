@@ -51,7 +51,7 @@ class ChangeTafsirDialog extends StatelessWidget {
                           .name,
                   style: QuranLibrary().cairoStyle.copyWith(
                         color: tafsirStyle.currentTafsirColor ??
-                            const Color(0xffCDAD80),
+                            const Color(0xFF20497D),
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -61,7 +61,8 @@ class ChangeTafsirDialog extends StatelessWidget {
               const SizedBox(width: 6),
               Icon(Icons.keyboard_arrow_down_rounded,
                   size: 24,
-                  color: tafsirStyle.unSelectedTafsirColor ?? Colors.grey),
+                  color: tafsirStyle.unSelectedTafsirColor ??
+                      const Color(0xFF9A9BA8)),
             ],
           ),
         ),
@@ -132,7 +133,7 @@ class DailogBuild extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 6.0),
         margin: const EdgeInsets.symmetric(vertical: 6.0),
         decoration: BoxDecoration(
-          color: tafsirStyle.backgroundTitleColor ?? const Color(0xffCDAD80),
+          color: tafsirStyle.backgroundTitleColor ?? const Color(0xFF20497D),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -189,16 +190,16 @@ class TafsirItemWidget extends StatelessWidget {
             margin: const EdgeInsets.symmetric(vertical: 4),
             decoration: BoxDecoration(
               color: tafsirCtrl.radioValue.value == tafsirIndex
-                  ? (tafsirStyle.selectedTafsirColor ?? const Color(0xffCDAD80))
+                  ? (tafsirStyle.selectedTafsirColor ?? const Color(0xFF20497D))
                       .withValues(alpha: 0.3)
                   : (tafsirStyle.unSelectedTafsirColor ??
-                          const Color(0xffCDAD80))
+                          const Color(0xFF20497D))
                       .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: tafsirCtrl.radioValue.value == tafsirIndex
                     ? (tafsirStyle.selectedTafsirBorderColor ??
-                            const Color(0xffCDAD80))
+                            const Color(0xFF20497D))
                         .withValues(alpha: 0.5)
                     : tafsirStyle.unSelectedTafsirBorderColor ??
                         Colors.transparent,
@@ -217,7 +218,7 @@ class TafsirItemWidget extends StatelessWidget {
                             shape: BoxShape.circle,
                             border: Border.all(
                                 color: tafsirStyle.unSelectedTafsirColor ??
-                                    const Color(0xffCDAD80),
+                                    const Color(0xFF20497D),
                                 width: 2),
                             color: Colors.white,
                           ),
@@ -226,7 +227,7 @@ class TafsirItemWidget extends StatelessWidget {
                                   Icons.done,
                                   size: 14,
                                   color: tafsirStyle.selectedTafsirColor ??
-                                      const Color(0xffCDAD80),
+                                      const Color(0xFF20497D),
                                 )
                               : null,
                         )
@@ -252,7 +253,7 @@ class TafsirItemWidget extends StatelessWidget {
                                         strokeWidth: 2,
                                         color:
                                             tafsirStyle.selectedTafsirColor ??
-                                                const Color(0xffCDAD80),
+                                                const Color(0xFF20497D),
                                       ),
                                     )
                                   : const SizedBox.shrink();
@@ -266,7 +267,7 @@ class TafsirItemWidget extends StatelessWidget {
                                         tafsirCtrl.downloadIndex.value
                                     ? tafsirCtrl.onDownloading.value
                                         ? tafsirStyle.selectedTafsirColor ??
-                                            const Color(0xffCDAD80)
+                                            const Color(0xFF20497D)
                                         : Colors.transparent
                                     : Colors.transparent,
                                 value: tafsirCtrl.progress.value,
@@ -294,7 +295,7 @@ class TafsirItemWidget extends StatelessWidget {
                                       size: 22,
                                       color:
                                           tafsirStyle.unSelectedTafsirColor ??
-                                              const Color(0xffCDAD80),
+                                              const Color(0xFF20497D),
                                     ),
                                     onPressed: () async {
                                       tafsirCtrl.downloadIndex.value =

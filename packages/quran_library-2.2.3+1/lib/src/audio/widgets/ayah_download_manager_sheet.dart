@@ -69,7 +69,7 @@ class AyahDownloadManagerSheet extends StatelessWidget {
             width: 48,
             height: 5,
             decoration: BoxDecoration(
-              color: style?.handleColor ?? Colors.grey.shade300,
+              color: style?.handleColor ?? const Color(0xFFCECACA),
               borderRadius: BorderRadius.circular(style?.handleRadius ?? 8),
             ),
           ),
@@ -127,9 +127,9 @@ class AyahDownloadManagerSheet extends StatelessWidget {
                                 radius: 22,
                                 backgroundColor: fullyDownloaded
                                     ? (style?.avatarDownloadedColor ??
-                                        Colors.teal)
+                                        const Color(0xFF20497D))
                                     : (style?.avatarUndownloadedColor ??
-                                            Colors.teal)
+                                            const Color(0xFF20497D))
                                         .withValues(alpha: .4),
                                 child: Text(
                                   s.surahNumber
@@ -221,7 +221,7 @@ class DownloadedAndDeleteWidget extends StatelessWidget {
               tooltip: style?.deleteTooltipText ?? 'حذف السورة',
               icon: Icon(
                 style?.deleteIcon ?? Icons.delete_outline,
-                color: style?.deleteIconColor ?? Colors.red,
+                color: style?.deleteIconColor ?? const Color(0xFFE74C3C),
               ),
               onPressed: isBusy ? null : () => onRequestDelete(s.surahNumber),
             ),
@@ -241,7 +241,7 @@ class DownloadedAndDeleteWidget extends StatelessWidget {
                 },
                 style: ButtonStyle(
                   backgroundColor: WidgetStatePropertyAll(
-                      style?.stopButtonBackground ?? Colors.teal),
+                      style?.stopButtonBackground ?? const Color(0xFF20497D)),
                   foregroundColor: WidgetStatePropertyAll(
                       style?.stopButtonForeground ?? Colors.white),
                 ),
@@ -256,9 +256,9 @@ class DownloadedAndDeleteWidget extends StatelessWidget {
                   isDownloading ? null : () => onRequestDownload(s.surahNumber),
               style: ButtonStyle(
                 backgroundColor: WidgetStatePropertyAll(
-                    style?.downloadBackground ?? Colors.teal),
+                    style?.downloadBackground ?? const Color(0xFF20497D)),
                 foregroundColor: WidgetStatePropertyAll(
-                    style?.downloadForeground ?? Colors.teal),
+                    style?.downloadForeground ?? const Color(0xFF20497D)),
               ),
               icon: Icon(
                 fullyDownloaded
@@ -308,7 +308,7 @@ class DownloadedTextWidget extends StatelessWidget {
       style: style?.surahSubtitleStyle ??
           QuranLibrary().cairoStyle.copyWith(
                 fontSize: 14,
-                color: Colors.grey[700],
+                color: const Color(0xFF9A9BA8),
                 height: 1.2,
               ),
     );
@@ -343,9 +343,9 @@ class ProgressIndicatorWidget extends StatelessWidget {
                 // Use the animated value provided by TweenAnimationBuilder
                 value: value,
                 backgroundColor:
-                    style?.progressBackgroundColor ?? Colors.grey.shade200,
+                    style?.progressBackgroundColor ?? const Color(0xFFCECACA),
                 valueColor: AlwaysStoppedAnimation<Color>(
-                    (style?.progressColor ?? Colors.teal)
+                    (style?.progressColor ?? const Color(0xFF20497D))
                         .withValues(alpha: .25)),
               )),
     );

@@ -3,7 +3,8 @@
     "close": "Close",
     "cancel": "Cancel",
     "save": "Save",
-    "ok": "OK"
+    "ok": "OK",
+    "downloading": "Downloading"
   },
   "global": {
     "jan": "January",
@@ -75,7 +76,8 @@
     "palestine_support": "O God, support our brothers in Palestine, ward off calamity from them, and grant them relief from every worry and a way out from every difficulty, and grant them patience and steadfastness, feed them when they are hungry and secure them when they are afraid, and grant them clear victory.",
     "palestine_support_call_to_action": "Prayer and support",
     "palestine_duah": "Do not forget to remember Allah's mercy",
-    "close": "Close"
+    "close": "Close",
+    "support_developer": "Support the Developer"
   },
   "quran": {
     "meccan": "Meccan",
@@ -87,7 +89,37 @@
     "search_surah": "Search for a surah...",
     "no_search_results": "No search results",
     "try_different_search": "Try different search",
-    "ayahs": "Ayah"
+    "ayahs": "Ayah",
+    "fonts_dialog_title": "Fonts",
+    "fonts_dialog_notes": "Download Quran fonts to make the Mushaf look similar to Medina Mushaf",
+    "tab_index": "Index",
+    "tab_search": "Search",
+    "tab_bookmarks": "Bookmarks",
+    "tab_surahs": "Surahs",
+    "tab_juzz": "Juzz",
+    "search_in_quran": "Search in Quran",
+    "page": "Page",
+    "yellow_bookmarks": "Yellow Bookmarks",
+    "red_bookmarks": "Red Bookmarks",
+    "green_bookmarks": "Green Bookmarks",
+    "count": "Count",
+    "no_saved_bookmarks": "No saved bookmarks",
+    "juz": "Juz",
+    "sajda": "Sajda",
+    "close": "Close",
+    "default_font": "Default Font",
+    "mushaf_font": "Mushaf Font",
+    "delete_fonts": "Delete Fonts",
+    "download_fonts": "Download Fonts",
+    "tafsir": "Tafsir",
+    "no_ayahs_for_selected_surah": "No ayahs for the selected surah",
+    "ayah_count": "Ayah Count",
+    "about_surah": "About Surah",
+    "surah_names": "Surah Names",
+    "surah_info": "Surah Info",
+    "tafsir_list": "Tafsir",
+    "translation_list": "Translations",
+    "footnotes": "Footnotes:"
   },
   "azkar": {
     "items": "Items",
@@ -180,7 +212,11 @@
     "test_regular": "Test Regular Prayers Adhan",
     "default_sound_message": "System default notification sound will be used",
     "playing_adhan": "Playing adhan for",
-    "adhan_error": "❌ Error playing adhan"
+    "adhan_error": "❌ Error playing adhan",
+    "notifications_count": "Notifications",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
   },
   "nav_bar": {
     "home": "Home",
@@ -326,5 +362,8 @@
     "error_network_check": "Check your internet connection and try again",
     "error_try_again_later": "Try again later",
     "retry_button": "Retry"
+  },
+  "splash": {
+    "tag_line": "Your Complete Islamic Companion"
   }
 }

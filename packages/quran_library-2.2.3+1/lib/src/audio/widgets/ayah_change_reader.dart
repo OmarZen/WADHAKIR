@@ -34,7 +34,7 @@ class AyahChangeReader extends StatelessWidget {
       BuildContext context, AyahAudioStyle effectiveStyle, bool dark) {
     final Color activeColor =
         effectiveStyle.readerNameInItemColor ?? AppColors.getTextColor(dark);
-    final Color inactiveColor = Colors.teal.withValues(alpha: 0.05);
+    final Color inactiveColor = const Color(0xFF20497D).withValues(alpha: 0.05);
     final double itemFontSize = effectiveStyle.readerNameInItemFontSize ?? 14;
     final Color textColor =
         effectiveStyle.textColor ?? AppColors.getTextColor(dark);
@@ -155,13 +155,13 @@ class _SelectionIndicator extends StatelessWidget {
       width: 20,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.black, width: 2),
+        border: Border.all(color: const Color(0xFF0D1122), width: 2),
       ),
       child: isSelected
           ? const Icon(
               Icons.done,
               size: 14,
-              color: Colors.black,
+              color: Color(0xFF0D1122),
             )
           : null,
     );

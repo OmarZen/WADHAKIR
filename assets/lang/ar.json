@@ -3,7 +3,8 @@
     "close": "إغلاق",
     "cancel": "إلغاء",
     "save": "حفظ",
-    "ok": "موافق"
+    "ok": "موافق",
+    "downloading": "جارِ التحميل"
   },
   "global": {
     "jan": "يناير",
@@ -75,7 +76,8 @@
     "palestine_support": "اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين",
     "palestine_support_call_to_action": "دعاء ونصرة",
     "palestine_duah": "لا تنسوهم من دعائكم",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "support_developer": "ادعم المطور"  
   },
   "quran": {
     "meccan": "مكية",
@@ -87,7 +89,37 @@
     "search_surah": "البحث عن سورة...",
     "no_search_results": "لا توجد نتائج للبحث",
     "try_different_search": "حاول البحث بكلمات مختلفة",
-    "ayahs": "آية"
+    "ayahs": "آية",
+    "fonts_dialog_title": "الخطوط",
+    "fonts_dialog_notes": "لجعل مظهر المصحف مشابه لمصحف المدينة يمكنك تحميل خطوط المصحف",
+    "tab_index": "الفهرس",
+    "tab_search": "البحث",
+    "tab_bookmarks": "الفواصل",
+    "tab_surahs": "السور",
+    "tab_juzz": "الأجزاء",
+    "search_in_quran": "بحث في القرآن",
+    "page": "صفحة",
+    "yellow_bookmarks": "الفواصل الصفراء",
+    "red_bookmarks": "الفواصل الحمراء",
+    "green_bookmarks": "الفواصل الخضراء",
+    "count": "عدد",
+    "no_saved_bookmarks": "لا توجد فواصل محفوظة",
+    "juz": "الجزء",
+    "sajda": "سجدة",
+    "close": "إغلاق",
+    "default_font": "الخط الأساسي",
+    "mushaf_font": "خط المصحف",
+    "delete_fonts": "حذف الخطوط",
+    "download_fonts": "تحميل الخطوط",
+    "tafsir": "التفسير",
+    "no_ayahs_for_selected_surah": "لا توجد آيات للسورة المحددة",
+    "ayah_count": "عدد الآيات",
+    "about_surah": "عن السورة",
+    "surah_names": "أسماء السورة",
+    "surah_info": "معلومات السورة",
+    "tafsir_list": "التفاسير",
+    "translation_list": "الترجمات",
+    "footnotes": "الحواشي:"
   },
   "azkar": {
     "items": "أذكار",
@@ -180,7 +212,11 @@
     "test_regular": "تجربة أذان الصلوات الأخرى",
     "default_sound_message": "سيتم استخدام صوت التنبيه الافتراضي للنظام",
     "playing_adhan": "تشغيل أذان",
-    "adhan_error": "❌ خطأ في تشغيل الأذان"
+    "adhan_error": "❌ خطأ في تشغيل الأذان",
+    "notifications_count": "إشعار",
+    "system": "النظام",
+    "light": "فاتح",
+    "dark": "داكن"
   },
   "nav_bar": {
     "home": "الرئيسية",
@@ -326,5 +362,8 @@
     "error_network_check": "تأكد من اتصالك بالإنترنت وحاول مرة أخرى",
     "error_try_again_later": "حاول مرة أخرى بعد قليل",
     "retry_button": "إعادة المحاولة"
+  },
+  "splash": {
+    "tag_line": "رفيقك الإسلامي الكامل"
   }
 }

@@ -11,8 +11,8 @@ class SurahCollapsedPlayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final bg = style?.audioSliderBackgroundColor ?? const Color(0xfffaf7f3);
-    final handleColor = Colors.grey.withValues(alpha: .6);
+    final bg = style?.audioSliderBackgroundColor ?? const Color(0xFFF9F9F9);
+    final handleColor = const Color(0xFF9A9BA8).withValues(alpha: .6);
     final borderColor =
         (style?.backgroundColor ?? AppColors.getBackgroundColor(isDark))
             .withValues(alpha: 0.15);
@@ -30,7 +30,7 @@ class SurahCollapsedPlayWidget extends StatelessWidget {
           border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withValues(alpha: .2),
+              color: const Color(0xFF9A9BA8).withValues(alpha: .2),
               spreadRadius: 1,
               blurRadius: 9,
               offset: const Offset(0, -10),

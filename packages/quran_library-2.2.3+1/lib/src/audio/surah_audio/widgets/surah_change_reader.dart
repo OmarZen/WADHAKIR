@@ -39,7 +39,7 @@ class SurahChangeSurahReader extends StatelessWidget {
             enabled: true,
             label: 'Change Reader',
             child: const Icon(Icons.keyboard_arrow_down_outlined,
-                size: 24, color: Colors.black),
+                size: 24, color: Color(0xFF0D1122)),
           ),
         ],
       ),
@@ -55,7 +55,7 @@ class SurahChangeSurahReader extends StatelessWidget {
           ReadersConstants.surahReaderInfo.length,
           (index) => ListTile(
             minTileHeight: 40,
-            selectedColor: Colors.teal,
+            selectedColor: const Color(0xFF20497D),
             title: Text(
               '${ReadersConstants.surahReaderInfo[index]['name']}'.tr,
               style: QuranLibrary().cairoStyle.copyWith(
@@ -63,7 +63,7 @@ class SurahChangeSurahReader extends StatelessWidget {
                           ReadersConstants.surahReaderInfo[index]['readerN']
                       ? style?.readerNameInItemColor ??
                           AppColors.getTextColor(isDark)
-                      : const Color(0xffcdba72),
+                      : const Color(0xFF20497D),
                   fontSize: 14,
                   fontFamily: "kufi"),
             ),
@@ -76,12 +76,12 @@ class SurahChangeSurahReader extends StatelessWidget {
                     color: surahAudioCtrl.state.surahReaderNameValue ==
                             ReadersConstants.surahReaderInfo[index]['readerN']
                         ? AppColors.getTextColor(isDark)
-                        : const Color(0xffcdba72),
+                        : const Color(0xFF20497D),
                     width: 2),
               ),
               child: surahAudioCtrl.state.surahReaderNameValue ==
                       ReadersConstants.surahReaderInfo[index]['readerN']
-                  ? const Icon(Icons.done, size: 14, color: Colors.black)
+                  ? const Icon(Icons.done, size: 14, color: Color(0xFF0D1122))
                   : null,
             ),
             onTap: () => surahAudioCtrl.changeSurahReadersOnTap(context, index),

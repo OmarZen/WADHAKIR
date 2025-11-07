@@ -56,8 +56,8 @@ class ActualTafsirWidget extends StatelessWidget {
             children: <InlineSpan>[
               WidgetSpan(
                   child: context.horizontalDivider(
-                color:
-                    tafsirStyle.textColor ?? Colors.grey.withValues(alpha: 0.8),
+                color: tafsirStyle.textColor ??
+                    const Color(0xFF9A9BA8).withValues(alpha: 0.8),
                 height: 1.5,
               )),
             ],
@@ -73,7 +73,7 @@ class ActualTafsirWidget extends StatelessWidget {
                       children: tafsir.tafsirText.toFlutterText(isDark),
                       style: TextStyle(
                           color: tafsirStyle.textColor ??
-                              (isDark ? Colors.white : Colors.black),
+                              (isDark ? Colors.white : const Color(0xFF0D1122)),
                           height: 1.5,
                           fontSize:
                               (tafsirStyle.fontSize ?? fontSizeArabic).sp),
@@ -82,7 +82,7 @@ class ActualTafsirWidget extends StatelessWidget {
                       children: _buildTranslationSpans(),
                       style: TextStyle(
                           color: tafsirStyle.textColor ??
-                              (isDark ? Colors.white : Colors.black),
+                              (isDark ? Colors.white : const Color(0xFF0D1122)),
                           height: 1.5,
                           fontSize:
                               (tafsirStyle.fontSize ?? fontSizeArabic).sp),

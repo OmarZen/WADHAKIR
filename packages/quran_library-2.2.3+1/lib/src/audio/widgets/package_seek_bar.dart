@@ -139,9 +139,11 @@ class _PackageSliderWidgetState extends State<PackageSliderWidget> {
             padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: widget.activeTrackColor ?? Colors.teal,
-                inactiveTrackColor: widget.inactiveTrackColor ?? Colors.grey,
-                thumbColor: widget.thumbColor ?? Colors.teal,
+                activeTrackColor:
+                    widget.activeTrackColor ?? const Color(0xFF20497D),
+                inactiveTrackColor:
+                    widget.inactiveTrackColor ?? const Color(0xFF9A9BA8),
+                thumbColor: widget.thumbColor ?? const Color(0xFF20497D),
                 thumbShape: CustomSliderThumbRect(
                   thumbRadius: 20,
                   min: widget.min,
@@ -178,7 +180,7 @@ class _PackageSliderWidgetState extends State<PackageSliderWidget> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8.0, vertical: 2.0),
                     decoration: const BoxDecoration(
-                      color: Colors.teal,
+                      color: Color(0xFF20497D),
                       borderRadius: BorderRadius.all(
                         Radius.circular(4),
                       ),
@@ -200,7 +202,7 @@ class _PackageSliderWidgetState extends State<PackageSliderWidget> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 2.0),
                         decoration: const BoxDecoration(
-                          color: Colors.teal,
+                          color: Color(0xFF20497D),
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(4),
                             bottomLeft: Radius.circular(4),
@@ -225,7 +227,7 @@ class _PackageSliderWidgetState extends State<PackageSliderWidget> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 2.0),
                         decoration: const BoxDecoration(
-                          color: Colors.teal,
+                          color: Color(0xFF20497D),
                           borderRadius: BorderRadius.only(
                             topRight: Radius.circular(4),
                             bottomRight: Radius.circular(4),

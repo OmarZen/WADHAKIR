@@ -119,7 +119,9 @@ class AyahLongClickDialog extends StatelessWidget {
           margin: const EdgeInsets.all(4.0),
           decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(6.0)),
-              border: Border.all(width: 2, color: Colors.teal.shade100)),
+              border: Border.all(
+                  width: 2,
+                  color: const Color(0xFF20497D).withValues(alpha: 0.15))),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -162,7 +164,9 @@ class AyahLongClickDialog extends StatelessWidget {
                       ),
                     ),
                   )),
-              context.verticalDivider(height: 30, color: Colors.teal.shade100),
+              context.verticalDivider(
+                  height: 30,
+                  color: const Color(0xFF20497D).withValues(alpha: 0.15)),
               GestureDetector(
                 onTap: () {
                   if (QuranCtrl.instance.state.fontsSelected.value == 1) {
@@ -182,10 +186,12 @@ class AyahLongClickDialog extends StatelessWidget {
                 },
                 child: const Icon(
                   Icons.copy_rounded,
-                  color: Colors.teal,
+                  color: Color(0xFF20497D),
                 ),
               ),
-              context.verticalDivider(height: 30, color: Colors.teal.shade100),
+              context.verticalDivider(
+                  height: 30,
+                  color: const Color(0xFF20497D).withValues(alpha: 0.15)),
               GestureDetector(
                 onTap: () {
                   showTafsirOnTap(
@@ -231,12 +237,13 @@ class AyahLongClickDialog extends StatelessWidget {
                 },
                 child: const Icon(
                   Icons.text_snippet_rounded,
-                  color: Colors.teal,
+                  color: Color(0xFF20497D),
                 ),
               ),
               anotherMenuChild != null
                   ? context.verticalDivider(
-                      height: 30, color: Colors.teal.shade100)
+                      height: 30,
+                      color: const Color(0xFF20497D).withValues(alpha: 0.15))
                   : const SizedBox(),
               anotherMenuChild != null
                   ? GestureDetector(
@@ -252,7 +259,8 @@ class AyahLongClickDialog extends StatelessWidget {
                   : const SizedBox(),
               secondMenuChild != null
                   ? context.verticalDivider(
-                      height: 30, color: Colors.teal.shade100)
+                      height: 30,
+                      color: const Color(0xFF20497D).withValues(alpha: 0.15))
                   : const SizedBox(),
               secondMenuChild != null
                   ? GestureDetector(

@@ -106,7 +106,7 @@ class BuildBottomSection extends StatelessWidget {
     return TextStyle(
       fontSize: UiHelper.currentOrientation(20.0, 22.0, context),
       fontFamily: 'naskh',
-      color: const Color(0xff77554B),
+      color: const Color(0xFF20497D),
       package: 'quran_library',
     );
   }
@@ -117,7 +117,7 @@ class BuildBottomSection extends StatelessWidget {
     return TextStyle(
       fontSize: UiHelper.currentOrientation(18.0, 22.0, context),
       fontFamily: 'naskh',
-      color: const Color(0xff77554B),
+      color: const Color(0xFF20497D),
       package: 'quran_library',
     );
   }

@@ -19,7 +19,7 @@ class SurahSkipToNext extends StatelessWidget {
             label: 'next'.tr,
             child: Icon(
               Icons.skip_next,
-              color: style!.playIconColor ?? Colors.teal,
+              color: style!.playIconColor ?? const Color(0xFF20497D),
               size: style!.nextIconHeight ?? 38,
             ),
           ),

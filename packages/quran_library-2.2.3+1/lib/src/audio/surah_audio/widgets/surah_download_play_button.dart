@@ -12,7 +12,7 @@ class SurahDownloadPlayButton extends StatelessWidget {
           ? IconButton(
               icon: Icon(
                 Icons.close,
-                color: style?.iconColor ?? Colors.black,
+                color: style?.iconColor ?? const Color(0xFF0D1122),
                 size: 28,
               ),
               onPressed: () => surahAudioCtrl.cancelDownload(),
@@ -38,7 +38,7 @@ class SurahDownloadPlayButton extends StatelessWidget {
                         label: 'download'.tr,
                         child: const Icon(Icons.cloud_download_outlined)),
                     iconSize: 24.0,
-                    color: style?.iconColor ?? Colors.teal,
+                    color: style?.iconColor ?? const Color(0xFF20497D),
                     onPressed: () async {
                       surahAudioCtrl.state.isPlayingSurahsMode = true;
                       if (surahAudioCtrl.state.isDownloading.value) {

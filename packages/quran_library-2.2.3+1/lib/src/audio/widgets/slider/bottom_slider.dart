@@ -105,7 +105,7 @@ class BottomSlider extends StatelessWidget {
                         height: 8,
                         margin: const EdgeInsets.only(top: 8),
                         decoration: BoxDecoration(
-                          color: Colors.grey,
+                          color: const Color(0xFF9A9BA8),
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),

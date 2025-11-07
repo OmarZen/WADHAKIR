@@ -26,8 +26,8 @@ extension FontsDownloadWidgetExtension on QuranCtrl {
     ];
 
     // Theming fallbacks
-    final Color accent =
-        downloadFontsDialogStyle?.linearProgressColor ?? Colors.teal;
+    final Color accent = downloadFontsDialogStyle?.linearProgressColor ??
+        const Color(0xFF20497D);
     final Color background = downloadFontsDialogStyle?.linearProgressColor ??
         AppColors.getBackgroundColor(isDark);
     final Color textColor =
@@ -234,7 +234,8 @@ extension FontsDownloadWidgetExtension on QuranCtrl {
         children: [
           // Header
           HeaderDialogWidget(
-              title: downloadFontsDialogStyle?.title ?? 'الخطوط'),
+              title: downloadFontsDialogStyle?.title ?? 'الخطوط',
+              isDark: isDark),
           const SizedBox(height: 8.0),
           context.horizontalDivider(
             width: MediaQuery.sizeOf(context).width * .5,

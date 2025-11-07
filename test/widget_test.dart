@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
-import 'package:wadhakir/domain/usecases/set_font_size_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
@@ -40,9 +39,6 @@ void main() {
           AppSettingsRepositoryImpl(sharedPreferences),
         ),
         setLanguageUseCase: SetLanguageUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        setFontSizeUseCase: SetFontSizeUseCase(
           AppSettingsRepositoryImpl(sharedPreferences),
         ),
         setNotificationSettingsUseCase: SetNotificationSettingsUseCase(

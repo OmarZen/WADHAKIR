@@ -83,7 +83,7 @@ class ShowTafseer extends StatelessWidget {
                   height: 5,
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: tafsirStyle.dividerColor ?? Colors.grey.shade500,
+                    color: tafsirStyle.dividerColor ?? const Color(0xFF9A9BA8),
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -103,7 +103,7 @@ class ShowTafseer extends StatelessWidget {
                           Container(
                               width: 1,
                               height: 24,
-                              color: Colors.grey.shade300),
+                              color: const Color(0xFFCECACA)),
                           const SizedBox(width: 8),
                           tafsirStyle.fontSizeWidget ??
                               fontSizeDropDown(

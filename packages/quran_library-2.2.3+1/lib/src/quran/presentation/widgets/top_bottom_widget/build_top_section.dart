@@ -59,7 +59,7 @@ class BuildTopSection extends StatelessWidget {
                                               18.0, 22.0, context),
                                           // fontWeight: FontWeight.bold,
                                           fontFamily: 'naskh',
-                                          color: const Color(0xff77554B)),
+                                          color: const Color(0xFF20497D)),
                                     )),
                           )
                         : const SizedBox.shrink(),
@@ -85,7 +85,7 @@ class BuildTopSection extends StatelessWidget {
                                               18.0, 22.0, context),
                                           // fontWeight: FontWeight.bold,
                                           fontFamily: 'naskh',
-                                          color: const Color(0xff77554B)),
+                                          color: const Color(0xFF20497D)),
                                     )),
                           )
                         : const SizedBox.shrink(),
@@ -111,7 +111,7 @@ class BuildTopSection extends StatelessWidget {
     return TextStyle(
       fontSize: UiHelper.currentOrientation(18.0, 22.0, context),
       fontFamily: 'naskh',
-      color: const Color(0xff77554B),
+      color: const Color(0xFF20497D),
       package: 'quran_library',
     );
   }

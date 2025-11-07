@@ -38,7 +38,7 @@ class SurahSeekBar extends StatelessWidget {
                             positionData.position.inSeconds;
                         c.updateControllerValues(positionData);
                       },
-                      activeTrackColor: Colors.teal,
+                      activeTrackColor: const Color(0xFF20497D),
                       textColor: Colors.white,
                       timeShow: true,
                       languageCode: languageCode,

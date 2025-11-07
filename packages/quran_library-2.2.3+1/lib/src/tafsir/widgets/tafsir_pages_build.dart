@@ -70,7 +70,7 @@ class TafsirPagesBuild extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.1),
+                    color: const Color(0xFF9A9BA8).withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 0),
                   ),
@@ -78,7 +78,7 @@ class TafsirPagesBuild extends StatelessWidget {
                 border: Border.symmetric(
                   horizontal: BorderSide(
                     color: tafsirStyle.textColor ??
-                        Colors.grey.withValues(alpha: 0.8),
+                        const Color(0xFF9A9BA8).withValues(alpha: 0.8),
                     width: 1.2,
                   ),
                 ),

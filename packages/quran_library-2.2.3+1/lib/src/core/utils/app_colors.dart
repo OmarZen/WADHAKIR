@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color background = Color(0xfffaf7f3);
-  static const Color darkBackground = Color(0xff1E1E1E);
-  static const Color textColor = Colors.black;
+  static const Color background = Color(0xFFF9F9F9);
+  static const Color darkBackground = Color(0xFF121212);
+  static const Color textColor = Color(0xFF0D1122);
   static const Color darkTextColor = Colors.white;
 
   // Getter theme colors

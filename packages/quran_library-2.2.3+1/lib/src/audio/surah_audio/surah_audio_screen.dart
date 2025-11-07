@@ -40,7 +40,7 @@ class SurahAudioScreen extends StatelessWidget {
           config: SlidingPanelConfig(
             anchorPosition: 100,
             expandPosition: UiHelper.currentOrientation(
-                size.height * .7, size.height * .8, context),
+                size.height * .75, size.height * .9, context),
           ),
           pageContent: SurahBackDropWidget(
               style: style, isDark: dark, languageCode: languageCode),

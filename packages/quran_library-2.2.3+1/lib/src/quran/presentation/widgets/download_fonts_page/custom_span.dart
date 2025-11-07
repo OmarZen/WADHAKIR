@@ -196,7 +196,7 @@ TextSpan _span({
               //         pageIndex == 498)
               // ? 20
               // : null,
-              color: ayahIconColor ?? Colors.teal,
+              color: ayahIconColor ?? const Color(0xFF20497D),
               backgroundColor: ayahBookmarked.contains(ayahUQNum)
                   ? bookmarksColor
                   : (bookmarksAyahs.contains(ayahUQNum)

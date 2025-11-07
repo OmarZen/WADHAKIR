@@ -18,9 +18,9 @@ class PlaySurahsWidget extends StatelessWidget {
     final borderColor =
         (style?.backgroundColor ?? AppColors.getBackgroundColor(isDark))
             .withValues(alpha: 0.15);
-    final handleColor = Colors.grey.withValues(alpha: .6);
+    final handleColor = const Color(0xFF9A9BA8).withValues(alpha: .6);
     final numberColor = style?.surahNameColor ?? AppColors.getTextColor(isDark);
-    final accent = style?.playIconColor ?? Colors.teal;
+    final accent = style?.playIconColor ?? const Color(0xFF20497D);
     return Align(
       alignment: AlignmentDirectional.centerEnd,
       child: Container(
@@ -33,7 +33,7 @@ class PlaySurahsWidget extends StatelessWidget {
           border: Border.all(color: borderColor, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withValues(alpha: .2),
+              color: const Color(0xFF9A9BA8).withValues(alpha: .2),
               spreadRadius: 1,
               blurRadius: 9,
               offset: const Offset(0, -10),

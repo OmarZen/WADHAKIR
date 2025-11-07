@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
-import 'package:wadhakir/domain/usecases/set_font_size_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
@@ -16,7 +15,6 @@ class SettingsCubit extends Cubit<SettingsState> {
   final GetSettingsStreamUseCase _getSettingsStreamUseCase;
   final SetThemeModeUseCase _setThemeModeUseCase;
   final SetLanguageUseCase _setLanguageUseCase;
-  final SetFontSizeUseCase _setFontSizeUseCase;
   final SetNotificationSettingsUseCase _setNotificationSettingsUseCase;
   final PrayerNotificationService _notificationService;
 
@@ -27,14 +25,12 @@ class SettingsCubit extends Cubit<SettingsState> {
     required GetSettingsStreamUseCase getSettingsStreamUseCase,
     required SetThemeModeUseCase setThemeModeUseCase,
     required SetLanguageUseCase setLanguageUseCase,
-    required SetFontSizeUseCase setFontSizeUseCase,
     required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
     PrayerNotificationService? notificationService,
   })  : _getSettingsUseCase = getSettingsUseCase,
         _getSettingsStreamUseCase = getSettingsStreamUseCase,
         _setThemeModeUseCase = setThemeModeUseCase,
         _setLanguageUseCase = setLanguageUseCase,
-        _setFontSizeUseCase = setFontSizeUseCase,
         _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
         _notificationService =
             notificationService ?? PrayerNotificationService(),
@@ -71,14 +67,6 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setLanguage(String language) async {
     try {
       await _setLanguageUseCase(language);
-    } catch (e) {
-      emit(SettingsError(e.toString()));
-    }
-  }
-
-  Future<void> setFontSize(double fontSize) async {
-    try {
-      await _setFontSizeUseCase(fontSize);
     } catch (e) {
       emit(SettingsError(e.toString()));
     }

@@ -23,7 +23,9 @@ class SurahRepeatWidget extends StatelessWidget {
         return IconButton(
           iconSize: 30,
           icon: Icon(icons[index]),
-          color: index == 0 ? Colors.teal.withValues(alpha: .4) : Colors.teal,
+          color: index == 0
+              ? const Color(0xFF20497D).withValues(alpha: .4)
+              : const Color(0xFF20497D),
           onPressed: () {
             // surahAudioCtrl.toggleSurahsMode(index == 0 ? false : true);
             surahAudioCtrl.state.audioPlayer.setLoopMode(cycleModes[

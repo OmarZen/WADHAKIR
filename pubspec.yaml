@@ -123,6 +123,8 @@ flutter:
     - assets/lang/
     - assets/json_data/
     - assets/adhan_sounds/
+    - assets/icons/icon.png
+    - assets/logo.png
     - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see

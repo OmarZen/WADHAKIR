@@ -12,11 +12,10 @@ import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:wadhakir/core/localization/language_manager.dart';
-import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
 import 'package:wadhakir/domain/usecases/get_radios_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
-import 'package:wadhakir/domain/usecases/set_font_size_usecase.dart';
+import 'package:wadhakir/features/splash_screen/splash_screen.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
@@ -79,7 +78,6 @@ void main() async {
   );
   final setThemeModeUseCase = SetThemeModeUseCase(appSettingsRepository);
   final setLanguageUseCase = SetLanguageUseCase(appSettingsRepository);
-  final setFontSizeUseCase = SetFontSizeUseCase(appSettingsRepository);
 
   final setNotificationSettingsUseCase =
       SetNotificationSettingsUseCase(appSettingsRepository);
@@ -100,7 +98,6 @@ void main() async {
       getSettingsStreamUseCase: getSettingsStreamUseCase,
       setThemeModeUseCase: setThemeModeUseCase,
       setLanguageUseCase: setLanguageUseCase,
-      setFontSizeUseCase: setFontSizeUseCase,
       setNotificationSettingsUseCase: setNotificationSettingsUseCase,
       // Quran
 
@@ -123,7 +120,6 @@ class MyApp extends StatelessWidget {
   final GetSettingsStreamUseCase getSettingsStreamUseCase;
   final SetThemeModeUseCase setThemeModeUseCase;
   final SetLanguageUseCase setLanguageUseCase;
-  final SetFontSizeUseCase setFontSizeUseCase;
   final SetNotificationSettingsUseCase setNotificationSettingsUseCase;
 
   // Quran
@@ -142,7 +138,6 @@ class MyApp extends StatelessWidget {
     required this.getSettingsStreamUseCase,
     required this.setThemeModeUseCase,
     required this.setLanguageUseCase,
-    required this.setFontSizeUseCase,
     required this.setNotificationSettingsUseCase,
     // Quran
 
@@ -164,7 +159,6 @@ class MyApp extends StatelessWidget {
             getSettingsStreamUseCase: getSettingsStreamUseCase,
             setThemeModeUseCase: setThemeModeUseCase,
             setLanguageUseCase: setLanguageUseCase,
-            setFontSizeUseCase: setFontSizeUseCase,
             setNotificationSettingsUseCase: setNotificationSettingsUseCase,
           ),
           lazy: false,
@@ -252,7 +246,7 @@ class MyApp extends StatelessWidget {
               supportedLocales: LanguageManager.supportedLocales,
               locale: locale,
               onGenerateRoute: AppRouter.onGenerateRoute,
-              home: const ScaffoldWithNavBar(),
+              home: const WadhakirSplashScreen(),
             );
           },
         ),

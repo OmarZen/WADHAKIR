@@ -11,8 +11,6 @@ abstract class AppSettingsRepository {
 
   Future<void> setShowBasmala(bool showBasmala);
 
-  Future<void> setFontSize(double fontSize);
-
   Future<void> setNotificationSettings(NotificationSettingsModel settings);
 
   Stream<AppSettingsModel> get settingsStream;

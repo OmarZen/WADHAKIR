@@ -112,9 +112,9 @@ class SurahAudioList extends StatelessWidget {
           gradient: isSelected
               ? LinearGradient(
                   colors: [
-                    (style?.primaryColor ?? Colors.teal)
+                    (style?.primaryColor ?? const Color(0xFF20497D))
                         .withValues(alpha: 0.15),
-                    (style?.primaryColor ?? Colors.teal)
+                    (style?.primaryColor ?? const Color(0xFF20497D))
                         .withValues(alpha: 0.08),
                   ],
                   begin: Alignment.centerLeft,
@@ -123,20 +123,21 @@ class SurahAudioList extends StatelessWidget {
               : null,
           color: !isSelected
               ? (isDark
-                  ? Colors.grey[800]?.withValues(alpha: 0.3)
+                  ? const Color(0xFF9A9BA8).withValues(alpha: 0.3)
                   : Colors.white.withValues(alpha: 0.6))
               : null,
           borderRadius: BorderRadius.circular(12.0),
           border: Border.all(
             color: isSelected
-                ? (style?.primaryColor ?? Colors.teal).withValues(alpha: 0.4)
+                ? (style?.primaryColor ?? const Color(0xFF20497D))
+                    .withValues(alpha: 0.4)
                 : Colors.transparent,
             width: 1.5,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: (style?.primaryColor ?? Colors.teal)
+                    color: (style?.primaryColor ?? const Color(0xFF20497D))
                         .withValues(alpha: 0.2),
                     blurRadius: 8.0,
                     spreadRadius: 1.0,
@@ -155,9 +156,9 @@ class SurahAudioList extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    (style?.primaryColor ?? Colors.teal)
+                    (style?.primaryColor ?? const Color(0xFF20497D))
                         .withValues(alpha: isSelected ? 0.8 : 0.6),
-                    (style?.primaryColor ?? Colors.teal)
+                    (style?.primaryColor ?? const Color(0xFF20497D))
                         .withValues(alpha: isSelected ? 0.6 : 0.4),
                   ],
                   begin: Alignment.topLeft,
@@ -166,7 +167,7 @@ class SurahAudioList extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20.0),
                 boxShadow: [
                   BoxShadow(
-                    color: (style?.primaryColor ?? Colors.teal)
+                    color: (style?.primaryColor ?? const Color(0xFF20497D))
                         .withValues(alpha: 0.3),
                     blurRadius: 4.0,
                     offset: const Offset(0, 2),
@@ -222,8 +223,9 @@ class SurahAudioList extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8.0, vertical: 3.0),
                         decoration: BoxDecoration(
-                          color: (style?.primaryColor ?? Colors.teal)
-                              .withValues(alpha: 0.1),
+                          color:
+                              (style?.primaryColor ?? const Color(0xFF20497D))
+                                  .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         child: Text(
@@ -256,8 +258,8 @@ class SurahAudioList extends StatelessWidget {
                         height: 36.0,
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? (style?.primaryColor ?? Colors.teal)
-                              : (style?.primaryColor ?? Colors.teal)
+                              ? (style?.primaryColor ?? const Color(0xFF20497D))
+                              : (style?.primaryColor ?? const Color(0xFF20497D))
                                   .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(18.0),
                         ),
@@ -271,7 +273,8 @@ class SurahAudioList extends StatelessWidget {
                                   : Icons.cloud_download_outlined,
                               color: isSelected
                                   ? Colors.white
-                                  : (style?.primaryColor ?? Colors.teal),
+                                  : (style?.primaryColor ??
+                                      const Color(0xFF20497D)),
                               size: 20.0,
                             ),
                           ),

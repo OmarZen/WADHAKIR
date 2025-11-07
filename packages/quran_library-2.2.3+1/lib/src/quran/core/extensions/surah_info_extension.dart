@@ -175,7 +175,8 @@ extension SurahInfoExtension on void {
                             decoration: BoxDecoration(
                               color: surahStyle?.primaryColor
                                       ?.withValues(alpha: 0.08) ??
-                                  Colors.teal.withValues(alpha: 0.08),
+                                  const Color(0xFF20497D)
+                                      .withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             padding: const EdgeInsets.symmetric(
@@ -203,13 +204,14 @@ extension SurahInfoExtension on void {
                         margin: const EdgeInsets.symmetric(horizontal: 8.0),
                         decoration: BoxDecoration(
                             color: surahStyle?.primaryColor ??
-                                Colors.teal.withValues(alpha: .10),
+                                const Color(0xFF20497D).withValues(alpha: .10),
                             borderRadius:
                                 const BorderRadius.all(Radius.circular(8)),
                             border: Border.all(
                               width: 1,
                               color: surahStyle?.primaryColor ??
-                                  Colors.teal.withValues(alpha: .30),
+                                  const Color(0xFF20497D)
+                                      .withValues(alpha: .30),
                             )),
                         child: Row(
                           children: [
@@ -268,20 +270,23 @@ extension SurahInfoExtension on void {
                                     const EdgeInsets.symmetric(horizontal: 8.0),
                                 decoration: BoxDecoration(
                                     color: surahStyle?.primaryColor ??
-                                        Colors.teal.withValues(alpha: .10),
+                                        const Color(0xFF20497D)
+                                            .withValues(alpha: .10),
                                     borderRadius: const BorderRadius.all(
                                         Radius.circular(8)),
                                     border: Border.all(
                                       width: 1,
                                       color: surahStyle?.primaryColor ??
-                                          Colors.teal.withValues(alpha: .30),
+                                          const Color(0xFF20497D)
+                                              .withValues(alpha: .30),
                                     )),
                                 child: TabBar(
                                   unselectedLabelColor: Colors.grey,
                                   indicatorSize: TabBarIndicatorSize.tab,
                                   dividerColor: Colors.transparent,
                                   indicatorColor: surahStyle?.primaryColor ??
-                                      Colors.teal.withValues(alpha: .20),
+                                      const Color(0xFF20497D)
+                                          .withValues(alpha: .20),
                                   indicatorWeight: 3,
                                   labelStyle: TextStyle(
                                     color: surahStyle?.titleColor ??
@@ -301,7 +306,8 @@ extension SurahInfoExtension on void {
                                     borderRadius: const BorderRadius.all(
                                         Radius.circular(8)),
                                     color: surahStyle?.indicatorColor ??
-                                        Colors.teal.withValues(alpha: .20),
+                                        const Color(0xFF20497D)
+                                            .withValues(alpha: .20),
                                   ),
                                   tabs: [
                                     Tab(

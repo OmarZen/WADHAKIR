@@ -50,7 +50,7 @@ class SurahHeaderWidget extends StatelessWidget {
           child: Text(
             surahNumber.toString(),
             style: TextStyle(
-              color: surahNameStyle?.surahNameColor ?? Colors.black,
+              color: surahNameStyle?.surahNameColor ?? const Color(0xFF0D1122),
               fontFamily: "surahName",
               fontSize: surahNameStyle?.surahNameSize,
               package: "quran_library",
@@ -90,7 +90,7 @@ class SurahHeaderWidget extends StatelessWidget {
                   surahNumber.toString(),
                   style: TextStyle(
                     color: surahNameStyle?.surahNameColor ??
-                        (isDark ? Colors.white : Colors.black),
+                        (isDark ? Colors.white : const Color(0xFF0D1122)),
                     fontFamily: "surahName",
                     fontSize: surahNameStyle?.surahNameSize ?? 120.0,
                     height: 1.2,

@@ -14,13 +14,13 @@ extension FontSizeExtension on Widget {
         button: true,
         enabled: true,
         label: 'Change Font Size',
-        child: Icon(
-          Icons.text_format_outlined,
+        child: const Icon(
+          Icons.text_fields,
           size: 34,
-          color: AppColors.getTextColor(isDark),
+          color: Color(0xFF20497D),
         ),
       ),
-      color: Colors.blue.withValues(alpha: .8),
+      color: const Color(0xFF20497D).withValues(alpha: .4),
       iconSize: height ?? 35.0,
       itemBuilder: (context) => [
         PopupMenuItem(
@@ -34,7 +34,8 @@ extension FontSizeExtension on Widget {
                   sliderTheme: SliderThemeData(
                     thumbColor: Colors.white,
                     activeTrackColor: Colors.white,
-                    inactiveTrackColor: Colors.tealAccent,
+                    inactiveTrackColor:
+                        const Color(0xFF20497D).withValues(alpha: 0.3),
                     overlayColor: Colors.white.withValues(alpha: 0.2),
                     valueIndicatorColor: Colors.white,
                     inactiveTickMarkColor: Colors.transparent,

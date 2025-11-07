@@ -24,8 +24,6 @@ import 'src/core/widgets/header_dialog_widget.dart';
 import 'package:archive/archive.dart' show ZipDecoder;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-
-
 part 'src/audio/widgets/slider/bottom_slider.dart';
 part 'src/audio/widgets/slider/controller/slider_controller.dart';
 part 'src/core/utils/assets_path.dart';

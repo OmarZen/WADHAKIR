@@ -88,7 +88,7 @@ class AboutSectionWidgets extends StatelessWidget {
             const SizedBox(height: 4),
             Center(
               child: Text(
-                l10n?.translate('settings.version') ?? 'الإصدار 1.1.0',
+                l10n?.translate('settings.version') ?? 'الإصدار 2.0.0+4',
                 style: theme.textTheme.bodyMedium,
               ),
             ),

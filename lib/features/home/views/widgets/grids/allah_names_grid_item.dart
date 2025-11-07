@@ -66,6 +66,8 @@ class AllahNamesGridItem extends StatelessWidget {
             ))
         .toList(growable: false);
 
+    if (!context.mounted) return;
+    
     // ignore: use_build_context_synchronously
     await showModalBottomSheet(
       context: context,

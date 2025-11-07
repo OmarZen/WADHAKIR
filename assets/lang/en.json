@@ -216,7 +216,20 @@
     "notifications_count": "Notifications",
     "system": "System",
     "light": "Light",
-    "dark": "Dark"
+    "dark": "Dark",
+    "exact_alarm_permission_title": "Prayer Time Notifications Permission",
+    "exact_alarm_permission_message": "Wadhakir app needs \"Exact Alarms\" permission to send prayer time notifications at their precise times.\n\nThis permission is necessary to ensure notifications arrive at the correct time for prayer and adhan.",
+    "later": "Later",
+    "grant_permission": "Grant Permission",
+    "activate_permission": "Activate Notification Permission",
+    "settings_instruction": "System settings will open.\n\nPlease enable \"Alarms & reminders\" to allow sending prayer time notifications at the exact time.\n\nSettings ← Alarms & reminders ← Enable",
+    "open_settings": "Open Settings",
+    "permission_required_title": "Permission Required",
+    "permission_required_message": "To receive prayer time notifications at the exact time, please enable \"Alarms & reminders\" permission from settings.\n\nSettings > Apps > Wadhakir > Permissions > Alarms & reminders",
+    "ok": "OK",
+    "notification_permission_title": "Notification Permission",
+    "notification_permission_message": "Wadhakir app needs notification permission to send prayer times, adhan, and azkar notifications.\n\nNo unwanted notifications will be sent.",
+    "exact_alarm_permission_warning": "Notifications will not arrive at the exact time without \"Alarms & reminders\" permission"
   },
   "nav_bar": {
     "home": "Home",

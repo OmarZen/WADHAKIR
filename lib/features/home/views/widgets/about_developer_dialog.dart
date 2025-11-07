@@ -151,6 +151,7 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                   onPressed: () async {
                     final url = Uri.parse(
                         'https://ipn.eg/S/omarzen2002/instapay/5uPbfh');
+                    if (!context.mounted) return;
                     try {
                       await launchUrl(url,
                           mode: LaunchMode.externalApplication);
@@ -158,6 +159,7 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                       try {
                         await launchUrl(url, mode: LaunchMode.platformDefault);
                       } catch (e) {
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                               content: Text('Could not open donation link')),
@@ -242,6 +244,7 @@ Widget _circleIconButton(
             await launchUrl(url, mode: LaunchMode.platformDefault);
           } catch (e) {
             // Show error if nothing works
+            if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Could not open link: ${url.toString()}')),
             );

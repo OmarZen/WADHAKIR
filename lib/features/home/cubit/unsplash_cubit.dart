@@ -58,7 +58,7 @@ class UnsplashCubit extends Cubit<UnsplashState> {
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
 
-      if (connectivityResult == ConnectivityResult.none) {
+      if (connectivityResult.contains(ConnectivityResult.none)) {
         await _loadLocalImages();
       } else {
         await _fetchFromUnsplash();

@@ -62,6 +62,8 @@ class RaqiaGridItem extends StatelessWidget {
     final map = json.decode(data) as Map<String, dynamic>;
     final List<dynamic> content = map['content'] as List<dynamic>;
 
+    if (!context.mounted) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,

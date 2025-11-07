@@ -57,10 +57,13 @@ class TasbihGridItem extends StatelessWidget {
 
   Future<void> _showAzkarSheet(BuildContext context, String assetPath) async {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final data = await rootBundle.loadString(assetPath);
     final map = json.decode(data) as Map<String, dynamic>;
     final List<dynamic> content = map['content'] as List<dynamic>;
-    final l10n = context.l10n;
+
+    if (!context.mounted) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,

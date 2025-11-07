@@ -65,9 +65,10 @@ class QuranScreen extends StatelessWidget {
             ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
             : theme.colorScheme.onSurface.withValues(alpha: 0.98),
         indicatorColor: theme.colorScheme.primary,
+        // Text color for ayah count and tab labels - white in light mode to show over primary color
         textColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
-            : theme.colorScheme.onSurface.withValues(alpha: 0.98),
+            : Colors.white,
         ayahCount: l10n?.translate('quran.ayah_count') ?? ' Ayah Count',
         firstTabText: l10n?.translate('quran.surah_names') ?? 'Surah Names',
         secondTabText: l10n?.translate('quran.surah_info') ?? 'Surah Info',

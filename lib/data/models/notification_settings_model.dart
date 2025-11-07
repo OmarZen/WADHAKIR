@@ -110,7 +110,7 @@ class NotificationSettingsModel extends Equatable {
 
   factory NotificationSettingsModel.defaultSettings() {
     return NotificationSettingsModel(
-      masterEnabled: true,
+      masterEnabled: false,
       persistentNotificationEnabled: false,
       fajrSettings: PrayerNotificationSettings.defaultSettings().copyWith(
         // Fajr is critical - use maximum importance

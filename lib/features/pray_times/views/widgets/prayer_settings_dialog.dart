@@ -798,11 +798,25 @@ class _CalculationMethodTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Radio<bool>(
-              value: true,
-              groupValue: isSelected,
-              onChanged: (_) => onTap(),
-              activeColor: theme.primaryColor,
+            Container(
+              width: 24,
+              height: 24,
+              margin: const EdgeInsets.only(left: 12, right: 8, top: 2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? theme.primaryColor : Colors.grey.shade400,
+                  width: 2,
+                ),
+                color: isSelected ? theme.primaryColor : Colors.transparent,
+              ),
+              child: isSelected
+                  ? Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
             ),
             const SizedBox(width: 8),
             Expanded(

@@ -33,8 +33,6 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     // Get other settings
     final showBasmala =
         _sharedPreferences.getBool(AppConstants.showBasmalaKey) ?? true;
-    final fontSize =
-        _sharedPreferences.getDouble(AppConstants.fontSizeKey) ?? 1.0;
 
     // Get notification settings
     final notificationSettingsJson =
@@ -55,7 +53,6 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       themeMode: themeMode,
       languageCode: languageCode,
       showBasmala: showBasmala,
-      fontSize: fontSize,
       notificationSettings: notificationSettings,
     );
 
@@ -87,15 +84,6 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     final settings = await getSettings();
     _cachedSettings = settings.copyWith(showBasmala: showBasmala);
-    _settingsController.add(_cachedSettings!);
-  }
-
-  @override
-  Future<void> setFontSize(double fontSize) async {
-    await _sharedPreferences.setDouble(AppConstants.fontSizeKey, fontSize);
-
-    final settings = await getSettings();
-    _cachedSettings = settings.copyWith(fontSize: fontSize);
     _settingsController.add(_cachedSettings!);
   }
 

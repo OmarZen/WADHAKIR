@@ -5,7 +5,6 @@ import 'package:wadhakir/features/home/views/screens/home_screen.dart';
 import 'package:wadhakir/features/radio/views/screens/radio_screen.dart';
 import 'package:wadhakir/features/campus/views/screens/qibla_screen.dart';
 import 'package:wadhakir/features/settings/view/screens/settings_screen.dart';
-import 'package:wadhakir/features/quran/views/screens/surah_detail_screen.dart';
 import 'package:wadhakir/features/pray_times/views/screens/prayer_times_screen.dart';
 
 class AppRouter {
@@ -16,13 +15,6 @@ class AppRouter {
 
       case AppConstants.homeScreenRoute:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
-
-      case AppConstants.surahDetailsRoute:
-        final args = settings.arguments as Map<String, dynamic>;
-        final surahNumber = args['surahNumber'] as int;
-        return MaterialPageRoute(
-          builder: (_) => SurahDetailScreen(surahNumber: surahNumber),
-        );
 
       case AppConstants.prayerTimesRoute:
         return MaterialPageRoute(builder: (_) => const PrayerTimesScreen());

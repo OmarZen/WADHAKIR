@@ -147,9 +147,44 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                   ],
                 ),
                 const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () async {
+                    final url = Uri.parse(
+                        'https://ipn.eg/S/omarzen2002/instapay/5uPbfh');
+                    try {
+                      await launchUrl(url,
+                          mode: LaunchMode.externalApplication);
+                    } catch (e) {
+                      try {
+                        await launchUrl(url, mode: LaunchMode.platformDefault);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text('Could not open donation link')),
+                        );
+                      }
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  icon: const Icon(Icons.favorite, size: 22),
+                  label: Text(
+                    l10n?.translate('home.support_developer') ??
+                        'ادعم المطور (InstaPay)',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 FilledButton(
                   onPressed: () {
-                    Share.share('شارك تطبيق واذكِّر لمنفعة الجميع بإذن الله');
+                    Share.share(
+                        'شارك تطبيق واذكِّر لمنفعة الجميع بإذن الله يمكنك الان التحميل من هنا: \n https://play.google.com/store/apps/details?id=com.bloom.wadhakir');
                   },
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,

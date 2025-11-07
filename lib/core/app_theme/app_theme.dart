@@ -48,7 +48,7 @@ const String _primaryFont = 'Almarai';
 const String _religiousFont = 'Jomhuria';
 
 final ThemeData lightTheme = ThemeData(
-  useMaterial3: true,
+  useMaterial3: false, // Required by quran_library package
   brightness: Brightness.light,
   primaryColor: _primaryColor,
   primaryColorDark: _secondaryColor,
@@ -167,7 +167,7 @@ final ThemeData lightTheme = ThemeData(
 );
 
 final ThemeData darkTheme = ThemeData(
-  useMaterial3: true,
+  useMaterial3: false, // Required by quran_library package
   brightness: Brightness.dark,
   primaryColor: _darkPrimaryColor,
   primaryColorDark: _darkSecondaryColor,

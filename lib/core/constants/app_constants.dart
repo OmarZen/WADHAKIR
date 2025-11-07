@@ -21,7 +21,6 @@ class AppConstants {
   static const String themeKey = 'theme_mode';
   static const String languageKey = 'language_code';
   static const String showBasmalaKey = 'show_basmala';
-  static const String fontSizeKey = 'font_size';
   static const String notificationSettingsKey = 'notification_settings';
 
   // Assets Paths

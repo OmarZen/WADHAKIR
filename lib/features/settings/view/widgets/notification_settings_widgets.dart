@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
+import 'package:wadhakir/core/utils/alarm_permission_helper.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
@@ -78,8 +79,43 @@ class NotificationSettingsWidgets extends StatelessWidget {
                   ),
                 ),
                 value: isEnabled,
-                onChanged: (value) => cubit.toggleNotifications(value),
-                activeColor: theme.colorScheme.primary,
+                onChanged: (value) async {
+                  if (value) {
+                    // Request permissions before enabling
+                    final permissions =
+                        await AlarmPermissionHelper.requestAllPermissions(
+                            context);
+
+                    // Only enable if we got notification permission at minimum
+                    if (permissions['notifications'] == true) {
+                      cubit.toggleNotifications(value);
+
+                      // Show warning if exact alarm permission was denied
+                      if (permissions['exactAlarms'] != true &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              l10n?.translate(
+                                      'settings.exact_alarm_permission_warning') ??
+                                  'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
+                            ),
+                            action: SnackBarAction(
+                              label: l10n?.translate('settings.settings') ??
+                                  'الإعدادات',
+                              onPressed: () => AlarmPermissionHelper
+                                  .showPermissionDeniedDialog(context),
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  } else {
+                    // Disable notifications
+                    cubit.toggleNotifications(value);
+                  }
+                },
+                activeThumbColor: theme.colorScheme.primary,
                 secondary: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.all(12),
@@ -132,8 +168,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: isEnabled
                       ? [
-                          theme.colorScheme.secondary.withValues(alpha: 0.15),
-                          theme.colorScheme.secondary.withValues(alpha: 0.05),
+                          theme.colorScheme.primary.withValues(alpha: 0.15),
+                          theme.colorScheme.primary.withValues(alpha: 0.05),
                         ]
                       : [
                           theme.colorScheme.surface,
@@ -145,7 +181,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: isEnabled
-                      ? theme.colorScheme.secondary.withValues(alpha: 0.3)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
                       : theme.colorScheme.outline.withValues(alpha: 0.2),
                   width: 1.5,
                 ),
@@ -175,20 +211,20 @@ class NotificationSettingsWidgets extends StatelessWidget {
                 ),
                 value: isEnabled,
                 onChanged: (value) => cubit.togglePersistentNotification(value),
-                activeColor: theme.colorScheme.secondary,
+                activeThumbColor: theme.colorScheme.primary,
                 secondary: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isEnabled
-                        ? theme.colorScheme.secondary.withValues(alpha: 0.15)
+                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
                         : theme.colorScheme.onSurface.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
                     isEnabled ? Icons.push_pin : Icons.push_pin_outlined,
                     color: isEnabled
-                        ? theme.colorScheme.secondary
+                        ? theme.colorScheme.primary
                         : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     size: 24,
                   ),
@@ -781,7 +817,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
                     prayerSettings: newSettings,
                   );
                 },
-                activeColor: theme.colorScheme.primary,
+                activeThumbColor: theme.colorScheme.primary,
               ),
             ),
           ),

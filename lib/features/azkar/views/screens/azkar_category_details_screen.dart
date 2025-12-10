@@ -147,6 +147,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
 
   Widget _buildCategoryContent(
       BuildContext context, AzkarCategorySelected state, ThemeData theme) {
+    final size = MediaQuery.of(context).size;
     if (state.category.items.isEmpty) {
       return Center(
         child: Text(
@@ -188,8 +189,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color:
-                                  theme.colorScheme.primary.withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -203,8 +204,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color:
-                                theme.colorScheme.primary.withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -243,130 +244,138 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                   // Progress indicator
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      '${_currentPage + 1}/${state.category.items.length}',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value:
-                            ((_currentPage + 1) / state.category.items.length),
-                        backgroundColor:
-                            theme.colorScheme.primary.withOpacity(0.1),
-                        color: theme.colorScheme.primary,
-                        minHeight: 8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Auto-advance toggle
-                  InkWell(
-                    onTap: () {
-                      setState(() {
-                        _autoAdvance = !_autoAdvance;
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _autoAdvance
-                            ? theme.colorScheme.primary.withOpacity(0.1)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _autoAdvance
-                                ? Icons.play_arrow_rounded
-                                : Icons.pause_rounded,
-                            size: 16,
-                            color: theme.colorScheme.primary,
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            context.l10n?.translate('azkar.auto') ?? 'تلقائي',
+                          child: Text(
+                            '${_currentPage + 1}/${state.category.items.length}',
                             style: TextStyle(
-                              fontSize: 12,
                               color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: ((_currentPage + 1) /
+                                  state.category.items.length),
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary,
+                              minHeight: 8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Auto-advance toggle
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              _autoAdvance = !_autoAdvance;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _autoAdvance
+                                  ? theme.colorScheme.primary
+                                      .withValues(alpha: 0.1)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _autoAdvance
+                                      ? Icons.play_arrow_rounded
+                                      : Icons.pause_rounded,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  context.l10n?.translate('azkar.auto_move') ??
+                                      'تلقائي',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
+            ),
 
-        // PageView for Azkar items - Touch anywhere to count
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              if (state.category.items.isNotEmpty && _currentPage < state.category.items.length) {
-                _incrementCounter(state.category.items[_currentPage]);
-              }
-            },
-            behavior: HitTestBehavior.translucent,
-            child: PageView.builder(
-              controller: _pageController,
-              physics: const BouncingScrollPhysics(),
-              itemCount: state.category.items.length,
-              itemBuilder: (context, index) {
-                final item = state.category.items[index];
-                return AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _animationController,
-                      child: SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, 0.1),
-                          end: Offset.zero,
-                        ).animate(CurvedAnimation(
-                          parent: _animationController,
-                          curve: Curves.easeOut,
-                        )),
-                        child: _buildAdhkarPage(context, item, theme),
-                      ),
+            SizedBox(height: size.height * 0.02),
+
+            // PageView for Azkar items - Touch anywhere to count
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  if (state.category.items.isNotEmpty &&
+                      _currentPage < state.category.items.length) {
+                    _incrementCounter(state.category.items[_currentPage]);
+                  }
+                },
+                behavior: HitTestBehavior.translucent,
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: state.category.items.length,
+                  itemBuilder: (context, index) {
+                    final item = state.category.items[index];
+                    return AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return FadeTransition(
+                          opacity: _animationController,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.1),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                              parent: _animationController,
+                              curve: Curves.easeOut,
+                            )),
+                            child: _buildAdhkarPage(context, item, theme),
+                          ),
+                        );
+                      },
                     );
                   },
-                );
-              },
+                ),
+              ),
             ),
-          ),
-        ),
 
-        // Bottom panel
-        _buildBottomPanel(context, state, theme),
+            // Bottom panel
+            _buildBottomPanel(context, state, theme),
+          ],
+        ),
       ],
     );
   }
@@ -385,7 +394,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
               ),
             ),
             child: Column(
@@ -410,7 +419,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -456,7 +465,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -478,7 +487,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                   color: theme.cardColor,
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.2),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
                       blurRadius: 16,
                       spreadRadius: 2,
                     ),
@@ -499,8 +508,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           return CircularProgressIndicator(
                             value: value,
                             strokeWidth: 8,
-                            backgroundColor:
-                                theme.colorScheme.primary.withOpacity(0.1),
+                            backgroundColor: theme.colorScheme.primary
+                                .withValues(alpha: 0.1),
                             color: theme.colorScheme.primary,
                           );
                         },
@@ -524,8 +533,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                             '${context.l10n?.translate('azkar.from') ?? 'من'} $maxCount',
                             style: TextStyle(
                               fontSize: 14,
-                              color:
-                                  theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6),
                             ),
                           ),
                       ],
@@ -563,6 +572,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
               ),
             ),
           ),
+          // add more space
+          const SizedBox(height: 12),
         ],
       ),
     );
@@ -581,7 +592,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.1),
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

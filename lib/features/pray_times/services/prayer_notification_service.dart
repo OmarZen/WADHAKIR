@@ -59,20 +59,26 @@ class PrayerNotificationService {
       ReceivedNotification receivedNotification) async {
     log('Notification displayed: ${receivedNotification.id}');
 
-    // Get sound path from payload
+    // Get sound settings from payload
     final soundPath = receivedNotification.payload?['soundPath'];
+    final useCustomAdhan =
+        receivedNotification.payload?['useCustomAdhan'] == 'true';
     final prayerName = receivedNotification.payload?['prayer'];
 
-    log('Playing adhan for $prayerName with sound: ${soundPath ?? "default"}');
+    log('Notification for $prayerName - useCustomAdhan: $useCustomAdhan, soundPath: ${soundPath ?? "none"}');
 
-    // Play adhan with volume and flip controls
-    if (soundPath != null && soundPath.isNotEmpty) {
+    // Only play custom adhan if explicitly using custom sound
+    // Default notification sound is handled by the channel itself
+    if (useCustomAdhan && soundPath != null && soundPath.isNotEmpty) {
+      log('Playing custom adhan for $prayerName');
       AdhanPlayerService().playAdhan(
         soundPath: soundPath,
         onComplete: () {
           log('Adhan playback completed for $prayerName');
         },
       );
+    } else {
+      log('Using default notification sound for $prayerName (no custom adhan)');
     }
   }
 
@@ -181,9 +187,17 @@ class PrayerNotificationService {
       }
     }
 
-    // Determine channel key based on prayer (match repository channel keys)
-    final String channelKey =
-        prayerName.toLowerCase() == 'fajr' ? 'fajr_channel' : 'prayers_channel';
+    // Determine if using custom adhan
+    final bool useCustomAdhan =
+        customSoundPath != null && customSoundPath.isNotEmpty;
+    final bool isFajr = prayerName.toLowerCase() == 'fajr';
+
+    // Use appropriate channel based on sound preference
+    final String channelKey = useCustomAdhan
+        ? (isFajr ? 'fajr_channel' : 'prayers_channel')
+        : (isFajr
+            ? 'fajr_channel_default_sound'
+            : 'prayers_channel_default_sound');
 
     // Create immediate notification
     await AwesomeNotifications().createNotification(
@@ -192,17 +206,19 @@ class PrayerNotificationService {
         channelKey: channelKey,
         groupKey: 'prayer_notifications',
         title: '🕌 اختبار: حان وقت صلاة $prayerNameArabic',
-        body: 'هذا إشعار تجريبي - اضغط أزرار الصوت أو اقلب الهاتف للإيقاف',
+        body:
+            'هذا إشعار تجريبي${useCustomAdhan ? ' - اضغط أزرار الصوت أو اقلب الهاتف للإيقاف' : ''}',
         notificationLayout: NotificationLayout.Default,
         payload: {
           'prayer': prayerName,
           'time': DateTime.now().toIso8601String(),
           'soundPath': customSoundPath ?? '',
+          'useCustomAdhan': useCustomAdhan.toString(),
           'isTest': 'true',
         },
         wakeUpScreen: true,
-        category: NotificationCategory.Alarm,
-        criticalAlert: prayerName.toLowerCase() == 'fajr',
+        category: NotificationCategory.Reminder,
+        criticalAlert: isFajr,
       ),
       actionButtons: [
         NotificationActionButton(

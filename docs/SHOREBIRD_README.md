@@ -64,25 +64,17 @@ Located in `.github/workflows/`:
 
 ---
 
-## 🤖 CI/CD Setup (Required for GitHub Actions)
+## 📖 Manual Deployment Guide
 
-To use the automated workflows, you need to:
+For complete step-by-step instructions on deploying releases and patches manually, see:
 
-1. **Generate CI Token**:
-   ```bash
-   shorebird login:ci
-   ```
+**[Manual Deployment Guide](../SHOREBIRD_MANUAL_DEPLOYMENT.md)**
 
-2. **Add to GitHub Secrets**:
-   - Go to: Settings → Secrets and variables → Actions
-   - Add secret: `SHOREBIRD_TOKEN` with the token value
-
-3. **Run Workflows**:
-   - Go to Actions tab
-   - Select a workflow
-   - Click "Run workflow"
-
-**Full instructions:** See [CI/CD Setup Guide](SHOREBIRD_CI_SETUP.md)
+This guide includes:
+- Complete workflow examples
+- PowerShell script usage
+- Troubleshooting tips
+- Real-world scenarios
 
 ---
 

@@ -4,7 +4,7 @@
 
 param(
     [string]$Target = "lib/main.dart",
-    [string]$Artifact = "appbundle",  # Options: appbundle, apk
+    [string]$Artifact = "aab",  # Options: aab, apk
     [switch]$Verbose
 )
 
@@ -42,7 +42,7 @@ try {
         Write-Host "✅ Android Release Build Completed Successfully!" -ForegroundColor Green
         Write-Host ""
         
-        if ($ARTIFACT_TYPE -eq "appbundle") {
+        if ($ARTIFACT_TYPE -eq "aab") {
             $outputPath = "build\app\outputs\bundle\release\app-release.aab"
             Write-Host "📦 App Bundle Location:" -ForegroundColor Cyan
             Write-Host "   $outputPath" -ForegroundColor White

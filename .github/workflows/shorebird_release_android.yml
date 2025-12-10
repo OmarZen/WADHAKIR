@@ -12,9 +12,9 @@ on:
         required: true
         type: choice
         options:
-          - appbundle
+          - aab
           - apk
-        default: appbundle
+        default: aab
 
 jobs:
   release:

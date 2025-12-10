@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
-import 'package:wadhakir/features/mosque_finder/views/widgets/mosque_list_bottom_sheet.dart';
+import 'package:wadhakir/features/home/views/widgets/mosque_list_bottom_sheet.dart';
 
 class NearestMosqueGridItem extends StatelessWidget {
   const NearestMosqueGridItem({super.key});

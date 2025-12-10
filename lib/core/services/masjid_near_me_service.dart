@@ -1,6 +1,6 @@
 import 'dart:convert';
-import '../models/mosque_model.dart';
 import 'package:http/http.dart' as http;
+import '../../data/models/mosque_model.dart';
 
 class MasjidNearMeService {
   static const String _baseUrl = 'https://api.masjidnear.me/v1/masjids';

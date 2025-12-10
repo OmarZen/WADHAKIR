@@ -27,18 +27,15 @@ jobs:
     name: Deploy iOS Patch
     runs-on: macos-latest
     
+    env:
+      SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+    
     steps:
       - name: 📚 Checkout repository
         uses: actions/checkout@v4
       
       - name: 🐦 Setup Shorebird
         uses: shorebirdtech/setup-shorebird@v1
-      
-      - name: 🔐 Shorebird Login
-        env:
-          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
-        run: |
-          shorebird login:ci
       
       - name: 🔍 Pre-Patch Analysis
         run: |

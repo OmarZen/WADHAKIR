@@ -17,6 +17,9 @@ jobs:
     name: Deploy Android Patch
     runs-on: ubuntu-latest
     
+    env:
+      SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+    
     steps:
       - name: 📚 Checkout repository
         uses: actions/checkout@v4
@@ -29,12 +32,6 @@ jobs:
       
       - name: 🐦 Setup Shorebird
         uses: shorebirdtech/setup-shorebird@v1
-      
-      - name: 🔐 Shorebird Login
-        env:
-          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
-        run: |
-          shorebird login:ci
       
       - name: 🔍 Pre-Patch Analysis
         run: |

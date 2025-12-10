@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
@@ -40,7 +39,6 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
     final l10n = AppLocalizations.of(context);
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
 
     return BlocBuilder<PrayerTimesCubit, PrayerTimesState>(
       builder: (context, state) {
@@ -100,36 +98,26 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
               'label': l10n?.translate('home.fajr') ?? 'الفجر',
               'time': prayerTimes.fajr,
               'icon': Icons.brightness_2_outlined,
-              'color': isDark ? darkMorningAzkarColor : morningAzkarColor,
-              'delay': 0.1,
             },
             {
               'label': l10n?.translate('home.dhuhr') ?? 'الظهر',
               'time': prayerTimes.dhuhr,
               'icon': Icons.wb_sunny_outlined,
-              'color': isDark ? darkQuranDuaColor : quranDuaColor,
-              'delay': 0.2,
             },
             {
               'label': l10n?.translate('home.asr') ?? 'العصر',
               'time': prayerTimes.asr,
               'icon': Icons.wb_sunny,
-              'color': isDark ? darkPrayerAzkarColor : prayerAzkarColor,
-              'delay': 0.3,
             },
             {
               'label': l10n?.translate('home.maghrib') ?? 'المغرب',
               'time': prayerTimes.maghrib,
               'icon': Icons.nightlight_round,
-              'color': isDark ? darkSleepAzkarColor : sleepAzkarColor,
-              'delay': 0.4,
             },
             {
               'label': l10n?.translate('home.isha') ?? 'العشاء',
               'time': prayerTimes.isha,
               'icon': Icons.nights_stay_outlined,
-              'color': isDark ? darkEveningAzkarColor : eveningAzkarColor,
-              'delay': 0.5,
             },
           ];
 
@@ -324,32 +312,24 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
 
                 SizedBox(height: size.height * 0.015),
 
-                // Prayer cards horizontal scroll with proper padding for shadows
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: size.height * 0.01),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: size.width * 0.02,
-                      vertical: size.height * 0.005,
-                    ),
-                    clipBehavior: Clip.none,
-                    child: Row(
-                      children: [
-                        for (final item in items)
-                          _PrayerTile(
-                            label: item['label'] as String,
-                            time: item['time'] as DateTime,
-                            isNext: (item['label'] as String) == nextPrayerName,
-                            iconData: item['icon'] as IconData,
-                            color: item['color'] as Color,
-                            size: size,
-                            theme: theme,
-                          ),
-                      ],
-                    ),
-                  ),
+                // Prayer cards grid - non-scrollable
+                Row(
+                  children: [
+                    for (int i = 0; i < items.length; i++)
+                      Expanded(
+                        child: _PrayerTile(
+                          label: items[i]['label'] as String,
+                          time: items[i]['time'] as DateTime,
+                          isNext:
+                              (items[i]['label'] as String) == nextPrayerName,
+                          iconData: items[i]['icon'] as IconData,
+                          size: size,
+                          theme: theme,
+                          isFirst: i == 0,
+                          isLast: i == items.length - 1,
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -420,181 +400,103 @@ class _PrayerTile extends StatelessWidget {
   final DateTime time;
   final bool isNext;
   final IconData iconData;
-  final Color color;
   final Size size;
   final ThemeData theme;
+  final bool isFirst;
+  final bool isLast;
 
   const _PrayerTile({
     required this.label,
     required this.time,
     required this.isNext,
     required this.iconData,
-    required this.color,
     required this.size,
     required this.theme,
+    required this.isFirst,
+    required this.isLast,
   });
 
   @override
   Widget build(BuildContext context) {
-    final timeStr = DateFormat('hh:mm a').format(time);
+    final timeStr = DateFormat('hh:mm').format(time);
 
     return Container(
-      width: size.width * 0.22, // More compact: ~90px on standard devices
-      margin: EdgeInsets.symmetric(horizontal: size.width * 0.01),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Main tile with gradient - reduced shadows
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.015,
-              vertical: size.height * 0.012,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isNext
-                    ? [
-                        color,
-                        color.withValues(alpha: 0.85),
-                      ]
-                    : [
-                        color.withValues(alpha: 0.12),
-                        color.withValues(alpha: 0.08),
-                      ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isNext
-                    ? color.withValues(alpha: 0.4)
-                    : color.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
-              // Reduced shadows to prevent cutoff
-              boxShadow: isNext
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                        spreadRadius: 0,
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.08),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icon with gradient background
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isNext
-                          ? [
-                              Colors.white,
-                              Colors.white.withValues(alpha: 0.95),
-                            ]
-                          : [
-                              color.withValues(alpha: 0.15),
-                              color.withValues(alpha: 0.1),
-                            ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    iconData,
-                    color: isNext ? color : color.withValues(alpha: 0.9),
-                    size: 22,
-                  ),
-                ),
-
-                SizedBox(height: size.height * 0.008),
-
-                // Prayer name
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: isNext ? Colors.white : color,
-                    fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-
-                SizedBox(height: size.height * 0.004),
-
-                // Time with subtle background
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.018,
-                    vertical: size.height * 0.005,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isNext
-                        ? Colors.white.withValues(alpha: 0.25)
-                        : color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    timeStr,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: isNext ? Colors.white : color,
-                      fontSize: 12,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      margin: EdgeInsets.only(
+        left: isFirst ? 0 : size.width * 0.01,
+        right: isLast ? 0 : size.width * 0.01,
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: size.width * 0.01,
+          vertical: size.height * 0.01,
+        ),
+        decoration: BoxDecoration(
+          color: isNext ? theme.colorScheme.primary : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isNext
+                ? theme.colorScheme.primary
+                : theme.colorScheme.primary.withValues(alpha: 0.2),
+            width: 1,
           ),
-
-          // Next prayer badge
-          if (isNext)
-            Positioned(
-              top: -6,
-              right: -6,
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white,
-                      Colors.white.withValues(alpha: 0.95),
-                    ],
+          boxShadow: isNext
+              ? [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: color,
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.notifications_active_rounded,
-                  size: 14,
-                  color: color,
-                ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isNext
+                    ? Colors.white.withValues(alpha: 0.2)
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                iconData,
+                color: isNext ? Colors.white : theme.colorScheme.primary,
+                size: 16,
               ),
             ),
-        ],
+
+            SizedBox(height: size.height * 0.006),
+
+            // Prayer name
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isNext ? Colors.white : theme.colorScheme.onSurface,
+                fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
+                fontSize: 11,
+              ),
+            ),
+
+            SizedBox(height: size.height * 0.003),
+
+            // Time
+            Text(
+              timeStr,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: isNext ? Colors.white : theme.colorScheme.primary,
+                fontSize: 10,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

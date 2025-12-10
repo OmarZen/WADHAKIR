@@ -6,6 +6,9 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 class NotificationRepositoryImpl implements NotificationRepository {
   static const String _channelKeyFajr = 'fajr_channel';
   static const String _channelKeyPrayers = 'prayers_channel';
+  static const String _channelKeyFajrDefault = 'fajr_channel_default_sound';
+  static const String _channelKeyPrayersDefault =
+      'prayers_channel_default_sound';
   static const String _channelKeyPersistent = 'persistent_prayer_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
@@ -19,34 +22,76 @@ class NotificationRepositoryImpl implements NotificationRepository {
 
   @override
   Future<void> initialize() async {
+    // First, remove old channels if they exist to force recreation
+    try {
+      await AwesomeNotifications().removeChannel(_channelKeyFajr);
+      await AwesomeNotifications().removeChannel(_channelKeyPrayers);
+      await AwesomeNotifications().removeChannel(_channelKeyFajrDefault);
+      await AwesomeNotifications().removeChannel(_channelKeyPrayersDefault);
+    } catch (e) {
+      // Channels might not exist yet, ignore error
+    }
+
     await AwesomeNotifications().initialize(
       null, // Use default app icon
       [
-        // Fajr channel - Maximum importance
+        // Fajr channel - Custom adhan (no notification sound)
         NotificationChannel(
           channelKey: _channelKeyFajr,
-          channelName: 'صلاة الفجر',
-          channelDescription: 'تنبيهات صلاة الفجر',
+          channelName: 'صلاة الفجر (أذان)',
+          channelDescription: 'تنبيهات صلاة الفجر مع الأذان المخصص',
           importance: NotificationImportance.Max,
           defaultColor: const Color(0xFF20497D),
-          ledColor: Colors.blue,
-          playSound: true,
+          ledColor: const Color(0xFF20497D),
+          playSound: false,
+          soundSource: null,
           enableVibration: true,
           channelShowBadge: true,
           locked: false,
+          onlyAlertOnce: true,
         ),
-        // Other prayers channel - High importance
+        // Other prayers channel - Custom adhan (no notification sound)
         NotificationChannel(
           channelKey: _channelKeyPrayers,
-          channelName: 'أوقات الصلاة',
-          channelDescription: 'تنبيهات الصلوات الخمس',
+          channelName: 'أوقات الصلاة (أذان)',
+          channelDescription: 'تنبيهات الصلوات مع الأذان المخصص',
           importance: NotificationImportance.High,
           defaultColor: const Color(0xFF20497D),
-          ledColor: const Color(0xFFDAA520),
+          ledColor: const Color(0xFF20497D),
+          playSound: false,
+          soundSource: null,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+        ),
+        // Fajr channel - Default notification sound (short beep)
+        NotificationChannel(
+          channelKey: _channelKeyFajrDefault,
+          channelName: 'صلاة الفجر (صوت النظام)',
+          channelDescription: 'تنبيهات صلاة الفجر بصوت النظام',
+          importance: NotificationImportance.Max,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
           playSound: true,
           enableVibration: true,
           channelShowBadge: true,
           locked: false,
+          onlyAlertOnce: true,
+        ),
+        // Other prayers channel - Default notification sound (short beep)
+        NotificationChannel(
+          channelKey: _channelKeyPrayersDefault,
+          channelName: 'أوقات الصلاة (صوت النظام)',
+          channelDescription: 'تنبيهات الصلوات بصوت النظام',
+          importance: NotificationImportance.High,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
         ),
         // Persistent notification channel - Default importance (no sound)
         NotificationChannel(
@@ -128,9 +173,14 @@ class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     final int notificationId = _getNotificationId(prayerName);
-    final String channelKey = prayerName.toLowerCase() == 'fajr'
-        ? _channelKeyFajr
-        : _channelKeyPrayers;
+    final bool isFajr = prayerName.toLowerCase() == 'fajr';
+    final bool useCustomAdhan = settings.customSoundPath != null &&
+        settings.customSoundPath!.isNotEmpty;
+
+    // Select channel based on sound preference
+    final String channelKey = useCustomAdhan
+        ? (isFajr ? _channelKeyFajr : _channelKeyPrayers)
+        : (isFajr ? _channelKeyFajrDefault : _channelKeyPrayersDefault);
 
     // Format time for display
     final String formattedTime = _formatTime(prayerTime);
@@ -147,11 +197,12 @@ class NotificationRepositoryImpl implements NotificationRepository {
         payload: {
           'prayer': prayerName,
           'time': prayerTime.toIso8601String(),
-          'soundPath': settings.customSoundPath ?? '', // Include sound path
+          'soundPath': settings.customSoundPath ?? '',
+          'useCustomAdhan': useCustomAdhan.toString(),
         },
         wakeUpScreen: true,
-        category: NotificationCategory.Alarm,
-        criticalAlert: prayerName.toLowerCase() == 'fajr',
+        category: NotificationCategory.Reminder,
+        criticalAlert: isFajr,
       ),
       actionButtons: [
         NotificationActionButton(

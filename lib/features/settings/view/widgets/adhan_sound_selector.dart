@@ -388,6 +388,8 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
                         ? theme.colorScheme.primary
                         : theme.colorScheme.onSurface,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -610,12 +612,16 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
                             color: theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            _getCurrentSoundName(),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                          Flexible(
+                            child: Text(
+                              _getCurrentSoundName(),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

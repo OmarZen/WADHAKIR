@@ -64,7 +64,7 @@ class PrayAzkarGridItem extends StatelessWidget {
     final List<dynamic> content = map['content'] as List<dynamic>;
 
     if (!context.mounted) return;
-    
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,

@@ -8,6 +8,7 @@ import 'package:wadhakir/features/azkar/cubit/azkar_cubit.dart';
 import 'package:wadhakir/features/azkar/cubit/azkar_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/repositories/azkar_repository_impl.dart';
+import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
 
 class AzkarCategoryDetailsScreen extends StatefulWidget {
   final AzkarCategory category;
@@ -124,23 +125,6 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
       )..selectCategory(widget.category),
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(_categoryIcon, size: 24),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  widget.category.title,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          centerTitle: true,
-          elevation: 0,
-        ),
         body: _buildBody(theme),
       ),
     );
@@ -172,11 +156,93 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
       );
     }
 
-    return Column(
+    return Stack(
       children: [
-        // Progress indicator
-        Padding(
-          padding: const EdgeInsets.all(16),
+        // Islamic pattern background
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.02,
+            child: CustomPaint(
+              painter: IslamicPatternPainter(
+                color: theme.colorScheme.primary,
+                gridSize: 100,
+              ),
+            ),
+          ),
+        ),
+
+        Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  // Custom Header with back button
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    child: Row(
+                      children: [
+                        InkWell(
+                          onTap: () => Navigator.pop(context),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color:
+                                  theme.colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color:
+                                theme.colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            _categoryIcon,
+                            color: theme.colorScheme.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.category.title,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                '${state.category.items.length} ${context.l10n?.translate('azkar.items') ?? 'أذكار'}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Progress indicator
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(
             children: [
               Row(
@@ -261,33 +327,41 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
           ),
         ),
 
-        // PageView for Azkar items
+        // PageView for Azkar items - Touch anywhere to count
         Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            physics: const BouncingScrollPhysics(),
-            itemCount: state.category.items.length,
-            itemBuilder: (context, index) {
-              final item = state.category.items[index];
-              return AnimatedBuilder(
-                animation: _animationController,
-                builder: (context, child) {
-                  return FadeTransition(
-                    opacity: _animationController,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.1),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                        parent: _animationController,
-                        curve: Curves.easeOut,
-                      )),
-                      child: _buildAdhkarPage(context, item, theme),
-                    ),
-                  );
-                },
-              );
+          child: GestureDetector(
+            onTap: () {
+              if (state.category.items.isNotEmpty && _currentPage < state.category.items.length) {
+                _incrementCounter(state.category.items[_currentPage]);
+              }
             },
+            behavior: HitTestBehavior.translucent,
+            child: PageView.builder(
+              controller: _pageController,
+              physics: const BouncingScrollPhysics(),
+              itemCount: state.category.items.length,
+              itemBuilder: (context, index) {
+                final item = state.category.items[index];
+                return AnimatedBuilder(
+                  animation: _animationController,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _animationController,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.1),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: _animationController,
+                          curve: Curves.easeOut,
+                        )),
+                        child: _buildAdhkarPage(context, item, theme),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
 
@@ -462,27 +536,31 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
             ),
           ),
 
-          // Action buttons
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildActionButton(
-                  context,
-                  Icons.copy_rounded,
-                  context.l10n?.translate('azkar.copy') ?? 'نسخ',
-                  theme,
-                  onTap: () => _copyTextToClipboard(context, state, theme),
-                ),
-                _buildActionButton(
-                  context,
-                  Icons.share_rounded,
-                  context.l10n?.translate('azkar.share') ?? 'مشاركة',
-                  theme,
-                  onTap: () => _shareText(context, state),
-                ),
-              ],
+          // Action buttons with bottom safe area padding
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildActionButton(
+                    context,
+                    Icons.copy_rounded,
+                    context.l10n?.translate('azkar.copy') ?? 'نسخ',
+                    theme,
+                    onTap: () => _copyTextToClipboard(context, state, theme),
+                  ),
+                  _buildActionButton(
+                    context,
+                    Icons.share_rounded,
+                    context.l10n?.translate('azkar.share') ?? 'مشاركة',
+                    theme,
+                    onTap: () => _shareText(context, state),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

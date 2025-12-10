@@ -4,7 +4,8 @@
     "cancel": "Cancel",
     "save": "Save",
     "ok": "OK",
-    "downloading": "Downloading"
+    "downloading": "Downloading",
+    "retry": "Retry"
   },
   "global": {
     "jan": "January",
@@ -57,6 +58,15 @@
     "radio": "Radio",
     "asmallah": "As-Salamu 'Alayhi Swallam",
     "nearest_mosque": "Nearest Mosque",
+    "nearest_mosques": "Nearest Mosques",
+    "loading_mosques": "Loading mosques...",
+    "error_loading_mosques": "Error loading mosques",
+    "no_mosques_found": "No mosques found nearby",
+    "try_expanding_search": "Try expanding your search area",
+    "get_more_mosques": "Get More Mosques",
+    "meters": "m",
+    "kilometers": "km",
+    "failed_to_get_location": "Failed to get your location",
     "location_services_disabled": "Location Services Disabled",
     "location_services_disabled_message": "Please enable location services to find the nearest mosque",
     "location_permission_denied": "Location Permission Denied",

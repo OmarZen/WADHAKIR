@@ -1,8 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/mosque_finder/views/widgets/mosque_list_bottom_sheet.dart';
 
 class NearestMosqueGridItem extends StatelessWidget {
   const NearestMosqueGridItem({super.key});
@@ -98,76 +97,23 @@ class NearestMosqueGridItem extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      // Show opening maps message
-      _showLoadingSnackBar(context,
-          l10n?.translate('home.opening_maps') ?? 'جارٍ فتح الخرائط...');
-
-      // Open maps with mosque search
-      await _openMapsWithMosqueSearch(context, position);
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      // Show mosque list bottom sheet
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => MosqueListBottomSheet(
+          userPosition: position,
+        ),
+      );
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       _showErrorSnackBar(
         context,
-        l10n?.translate('home.failed_to_open_maps_message') ??
-            'لا يمكن فتح تطبيق الخرائط. يرجى التحقق من تثبيت تطبيق خرائط على جهازك',
+        l10n?.translate('home.failed_to_get_location') ??
+            'فشل الحصول على موقعك. يرجى المحاولة مرة أخرى',
       );
-    }
-  }
-
-  Future<void> _openMapsWithMosqueSearch(
-      BuildContext context, Position position) async {
-    final lat = position.latitude;
-    final lng = position.longitude;
-
-    // Build URL based on platform
-    final Uri mapsUrl;
-
-    if (Platform.isIOS) {
-      // Apple Maps URL with search query
-      // Format: http://maps.apple.com/?q=mosque&ll=lat,lng
-      mapsUrl = Uri.parse('http://maps.apple.com/?q=mosque&ll=$lat,$lng');
-    } else {
-      // Google Maps URL with search query
-      // Format: https://www.google.com/maps/search/?api=1&query=mosque&query_place_id=ChIJ...
-      mapsUrl = Uri.parse(
-          'https://www.google.com/maps/search/?api=1&query=mosque&query=$lat,$lng');
-    }
-
-    try {
-      // Try to launch with external application mode first
-      final launched = await launchUrl(
-        mapsUrl,
-        mode: LaunchMode.externalApplication,
-      );
-
-      if (!launched) {
-        // Fallback to platform default mode
-        await launchUrl(
-          mapsUrl,
-          mode: LaunchMode.platformDefault,
-        );
-      }
-    } catch (e) {
-      // If launching fails, try with platform default
-      if (!context.mounted) return;
-      try {
-        await launchUrl(
-          mapsUrl,
-          mode: LaunchMode.platformDefault,
-        );
-      } catch (e) {
-        if (!context.mounted) return;
-        final l10n = context.l10n;
-        _showErrorSnackBar(
-          context,
-          l10n?.translate('home.failed_to_open_maps_message') ??
-              'لا يمكن فتح تطبيق الخرائط. يرجى التحقق من تثبيت تطبيق خرائط على جهازك',
-        );
-      }
     }
   }
 

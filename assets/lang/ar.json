@@ -4,7 +4,8 @@
     "cancel": "إلغاء",
     "save": "حفظ",
     "ok": "موافق",
-    "downloading": "جارِ التحميل"
+    "downloading": "جارِ التحميل",
+    "retry": "إعادة المحاولة"
   },
   "global": {
     "jan": "يناير",
@@ -57,6 +58,15 @@
     "radio": "الراديو",
     "asmallah": "أسماء الله الحسنى",
     "nearest_mosque": "أقرب مسجد",
+    "nearest_mosques": "أقرب المساجد",
+    "loading_mosques": "جارٍ تحميل المساجد...",
+    "error_loading_mosques": "خطأ في تحميل المساجد",
+    "no_mosques_found": "لا توجد مساجد قريبة",
+    "try_expanding_search": "جرب توسيع نطاق البحث",
+    "get_more_mosques": "المزيد من المساجد",
+    "meters": "متر",
+    "kilometers": "كم",
+    "failed_to_get_location": "فشل الحصول على موقعك",
     "location_services_disabled": "خدمات الموقع معطلة",
     "location_services_disabled_message": "يرجى تفعيل خدمات الموقع للعثور على أقرب مسجد",
     "location_permission_denied": "تم رفض إذن الموقع",

@@ -35,8 +35,10 @@ jobs:
         uses: shorebirdtech/setup-shorebird@v1
       
       - name: 🔐 Shorebird Login
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
-          shorebird login:ci --token ${{ secrets.SHOREBIRD_TOKEN }}
+          shorebird login:ci
       
       - name: 🔍 Pre-Patch Analysis
         run: |

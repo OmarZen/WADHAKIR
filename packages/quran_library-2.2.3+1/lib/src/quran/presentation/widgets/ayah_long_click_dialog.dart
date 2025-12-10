@@ -194,7 +194,7 @@ class AyahLongClickDialog extends StatelessWidget {
                   color: const Color(0xFF20497D).withValues(alpha: 0.15)),
               GestureDetector(
                 onTap: () {
-                  showTafsirOnTap(
+                  ShowTafsirExtension.showTafsirOnTap(
                     context: context,
                     isDark: isDark,
                     ayahNum: (QuranCtrl.instance.state.fontsSelected.value ==

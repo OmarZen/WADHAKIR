@@ -1,0 +1,68 @@
+name: Shorebird Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version (e.g., 1.0.0+1)'
+        required: true
+        type: string
+      artifact_type:
+        description: 'Artifact type'
+        required: true
+        type: choice
+        options:
+          - appbundle
+          - apk
+        default: appbundle
+
+jobs:
+  release:
+    name: Create Android Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      
+      - name: 🐦 Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+      
+      - name: 🔐 Shorebird Login
+        run: |
+          shorebird login:ci --token ${{ secrets.SHOREBIRD_TOKEN }}
+      
+      - name: 📦 Build Android Release
+        run: |
+          shorebird release android \
+            --artifact=${{ inputs.artifact_type }} \
+            --no-codesign
+      
+      - name: 📤 Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-${{ inputs.artifact_type }}-${{ inputs.release_version }}
+          path: |
+            build/app/outputs/bundle/release/*.aab
+            build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: warn
+      
+      - name: ✅ Release Summary
+        run: |
+          echo "## 🎉 Android Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ inputs.release_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact:** ${{ inputs.artifact_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📤 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the artifact from this workflow run" >> $GITHUB_STEP_SUMMARY
+          echo "2. Upload to Google Play Console" >> $GITHUB_STEP_SUMMARY
+          echo "3. Deploy patches using the Shorebird Patch workflow" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View in Shorebird Console](https://console.shorebird.dev)" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,81 @@
+name: Shorebird Android Patch
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Target release version (leave empty for latest)'
+        required: false
+        type: string
+      patch_description:
+        description: 'Patch description (what changed)'
+        required: true
+        type: string
+
+jobs:
+  patch:
+    name: Deploy Android Patch
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      
+      - name: 🐦 Setup Shorebird
+        uses: shorebirdtech/setup-shorebird@v1
+      
+      - name: 🔐 Shorebird Login
+        run: |
+          shorebird login:ci --token ${{ secrets.SHOREBIRD_TOKEN }}
+      
+      - name: 🔍 Pre-Patch Analysis
+        run: |
+          echo "## 🔍 Running Pre-Patch Analysis..." >> $GITHUB_STEP_SUMMARY
+          flutter analyze --no-fatal-infos || true
+      
+      - name: 🚀 Deploy Android Patch
+        run: |
+          if [ -n "${{ inputs.release_version }}" ]; then
+            shorebird patch android --release-version="${{ inputs.release_version }}"
+          else
+            shorebird patch android
+          fi
+      
+      - name: ✅ Patch Summary
+        run: |
+          echo "## 🎉 Android Patch Deployed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Description:** ${{ inputs.patch_description }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ inputs.release_version }}" ]; then
+            echo "**Target Version:** ${{ inputs.release_version }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Target Version:** latest" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎯 What Happens Next:" >> $GITHUB_STEP_SUMMARY
+          echo "- Users will receive the patch on next app restart" >> $GITHUB_STEP_SUMMARY
+          echo "- The update downloads automatically in the background" >> $GITHUB_STEP_SUMMARY
+          echo "- Changes are applied after the app is restarted" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Monitor Patch in Shorebird Console](https://console.shorebird.dev)" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📝 Create Release Notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const releaseVersion = '${{ inputs.release_version }}' || 'latest';
+            const description = '${{ inputs.patch_description }}';
+            const timestamp = new Date().toISOString();
+            
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `## 🔁 Android Patch Deployed\n\n**Version:** ${releaseVersion}\n**Description:** ${description}\n**Deployed:** ${timestamp}\n\n[View in Shorebird Console](https://console.shorebird.dev)`
+            });

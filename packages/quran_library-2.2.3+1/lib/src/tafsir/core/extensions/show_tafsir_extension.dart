@@ -5,10 +5,10 @@ part of '../../tafsir.dart';
 final GlobalKey<NavigatorState> tafsirNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'tafsirNavigatorKey');
 
-extension ShowTafsirExtension on void {
+class ShowTafsirExtension {
   /// دالة مساعدة للحصول على سياق صالح
   /// Helper function to get valid context
-  BuildContext? _getValidContext(BuildContext originalContext) {
+  static BuildContext? _getValidContext(BuildContext originalContext) {
     // التحقق من السياق الأصلي أولاً
     // Check original context first
     if (originalContext.mounted) {
@@ -38,7 +38,7 @@ extension ShowTafsirExtension on void {
 
   /// دالة مساعدة لتهيئة بيانات التفسير
   /// Helper function to initialize tafsir data
-  Future<void> _initializeTafsirData({
+  static Future<void> _initializeTafsirData({
     required int ayahUQNum,
     required int pageIndex,
   }) async {
@@ -67,7 +67,7 @@ extension ShowTafsirExtension on void {
   /// -------- [onTap] --------
   /// عرض تفسير الآية عند النقر عليها
   /// Shows Tafsir when an ayah is tapped
-  Future<void> showTafsirOnTap({
+  static Future<void> showTafsirOnTap({
     required BuildContext context,
     required int ayahNum,
     required int pageIndex,

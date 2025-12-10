@@ -28,7 +28,7 @@ class TafsirPagesBuild extends StatelessWidget {
     final selectedAyahIndexInFullPage =
         pageAyahs.indexWhere((ayah) => ayah.ayahUQNumber == ayahUQNumber);
     return FutureBuilder<void>(
-      future: _initializeTafsirData(
+      future: ShowTafsirExtension._initializeTafsirData(
         ayahUQNum: ayahUQNumber,
         pageIndex: pageIndex,
       ),

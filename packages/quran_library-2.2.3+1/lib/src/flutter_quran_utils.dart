@@ -640,7 +640,7 @@ class QuranLibrary {
     required int ayahNumber,
     TafsirStyle? tafsirStyle,
   }) async =>
-      await TafsirCtrl.instance.showTafsirOnTap(
+      await ShowTafsirExtension.showTafsirOnTap(
         context: context,
         ayahNum: ayahNum,
         pageIndex: pageIndex,

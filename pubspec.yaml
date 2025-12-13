@@ -44,7 +44,9 @@ dependencies:
   
   # Local storage
   shared_preferences: ^2.5.3
-  
+  sqflite: ^2.4.1
+  path: ^1.9.0
+  uuid: ^4.5.1
   
   # Sharing functionality
   share_plus: ^10.1.4
@@ -122,6 +124,40 @@ flutter:
     - assets/images/profile/
     - assets/lang/
     - assets/json_data/
+    - assets/json_data/hadiths_json/
+    - assets/json_data/hadiths_json/bukhari_books/arabic/
+    - assets/json_data/hadiths_json/bukhari_books/english/
+    - assets/json_data/hadiths_json/bukhari_books/urdu/
+    - assets/json_data/hadiths_json/bukhari_books/bangla/
+    - assets/json_data/hadiths_json/muslim_books/arabic/
+    - assets/json_data/hadiths_json/muslim_books/english/
+    - assets/json_data/hadiths_json/abudawud_books/arabic/
+    - assets/json_data/hadiths_json/abudawud_books/english/
+    - assets/json_data/hadiths_json/abudawud_books/urdu/
+    - assets/json_data/hadiths_json/tirmidhi_books/arabic/
+    - assets/json_data/hadiths_json/tirmidhi_books/english/
+    - assets/json_data/hadiths_json/ibnmajah_books/arabic/
+    - assets/json_data/hadiths_json/ibnmajah_books/english/
+    - assets/json_data/hadiths_json/ibnmajah_books/urdu/
+    - assets/json_data/hadiths_json/nasai_books/arabic/
+    - assets/json_data/hadiths_json/nasai_books/english/
+    - assets/json_data/hadiths_json/malik_books/arabic/
+    - assets/json_data/hadiths_json/malik_books/english/
+    - assets/json_data/hadiths_json/riyadussalihin_books/arabic/
+    - assets/json_data/hadiths_json/riyadussalihin_books/english/
+    - assets/json_data/hadiths_json/forty_books/arabic/
+    - assets/json_data/hadiths_json/forty_books/english/
+    - assets/json_data/hadiths_json/bulugh_books/arabic/
+    - assets/json_data/hadiths_json/bulugh_books/english/
+    - assets/json_data/hadiths_json/adab_books/arabic/
+    - assets/json_data/hadiths_json/adab_books/english/
+    - assets/json_data/hadiths_json/shamail_books/arabic/
+    - assets/json_data/hadiths_json/shamail_books/english/
+    - assets/json_data/hadiths_json/mishkat_books/arabic/
+    - assets/json_data/hadiths_json/mishkat_books/english/
+    - assets/json_data/hadiths_json/ahmad_books/arabic/
+    - assets/json_data/hadiths_json/ahmad_books/english/
+    - assets/json_data/hadiths_json/darimi_books/arabic/
     - assets/adhan_sounds/
     - assets/icons/icon.png
     - assets/logo.png

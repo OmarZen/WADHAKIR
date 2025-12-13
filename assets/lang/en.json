@@ -62,8 +62,9 @@
     "loading_mosques": "Loading mosques...",
     "error_loading_mosques": "Error loading mosques",
     "no_mosques_found": "No mosques found nearby",
-    "try_expanding_search": "Try expanding your search area",
-    "get_more_mosques": "Get More Mosques",
+    "try_expanding_search": "Try expanding search area",
+    "get_more_mosques": "Get more mosques",
+    "search_on_maps": "Search on Maps",
     "meters": "m",
     "kilometers": "km",
     "failed_to_get_location": "Failed to get your location",
@@ -88,6 +89,7 @@
     "repeat": "Repeat",
     "raqia_sharia": "Raqia Sharia",
     "tasbih": "Tasbih",
+    "hadith_library": "Hadith Library",
     "about_developer": "About the Developer",
     "developer_name": "Omar Waleed",
     "developer_job": "Software Engineer and YouBe CEO",
@@ -406,5 +408,28 @@
   },
   "splash": {
     "tag_line": "Your Complete Islamic Companion"
+  },
+  "hadith_library": {
+    "title": "Hadith Library",
+    "subtitle": "15 Authentic Collections",
+    "popular_collections": "Popular Collections",
+    "all_collections": "All Collections",
+    "about_collection": "About Collection",
+    "my_bookmarks": "My Bookmarks",
+    "all": "All",
+    "favorites": "Favorites",`n    "favorite": "Favorite",`n    "added_to_favorites": "Added to favorites",`n    "removed_from_favorites": "Removed from favorites",
+    "search_bookmarks": "Search bookmarks...",
+    "no_bookmarks": "No bookmarks yet",
+    "start_bookmarking": "Start bookmarking your favorite hadiths",
+    "bookmark": "Bookmark",
+    "copy": "Copy",
+    "share": "Share",
+    "bookmark_added": "Bookmark added",
+    "bookmark_removed": "Bookmark removed",
+    "copied_to_clipboard": "Copied to clipboard",
+    "hide_translation": "Hide Translation",
+    "show_translation": "Show Translation",
+    "translation": "Translation",
+    "narrator": "Narrator"
   }
 }

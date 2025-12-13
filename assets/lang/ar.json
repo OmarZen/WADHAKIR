@@ -64,6 +64,7 @@
     "no_mosques_found": "لا توجد مساجد قريبة",
     "try_expanding_search": "جرب توسيع نطاق البحث",
     "get_more_mosques": "المزيد من المساجد",
+    "search_on_maps": "البحث في الخرائط",
     "meters": "متر",
     "kilometers": "كم",
     "failed_to_get_location": "فشل الحصول على موقعك",
@@ -88,6 +89,7 @@
     "repeat": "تكرار",
     "raqia_sharia": "الرقية الشرعية",
     "tasbih": "تسابيح",
+    "hadith_library": "مكتبة الأحاديث",
     "about_developer": "عن المطور",
     "developer_name": "عمر وليد",
     "developer_job": "مهندس برمجيات ومؤسس YouBe",
@@ -406,5 +408,28 @@
   },
   "splash": {
     "tag_line": "رفيقك الإسلامي الكامل"
+  },
+  "hadith_library": {
+    "title": "مكتبة الأحاديث",
+    "subtitle": "15 مجموعة أحاديث صحيحة",
+    "popular_collections": "مجموعات مشهورة",
+    "all_collections": "جميع المجموعات",
+    "about_collection": "عن المجموعة",
+    "my_bookmarks": "الأحاديث المحفوظة",
+    "all": "الكل",
+    "favorites": "المفضلة",
+    "search_bookmarks": "البحث في الأحاديث المحفوظة...",
+    "no_bookmarks": "لا توجد أحاديث محفوظة بعد",
+    "start_bookmarking": "ابدأ بحفظ أحاديثك المفضلة",
+    "bookmark": "حفظ",
+    "copy": "نسخ",
+    "share": "مشاركة",
+    "bookmark_added": "تم حفظ الحديث",
+    "bookmark_removed": "تم إزالة الحديث من المحفوظات",
+    "copied_to_clipboard": "تم النسخ إلى الحافظة",
+    "hide_translation": "إخفاء الترجمة",
+    "show_translation": "إظهار الترجمة",
+    "translation": "الترجمة",
+    "narrator": "الراوي"
   }
 }

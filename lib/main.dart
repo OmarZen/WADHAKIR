@@ -33,7 +33,7 @@ import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
-import 'package:wadhakir/features/prayer_times/presentation/widgets/prayer_times_home_widget.dart';
+import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
 
 void main() async {
   // Initialize widgets binding and preserve splash screen

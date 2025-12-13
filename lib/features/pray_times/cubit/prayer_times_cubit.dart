@@ -13,7 +13,7 @@ import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/pray_times/services/persistent_notification_manager.dart';
-import 'package:wadhakir/features/prayer_times/presentation/widgets/prayer_times_home_widget.dart';
+import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
 
 class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   final GetPrayerTimesUseCase _getPrayerTimesUseCase;

@@ -398,37 +398,63 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
 
   Widget _buildEmptyState(ThemeData theme, dynamic l10n) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              ),
+              child: Icon(
+                Icons.mosque_outlined,
+                size: 40,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            child: Icon(
-              Icons.mosque_outlined,
-              size: 40,
-              color: theme.colorScheme.primary,
+            const SizedBox(height: 20),
+            Text(
+              l10n?.translate('home.no_mosques_found') ?? 'لا توجد مساجد قريبة',
+              style: theme.textTheme.titleMedium,
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            l10n?.translate('home.no_mosques_found') ?? 'لا توجد مساجد قريبة',
-            style: theme.textTheme.titleMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n?.translate('home.try_expanding_search') ??
-                'جرب توسيع نطاق البحث',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            const SizedBox(height: 8),
+            Text(
+              l10n?.translate('home.try_expanding_search') ??
+                  'جرب توسيع نطاق البحث',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _openMapsWithMosqueSearch,
+                icon: const Icon(Icons.map_outlined, size: 20),
+                label: Text(
+                  l10n?.translate('home.search_on_maps') ?? 'البحث في الخرائط',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

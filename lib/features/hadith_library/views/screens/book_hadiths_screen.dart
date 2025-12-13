@@ -92,7 +92,7 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
               ],
             );
           } else if (state is HadithLibraryError) {
-            return _buildError(context, state, theme);
+            return _buildError(context, state, theme, l10n);
           }
 
           return const LoadingIndicator();
@@ -130,7 +130,11 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
                 : Icons.g_translate_rounded,
             color: Colors.white,
           ),
-          tooltip: _showTranslation ? 'Hide Translation' : 'Show Translation',
+          tooltip: _showTranslation
+              ? (l10n?.translate('hadith_library.hide_translation') ??
+                  'Hide Translation')
+              : (l10n?.translate('hadith_library.show_translation') ??
+                  'Show Translation'),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -204,6 +208,7 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
     BuildContext context,
     HadithLibraryError state,
     ThemeData theme,
+    AppLocalizations? l10n,
   ) {
     return Center(
       child: Column(
@@ -228,7 +233,7 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
                   bookNumber: widget.bookNumber);
             },
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(l10n?.translate('hadith_library.retry') ?? 'Retry'),
           ),
         ],
       ),

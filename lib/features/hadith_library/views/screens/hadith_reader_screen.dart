@@ -137,7 +137,7 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
                             (widget.hadith.hadithTextEnglish?.isNotEmpty ??
                                 false)) ...[
                           SizedBox(height: size.height * 0.04),
-                          _buildTranslation(theme, size),
+                          _buildTranslation(theme, size, l10n),
                         ],
 
                         if (widget.hadith.narrator?.isNotEmpty ?? false) ...[
@@ -308,7 +308,7 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
     );
   }
 
-  Widget _buildTranslation(ThemeData theme, Size size) {
+  Widget _buildTranslation(ThemeData theme, Size size, AppLocalizations? l10n) {
     return Container(
       padding: EdgeInsets.all(size.width * 0.05),
       decoration: BoxDecoration(
@@ -331,7 +331,7 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Translation',
+                l10n?.translate('hadith_library.translation') ?? 'Translation',
                 style: TextStyle(
                   color: widget.collection.color.withValues(alpha: 0.7),
                   fontWeight: FontWeight.bold,
@@ -492,28 +492,32 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
   }
 
   void _handleBookmark(BuildContext context, bool isBookmarked) {
+    final l10n = AppLocalizations.of(context);
     if (isBookmarked) {
       // Remove bookmark
       context.read<BookmarkCubit>().removeBookmark(widget.hadith.id);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bookmark removed'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n?.translate('hadith_library.bookmark_removed') ??
+              'Bookmark removed'),
+          duration: const Duration(seconds: 2),
         ),
       );
     } else {
       // Add bookmark
       context.read<BookmarkCubit>().addBookmark(hadithId: widget.hadith.id);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bookmark added'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l10n?.translate('hadith_library.bookmark_added') ??
+              'Bookmark added'),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
   }
 
   void _handleCopy(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final text = '''
 ${widget.hadith.hadithTextArabic}
 
@@ -526,9 +530,10 @@ ${widget.collection.nameArabic} • الحديث رقم ${widget.hadith.ourHadit
 
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Copied to clipboard'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(l10n?.translate('hadith_library.copied_to_clipboard') ??
+            'Copied to clipboard'),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

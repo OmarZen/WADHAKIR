@@ -79,7 +79,7 @@ class _BookmarksViewState extends State<_BookmarksView> {
                   } else if (state is BookmarksLoaded) {
                     return _buildContent(context, state, theme, size, l10n);
                   } else if (state is BookmarkError) {
-                    return _buildError(context, state, theme);
+                    return _buildError(context, state, theme, l10n);
                   }
 
                   return const LoadingIndicator();
@@ -123,7 +123,7 @@ class _BookmarksViewState extends State<_BookmarksView> {
                   builder: (context, state) {
                     if (state is BookmarksLoaded) {
                       return Text(
-                        '${state.bookmarks.length} bookmarks',
+                        '${state.bookmarks.length} ${l10n?.translate('hadith_library.bookmarks') ?? 'bookmarks'}',
                         style: theme.textTheme.bodySmall,
                       );
                     }
@@ -235,9 +235,11 @@ class _BookmarksViewState extends State<_BookmarksView> {
 
               if (collection == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Collection not found'),
-                    duration: Duration(seconds: 2),
+                  SnackBar(
+                    content: Text(
+                        l10n?.translate('hadith_library.collection_not_found') ??
+                            'Collection not found'),
+                    duration: const Duration(seconds: 2),
                   ),
                 );
                 return;
@@ -266,9 +268,11 @@ class _BookmarksViewState extends State<_BookmarksView> {
                 if (hadith == null) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Hadith not found'),
-                        duration: Duration(seconds: 2),
+                      SnackBar(
+                        content: Text(
+                            l10n?.translate('hadith_library.hadith_not_found') ??
+                                'Hadith not found'),
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                   }
@@ -293,7 +297,8 @@ class _BookmarksViewState extends State<_BookmarksView> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error loading hadith: $e'),
+                      content: Text(
+                          '${l10n?.translate('hadith_library.error_loading_hadith') ?? 'Error loading hadith'}: $e'),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -347,6 +352,7 @@ class _BookmarksViewState extends State<_BookmarksView> {
     BuildContext context,
     BookmarkError state,
     ThemeData theme,
+    AppLocalizations? l10n,
   ) {
     return Center(
       child: Column(
@@ -369,7 +375,7 @@ class _BookmarksViewState extends State<_BookmarksView> {
               context.read<BookmarkCubit>().loadBookmarks();
             },
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(l10n?.translate('hadith_library.retry') ?? 'Retry'),
           ),
         ],
       ),

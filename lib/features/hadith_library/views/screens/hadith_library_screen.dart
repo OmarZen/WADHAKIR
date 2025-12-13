@@ -79,7 +79,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
             } else if (state is HadithCollectionsLoaded) {
               return _buildMainContent(context, state, theme, size, l10n);
             } else if (state is HadithLibraryError) {
-              return _buildError(context, state, theme);
+              return _buildError(context, state, theme, l10n);
             }
 
             return const LoadingIndicator();
@@ -269,6 +269,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
     BuildContext context,
     HadithLibraryError state,
     ThemeData theme,
+    AppLocalizations? l10n,
   ) {
     return Center(
       child: Column(
@@ -291,7 +292,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
               context.read<HadithLibraryCubit>().loadCollections();
             },
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(l10n?.translate('hadith_library.retry') ?? 'Retry'),
           ),
         ],
       ),
@@ -664,7 +665,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                         ),
                       )
                     : _buildSearchResults(
-                        collections, theme, MediaQuery.of(context).size),
+                        collections, theme, MediaQuery.of(context).size, l10n),
               ),
             ],
           ),
@@ -673,7 +674,8 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
     );
   }
 
-  Widget _buildSearchResults(List collections, ThemeData theme, Size size) {
+  Widget _buildSearchResults(
+      List collections, ThemeData theme, Size size, AppLocalizations? l10n) {
     final filteredCollections = _getFilteredCollections(collections);
 
     if (filteredCollections.isEmpty) {
@@ -688,7 +690,8 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
             ),
             const SizedBox(height: 16),
             Text(
-              'No collections found',
+              l10n?.translate('hadith_library.no_collections_found') ??
+                  'No collections found',
               style: theme.textTheme.titleMedium?.copyWith(
                 color: theme.disabledColor,
                 fontFamily: 'Almarai',
@@ -778,7 +781,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            '${collection.totalHadiths} hadiths',
+                            '${collection.totalHadiths} ${l10n?.translate('hadith_library.hadiths') ?? 'hadiths'}',
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: collection.color,
                               fontWeight: FontWeight.bold,

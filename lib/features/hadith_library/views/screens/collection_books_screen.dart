@@ -80,7 +80,7 @@ class _CollectionBooksView extends StatelessWidget {
               ],
             );
           } else if (state is HadithLibraryError) {
-            return _buildError(context, state, theme);
+            return _buildError(context, state, theme, l10n);
           }
 
           return const LoadingIndicator();
@@ -288,6 +288,7 @@ class _CollectionBooksView extends StatelessWidget {
     BuildContext context,
     HadithLibraryError state,
     ThemeData theme,
+    AppLocalizations? l10n,
   ) {
     return Center(
       child: Column(
@@ -310,7 +311,7 @@ class _CollectionBooksView extends StatelessWidget {
               context.read<HadithLibraryCubit>().loadBooks(collection.id);
             },
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
+            label: Text(l10n?.translate('hadith_library.retry') ?? 'Retry'),
           ),
         ],
       ),

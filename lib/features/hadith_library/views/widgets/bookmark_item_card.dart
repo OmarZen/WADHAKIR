@@ -59,8 +59,7 @@ class BookmarkItemCard extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(
-                      l10n?.translate('common.cancel') ?? 'Cancel'),
+                  child: Text(l10n?.translate('common.cancel') ?? 'Cancel'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
@@ -184,7 +183,8 @@ class BookmarkItemCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              _formatHadithReference(bookmark.hadithId, context),
+                              _formatHadithReference(
+                                  bookmark.hadithId, context),
                               style: theme.textTheme.titleSmall?.copyWith(
                                 color: collection.color,
                                 fontWeight: FontWeight.bold,
@@ -215,8 +215,8 @@ class BookmarkItemCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              AppLocalizations.of(context)
-                                      ?.translate('hadith_library.tap_to_read') ??
+                              AppLocalizations.of(context)?.translate(
+                                      'hadith_library.tap_to_read') ??
                                   'Tap to read the full hadith',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: collection.color.withValues(alpha: 0.9),

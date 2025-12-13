@@ -236,9 +236,9 @@ class _BookmarksViewState extends State<_BookmarksView> {
               if (collection == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                        l10n?.translate('hadith_library.collection_not_found') ??
-                            'Collection not found'),
+                    content: Text(l10n?.translate(
+                            'hadith_library.collection_not_found') ??
+                        'Collection not found'),
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -269,9 +269,9 @@ class _BookmarksViewState extends State<_BookmarksView> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(
-                            l10n?.translate('hadith_library.hadith_not_found') ??
-                                'Hadith not found'),
+                        content: Text(l10n?.translate(
+                                'hadith_library.hadith_not_found') ??
+                            'Hadith not found'),
                         duration: const Duration(seconds: 2),
                       ),
                     );

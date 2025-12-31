@@ -13,6 +13,7 @@ class AdhanSoundsSectionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -24,7 +25,9 @@ class AdhanSoundsSectionWidget extends StatelessWidget {
             children: [
               Icon(
                 Icons.music_note,
-                color: theme.colorScheme.primary,
+                color: isDark
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -32,7 +35,9 @@ class AdhanSoundsSectionWidget extends StatelessWidget {
                 l10n?.translate('settings.adhan_sounds') ?? 'أصوات الأذان',
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+                  color: isDark
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.primary,
                 ),
               ),
             ],

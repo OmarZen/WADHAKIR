@@ -21,125 +21,99 @@ class NotificationSettingsWidgets extends StatelessWidget {
   ) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isEnabled = settings.notificationSettings.masterEnabled;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: 0.95 + (0.05 * value),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isEnabled
-                      ? [
-                          theme.colorScheme.primary.withValues(alpha: 0.15),
-                          theme.colorScheme.primary.withValues(alpha: 0.05),
-                        ]
-                      : [
-                          theme.colorScheme.surface,
-                          theme.colorScheme.surface,
-                        ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isEnabled
-                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                      : theme.colorScheme.outline.withValues(alpha: 0.2),
-                  width: 1.5,
-                ),
-              ),
-              child: SwitchListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                title: Text(
-                  l10n?.translate('settings.enable_notifications') ??
-                      'تفعيل التنبيهات',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    l10n?.translate('settings.enable_notifications_subtitle') ??
-                        'إرسال تنبيه عند حلول وقت كل صلاة',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                value: isEnabled,
-                onChanged: (value) async {
-                  if (value) {
-                    // Request permissions before enabling
-                    final permissions =
-                        await AlarmPermissionHelper.requestAllPermissions(
-                            context);
-
-                    // Only enable if we got notification permission at minimum
-                    if (permissions['notifications'] == true) {
-                      cubit.toggleNotifications(value);
-
-                      // Show warning if exact alarm permission was denied
-                      if (permissions['exactAlarms'] != true &&
-                          context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              l10n?.translate(
-                                      'settings.exact_alarm_permission_warning') ??
-                                  'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
-                            ),
-                            action: SnackBarAction(
-                              label: l10n?.translate('settings.settings') ??
-                                  'الإعدادات',
-                              onPressed: () => AlarmPermissionHelper
-                                  .showPermissionDeniedDialog(context),
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  } else {
-                    // Disable notifications
-                    cubit.toggleNotifications(value);
-                  }
-                },
-                activeThumbColor: theme.colorScheme.primary,
-                secondary: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isEnabled
-                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    isEnabled
-                        ? Icons.notifications_active
-                        : Icons.notifications_off,
-                    color: isEnabled
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    size: 24,
-                  ),
-                ),
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isEnabled
+            ? (isDark
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isEnabled
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        title: Text(
+          l10n?.translate('settings.enable_notifications') ?? 'تفعيل التنبيهات',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            l10n?.translate('settings.enable_notifications_subtitle') ??
+                'إرسال تنبيه عند حلول وقت كل صلاة',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 12,
             ),
           ),
-        );
-      },
+        ),
+        value: isEnabled,
+        onChanged: (value) async {
+          if (value) {
+            // Request permissions before enabling
+            final permissions =
+                await AlarmPermissionHelper.requestAllPermissions(context);
+
+            // Only enable if we got notification permission at minimum
+            if (permissions['notifications'] == true) {
+              cubit.toggleNotifications(value);
+
+              // Show warning if exact alarm permission was denied
+              if (permissions['exactAlarms'] != true && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n?.translate(
+                              'settings.exact_alarm_permission_warning') ??
+                          'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
+                    ),
+                    action: SnackBarAction(
+                      label:
+                          l10n?.translate('settings.settings') ?? 'الإعدادات',
+                      onPressed: () =>
+                          AlarmPermissionHelper.showPermissionDeniedDialog(
+                              context),
+                    ),
+                  ),
+                );
+              }
+            }
+          } else {
+            // Disable notifications
+            cubit.toggleNotifications(value);
+          }
+        },
+        activeThumbColor: theme.colorScheme.primary,
+        secondary: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isEnabled
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            isEnabled ? Icons.notifications_active : Icons.notifications_off,
+            color: isEnabled
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            size: 18,
+          ),
+        ),
+      ),
     );
   }
 
@@ -150,90 +124,67 @@ class NotificationSettingsWidgets extends StatelessWidget {
   ) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final isEnabled =
         settings.notificationSettings.persistentNotificationEnabled;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: 0.95 + (0.05 * value),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isEnabled
-                      ? [
-                          theme.colorScheme.primary.withValues(alpha: 0.15),
-                          theme.colorScheme.primary.withValues(alpha: 0.05),
-                        ]
-                      : [
-                          theme.colorScheme.surface,
-                          theme.colorScheme.surface,
-                        ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isEnabled
-                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                      : theme.colorScheme.outline.withValues(alpha: 0.2),
-                  width: 1.5,
-                ),
-              ),
-              child: SwitchListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                title: Text(
-                  l10n?.translate('settings.persistent_notification') ??
-                      'إشعار دائم للصلاة القادمة',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    l10n?.translate(
-                            'settings.persistent_notification_subtitle') ??
-                        'عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                value: isEnabled,
-                onChanged: (value) => cubit.togglePersistentNotification(value),
-                activeThumbColor: theme.colorScheme.primary,
-                secondary: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isEnabled
-                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    isEnabled ? Icons.push_pin : Icons.push_pin_outlined,
-                    color: isEnabled
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    size: 24,
-                  ),
-                ),
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isEnabled
+            ? (isDark
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isEnabled
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        title: Text(
+          l10n?.translate('settings.persistent_notification') ??
+              'إشعار دائم للصلاة القادمة',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            l10n?.translate('settings.persistent_notification_subtitle') ??
+                'عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 12,
             ),
           ),
-        );
-      },
+        ),
+        value: isEnabled,
+        onChanged: (value) => cubit.togglePersistentNotification(value),
+        activeThumbColor: theme.colorScheme.primary,
+        secondary: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isEnabled
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            isEnabled ? Icons.push_pin : Icons.push_pin_outlined,
+            color: isEnabled
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            size: 18,
+          ),
+        ),
+      ),
     );
   }
 
@@ -244,84 +195,59 @@ class NotificationSettingsWidgets extends StatelessWidget {
   ) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                title: Text(
-                  l10n?.translate('settings.notification_timing') ??
-                      'وقت التنبيه',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    l10n?.translate('settings.notification_timing_subtitle') ??
-                        'اختر متى تريد استلام التنبيه',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                leading: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary.withValues(alpha: 0.2),
-                        theme.colorScheme.primary.withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.schedule,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                ),
-                onTap: () =>
-                    _showNotificationTimingDialog(context, settings, cubit),
-              ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        title: Text(
+          l10n?.translate('settings.notification_timing') ?? 'وقت التنبيه',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            l10n?.translate('settings.notification_timing_subtitle') ??
+                'اختر متى تريد استلام التنبيه',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 12,
             ),
           ),
-        );
-      },
+        ),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.schedule,
+            color: theme.colorScheme.onPrimary,
+            size: 18,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 14,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+        ),
+        onTap: () => _showNotificationTimingDialog(context, settings, cubit),
+      ),
     );
   }
 
@@ -337,42 +263,33 @@ class NotificationSettingsWidgets extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: '',
-      barrierColor: Colors.black54,
-      transitionDuration: const Duration(milliseconds: 300),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, animation, secondaryAnimation) {
         return Container();
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curvedAnimation = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutBack,
-        );
-
         return Transform.scale(
-          scale: curvedAnimation.value,
-          child: Opacity(
-            opacity: animation.value,
+          scale: Curves.easeOut.transform(animation.value),
+          child: FadeTransition(
+            opacity: animation,
             child: AlertDialog(
+              backgroundColor: theme.colorScheme.surface,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(20),
               ),
               title: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.2),
-                          theme.colorScheme.primary.withValues(alpha: 0.1),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       Icons.schedule,
-                      color: theme.colorScheme.primary,
-                      size: 24,
+                      color: theme.colorScheme.onPrimary,
+                      size: 20,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -381,12 +298,12 @@ class NotificationSettingsWidgets extends StatelessWidget {
                       l10n?.translate('settings.notification_timing') ??
                           'وقت التنبيه',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18),
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                 ],
               ),
-              contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -436,7 +353,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
+                        horizontal: 20, vertical: 10),
                   ),
                   child: Text(
                     l10n?.translate('common.close') ?? 'إغلاق',
@@ -467,124 +384,79 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final theme = Theme.of(context);
     final isSelected = currentTiming == timing;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 300 + (index * 100)),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(30 * (1 - value), 0),
-          child: Opacity(
-            opacity: value,
-            child: InkWell(
-              onTap: () {
-                final notificationSettings = settings.notificationSettings;
-                final newSettings = notificationSettings.copyWith(
-                  fajrSettings: notificationSettings.fajrSettings
-                      .copyWith(timing: timing),
-                  dhuhrSettings: notificationSettings.dhuhrSettings
-                      .copyWith(timing: timing),
-                  asrSettings:
-                      notificationSettings.asrSettings.copyWith(timing: timing),
-                  maghribSettings: notificationSettings.maghribSettings
-                      .copyWith(timing: timing),
-                  ishaSettings: notificationSettings.ishaSettings
-                      .copyWith(timing: timing),
-                );
-                cubit.setNotificationSettings(newSettings);
-                Navigator.pop(context);
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: isSelected
-                      ? LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary.withValues(alpha: 0.15),
-                            theme.colorScheme.primary.withValues(alpha: 0.05),
-                          ],
-                        )
-                      : null,
+    return InkWell(
+      onTap: () {
+        final notificationSettings = settings.notificationSettings;
+        final newSettings = notificationSettings.copyWith(
+          fajrSettings:
+              notificationSettings.fajrSettings.copyWith(timing: timing),
+          dhuhrSettings:
+              notificationSettings.dhuhrSettings.copyWith(timing: timing),
+          asrSettings:
+              notificationSettings.asrSettings.copyWith(timing: timing),
+          maghribSettings:
+              notificationSettings.maghribSettings.copyWith(timing: timing),
+          ishaSettings:
+              notificationSettings.ishaSettings.copyWith(timing: timing),
+        );
+        cubit.setNotificationSettings(newSettings);
+        Navigator.pop(context);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurfaceVariant,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   color: isSelected
-                      ? null
-                      : theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.outline.withValues(alpha: 0.2),
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: isSelected
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                          color: isSelected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    if (isSelected)
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.elasticOut,
-                        builder: (context, checkValue, child) {
-                          return Transform.scale(
-                            scale: checkValue,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                  ],
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.onSurface,
+                  fontSize: 14,
                 ),
               ),
             ),
-          ),
-        );
-      },
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -595,72 +467,120 @@ class NotificationSettingsWidgets extends StatelessWidget {
   ) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 30 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        title: Text(
+          l10n?.translate('settings.customize_prayers') ?? 'تخصيص كل صلاة',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            l10n?.translate('settings.customize_prayers_subtitle') ??
+                'تخصيص التنبيهات لكل صلاة على حدة',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 12,
+            ),
+          ),
+        ),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.tune,
+            color: isDark
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onPrimary,
+            size: 18,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 14,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+        ),
+        onTap: () => _showPrayerCustomizationDialog(context, settings, cubit),
+      ),
+    );
+  }
+
+  static void _showPrayerCustomizationDialog(
+    BuildContext context,
+    AppSettingsModel settings,
+    SettingsCubit cubit,
+  ) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Container();
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return Transform.scale(
+          scale: Curves.easeOut.transform(animation.value),
+          child: FadeTransition(
+            opacity: animation,
+            child: AlertDialog(
+              backgroundColor: theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                  width: 1.5,
-                ),
               ),
-              child: Theme(
-                data: theme.copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  tilePadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  childrenPadding: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  leading: Container(
-                    padding: const EdgeInsets.all(12),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.tertiary.withValues(alpha: 0.2),
-                          theme.colorScheme.tertiary.withValues(alpha: 0.1),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
+                      color: theme.colorScheme.tertiary,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       Icons.tune,
-                      color: theme.colorScheme.tertiary,
-                      size: 24,
+                      color: theme.colorScheme.onTertiary,
+                      size: 20,
                     ),
                   ),
-                  title: Text(
-                    l10n?.translate('settings.customize_prayers') ??
-                        'تخصيص كل صلاة',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Text(
-                      l10n?.translate('settings.customize_prayers_subtitle') ??
-                          'تخصيص التنبيهات لكل صلاة على حدة',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                        fontSize: 12,
-                      ),
+                      l10n?.translate('settings.customize_prayers') ??
+                          'تخصيص كل صلاة',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
+                ],
+              ),
+              contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildPrayerNotificationTile(
                       context,
@@ -709,6 +629,22 @@ class NotificationSettingsWidgets extends StatelessWidget {
                   ],
                 ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                  ),
+                  child: Text(
+                    l10n?.translate('common.close') ?? 'إغلاق',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -726,6 +662,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final isDark = theme.brightness == Brightness.dark;
 
     // Prayer name translations
     final prayerNames = {
@@ -743,86 +680,62 @@ class NotificationSettingsWidgets extends StatelessWidget {
 
     final isEnabled = prayerSettings.enabled;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 300 + (index * 80)),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(20 * (1 - value), 0),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+    return Container(
+      margin: const EdgeInsets.all(0),
+      decoration: BoxDecoration(
+        color: isEnabled
+            ? (isDark
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isEnabled
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: isEnabled
-                    ? LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.08),
-                          theme.colorScheme.primary.withValues(alpha: 0.03),
-                        ],
-                      )
-                    : null,
                 color: isEnabled
-                    ? null
-                    : theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isEnabled
-                      ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                      : theme.colorScheme.outline.withValues(alpha: 0.1),
-                  width: 1,
-                ),
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: SwitchListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                title: Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: isEnabled
-                            ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        icon,
-                        size: 20,
-                        color: isEnabled
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      displayName,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                value: prayerSettings.enabled,
-                onChanged: (value) {
-                  final newSettings = prayerSettings.copyWith(enabled: value);
-                  cubit.updatePrayerNotificationSettings(
-                    prayerName: prayerNameEnglish,
-                    prayerSettings: newSettings,
-                  );
-                },
-                activeThumbColor: theme.colorScheme.primary,
+              child: Icon(
+                icon,
+                size: 18,
+                color: isEnabled
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
-          ),
-        );
-      },
+            const SizedBox(width: 12),
+            Text(
+              displayName,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        value: prayerSettings.enabled,
+        onChanged: (value) {
+          final newSettings = prayerSettings.copyWith(enabled: value);
+          cubit.updatePrayerNotificationSettings(
+            prayerName: prayerNameEnglish,
+            prayerSettings: newSettings,
+          );
+        },
+        activeThumbColor: theme.colorScheme.primary,
+      ),
     );
   }
 }

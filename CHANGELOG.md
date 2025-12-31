@@ -7,6 +7,196 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-12-31
+
+### Added - Fasting Notifications System
+- **Monday and Thursday Fasting Reminders**:
+  - Configurable notification time (default: 21:00 / 9:00 PM)
+  - Notifications sent the night before fasting days
+  - Weekly recurring schedule using NotificationCalendar
+  - Vibration support for fasting notifications
+  - Arabic day names in notification content
+  - Dedicated notification IDs: Monday (200), Thursday (201)
+  - Individual toggles for Monday and Thursday
+  - Custom time picker with 12-hour Arabic format display
+  - Conditional UI: time picker shows only when at least one day enabled
+
+- **Data Model Extensions**:
+  - Extended NotificationSettingsModel with 4 required fields
+  - mondayFastingEnabled, thursdayFastingEnabled (bool)
+  - fastingNotificationTime (String in HH:mm format)
+  - fastingVibration (bool)
+  - Full integration with copyWith, toJson, fromJson, props
+
+- **Repository Layer**:
+  - scheduleFastingNotification() method
+  - cancelFastingNotification() method
+  - scheduleAllFastingNotifications() method
+  - Dedicated _channelKeyFasting notification channel
+  - High importance channel with proper Arabic/English naming
+
+- **State Management**:
+  - toggleMondayFasting() in SettingsCubit
+  - toggleThursdayFasting() in SettingsCubit
+  - setFastingNotificationTime() in SettingsCubit
+  - toggleFastingVibration() in SettingsCubit
+  - Each method: updates model → saves → reschedules notifications
+
+- **UI Components**:
+  - FastingNotificationSettingsWidget (new file)
+  - buildMondayFastingToggle() method
+  - buildThursdayFastingToggle() method
+  - buildFastingTimePicker() method
+  - Time picker with custom themed dialog
+  - 12-hour format display with Arabic AM/PM (ص/م)
+
+- **Localization**:
+  - fasting_notifications key (AR/EN)
+  - fasting_monday key with subtitle (AR/EN)
+  - fasting_thursday key with subtitle (AR/EN)
+  - fasting_time key with subtitle (AR/EN)
+
+### Improved - Settings UI Complete Modernization
+- **Design System Established**:
+  - Consistent color patterns across all components
+  - Selector backgrounds: isDark ? primaryContainer(0.2) : surface
+  - Enabled states: isDark ? primary(0.15) : primary(0.08)
+  - Icon containers: Solid primary with onPrimary contrast
+  - Borders: onSurface(0.2) with 1px width
+  - Standardized spacing: 12px/6px margins, 12px/8px padding
+  - Border radius: 12px (components), 20px (dialogs)
+  - Icon sizes: 18px standard (down from 24-30px)
+  - Font sizes: 14px title, 12px subtitle/body
+
+- **Animation Cleanup (Performance)**:
+  - Removed 50+ TweenAnimationBuilder instances
+  - Removed all Transform animations (rotate, translate, scale)
+  - Removed Opacity fade animations
+  - Removed continuous looping animations
+  - Removed gradient backgrounds (replaced with solid colors)
+  - Eliminated AnimatedBuilder overhead
+  - 30-50% code reduction across components
+
+- **11 Components Modernized**:
+  1. **SettingsSection** (~15% smaller)
+     - StatefulWidget → StatelessWidget
+     - Removed hover animations and AnimatedController
+     - Icon: 24px → 20px, 8px padding
+     - Title: 17px → 15px, subtitle: 13px → 12px
+  
+  2. **ThemeSelectorWidget** (~33% smaller)
+     - StatefulWidget → StatelessWidget
+     - Removed gradient icon container
+     - Dialog: showDialog → showGeneralDialog
+     - Icon: 22px → 18px
+  
+  3. **LanguageSelectorWidget** (~38% smaller)
+     - StatefulWidget → StatelessWidget
+     - Removed slide-in animations
+     - Flag size: 32px → 28px
+  
+  4. **NotificationMasterToggle**
+     - Removed TweenAnimationBuilder wrapper
+     - Removed gradient backgrounds
+     - Compact padding and margins
+  
+  5. **PersistentNotificationToggle**
+     - Same modernization as NotificationMasterToggle
+     - Consistent with design system
+  
+  6. **NotificationTimingSelector**
+     - Removed slide animations
+     - Dialog with scale+fade transition
+  
+  7. **PrayerNotificationsSettings** (~35% smaller)
+     - **Major Change**: ExpansionTile → Dialog conversion
+     - showGeneralDialog with SingleChildScrollView
+     - 5 prayer tiles: Fajr, Dhuhr, Asr, Maghrib, Isha
+     - Compact tiles with zero margins in dialog
+  
+  8. **FastingNotificationSettings** (NEW FILE)
+     - 3 static build methods
+     - Time picker with Arabic format
+     - Follows all established patterns
+  
+  9. **AdhanSoundSelector** (~35% smaller)
+     - Removed Transform.translate wrapper
+     - Removed slide-in animations for options
+     - Icon: 24px → 18px
+  
+  10. **AboutSectionWidgets**
+      - All 5 tiles modernized: About, Feedback, Website, Privacy, Rate
+      - showDialog → showGeneralDialog
+      - App icon: 80x80 → 70x70, icon: 40px → 36px
+      - Consistent container wrappers
+  
+  11. **Settings Header** (~27% smaller)
+      - Removed AnimatedBuilder wrapper
+      - Removed 4 TweenAnimationBuilder animations
+      - Removed gradient backgrounds and box shadows
+      - Icon container: 60x60 → 48x48
+      - Title: 24px → 20px, description: 13px → 12px
+      - Stats bar: Compact padding, removed animations
+
+- **Dialog Standardization**:
+  - All 6 dialogs use showGeneralDialog
+  - Scale + fade transitions (250ms, Curves.easeOut)
+  - Consistent border radius (20px)
+  - Compact padding (20px/16px)
+
+### Fixed - Native Compatibility
+- **Android Build System**:
+  - Resolved Kotlin compilation cache issues
+  - Fixed incremental build problems
+  - Updated Gradle configuration for stability
+  - Improved build reliability
+
+### Changed - Code Quality
+- **Architecture Improvements**:
+  - 3 StatefulWidget → StatelessWidget conversions
+  - Better separation of concerns
+  - Cleaner, more maintainable code
+  - Consistent design patterns
+
+- **Performance Optimizations**:
+  - Removed continuous animation loops
+  - Reduced widget rebuilds significantly
+  - Better memory usage (no animation controllers)
+  - Simplified widget trees
+  - Improved app responsiveness
+
+### Technical Details
+- **Files Modified**: 16 files
+- **Lines Changed**: +2,318 insertions, -2,109 deletions
+- **New Files**: 1 (fasting_notification_settings_widget.dart)
+- **Quality Assurance**: All flutter analyze checks passing
+- **Backward Compatibility**: Full - no breaking changes
+- **Migration**: Automatic via model defaults
+
+### User-Facing Changes
+- **New Features**:
+  - Monday/Thursday fasting notification reminders
+  - Configurable reminder time with visual time picker
+  
+- **UI/UX Improvements**:
+  - Cleaner, more professional interface
+  - Faster, more responsive settings screen
+  - Better dark mode support with improved contrast
+  - Compact design showing more content
+  - Prayer customization via dialog (cleaner than ExpansionTile)
+  
+- **Performance**:
+  - Reduced animations for snappier responses
+  - Better accessibility (less motion, clearer UI)
+  - Improved battery life (no continuous animations)
+
+### Migration Notes
+- Update from 2.2.0 by installing 2.3.0+7
+- All existing settings preserved
+- New fasting notification fields have sensible defaults
+- First launch after update: all notifications will be rescheduled
+- No user action required
+
 ## [2.2.0] - 2025-12-14
 
 ### Added - Hadith Library Feature

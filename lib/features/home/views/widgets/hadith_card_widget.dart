@@ -88,8 +88,9 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
 
   Widget _buildSkeleton(ThemeData theme) {
     final l10n = context.l10n;
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
-      decoration: _glassDecoration(theme),
+      decoration: _glassDecoration(theme, isDark),
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,8 +110,9 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
 
   Widget _buildError(ThemeData theme) {
     final l10n = context.l10n;
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
-      decoration: _glassDecoration(theme),
+      decoration: _glassDecoration(theme, isDark),
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -133,6 +135,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     final title = _extractTitle(fullText);
     final body = _extractBody(fullText);
     final l10n = context.l10n;
+    final isDark = theme.brightness == Brightness.dark;
 
     final borderRadius = BorderRadius.circular(16);
 
@@ -146,7 +149,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 140, maxHeight: 220),
             child: Container(
-              decoration: _glassDecoration(theme),
+              decoration: _glassDecoration(theme, isDark),
               padding: const EdgeInsets.all(14.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -332,17 +335,20 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     );
   }
 
-  BoxDecoration _glassDecoration(ThemeData theme) {
+  BoxDecoration _glassDecoration(ThemeData theme, bool isDark) {
     // Simplified: solid surface, subtle border, no gradient or shadow
     return BoxDecoration(
       borderRadius: BorderRadius.circular(16),
-      color: theme.colorScheme.surface,
+      color: isDark
+          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.12)
+          : theme.colorScheme.surface.withValues(alpha: 0.6),
       border: Border.all(color: _accent(theme).withValues(alpha: 0.16)),
     );
   }
 
   static Color _accent(ThemeData theme) {
-    return theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+    return isDark ? theme.colorScheme.onSurface : theme.colorScheme.primary;
   }
 
   // Reserved for future outline tuning
@@ -409,6 +415,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
       required String tooltip,
       required VoidCallback onTap}) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Tooltip(
       message: tooltip,
       child: InkResponse(
@@ -419,7 +426,9 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
           height: 36,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: theme.colorScheme.primary.withValues(alpha: 0.08),
+            color: isDark
+                ? theme.colorScheme.surface.withValues(alpha: 0.12)
+                : theme.colorScheme.primary.withValues(alpha: 0.08),
             border: Border.all(
                 color: theme.colorScheme.primary.withValues(alpha: 0.2)),
           ),
@@ -430,13 +439,15 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
   }
 
   Widget _shimmerBar(ThemeData theme, double height, double widthFactor) {
+    final isDark = theme.brightness == Brightness.dark;
     return FractionallySizedBox(
       widthFactor: widthFactor,
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color:
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          color: isDark
+              ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+              : theme.colorScheme.onSurface.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
       ),

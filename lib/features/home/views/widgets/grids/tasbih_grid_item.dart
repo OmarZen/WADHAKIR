@@ -11,6 +11,8 @@ class TasbihGridItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Material(
       color: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(14),
@@ -31,11 +33,13 @@ class TasbihGridItem extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 ),
                 child: Icon(
                   Icons.format_list_numbered_rounded,
-                  color: theme.colorScheme.primary,
+                  color: isDark
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                      : theme.colorScheme.primary,
                 ),
               ),
               const SizedBox(width: 10),

@@ -39,6 +39,7 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
     final l10n = AppLocalizations.of(context);
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -59,8 +60,14 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  theme.colorScheme.primary.withValues(alpha: 0.05),
-                  theme.colorScheme.primary.withValues(alpha: 0.02),
+                  isDark
+                      ? theme.colorScheme.primaryContainer
+                          .withValues(alpha: 0.1)
+                      : theme.colorScheme.primary.withValues(alpha: 0.1),
+                  isDark
+                      ? theme.colorScheme.primary.withValues(alpha: 0.05)
+                      : theme.colorScheme.primaryContainer
+                          .withValues(alpha: 0.05),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -104,12 +111,14 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      l10n?.translate('home.prayer_times') ?? 'Prayer Times',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text(l10n?.translate('home.prayer_times') ?? 'Prayer Times',
+                        style: TextStyle(
+                          color: isDark
+                              ? theme.colorScheme.onSurface
+                              : theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        )),
                   ],
                 ),
                 // Modern View All Button
@@ -148,7 +157,9 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                           Text(
                             l10n?.translate('home.view_all') ?? 'عرض الكل',
                             style: TextStyle(
-                              color: theme.colorScheme.primary,
+                              color: isDark
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.primary,
                               fontWeight: FontWeight.w600,
                               fontSize: 13,
                             ),
@@ -157,7 +168,9 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                           Icon(
                             Icons.arrow_forward_ios_rounded,
                             size: 12,
-                            color: theme.colorScheme.primary,
+                            color: isDark
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.primary,
                           ),
                         ],
                       ),
@@ -301,7 +314,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                       children: [
                         // Location
                         Expanded(
-                          child: _LocationNameWidget(theme: theme, size: size),
+                          child: _LocationNameWidget(
+                              theme: theme,
+                              size: size,
+                              isDark: theme.brightness == Brightness.dark),
                         ),
                         SizedBox(width: size.width * 0.02),
                         // Countdown Timer - simplified
@@ -311,8 +327,11 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                             vertical: size.height * 0.008,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
+                            color: isDark
+                                ? theme.colorScheme.primaryContainer
+                                    .withValues(alpha: 0.1)
+                                : theme.colorScheme.primary
+                                    .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: theme.colorScheme.primary
@@ -326,7 +345,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                               Icon(
                                 Icons.timer_outlined,
                                 size: 16,
-                                color: theme.colorScheme.primary,
+                                color: isDark
+                                    ? theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.65)
+                                    : theme.colorScheme.primary,
                               ),
                               const SizedBox(width: 6),
                               Text(
@@ -334,7 +356,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.primary,
+                                  color: isDark
+                                      ? theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.65)
+                                      : theme.colorScheme.primary,
                                   letterSpacing: 0.5,
                                   fontFamily: 'Courier',
                                 ),
@@ -376,8 +401,11 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                         children: [
                           Expanded(
                             child: Divider(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.2),
+                              color: isDark
+                                  ? theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.2)
+                                  : theme.colorScheme.primary
+                                      .withValues(alpha: 0.2),
                               thickness: 1,
                             ),
                           ),
@@ -389,8 +417,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                               l10n?.translate('prayer_times.qiyam_times') ??
                                   'أوقات القيام',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.7),
+                                color: isDark
+                                    ? theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6)
+                                    : theme.colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 11,
                               ),
@@ -398,8 +428,11 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                           ),
                           Expanded(
                             child: Divider(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.2),
+                              color: isDark
+                                  ? theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.2)
+                                  : theme.colorScheme.primary
+                                      .withValues(alpha: 0.2),
                               thickness: 1,
                             ),
                           ),
@@ -407,111 +440,43 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                       ),
                     ),
 
-                    // Qiyam prayer times row - simple design
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: size.width * 0.03,
-                        vertical: size.height * 0.012,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.2),
-                          width: 1,
+                    // Qiyam prayer times row - with next prayer highlighting
+                    Row(
+                      children: [
+                        // Midnight prayer
+                        Expanded(
+                          child: _QiyamPrayerTile(
+                            label: l10n?.translate(
+                                    'prayer_times.middle_of_the_night') ??
+                                'منتصف الليل',
+                            time: qiyamPrayers[0]['time'] as DateTime,
+                            isNext: nextPrayerTime ==
+                                qiyamPrayers[0]['time'] as DateTime,
+                            iconData: qiyamPrayers[0]['icon'] as IconData,
+                            size: size,
+                            theme: theme,
+                            isFirst: true,
+                            isLast: false,
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          // Midnight prayer
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    l10n?.translate(
-                                            'prayer_times.middle_of_the_night') ??
-                                        'منتصف الليل',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 12,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Text(
-                                  ' : ',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  DateFormat('hh:mm').format(
-                                      qiyamPrayers[0]['time'] as DateTime),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        SizedBox(width: size.width * 0.02),
+                        // Last third prayer
+                        Expanded(
+                          child: _QiyamPrayerTile(
+                            label: l10n?.translate(
+                                    'prayer_times.last_third_of_the_night') ??
+                                'الثلث الأخير',
+                            time: qiyamPrayers[1]['time'] as DateTime,
+                            isNext: nextPrayerTime ==
+                                qiyamPrayers[1]['time'] as DateTime,
+                            iconData: qiyamPrayers[1]['icon'] as IconData,
+                            size: size,
+                            theme: theme,
+                            isFirst: false,
+                            isLast: true,
                           ),
-
-                          // Vertical divider
-                          Container(
-                            height: 25,
-                            width: 1,
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.3),
-                          ),
-
-                          // Last third prayer
-                          Expanded(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    l10n?.translate(
-                                            'prayer_times.last_third_of_the_night') ??
-                                        'الثلث الأخير',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 12,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Text(
-                                  ' : ',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  DateFormat('hh:mm').format(
-                                      qiyamPrayers[1]['time'] as DateTime),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 );
@@ -602,6 +567,7 @@ class _PrayerTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final timeStr = DateFormat('hh:mm').format(time);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: EdgeInsets.only(
@@ -640,13 +606,23 @@ class _PrayerTile extends StatelessWidget {
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: isNext
-                    ? Colors.white.withValues(alpha: 0.2)
-                    : theme.colorScheme.primary.withValues(alpha: 0.1),
+                    ? isDark
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+                        : theme.colorScheme.onPrimary.withValues(alpha: 0.2)
+                    : isDark
+                        ? theme.colorScheme.surface
+                        : theme.colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 iconData,
-                color: isNext ? Colors.white : theme.colorScheme.primary,
+                color: isNext
+                    ? isDark
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onPrimary
+                    : isDark
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                        : theme.colorScheme.primary,
                 size: 16,
               ),
             ),
@@ -660,7 +636,13 @@ class _PrayerTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: isNext ? Colors.white : theme.colorScheme.onSurface,
+                color: isNext
+                    ? isDark
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onPrimary
+                    : isDark
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurface,
                 fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
                 fontSize: 11,
               ),
@@ -673,7 +655,13 @@ class _PrayerTile extends StatelessWidget {
               timeStr,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: isNext ? Colors.white : theme.colorScheme.primary,
+                color: isNext
+                    ? (isDark
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onPrimary)
+                    : (isDark
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                        : theme.colorScheme.primary),
                 fontSize: 10,
                 letterSpacing: 0.3,
               ),
@@ -685,12 +673,123 @@ class _PrayerTile extends StatelessWidget {
   }
 }
 
+// Qiyam Prayer Tile Widget - for midnight and last third prayers
+class _QiyamPrayerTile extends StatelessWidget {
+  final String label;
+  final DateTime time;
+  final bool isNext;
+  final IconData iconData;
+  final Size size;
+  final ThemeData theme;
+  final bool isFirst;
+  final bool isLast;
+
+  const _QiyamPrayerTile({
+    required this.label,
+    required this.time,
+    required this.isNext,
+    required this.iconData,
+    required this.size,
+    required this.theme,
+    required this.isFirst,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final timeStr = DateFormat('hh:mm').format(time);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.02,
+        vertical: size.height * 0.008,
+      ),
+      decoration: BoxDecoration(
+        color: isNext ? theme.colorScheme.primary : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isNext
+              ? isDark
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.primary
+              : isDark
+                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                  : theme.colorScheme.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: isNext
+            ? [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isNext
+                    ? isDark
+                        ? theme.colorScheme.onPrimary
+                        : theme.colorScheme.onPrimary
+                    : isDark
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.primary,
+                fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          Text(
+            ' : ',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isNext
+                  ? isDark
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimary
+                  : isDark
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.primary,
+              fontSize: 12,
+            ),
+          ),
+          Text(
+            timeStr,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isNext
+                  ? isDark
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimary
+                  : isDark
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // Location Name Widget - listens to BlocBuilder for location updates
 class _LocationNameWidget extends StatelessWidget {
   final ThemeData theme;
   final Size size;
+  final bool isDark;
 
-  const _LocationNameWidget({required this.theme, required this.size});
+  const _LocationNameWidget(
+      {required this.theme, required this.size, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -719,7 +818,8 @@ class _LocationNameWidget extends StatelessWidget {
                 vertical: size.height * 0.008,
               ),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                color:
+                    theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
@@ -732,7 +832,9 @@ class _LocationNameWidget extends StatelessWidget {
                   Icon(
                     Icons.location_on_rounded,
                     size: 16,
-                    color: theme.colorScheme.primary,
+                    color: isDark
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.65)
+                        : theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
@@ -741,8 +843,11 @@ class _LocationNameWidget extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? theme.colorScheme.onSurface
+                                .withValues(alpha: 0.65)
+                            : theme.colorScheme.primary,
+                        fontWeight: isDark ? FontWeight.w600 : FontWeight.w600,
                         fontSize: 13,
                       ),
                     ),

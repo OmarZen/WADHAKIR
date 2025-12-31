@@ -47,6 +47,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
     final theme = Theme.of(context);
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Localizations.override(
       context: context,
@@ -75,14 +76,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: isDark
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                    : theme.colorScheme.primary,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -97,17 +93,23 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                 children: [
                   Icon(
                     Icons.calendar_month_rounded,
-                    color: Colors.white,
+                    color: isDark
+                        ? theme.colorScheme.onPrimaryContainer
+                            .withValues(alpha: 0.8)
+                        : theme.colorScheme.onPrimary,
                     size: 22,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     l10n?.translate('calendar.hijri_calendar') ??
                         'التقويم الهجري',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isDark
+                          ? theme.colorScheme.onPrimaryContainer
+                              .withValues(alpha: 0.8)
+                          : theme.colorScheme.onPrimary,
                     ),
                   ),
                 ],
@@ -132,7 +134,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                     textStyle: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
+                      color: isDark
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                          : theme.colorScheme.primary.withValues(alpha: 0.7),
                     ),
                   ),
                   dayFormat: 'EEE',
@@ -141,7 +145,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                 monthCellStyle: HijriDatePickerMonthCellStyle(
                   textStyle: TextStyle(
                     fontSize: 12,
-                    color: theme.textTheme.bodyLarge?.color,
+                    color: isDark
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                        : theme.colorScheme.primary.withValues(alpha: 0.8),
                   ),
                   todayTextStyle: TextStyle(
                     fontSize: 12,
@@ -151,7 +157,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                 yearCellStyle: HijriDatePickerYearCellStyle(
                   textStyle: TextStyle(
                     fontSize: 13,
-                    color: theme.textTheme.bodyLarge?.color,
+                    color: isDark
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                        : theme.colorScheme.primary.withValues(alpha: 0.8),
                   ),
                   todayTextStyle: TextStyle(
                     fontSize: 13,
@@ -171,7 +179,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                   textStyle: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
+                    color: isDark
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.9)
+                        : theme.colorScheme.primary,
                   ),
                 ),
                 headerHeight: 45,
@@ -202,7 +212,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                     Icon(
                       Icons.mosque,
                       size: 18,
-                      color: theme.colorScheme.primary,
+                      color: isDark
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                          : theme.colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -210,7 +222,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
+                        color: isDark
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                            : theme.colorScheme.primary,
                       ),
                     ),
                     Padding(
@@ -226,8 +240,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                     Icon(
                       Icons.calendar_today,
                       size: 16,
-                      color: theme.textTheme.bodyMedium?.color
-                          ?.withValues(alpha: 0.7),
+                      color: isDark
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                          : theme.colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -235,7 +250,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: theme.textTheme.bodyMedium?.color,
+                        color: isDark
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                            : theme.colorScheme.primary,
                       ),
                     ),
                   ],

@@ -10,6 +10,7 @@ class AllahNamesGridItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -30,11 +31,16 @@ class AllahNamesGridItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.circular(8.0),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 ),
-                child: Icon(Icons.menu_book_rounded,
-                    color: theme.colorScheme.primary),
+                child: Icon(
+                  Icons.collections_bookmark,
+                  color: isDark
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                      : theme.colorScheme.primary,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(

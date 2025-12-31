@@ -174,7 +174,9 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: isDark
+                ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -321,7 +323,9 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           height: 40,
           decoration: BoxDecoration(
             color: isSelected
-                ? theme.colorScheme.primary
+                ? isDark
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+                    : theme.colorScheme.primary
                 : (isDark
                     ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
                     : theme.colorScheme.surface),
@@ -330,8 +334,12 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           child: Icon(
             option.isDefault ? Icons.notifications : Icons.music_note,
             color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ? isDark
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onPrimary
+                : isDark
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                    : theme.colorScheme.primary,
             size: 18,
           ),
         ),
@@ -340,8 +348,12 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           style: theme.textTheme.bodyLarge?.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurface,
+                ? isDark
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onPrimary
+                : isDark
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                    : theme.colorScheme.onSurface,
             fontSize: 14,
           ),
           maxLines: 2,
@@ -387,7 +399,9 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
                 ),
                 child: Icon(
                   Icons.check,
-                  color: theme.colorScheme.onPrimary,
+                  color: isDark
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimary,
                   size: 16,
                 ),
               ),

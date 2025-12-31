@@ -16,6 +16,7 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final l10n = context.l10n;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -24,8 +25,22 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.auto_awesome_rounded,
-                  color: theme.colorScheme.primary),
+              Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.rectangle,
+                  color: isDark
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
+                      : theme.colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: isDark
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.primary,
+                ),
+              ),
               const SizedBox(width: 8),
               Text(
                 l10n?.translate('home.more_islamic_excerpts') ??

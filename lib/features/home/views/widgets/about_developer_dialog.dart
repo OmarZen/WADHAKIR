@@ -217,6 +217,7 @@ Widget _circleIconButton(
   required Uri url,
 }) {
   final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
   return Container(
     decoration: BoxDecoration(
       color: theme.colorScheme.surface,
@@ -251,7 +252,10 @@ Widget _circleIconButton(
           }
         }
       },
-      icon: Icon(icon, color: theme.colorScheme.primary),
+      icon: Icon(icon,
+          color: isDark
+              ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+              : theme.colorScheme.primary),
     ),
   );
 }

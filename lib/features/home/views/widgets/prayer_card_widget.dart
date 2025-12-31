@@ -205,6 +205,20 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     'time': prayerTimes.isha,
                     'icon': Icons.nightlight_round,
                   },
+                  {
+                    'name':
+                        l10n?.translate('prayer_times.middle_of_the_night') ??
+                            'منتصف الليل',
+                    'time': prayerTimes.middleOfTheNight,
+                    'icon': Icons.bedtime_outlined,
+                  },
+                  {
+                    'name': l10n?.translate(
+                            'prayer_times.last_third_of_the_night') ??
+                        'الثلث الأخير من الليل',
+                    'time': prayerTimes.lastThirdOfTheNight,
+                    'icon': Icons.nightlight,
+                  },
                 ];
 
                 DateTime? nextPrayerTime;
@@ -226,7 +240,8 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                   nextPrayerName = l10n?.translate('home.fajr') ?? 'الفجر';
                 }
 
-                final items = [
+                // Main prayer times
+                final mainPrayers = [
                   {
                     'label': l10n?.translate('home.fajr') ?? 'الفجر',
                     'time': prayerTimes.fajr,
@@ -251,6 +266,24 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     'label': l10n?.translate('home.isha') ?? 'العشاء',
                     'time': prayerTimes.isha,
                     'icon': Icons.nights_stay_outlined,
+                  },
+                ];
+
+                // Qiyam prayer times
+                final qiyamPrayers = [
+                  {
+                    'label':
+                        l10n?.translate('prayer_times.middle_of_the_night') ??
+                            'منتصف الليل',
+                    'time': prayerTimes.middleOfTheNight,
+                    'icon': Icons.bedtime_outlined,
+                  },
+                  {
+                    'label': l10n?.translate(
+                            'prayer_times.last_third_of_the_night') ??
+                        'الثلث الأخير',
+                    'time': prayerTimes.lastThirdOfTheNight,
+                    'icon': Icons.nightlight,
                   },
                 ];
 
@@ -314,24 +347,171 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
 
                     SizedBox(height: size.height * 0.015),
 
-                    // Prayer cards grid - non-scrollable
+                    // Main prayer times row
                     Row(
                       children: [
-                        for (int i = 0; i < items.length; i++)
+                        for (int i = 0; i < mainPrayers.length; i++)
                           Expanded(
                             child: _PrayerTile(
-                              label: items[i]['label'] as String,
-                              time: items[i]['time'] as DateTime,
-                              isNext: (items[i]['label'] as String) ==
+                              label: mainPrayers[i]['label'] as String,
+                              time: mainPrayers[i]['time'] as DateTime,
+                              isNext: (mainPrayers[i]['label'] as String) ==
                                   nextPrayerName,
-                              iconData: items[i]['icon'] as IconData,
+                              iconData: mainPrayers[i]['icon'] as IconData,
                               size: size,
                               theme: theme,
                               isFirst: i == 0,
-                              isLast: i == items.length - 1,
+                              isLast: i == mainPrayers.length - 1,
                             ),
                           ),
                       ],
+                    ),
+
+                    // Separator
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                        vertical: size.height * 0.005,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.2),
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: size.width * 0.02,
+                            ),
+                            child: Text(
+                              l10n?.translate('prayer_times.qiyam_times') ??
+                                  'أوقات القيام',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary
+                                    .withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.2),
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Qiyam prayer times row - simple design
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.03,
+                        vertical: size.height * 0.012,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          // Midnight prayer
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    l10n?.translate(
+                                            'prayer_times.middle_of_the_night') ??
+                                        'منتصف الليل',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  ' : ',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat('hh:mm').format(
+                                      qiyamPrayers[0]['time'] as DateTime),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Vertical divider
+                          Container(
+                            height: 25,
+                            width: 1,
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.3),
+                          ),
+
+                          // Last third prayer
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    l10n?.translate(
+                                            'prayer_times.last_third_of_the_night') ??
+                                        'الثلث الأخير',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  ' : ',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  DateFormat('hh:mm').format(
+                                      qiyamPrayers[1]['time'] as DateTime),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 );

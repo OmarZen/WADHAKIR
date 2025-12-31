@@ -210,6 +210,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         _adjustTime(model.isha, _timeAdjustments['العشاء'] ?? 0);
 
     // Create a new model with adjusted times
+    // Note: Qiyam times (midnight and last third) are kept as-is since they're calculated times
     return PrayerTimesModel(
       fajr: adjustedFajr,
       sunrise: adjustedSunrise,
@@ -220,6 +221,8 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       date: model.date,
       calculationParameters: model.calculationParameters,
       coordinates: model.coordinates,
+      middleOfTheNight: model.middleOfTheNight,
+      lastThirdOfTheNight: model.lastThirdOfTheNight,
     );
   }
 

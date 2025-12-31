@@ -13,10 +13,10 @@ class PrayerTimesModel extends Equatable {
   final DateTime date;
   final CalculationParameters calculationParameters;
   final Coordinates coordinates;
-  
+
   // Sunnah Times - Qiyam times
-  final DateTime? middleOfTheNight;
-  final DateTime? lastThirdOfTheNight;
+  final DateTime middleOfTheNight;
+  final DateTime lastThirdOfTheNight;
 
   const PrayerTimesModel({
     required this.fajr,
@@ -28,8 +28,8 @@ class PrayerTimesModel extends Equatable {
     required this.date,
     required this.calculationParameters,
     required this.coordinates,
-    this.middleOfTheNight,
-    this.lastThirdOfTheNight,
+    required this.middleOfTheNight,
+    required this.lastThirdOfTheNight,
   });
 
   Map<String, dynamic> toJson() {
@@ -42,8 +42,8 @@ class PrayerTimesModel extends Equatable {
       'maghrib': timeFormat.format(maghrib),
       'isha': timeFormat.format(isha),
       'date': date.toIso8601String(),
-      'middleOfTheNight': middleOfTheNight != null ? timeFormat.format(middleOfTheNight!) : null,
-      'lastThirdOfTheNight': lastThirdOfTheNight != null ? timeFormat.format(lastThirdOfTheNight!) : null,
+      'middleOfTheNight': timeFormat.format(middleOfTheNight),
+      'lastThirdOfTheNight': timeFormat.format(lastThirdOfTheNight),
     };
   }
 
@@ -72,8 +72,8 @@ class PrayerTimesModel extends Equatable {
       calculationParameters:
           CalculationMethodMapper.getParameters('muslim_world_league'),
       coordinates: const Coordinates(0, 0), // Default coordinates
-      middleOfTheNight: json['middleOfTheNight'] != null ? parseTime(json['middleOfTheNight']) : null,
-      lastThirdOfTheNight: json['lastThirdOfTheNight'] != null ? parseTime(json['lastThirdOfTheNight']) : null,
+      middleOfTheNight: parseTime(json['middleOfTheNight']),
+      lastThirdOfTheNight: parseTime(json['lastThirdOfTheNight']),
     );
   }
 
@@ -85,10 +85,10 @@ class PrayerTimesModel extends Equatable {
   }) {
     // Convert UTC times to local time
     // adhan_dart returns times in UTC, we need to convert to local timezone
-    
+
     // Calculate Sunnah times (Qiyam times)
     final sunnahTimes = SunnahTimes(prayerTimes);
-    
+
     return PrayerTimesModel(
       fajr: prayerTimes.fajr.toLocal(),
       sunrise: prayerTimes.sunrise.toLocal(),
@@ -116,8 +116,10 @@ class PrayerTimesModel extends Equatable {
     if (now.isBefore(asr)) return asr;
     if (now.isBefore(maghrib)) return maghrib;
     if (now.isBefore(isha)) return isha;
+    if (now.isBefore(middleOfTheNight)) return middleOfTheNight;
+    if (now.isBefore(lastThirdOfTheNight)) return lastThirdOfTheNight;
 
-    // If all prayers for today have passed, return tomorrow's Fajr
+    // If all times for today have passed, return tomorrow's Fajr
     final tomorrowDate = date.add(const Duration(days: 1));
     final tomorrowPrayerTimes = PrayerTimes(
       coordinates: coordinates,
@@ -136,6 +138,8 @@ class PrayerTimesModel extends Equatable {
     if (now.isBefore(asr)) return 'العصر';
     if (now.isBefore(maghrib)) return 'المغرب';
     if (now.isBefore(isha)) return 'العشاء';
+    if (now.isBefore(middleOfTheNight)) return 'منتصف الليل';
+    if (now.isBefore(lastThirdOfTheNight)) return 'الثلث الأخير من الليل';
     return 'الفجر';
   }
 
@@ -150,7 +154,7 @@ class PrayerTimesModel extends Equatable {
 
     // Find current prayer time (the last prayer that occurred)
     if (now.isBefore(fajr)) {
-      // Before Fajr, use Isha from yesterday
+      // Before Fajr, use last third of night from yesterday
       final yesterdayDate = date.subtract(const Duration(days: 1));
       final yesterdayPrayers = PrayerTimes(
         coordinates: coordinates,
@@ -158,7 +162,8 @@ class PrayerTimesModel extends Equatable {
         calculationParameters: calculationParameters,
         precision: true,
       );
-      currentPrayer = yesterdayPrayers.isha.toLocal();
+      final yesterdaySunnahTimes = SunnahTimes(yesterdayPrayers);
+      currentPrayer = yesterdaySunnahTimes.lastThirdOfTheNight.toLocal();
     } else if (now.isBefore(sunrise)) {
       currentPrayer = fajr;
     } else if (now.isBefore(dhuhr)) {
@@ -169,9 +174,13 @@ class PrayerTimesModel extends Equatable {
       currentPrayer = asr;
     } else if (now.isBefore(isha)) {
       currentPrayer = maghrib;
-    } else {
-      // After Isha
+    } else if (now.isBefore(middleOfTheNight)) {
       currentPrayer = isha;
+    } else if (now.isBefore(lastThirdOfTheNight)) {
+      currentPrayer = middleOfTheNight;
+    } else {
+      // After last third of night
+      currentPrayer = lastThirdOfTheNight;
     }
 
     // Calculate total interval between current and next prayer

@@ -23,6 +23,8 @@ const Color wakeupAzkarColor = Color(0xFF16A085); // Teal
 const Color mosqueAzkarColor = Color(0xFFD35400); // Orange
 const Color maathurDuaColor = Color(0xFF7FB069); // Sage green
 const Color quranDuaColor = Color(0xFFDAA520); // Golden/Amber
+const Color midnightPrayerColor = Color(0xFF9C27B0); // Purple for midnight
+const Color lastThirdPrayerColor = Color(0xFF3F51B5); // Indigo for last third
 
 // Dark theme colors
 const Color _darkPrimaryColor = Color(0xFF20497D); // Same primary blue
@@ -42,6 +44,10 @@ const Color darkWakeupAzkarColor = Color(0xFF1ABC9C); // Brighter teal
 const Color darkMosqueAzkarColor = Color(0xFFE67E22); // Brighter orange
 const Color darkMaathurDuaColor = Color(0xFF8FC779); // Brighter sage green
 const Color darkQuranDuaColor = Color(0xFFF1C40F); // Brighter gold
+const Color darkMidnightPrayerColor =
+    Color(0xFFAB47BC); // Brighter purple for midnight
+const Color darkLastThirdPrayerColor =
+    Color(0xFF5C6BC0); // Brighter indigo for last third
 
 // Typography settings
 const String _primaryFont = 'Almarai';

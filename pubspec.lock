@@ -637,14 +637,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.2"
-  hijri:
-    dependency: "direct main"
-    description:
-      name: hijri
-      sha256: "203eb7341e32789af6429877e88411b1526ef44c5d157ce4d3b930dd32c37ef1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   hive:
     dependency: "direct main"
     description:
@@ -1337,6 +1329,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  syncfusion_flutter_core:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_core
+      sha256: "511d5740fe5321d38492d970a69042e7eb18ae8153c4a663da538a772c3d724e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "32.1.21"
+  syncfusion_flutter_datepicker:
+    dependency: "direct main"
+    description:
+      name: syncfusion_flutter_datepicker
+      sha256: "2a05b75ef3efe0090a8977bb090933dd310489273340ba870b8cf13e0573a0f3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "32.1.21"
+  syncfusion_localizations:
+    dependency: "direct main"
+    description:
+      name: syncfusion_localizations
+      sha256: a26ccfbb85f1a71f63daa188ba1af9c332aa3d0d422df8b3c0767fa036100411
+      url: "https://pub.dev"
+    source: hosted
+    version: "32.1.21"
   synchronized:
     dependency: transitive
     description:
@@ -1587,4 +1603,4 @@ packages:
     version: "3.1.3"
 sdks:
   dart: ">=3.9.0 <4.0.0"
-  flutter: ">=3.35.0"
+  flutter: ">=3.35.1"

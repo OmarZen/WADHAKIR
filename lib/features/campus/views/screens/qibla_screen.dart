@@ -367,6 +367,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                     height: compassSize,
                     child: QiblaCompassWidget(
                       qiblaModel: state.qiblaModel,
+                      isAligned: state.isAligned,
                     ),
                   ),
                 ],
@@ -374,12 +375,49 @@ class _QiblaScreenState extends State<QiblaScreen>
             ),
           ),
         ),
+        // Alignment status badge
+        if (state.isAligned)
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.04,
+              vertical: size.height * 0.008,
+            ),
+            margin: EdgeInsets.only(bottom: size.height * 0.01),
+            decoration: BoxDecoration(
+              color: const Color(0xFF27AE60), // App theme green
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n?.translate('campus.aligned_with_qibla') ??
+                      'متجه نحو القبلة',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
         Text(
           '${state.qiblaModel.qiblaDirection.toStringAsFixed(1)}°',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: state.isAligned ? const Color(0xFF00C853) : null,
               ),
         ),
+        SizedBox(height: size.height * 0.01),
+        // Accuracy indicator
+        _buildAccuracyIndicator(state, size),
         // Information cards with scroll for smaller screens
         Expanded(
           flex: 2,
@@ -433,6 +471,104 @@ class _QiblaScreenState extends State<QiblaScreen>
                 ),
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccuracyIndicator(QiblaLoaded state, Size size) {
+    final l10n = AppLocalizations.of(context);
+
+    // Calculate the angle difference
+    double angleDifference =
+        (state.qiblaModel.qiblaDirection - state.qiblaModel.compassDirection)
+            .abs();
+
+    // Normalize the angle to be between 0 and 180
+    if (angleDifference > 180) {
+      angleDifference = 360 - angleDifference;
+    }
+
+    // Calculate accuracy percentage (0° = 100%, 180° = 0%)
+    double accuracy = ((180 - angleDifference) / 180 * 100).clamp(0, 100);
+
+    // Determine color based on accuracy - using app theme colors
+    Color indicatorColor;
+    String accuracyText;
+    IconData accuracyIcon;
+
+    if (accuracy >= 97) {
+      indicatorColor = const Color(0xFF27AE60); // App theme green
+      accuracyText = l10n?.translate('campus.excellent') ?? 'ممتاز';
+      accuracyIcon = Icons.stars_rounded;
+    } else if (accuracy >= 85) {
+      indicatorColor = const Color(0xFF16A085); // App theme teal
+      accuracyText = l10n?.translate('campus.very_good') ?? 'جيد جداً';
+      accuracyIcon = Icons.star_rounded;
+    } else if (accuracy >= 70) {
+      indicatorColor = const Color(0xFFDAA520); // App theme gold
+      accuracyText = l10n?.translate('campus.good') ?? 'جيد';
+      accuracyIcon = Icons.star_half_rounded;
+    } else if (accuracy >= 50) {
+      indicatorColor = const Color(0xFFD35400); // App theme orange
+      accuracyText = l10n?.translate('campus.close') ?? 'قريب';
+      accuracyIcon = Icons.navigation_rounded;
+    } else {
+      indicatorColor = const Color(0xFFE74C3C); // App theme red
+      accuracyText = l10n?.translate('campus.searching') ?? 'ابحث';
+      accuracyIcon = Icons.explore_rounded;
+    }
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              accuracyIcon,
+              color: indicatorColor,
+              size: size.width * 0.045,
+            ),
+            SizedBox(width: size.width * 0.015),
+            Text(
+              accuracyText,
+              style: TextStyle(
+                color: indicatorColor,
+                fontWeight: FontWeight.w600,
+                fontSize: size.width * 0.035,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: size.height * 0.008),
+        // Accuracy progress bar - simplified
+        Container(
+          width: size.width * 0.5,
+          height: 5,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: accuracy / 100,
+            child: Container(
+              decoration: BoxDecoration(
+                color: indicatorColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: size.height * 0.005),
+        Text(
+          angleDifference < 5
+              ? '${angleDifference.toStringAsFixed(1)}° ${l10n?.translate('campus.high_accuracy') ?? 'دقة عالية'}'
+              : '${angleDifference.toStringAsFixed(1)}° ${l10n?.translate('campus.from_target') ?? 'من الهدف'}',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: size.width * 0.028,
           ),
         ),
       ],

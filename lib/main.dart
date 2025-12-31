@@ -21,6 +21,7 @@ import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/repositories/radio_repository_impl.dart';
+import 'package:syncfusion_localizations/syncfusion_localizations.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/core/localization/app_localizations_delegate.dart';
@@ -41,14 +42,15 @@ void main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // Set system UI overlay style for edge-to-edge experience
+  // Note: In Android 15+, color settings are deprecated for edge-to-edge.
+  // Only icon brightness should be controlled.
   SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.edgeToEdge,
   );
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 
@@ -252,6 +254,7 @@ class MyApp extends StatelessWidget {
               themeMode: themeMode,
               localizationsDelegates: const [
                 AppLocalizationsDelegate(),
+                SfGlobalLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,

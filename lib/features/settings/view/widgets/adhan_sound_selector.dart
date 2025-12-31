@@ -165,143 +165,121 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
 
   Widget _buildSoundPickerSheet(StateSetter setModalState) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset:
-              Offset(0, MediaQuery.of(context).size.height * 0.7 * (1 - value)),
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.7,
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(28)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                ),
-              ],
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
             ),
-            child: Column(
+          ),
+
+          // Title
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+                  : theme.colorScheme.surface,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
               children: [
-                // Handle bar
                 Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  width: 40,
-                  height: 4,
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.music_note,
+                    color: theme.colorScheme.onPrimary,
+                    size: 20,
                   ),
                 ),
-
-                // Title with gradient background
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary.withValues(alpha: 0.1),
-                        theme.colorScheme.primary.withValues(alpha: 0.05),
-                      ],
-                    ),
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(28)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withValues(alpha: 0.3),
-                              theme.colorScheme.primary.withValues(alpha: 0.15),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.music_note,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          widget.title,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Divider(height: 1),
-
-                // Sound options list
+                const SizedBox(width: 12),
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
-                    itemCount: widget.soundOptions.length +
-                        1, // +1 for default option at top
-                    itemBuilder: (context, index) {
-                      // Default sound option
-                      if (index == 0) {
-                        final isSelected = widget.currentSoundPath == null;
-                        return _buildSoundOption(
-                          option: const AdhanSoundOption(
-                            name: 'الصوت الافتراضي',
-                            nameEn: 'Default Sound',
-                            path: null,
-                          ),
-                          isSelected: isSelected,
-                          isPlaying: false, // Default sound can't be previewed
-                          theme: theme,
-                          setModalState: setModalState,
-                          index: index,
-                        );
-                      }
-
-                      // Regular sound options
-                      final option = widget.soundOptions[index - 1];
-                      // Skip if this is already a default option in the list
-                      if (option.path == null) {
-                        return const SizedBox.shrink();
-                      }
-
-                      final isSelected = option.path == widget.currentSoundPath;
-                      final isPlaying =
-                          _isPlaying && _playingPath == option.path;
-
-                      return _buildSoundOption(
-                        option: option,
-                        isSelected: isSelected,
-                        isPlaying: isPlaying,
-                        theme: theme,
-                        setModalState: setModalState,
-                        index: index,
-                      );
-                    },
+                  child: Text(
+                    widget.title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        );
-      },
+
+          const Divider(height: 1),
+
+          // Sound options list
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              itemCount: widget.soundOptions.length +
+                  1, // +1 for default option at top
+              itemBuilder: (context, index) {
+                // Default sound option
+                if (index == 0) {
+                  final isSelected = widget.currentSoundPath == null;
+                  return _buildSoundOption(
+                    option: const AdhanSoundOption(
+                      name: 'الصوت الافتراضي',
+                      nameEn: 'Default Sound',
+                      path: null,
+                    ),
+                    isSelected: isSelected,
+                    isPlaying: false, // Default sound can't be previewed
+                    theme: theme,
+                    setModalState: setModalState,
+                    index: index,
+                  );
+                }
+
+                // Regular sound options
+                final option = widget.soundOptions[index - 1];
+                // Skip if this is already a default option in the list
+                if (option.path == null) {
+                  return const SizedBox.shrink();
+                }
+
+                final isSelected = option.path == widget.currentSoundPath;
+                final isPlaying = _isPlaying && _playingPath == option.path;
+
+                return _buildSoundOption(
+                  option: option,
+                  isSelected: isSelected,
+                  isPlaying: isPlaying,
+                  theme: theme,
+                  setModalState: setModalState,
+                  index: index,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -316,332 +294,229 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
     final l10n = context.l10n;
     final isArabic = l10n?.locale.languageCode == 'ar';
     final displayName = isArabic ? option.name : option.nameEn;
+    final isDark = theme.brightness == Brightness.dark;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 300 + (index * 50)),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(30 * (1 - value), 0),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                gradient: isSelected
-                    ? LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.15),
-                          theme.colorScheme.primary.withValues(alpha: 0.05),
-                        ],
-                      )
-                    : null,
-                color: isSelected
-                    ? null
-                    : theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outline.withValues(alpha: 0.2),
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                leading: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: isSelected
-                        ? LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withValues(alpha: 0.3),
-                              theme.colorScheme.primary.withValues(alpha: 0.15),
-                            ],
-                          )
-                        : null,
-                    color: isSelected
-                        ? null
-                        : theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    option.isDefault ? Icons.notifications : Icons.music_note,
-                    color: isSelected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    size: 24,
-                  ),
-                ),
-                title: Text(
-                  displayName,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
-                    color: isSelected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Play/Stop button (only for non-default sounds)
-                    if (!option.isDefault)
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 400),
-                        curve: Curves.easeOutCubic,
-                        builder: (context, btnValue, child) {
-                          return Transform.scale(
-                            scale: 0.8 + (0.2 * btnValue),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isPlaying
-                                    ? theme.colorScheme.error
-                                        .withValues(alpha: 0.15)
-                                    : theme.colorScheme.primary
-                                        .withValues(alpha: 0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  isPlaying
-                                      ? Icons.stop_circle
-                                      : Icons.play_circle,
-                                  color: isPlaying
-                                      ? theme.colorScheme.error
-                                      : theme.colorScheme.primary,
-                                  size: 32,
-                                ),
-                                onPressed: () async {
-                                  await _playSoundWithModalState(
-                                      option.path, setModalState);
-                                },
-                                tooltip: isPlaying ? 'إيقاف' : 'تشغيل',
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                    const SizedBox(width: 8),
-
-                    // Selected indicator
-                    if (isSelected)
-                      TweenAnimationBuilder<double>(
-                        tween: Tween(begin: 0.0, end: 1.0),
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.elasticOut,
-                        builder: (context, checkValue, child) {
-                          return Transform.scale(
-                            scale: checkValue,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    theme.colorScheme.primary,
-                                    theme.colorScheme.primary
-                                        .withValues(alpha: 0.8),
-                                  ],
-                                ),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.primary
-                                        .withValues(alpha: 0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                  ],
-                ),
-                onTap: () {
-                  debugPrint(
-                      '🎵 Sound option tapped: ${option.name} (path: ${option.path})');
-                  debugPrint(
-                      '🎵 Calling widget.onSoundSelected with path: ${option.path}');
-                  widget.onSoundSelected(option.path);
-                  debugPrint('🎵 Closing modal...');
-                  Navigator.pop(context);
-                  debugPrint('🎵 Modal closed');
-                },
-              ),
-            ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? (isDark
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
+            : (isDark
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
+                : theme.colorScheme.surface),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : (isDark
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+                    : theme.colorScheme.surface),
+            borderRadius: BorderRadius.circular(10),
           ),
-        );
-      },
+          child: Icon(
+            option.isDefault ? Icons.notifications : Icons.music_note,
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            size: 18,
+          ),
+        ),
+        title: Text(
+          displayName,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface,
+            fontSize: 14,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Play/Stop button (only for non-default sounds)
+            if (!option.isDefault)
+              Container(
+                decoration: BoxDecoration(
+                  color: isPlaying
+                      ? theme.colorScheme.error.withValues(alpha: 0.15)
+                      : theme.colorScheme.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    isPlaying ? Icons.stop_circle : Icons.play_circle,
+                    color: isPlaying
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.primary,
+                    size: 28,
+                  ),
+                  onPressed: () async {
+                    await _playSoundWithModalState(option.path, setModalState);
+                  },
+                  tooltip: isPlaying ? 'إيقاف' : 'تشغيل',
+                ),
+              ),
+
+            const SizedBox(width: 6),
+
+            // Selected indicator
+            if (isSelected)
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check,
+                  color: theme.colorScheme.onPrimary,
+                  size: 16,
+                ),
+              ),
+          ],
+        ),
+        onTap: () {
+          debugPrint(
+              '🎵 Sound option tapped: ${option.name} (path: ${option.path})');
+          debugPrint(
+              '🎵 Calling widget.onSoundSelected with path: ${option.path}');
+          widget.onSoundSelected(option.path);
+          debugPrint('🎵 Closing modal...');
+          Navigator.pop(context);
+          debugPrint('🎵 Modal closed');
+        },
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: 0.95 + (0.05 * value),
-          child: Opacity(
-            opacity: value,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                gradient: widget.enabled
-                    ? LinearGradient(
-                        colors: [
-                          theme.colorScheme.primaryContainer
-                              .withValues(alpha: 0.3),
-                          theme.colorScheme.primaryContainer
-                              .withValues(alpha: 0.1),
-                        ],
-                      )
-                    : null,
-                color: widget.enabled
-                    ? null
-                    : theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: widget.enabled
-                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                      : theme.colorScheme.outline.withValues(alpha: 0.2),
-                  width: 1.5,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: widget.enabled
+            ? (isDark
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+                : theme.colorScheme.surface)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: widget.enabled
+              ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+              : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        enabled: widget.enabled,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: widget.enabled
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            Icons.music_note,
+            color: widget.enabled
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            size: 18,
+          ),
+        ),
+        title: Text(
+          widget.title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: widget.enabled
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.subtitle != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  widget.subtitle!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
                 ),
               ),
-              child: ListTile(
-                enabled: widget.enabled,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                leading: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: widget.enabled
-                        ? LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withValues(alpha: 0.2),
-                              theme.colorScheme.primary.withValues(alpha: 0.1),
-                            ],
-                          )
-                        : null,
-                    color: widget.enabled
-                        ? null
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.music_note,
-                    color: widget.enabled
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                    size: 24,
-                  ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.colorScheme.primary,
+                  width: 1,
                 ),
-                title: Text(
-                  widget.title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    color: widget.enabled
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.volume_up,
+                    size: 14,
+                    color: theme.colorScheme.primary,
                   ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (widget.subtitle != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          widget.subtitle!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
-                            fontSize: 12,
-                          ),
-                        ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      _getCurrentSoundName(),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
                       ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary.withValues(alpha: 0.15),
-                            theme.colorScheme.primary.withValues(alpha: 0.08),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.volume_up,
-                            size: 16,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              _getCurrentSoundName(),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: widget.enabled
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                ),
-                onTap: widget.enabled ? _showSoundPickerDialog : null,
+                  ),
+                ],
               ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 14,
+          color: widget.enabled
+              ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
+              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+        ),
+        onTap: widget.enabled ? _showSoundPickerDialog : null,
+      ),
     );
   }
 }

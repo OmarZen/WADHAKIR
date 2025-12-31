@@ -10,6 +10,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
   static const String _channelKeyPrayersDefault =
       'prayers_channel_default_sound';
   static const String _channelKeyPersistent = 'persistent_prayer_channel';
+  static const String _channelKeyFasting = 'fasting_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
   // Notification IDs for each prayer
@@ -19,6 +20,10 @@ class NotificationRepositoryImpl implements NotificationRepository {
   static const int _maghribId = 103;
   static const int _ishaId = 104;
   static const int _persistentId = 999; // ID for persistent notification
+
+  // Notification IDs for fasting reminders
+  static const int _mondayFastingId = 200;
+  static const int _thursdayFastingId = 201;
 
   @override
   Future<void> initialize() async {
@@ -33,7 +38,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     await AwesomeNotifications().initialize(
-      null, // Use default app icon
+      'resource://drawable/ic_notification', // Use custom notification icon
       [
         // Fajr channel - Custom adhan (no notification sound)
         NotificationChannel(
@@ -49,6 +54,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Other prayers channel - Custom adhan (no notification sound)
         NotificationChannel(
@@ -64,6 +70,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Fajr channel - Default notification sound (short beep)
         NotificationChannel(
@@ -78,6 +85,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Other prayers channel - Default notification sound (short beep)
         NotificationChannel(
@@ -92,6 +100,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Persistent notification channel - Default importance (no sound)
         NotificationChannel(
@@ -105,7 +114,22 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: false,
           locked: true, // Prevent user from dismissing
           onlyAlertOnce: true,
-          icon: 'resource://mipmap/ic_launcher',
+          icon: 'resource://drawable/ic_notification',
+        ),
+        // Fasting reminders channel - High importance with default sound
+        NotificationChannel(
+          channelKey: _channelKeyFasting,
+          channelName: 'تذكير بالصيام',
+          channelDescription: 'تنبيهات صيام الإثنين والخميس',
+          importance: NotificationImportance.High,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
       ],
       channelGroups: [
@@ -415,5 +439,140 @@ class NotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<void> hidePersistentNotification() async {
     await AwesomeNotifications().cancel(_persistentId);
+  }
+
+  @override
+  Future<void> scheduleFastingNotification({
+    required String dayName,
+    required String dayNameArabic,
+    required String notificationTime,
+    required bool enabled,
+    required bool vibration,
+  }) async {
+    final notificationId = dayName.toLowerCase() == 'monday'
+        ? _mondayFastingId
+        : _thursdayFastingId;
+
+    if (!enabled) {
+      await AwesomeNotifications().cancel(notificationId);
+      debugPrint('🍽️ Cancelled fasting notification for $dayName');
+      return;
+    }
+
+    // Parse the time string (format: "HH:mm")
+    final timeParts = notificationTime.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = int.parse(timeParts[1]);
+
+    // Calculate next occurrence of the day
+    final now = DateTime.now();
+    final targetWeekday =
+        dayName.toLowerCase() == 'monday' ? DateTime.monday : DateTime.thursday;
+
+    // Find next occurrence of the target day
+    int daysUntilTarget = targetWeekday - now.weekday;
+    if (daysUntilTarget <= 0) {
+      // If today is the target day but time has passed, schedule for next week
+      daysUntilTarget += 7;
+    }
+
+    // Check if today is the target day and time hasn't passed yet
+    if (daysUntilTarget == 7) {
+      final todayAtTime = DateTime(now.year, now.month, now.day, hour, minute);
+      if (todayAtTime.isAfter(now)) {
+        daysUntilTarget = 0; // Schedule for today
+      }
+    }
+
+    final nextNotificationDate = DateTime(
+      now.year,
+      now.month,
+      now.day + daysUntilTarget,
+      hour,
+      minute,
+    );
+
+    debugPrint('🍽️ ═══════════════════════════════════════════════════');
+    debugPrint('🍽️ Scheduling fasting notification for $dayName');
+    debugPrint('🍽️ Notification time: $notificationTime');
+    debugPrint('🍽️ Next occurrence: $nextNotificationDate');
+    debugPrint('🍽️ Vibration: $vibration');
+
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: notificationId,
+        channelKey: _channelKeyFasting,
+        title: '🌙 تذكير بصيام $dayNameArabic',
+        body: 'غدًا يوم $dayNameArabic، لا تنسى نية الصيام 🤲',
+        notificationLayout: NotificationLayout.Default,
+        category: NotificationCategory.Reminder,
+        wakeUpScreen: true,
+        autoDismissible: true,
+        displayOnForeground: true,
+        displayOnBackground: true,
+        backgroundColor: const Color(0xFF20497D),
+        color: Colors.white,
+        icon: 'resource://drawable/ic_notification',
+        largeIcon: 'resource://mipmap/launcher_icon',
+      ),
+      schedule: NotificationCalendar(
+        weekday: targetWeekday,
+        hour: hour,
+        minute: minute,
+        second: 0,
+        millisecond: 0,
+        repeats: true, // Repeat weekly
+        preciseAlarm: true,
+        allowWhileIdle: true,
+      ),
+    );
+
+    debugPrint('✅ Fasting notification scheduled successfully for $dayName');
+    debugPrint('🍽️ ═══════════════════════════════════════════════════\n');
+  }
+
+  @override
+  Future<void> cancelFastingNotification(String dayName) async {
+    final notificationId = dayName.toLowerCase() == 'monday'
+        ? _mondayFastingId
+        : _thursdayFastingId;
+
+    await AwesomeNotifications().cancel(notificationId);
+    debugPrint('🍽️ Cancelled fasting notification for $dayName');
+  }
+
+  @override
+  Future<void> scheduleAllFastingNotifications({
+    required bool mondayEnabled,
+    required bool thursdayEnabled,
+    required String notificationTime,
+    required bool vibration,
+  }) async {
+    debugPrint('🍽️ ═══════════════════════════════════════════════════');
+    debugPrint('🍽️ Scheduling all fasting notifications');
+    debugPrint('🍽️ Monday enabled: $mondayEnabled');
+    debugPrint('🍽️ Thursday enabled: $thursdayEnabled');
+    debugPrint('🍽️ Notification time: $notificationTime');
+
+    // Schedule Monday fasting notification
+    await scheduleFastingNotification(
+      dayName: 'Monday',
+      dayNameArabic: 'الإثنين',
+      notificationTime: notificationTime,
+      enabled: mondayEnabled,
+      vibration: vibration,
+    );
+
+    // Schedule Thursday fasting notification
+    await scheduleFastingNotification(
+      dayName: 'Thursday',
+      dayNameArabic: 'الخميس',
+      notificationTime: notificationTime,
+      enabled: thursdayEnabled,
+      vibration: vibration,
+    );
+
+    debugPrint('✅ All fasting notifications scheduled successfully');
+    debugPrint('🍽️ ═══════════════════════════════════════════════════\n');
   }
 }

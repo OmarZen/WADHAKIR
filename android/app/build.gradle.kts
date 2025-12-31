@@ -64,3 +64,8 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Required for edge-to-edge support on Android 15 (API 35)
+    implementation("androidx.core:core-ktx:1.13.1")
+}

@@ -2,30 +2,94 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:wadhakir/data/models/qibla_model.dart';
 
-class QiblaCompassWidget extends StatelessWidget {
+class QiblaCompassWidget extends StatefulWidget {
   final QiblaModel qiblaModel;
+  final bool isAligned;
 
   const QiblaCompassWidget({
     super.key,
     required this.qiblaModel,
+    this.isAligned = false,
   });
+
+  @override
+  State<QiblaCompassWidget> createState() => _QiblaCompassWidgetState();
+}
+
+class _QiblaCompassWidgetState extends State<QiblaCompassWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.8, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     // Calculate the angle to rotate the compass
     // Subtract compass direction from Qibla direction to get the relative angle
-    double compassAngle = (qiblaModel.compassDirection) * (pi / 180);
-    double qiblaAngle =
-        (qiblaModel.qiblaDirection - qiblaModel.compassDirection) * (pi / 180);
+    double compassAngle = (widget.qiblaModel.compassDirection) * (pi / 180);
+    double qiblaAngle = (widget.qiblaModel.qiblaDirection -
+            widget.qiblaModel.compassDirection) *
+        (pi / 180);
     final size = MediaQuery.of(context).size;
+
+    // Colors based on alignment
+    final primaryColor = widget.isAligned
+        ? const Color(0xFF27AE60) // App theme green when aligned
+        : Theme.of(context).colorScheme.primary;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Stack(
           alignment: Alignment.center,
           children: [
+            // Animated glow effect when aligned
+            if (widget.isAligned)
+              AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width: size.width *
+                        0.65 *
+                        (0.98 + _pulseAnimation.value * 0.02),
+                    height: size.width *
+                        0.65 *
+                        (0.98 + _pulseAnimation.value * 0.02),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withValues(alpha: 0.2),
+                          blurRadius: 15,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
             // Outer compass circle
-            Container(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
               width: size.width * 0.65,
               height: size.width * 0.65,
               decoration: BoxDecoration(
@@ -33,50 +97,35 @@ class QiblaCompassWidget extends StatelessWidget {
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
                 border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.3),
-                  width: 8,
+                  color: primaryColor.withValues(alpha: 0.4),
+                  width: 4,
                 ),
               ),
               child: Transform.rotate(
                 angle: compassAngle,
                 child: CustomPaint(
                   painter: CompassPainter(
-                    primaryColor: Theme.of(context).colorScheme.primary,
+                    primaryColor: primaryColor,
                     secondaryColor: Theme.of(context).colorScheme.secondary,
+                    isAligned: widget.isAligned,
                   ),
                 ),
               ),
             ),
 
-            // Qibla arrow indicator
+            // Qibla arrow indicator - simplified
             Transform.rotate(
               angle: qiblaAngle,
-              child: Container(
-                width: size.width * 0.5,
-                height: size.width * 0.5,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Qibla arrow
-                    Icon(
-                      Icons.mosque_rounded,
-                      size: size.width * 0.1,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ],
-                ),
+              child: Icon(
+                Icons.mosque_rounded,
+                size: size.width * 0.08, // Smaller icon
+                color: primaryColor,
               ),
             ),
           ],
@@ -89,10 +138,12 @@ class QiblaCompassWidget extends StatelessWidget {
 class CompassPainter extends CustomPainter {
   final Color primaryColor;
   final Color secondaryColor;
+  final bool isAligned;
 
   CompassPainter({
     required this.primaryColor,
     required this.secondaryColor,
+    this.isAligned = false,
   });
 
   @override

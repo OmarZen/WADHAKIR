@@ -57,7 +57,9 @@ dependencies:
   geocoding: ^4.0.0
   vector_math: ^2.1.4
   adhan_dart: ^1.2.0
-  hijri: ^3.0.0
+  syncfusion_flutter_datepicker: ^32.1.21
+  syncfusion_flutter_core: ^32.1.21
+  syncfusion_localizations: ^32.1.21
   intl: ^0.20.2
   
   # Quran Library (local package)
@@ -124,6 +126,7 @@ flutter:
     - assets/images/profile/
     - assets/lang/
     - assets/json_data/
+    - assets/json_data/history.json
     - assets/json_data/hadiths_json/
     - assets/json_data/hadiths_json/bukhari_books/arabic/
     - assets/json_data/hadiths_json/bukhari_books/english/

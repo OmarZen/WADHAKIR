@@ -1,8 +1,8 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:hijri/hijri_calendar.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
@@ -90,7 +90,7 @@ class PrayerTimesContent extends StatelessWidget {
     bool isDark,
   ) {
     final l10n = context.l10n;
-    final hijriDate = HijriCalendar.fromDate(selectedDate);
+    final hijriDate = HijriDateTime.fromDateTime(selectedDate);
     final gregorianDate = DateFormat.yMMMEd().format(selectedDate);
 
     return Container(
@@ -146,7 +146,7 @@ class PrayerTimesContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${hijriDate.hDay} ${hijriDate.longMonthName} ${hijriDate.hYear} هـ',
+                        '${hijriDate.day} ${_getHijriMonthName(hijriDate.month)} ${hijriDate.year} هـ',
                         style: TextStyle(
                           fontSize: size.width * 0.045,
                           color: Colors.white,
@@ -210,8 +210,10 @@ class PrayerTimesContent extends StatelessWidget {
     final asrColor = isDark ? darkPrayerAzkarColor : prayerAzkarColor;
     final maghribColor = isDark ? darkSleepAzkarColor : sleepAzkarColor;
     final ishaColor = isDark ? darkEveningAzkarColor : eveningAzkarColor;
-    final midnightColor = isDark ? darkMidnightPrayerColor : midnightPrayerColor;
-    final lastThirdColor = isDark ? darkLastThirdPrayerColor : lastThirdPrayerColor;
+    final midnightColor =
+        isDark ? darkMidnightPrayerColor : midnightPrayerColor;
+    final lastThirdColor =
+        isDark ? darkLastThirdPrayerColor : lastThirdPrayerColor;
 
     return GridView.count(
       crossAxisCount: 2,
@@ -323,8 +325,10 @@ class PrayerTimesContent extends StatelessWidget {
     final asrColor = isDark ? darkPrayerAzkarColor : prayerAzkarColor;
     final maghribColor = isDark ? darkSleepAzkarColor : sleepAzkarColor;
     final ishaColor = isDark ? darkEveningAzkarColor : eveningAzkarColor;
-    final midnightColor = isDark ? darkMidnightPrayerColor : midnightPrayerColor;
-    final lastThirdColor = isDark ? darkLastThirdPrayerColor : lastThirdPrayerColor;
+    final midnightColor =
+        isDark ? darkMidnightPrayerColor : midnightPrayerColor;
+    final lastThirdColor =
+        isDark ? darkLastThirdPrayerColor : lastThirdPrayerColor;
 
     return Column(
       children: [
@@ -567,4 +571,22 @@ class PrayerTimesContent extends StatelessWidget {
       ),
     );
   }
+}
+
+String _getHijriMonthName(int month) {
+  const monthNames = [
+    'محرم',
+    'صفر',
+    'ربيع الأول',
+    'ربيع الثاني',
+    'جمادى الأولى',
+    'جمادى الآخرة',
+    'رجب',
+    'شعبان',
+    'رمضان',
+    'شوال',
+    'ذو القعدة',
+    'ذو الحجة',
+  ];
+  return month >= 1 && month <= 12 ? monthNames[month - 1] : '';
 }

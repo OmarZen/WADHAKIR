@@ -102,6 +102,7 @@
     "hadith_previous": "Previous Hadith",
     "hadith_next": "Next Hadith",
     "more_islamic_excerpts": "More Islamic Excerpts",
+    "islamic_history": "Islamic History",
     "free_palestine": "Free Palestine",
     "palestine_support": "O God, support our brothers in Palestine, ward off calamity from them, and grant them relief from every worry and a way out from every difficulty, and grant them patience and steadfastness, feed them when they are hungry and secure them when they are afraid, and grant them clear victory.",
     "palestine_support_call_to_action": "Prayer and support",
@@ -286,7 +287,15 @@
     "loading_qibla_direction": "Loading Qibla Direction",
     "loading_qibla_direction_description": "We are locating your location and calculating the Qibla direction",
     "qibla_error_message": "Please enable location service and grant location permission",
-    "preparing_compass": "Preparing Compass"
+    "preparing_compass": "Preparing Compass",
+    "aligned_with_qibla": "Aligned with Qibla",
+    "excellent": "Excellent",
+    "very_good": "Very Good",
+    "good": "Good",
+    "close": "Close",
+    "searching": "Searching",
+    "high_accuracy": "High Accuracy",
+    "from_target": "from target"
   },
   "prayer_times": {
     "title": "Prayer Times",
@@ -461,5 +470,34 @@
     "weeks_ago": "weeks ago",
     "months_ago": "months ago",
     "years_ago": "years ago"
+  },
+  "calendar": {
+    "hijri_calendar": "Hijri Calendar",
+    "hijri": "AH",
+    "selected_date": "Selected Date",
+    "today": "Today"
+  },
+  "hijri_months": {
+    "month_1": "Muharram",
+    "month_2": "Safar",
+    "month_3": "Rabi' al-Awwal",
+    "month_4": "Rabi' al-Thani",
+    "month_5": "Jumada al-Awwal",
+    "month_6": "Jumada al-Thani",
+    "month_7": "Rajab",
+    "month_8": "Sha'ban",
+    "month_9": "Ramadan",
+    "month_10": "Shawwal",
+    "month_11": "Dhu al-Qi'dah",
+    "month_12": "Dhu al-Hijjah"
+  },
+  "weekdays": {
+    "day_1": "Monday",
+    "day_2": "Tuesday",
+    "day_3": "Wednesday",
+    "day_4": "Thursday",
+    "day_5": "Friday",
+    "day_6": "Saturday",
+    "day_7": "Sunday"
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hijri/hijri_calendar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_cubit.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
 import 'package:wadhakir/features/home/views/widgets/hadith_card_widget.dart';
@@ -29,7 +29,7 @@ class HomeScreenContent extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Get today's date in Hijri
-    final hijriToday = HijriCalendar.now();
+    final hijriToday = HijriDateTime.now();
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,

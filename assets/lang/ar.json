@@ -102,6 +102,7 @@
     "hadith_previous": "السابق",
     "hadith_next": "التالي",
     "more_islamic_excerpts": "مقتطفات إسلامية",
+    "islamic_history": "السيرة النبوية",
     "free_palestine": "فلسطين حرة",
     "palestine_support": "اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين",
     "palestine_support_call_to_action": "دعاء ونصرة",
@@ -286,7 +287,15 @@
     "loading_qibla_direction": "جاري تحضير إتجاه القبلة",
     "loading_qibla_direction_description": "نقوم بتحديد موقعك وحساب اتجاه القبلة",
     "qibla_error_message": "يرجى تفعيل خدمة الموقع وإعطاء إذن الموقع",
-    "preparing_compass": "جاري تحضير البوصلة"
+    "preparing_compass": "جاري تحضير البوصلة",
+    "aligned_with_qibla": "متجه نحو القبلة",
+    "excellent": "ممتاز",
+    "very_good": "جيد جداً",
+    "good": "جيد",
+    "close": "قريب",
+    "searching": "ابحث",
+    "high_accuracy": "دقة عالية",
+    "from_target": "من الهدف"
   },
   "prayer_times": {
     "title": "مواقيت الصلاة",
@@ -458,5 +467,34 @@
     "weeks_ago": "أسابيع مضت",
     "months_ago": "أشهر مضت",
     "years_ago": "سنوات مضت"
+  },
+  "calendar": {
+    "hijri_calendar": "التقويم الهجري",
+    "hijri": "هـ",
+    "selected_date": "التاريخ المحدد",
+    "today": "اليوم"
+  },
+  "hijri_months": {
+    "month_1": "محرم",
+    "month_2": "صفر",
+    "month_3": "ربيع الأول",
+    "month_4": "ربيع الثاني",
+    "month_5": "جمادى الأولى",
+    "month_6": "جمادى الآخرة",
+    "month_7": "رجب",
+    "month_8": "شعبان",
+    "month_9": "رمضان",
+    "month_10": "شوال",
+    "month_11": "ذو القعدة",
+    "month_12": "ذو الحجة"
+  },
+  "weekdays": {
+    "day_1": "الإثنين",
+    "day_2": "الثلاثاء",
+    "day_3": "الأربعاء",
+    "day_4": "الخميس",
+    "day_5": "الجمعة",
+    "day_6": "السبت",
+    "day_7": "الأحد"
   }
 }

@@ -1,17 +1,17 @@
-import 'package:hijri/hijri_calendar.dart';
+import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
 class AppDateUtils {
   static String getFormattedHijriDate(
-      HijriCalendar date, AppLocalizations? l10n) {
-    String month = _getHijriMonthName(date.hMonth, l10n);
-    return '${date.hDay} $month ${date.hYear}';
+      HijriDateTime date, AppLocalizations? l10n) {
+    String month = _getHijriMonthName(date.month, l10n);
+    return '${date.day} $month ${date.year}';
   }
 
   static String getShortFormattedHijriDate(
-      HijriCalendar date, AppLocalizations? l10n) {
-    String month = _getShortHijriMonthName(date.hMonth, l10n);
-    return '${date.hDay} $month';
+      HijriDateTime date, AppLocalizations? l10n) {
+    String month = _getShortHijriMonthName(date.month, l10n);
+    return '${date.day} $month';
   }
 
   static String _getHijriMonthName(int month, AppLocalizations? l10n) {

@@ -62,10 +62,10 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
   @override
   void initState() {
     super.initState();
-    // Set status bar to transparent for immersive experience
+    // Set status bar icon brightness for immersive experience
+    // Note: statusBarColor is deprecated in Android 15 for edge-to-edge apps
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
       ),
     );
@@ -73,10 +73,10 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
 
   @override
   void dispose() {
-    // Restore status bar
+    // Restore status bar icon brightness
+    // Note: statusBarColor is deprecated in Android 15 for edge-to-edge apps
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
       ),
     );

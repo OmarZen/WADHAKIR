@@ -33,7 +33,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
     }
 
     await AwesomeNotifications().initialize(
-      null, // Use default app icon
+      'resource://drawable/ic_notification', // Use custom notification icon
       [
         // Fajr channel - Custom adhan (no notification sound)
         NotificationChannel(
@@ -49,6 +49,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Other prayers channel - Custom adhan (no notification sound)
         NotificationChannel(
@@ -64,6 +65,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Fajr channel - Default notification sound (short beep)
         NotificationChannel(
@@ -78,6 +80,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Other prayers channel - Default notification sound (short beep)
         NotificationChannel(
@@ -92,6 +95,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: true,
           locked: false,
           onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
         ),
         // Persistent notification channel - Default importance (no sound)
         NotificationChannel(
@@ -105,7 +109,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
           channelShowBadge: false,
           locked: true, // Prevent user from dismissing
           onlyAlertOnce: true,
-          icon: 'resource://mipmap/ic_launcher',
+          icon: 'resource://drawable/ic_notification',
         ),
       ],
       channelGroups: [

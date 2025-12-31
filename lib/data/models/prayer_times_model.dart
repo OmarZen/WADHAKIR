@@ -13,6 +13,10 @@ class PrayerTimesModel extends Equatable {
   final DateTime date;
   final CalculationParameters calculationParameters;
   final Coordinates coordinates;
+  
+  // Sunnah Times - Qiyam times
+  final DateTime? middleOfTheNight;
+  final DateTime? lastThirdOfTheNight;
 
   const PrayerTimesModel({
     required this.fajr,
@@ -24,6 +28,8 @@ class PrayerTimesModel extends Equatable {
     required this.date,
     required this.calculationParameters,
     required this.coordinates,
+    this.middleOfTheNight,
+    this.lastThirdOfTheNight,
   });
 
   Map<String, dynamic> toJson() {
@@ -36,6 +42,8 @@ class PrayerTimesModel extends Equatable {
       'maghrib': timeFormat.format(maghrib),
       'isha': timeFormat.format(isha),
       'date': date.toIso8601String(),
+      'middleOfTheNight': middleOfTheNight != null ? timeFormat.format(middleOfTheNight!) : null,
+      'lastThirdOfTheNight': lastThirdOfTheNight != null ? timeFormat.format(lastThirdOfTheNight!) : null,
     };
   }
 
@@ -64,6 +72,8 @@ class PrayerTimesModel extends Equatable {
       calculationParameters:
           CalculationMethodMapper.getParameters('muslim_world_league'),
       coordinates: const Coordinates(0, 0), // Default coordinates
+      middleOfTheNight: json['middleOfTheNight'] != null ? parseTime(json['middleOfTheNight']) : null,
+      lastThirdOfTheNight: json['lastThirdOfTheNight'] != null ? parseTime(json['lastThirdOfTheNight']) : null,
     );
   }
 
@@ -75,6 +85,10 @@ class PrayerTimesModel extends Equatable {
   }) {
     // Convert UTC times to local time
     // adhan_dart returns times in UTC, we need to convert to local timezone
+    
+    // Calculate Sunnah times (Qiyam times)
+    final sunnahTimes = SunnahTimes(prayerTimes);
+    
     return PrayerTimesModel(
       fajr: prayerTimes.fajr.toLocal(),
       sunrise: prayerTimes.sunrise.toLocal(),
@@ -85,6 +99,8 @@ class PrayerTimesModel extends Equatable {
       date: date,
       calculationParameters: calculationParameters,
       coordinates: coordinates,
+      middleOfTheNight: sunnahTimes.middleOfTheNight.toLocal(),
+      lastThirdOfTheNight: sunnahTimes.lastThirdOfTheNight.toLocal(),
     );
   }
 
@@ -172,6 +188,8 @@ class PrayerTimesModel extends Equatable {
         isha,
         date,
         calculationParameters,
-        coordinates
+        coordinates,
+        middleOfTheNight,
+        lastThirdOfTheNight,
       ];
 }

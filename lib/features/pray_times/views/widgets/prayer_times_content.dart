@@ -69,6 +69,11 @@ class PrayerTimesContent extends StatelessWidget {
                     : _buildPrayerTimesList(
                         context, prayerTimes, isToday, isDark),
 
+                // Qiyam times info card
+                if (prayerTimes.middleOfTheNight != null || 
+                    prayerTimes.lastThirdOfTheNight != null)
+                  _buildQiyamTimesInfo(context, theme),
+
                 _buildCalculationMethodInfo(context, theme),
               ],
             ),
@@ -207,6 +212,7 @@ class PrayerTimesContent extends StatelessWidget {
     final asrColor = isDark ? darkPrayerAzkarColor : prayerAzkarColor;
     final maghribColor = isDark ? darkSleepAzkarColor : sleepAzkarColor;
     final ishaColor = isDark ? darkEveningAzkarColor : eveningAzkarColor;
+    final qiyamColor = isDark ? const Color(0xFF4A148C) : const Color(0xFF7B1FA2);
 
     return GridView.count(
       crossAxisCount: 2,
@@ -276,6 +282,28 @@ class PrayerTimesContent extends StatelessWidget {
           animation: fadeAnimation,
           delay: 0.6,
         ),
+        if (prayerTimes.middleOfTheNight != null)
+          PrayerCard(
+            size: size,
+            icon: Icons.bedtime_outlined,
+            prayerName: l10n?.translate('prayer_times.middle_of_the_night') ?? 'منتصف الليل',
+            prayerTime: prayerTimes.formatTime(prayerTimes.middleOfTheNight!),
+            isNext: false,
+            color: qiyamColor,
+            animation: fadeAnimation,
+            delay: 0.7,
+          ),
+        if (prayerTimes.lastThirdOfTheNight != null)
+          PrayerCard(
+            size: size,
+            icon: Icons.nightlight,
+            prayerName: l10n?.translate('prayer_times.last_third_of_the_night') ?? 'الثلث الأخير من الليل',
+            prayerTime: prayerTimes.formatTime(prayerTimes.lastThirdOfTheNight!),
+            isNext: false,
+            color: qiyamColor.withValues(alpha: 0.85),
+            animation: fadeAnimation,
+            delay: 0.8,
+          ),
       ],
     );
   }
@@ -295,6 +323,7 @@ class PrayerTimesContent extends StatelessWidget {
     final asrColor = isDark ? darkPrayerAzkarColor : prayerAzkarColor;
     final maghribColor = isDark ? darkSleepAzkarColor : sleepAzkarColor;
     final ishaColor = isDark ? darkEveningAzkarColor : eveningAzkarColor;
+    final qiyamColor = isDark ? const Color(0xFF4A148C) : const Color(0xFF7B1FA2);
 
     return Column(
       children: [
@@ -358,6 +387,28 @@ class PrayerTimesContent extends StatelessWidget {
           animation: fadeAnimation,
           delay: 0.6,
         ),
+        if (prayerTimes.middleOfTheNight != null)
+          PrayerCard(
+            size: size,
+            icon: Icons.bedtime_outlined,
+            prayerName: l10n?.translate('prayer_times.middle_of_the_night') ?? 'منتصف الليل',
+            prayerTime: prayerTimes.formatTime(prayerTimes.middleOfTheNight!),
+            isNext: false,
+            color: qiyamColor,
+            animation: fadeAnimation,
+            delay: 0.7,
+          ),
+        if (prayerTimes.lastThirdOfTheNight != null)
+          PrayerCard(
+            size: size,
+            icon: Icons.nightlight,
+            prayerName: l10n?.translate('prayer_times.last_third_of_the_night') ?? 'الثلث الأخير من الليل',
+            prayerTime: prayerTimes.formatTime(prayerTimes.lastThirdOfTheNight!),
+            isNext: false,
+            color: qiyamColor.withValues(alpha: 0.85),
+            animation: fadeAnimation,
+            delay: 0.8,
+          ),
       ],
     );
   }
@@ -413,6 +464,79 @@ class PrayerTimesContent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildQiyamTimesInfo(BuildContext context, ThemeData theme) {
+    final l10n = context.l10n;
+    final bool isDark = theme.brightness == Brightness.dark;
+    final qiyamColor = isDark ? const Color(0xFF4A148C) : const Color(0xFF7B1FA2);
+
+    return Container(
+      margin: EdgeInsets.only(top: size.height * 0.02),
+      padding: EdgeInsets.all(size.width * 0.04),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            qiyamColor.withValues(alpha: 0.08),
+            qiyamColor.withValues(alpha: 0.03),
+          ],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: qiyamColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: qiyamColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.nightlight,
+                  color: qiyamColor,
+                  size: size.width * 0.06,
+                ),
+              ),
+              SizedBox(width: size.width * 0.03),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n?.translate('prayer_times.qiyam_times') ?? 'أوقات القيام',
+                      style: TextStyle(
+                        fontSize: size.width * 0.04,
+                        color: qiyamColor,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Almarai',
+                      ),
+                    ),
+                    Text(
+                      l10n?.translate('prayer_times.qiyam_times_description') ?? 
+                          'أوقات مستحبة لقيام الليل والدعاء',
+                      style: TextStyle(
+                        fontSize: size.width * 0.028,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        fontFamily: 'Almarai',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

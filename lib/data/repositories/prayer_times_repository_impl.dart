@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:adhan_dart/adhan_dart.dart';
@@ -198,36 +199,42 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       await prefs.setDouble(_lastLongitudeKey, coordinates.longitude);
 
       // Try to get and save the location name (city)
-      try {
-        final placemarks = await placemarkFromCoordinates(
-          coordinates.latitude,
-          coordinates.longitude,
-        );
+      // Skip geocoding on desktop platforms where it's not supported
+      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+        try {
+          final placemarks = await placemarkFromCoordinates(
+            coordinates.latitude,
+            coordinates.longitude,
+          );
 
-        if (placemarks.isNotEmpty) {
-          final placemark = placemarks.first;
-          String? cityName;
+          if (placemarks.isNotEmpty) {
+            final placemark = placemarks.first;
+            String? cityName;
 
-          // Try different fields in order of preference
-          if (placemark.locality?.isNotEmpty ?? false) {
-            cityName = placemark.locality;
-          } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
-            cityName = placemark.subAdministrativeArea;
-          } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
-            cityName = placemark.administrativeArea;
+            // Try different fields in order of preference
+            if (placemark.locality?.isNotEmpty ?? false) {
+              cityName = placemark.locality;
+            } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
+              cityName = placemark.subAdministrativeArea;
+            } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
+              cityName = placemark.administrativeArea;
+            }
+
+            if (cityName != null && cityName.isNotEmpty) {
+              await prefs.setString(_lastLocationNameKey, cityName);
+              debugPrint('Saved location name: $cityName');
+            } else {
+              debugPrint('No valid location name found in placemark data');
+              await prefs.remove(_lastLocationNameKey);
+            }
           }
-
-          if (cityName != null && cityName.isNotEmpty) {
-            await prefs.setString(_lastLocationNameKey, cityName);
-            debugPrint('Saved location name: $cityName');
-          } else {
-            debugPrint('No valid location name found in placemark data');
-            await prefs.remove(_lastLocationNameKey); // Clear any old name
-          }
+        } catch (e) {
+          debugPrint('Error getting location name: $e');
+          await prefs.remove(_lastLocationNameKey);
         }
-      } catch (e) {
-        debugPrint('Error getting location name: $e');
-        await prefs.remove(_lastLocationNameKey); // Clear any old name on error
+      } else {
+        debugPrint('Geocoding not supported on this platform (desktop/web)');
+        await prefs.remove(_lastLocationNameKey);
       }
 
       debugPrint(
@@ -262,48 +269,58 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       final coordinates = _coordinates ?? await _loadLastSavedLocation();
 
       if (coordinates != null) {
-        try {
-          // Always try to get fresh location name from geocoding
-          final placemarks = await placemarkFromCoordinates(
-            coordinates.latitude,
-            coordinates.longitude,
-          );
+        // Try to get saved location name first
+        final savedLocationName = prefs.getString(_lastLocationNameKey);
 
-          if (placemarks.isNotEmpty) {
-            final placemark = placemarks.first;
-            String? cityName;
+        // Skip geocoding on desktop platforms where it's not supported
+        if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+          try {
+            // Try to get fresh location name from geocoding
+            final placemarks = await placemarkFromCoordinates(
+              coordinates.latitude,
+              coordinates.longitude,
+            );
 
-            // Try different fields in order of preference
-            if (placemark.locality?.isNotEmpty ?? false) {
-              cityName = placemark.locality;
-            } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
-              cityName = placemark.subAdministrativeArea;
-            } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
-              cityName = placemark.administrativeArea;
+            if (placemarks.isNotEmpty) {
+              final placemark = placemarks.first;
+              String? cityName;
+
+              // Try different fields in order of preference
+              if (placemark.locality?.isNotEmpty ?? false) {
+                cityName = placemark.locality;
+              } else if (placemark.subAdministrativeArea?.isNotEmpty ?? false) {
+                cityName = placemark.subAdministrativeArea;
+              } else if (placemark.administrativeArea?.isNotEmpty ?? false) {
+                cityName = placemark.administrativeArea;
+              }
+
+              if (cityName != null && cityName.isNotEmpty) {
+                // Save the resolved name
+                await prefs.setString(_lastLocationNameKey, cityName);
+                return cityName;
+              }
             }
-
-            if (cityName != null && cityName.isNotEmpty) {
-              // Save the resolved name
-              await prefs.setString(_lastLocationNameKey, cityName);
-              return cityName;
+          } catch (e) {
+            debugPrint('Error getting location name from geocoding: $e');
+            // On error, try to fall back to saved name
+            if (savedLocationName != null && savedLocationName.isNotEmpty) {
+              return savedLocationName;
             }
           }
-        } catch (e) {
-          debugPrint('Error getting location name: $e');
-          // On error, try to fall back to saved name
-          final savedLocationName = prefs.getString(_lastLocationNameKey);
+        } else {
+          // Desktop/Web platform - use saved name if available
           if (savedLocationName != null && savedLocationName.isNotEmpty) {
             return savedLocationName;
           }
         }
 
-        // If geocoding fails and no saved name, return formatted coordinates
+        // If geocoding fails/unavailable and no saved name, return formatted coordinates
         return '${coordinates.latitude.toStringAsFixed(2)}°, ${coordinates.longitude.toStringAsFixed(2)}°';
       }
 
       return 'موقع غير محدد';
     } catch (e) {
-      debugPrint('Error getting location name: $e');
+      debugPrint('Error in getCurrentLocationName: $e');
       return 'موقع غير محدد';
     }
   }

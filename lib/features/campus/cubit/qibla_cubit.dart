@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/data/models/qibla_model.dart';
 import 'package:wadhakir/features/campus/cubit/qibla_state.dart';
+import 'package:wadhakir/domain/repositories/qibla_repository.dart';
 import 'package:wadhakir/domain/usecases/get_qibla_direction_usecase.dart';
 import 'package:wadhakir/domain/usecases/request_qibla_permissions_usecase.dart';
 
 class QiblaCubit extends Cubit<QiblaState> {
   final GetQiblaDirectionUseCase _getQiblaDirectionUseCase;
   final RequestQiblaPermissionsUseCase _requestQiblaPermissionsUseCase;
+  final QiblaRepository _qiblaRepository;
   StreamSubscription<QiblaModel>? _qiblaSubscription;
   bool _wasAlignedBefore = false;
   static const double _alignmentThreshold = 5.0; // degrees
@@ -16,6 +18,7 @@ class QiblaCubit extends Cubit<QiblaState> {
   QiblaCubit(
     this._getQiblaDirectionUseCase,
     this._requestQiblaPermissionsUseCase,
+    this._qiblaRepository,
   ) : super(const QiblaInitial());
 
   Future<void> requestPermissions() async {
@@ -30,9 +33,18 @@ class QiblaCubit extends Cubit<QiblaState> {
     emit(const QiblaLoading());
 
     try {
+      // Check if compass is available before doing anything
+      if (!_qiblaRepository.isCompassAvailable) {
+        final errorMessage = _qiblaRepository.compassErrorMessage ??
+            'Compass sensor is not available on this device.';
+        emit(QiblaError(errorMessage));
+        return;
+      }
+
       await requestPermissions();
 
       await _qiblaSubscription?.cancel();
+
       _qiblaSubscription = _getQiblaDirectionUseCase().listen(
         (qiblaModel) {
           // Calculate the difference between Qibla direction and compass direction
@@ -60,7 +72,11 @@ class QiblaCubit extends Cubit<QiblaState> {
 
           emit(QiblaLoaded(qiblaModel, isAligned: isAligned));
         },
-        onError: (error) => emit(QiblaError(error.toString())),
+        onError: (error) {
+          // Immediately transition to error state when error occurs
+          emit(QiblaError(error.toString()));
+        },
+        cancelOnError: false, // Keep subscription alive for potential recovery
       );
     } catch (e) {
       emit(QiblaError(e.toString()));

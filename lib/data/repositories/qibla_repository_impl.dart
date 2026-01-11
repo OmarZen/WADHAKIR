@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:vector_math/vector_math.dart';
@@ -18,24 +19,53 @@ class QiblaRepositoryImpl implements QiblaRepository {
   StreamSubscription<CompassEvent>? _compassSubscription;
   Position? _currentPosition;
   bool _isCompassAvailable = false;
+  String? _compassErrorMessage;
 
   QiblaRepositoryImpl() {
-    _checkCompassAvailability();
-    _initLocation();
+    _initializeQibla();
+  }
+
+  /// Check if compass is available on this device
+  @override
+  bool get isCompassAvailable => _isCompassAvailable;
+
+  /// Get the compass error message if compass is not available
+  @override
+  String? get compassErrorMessage => _compassErrorMessage;
+
+  Future<void> _initializeQibla() async {
+    // Check compass availability first before doing anything
+    await _checkCompassAvailability();
+
+    // Only initialize location if compass is available
+    if (_isCompassAvailable) {
+      await _initLocation();
+    }
   }
 
   Future<void> _checkCompassAvailability() async {
     try {
+      // Check if platform supports compass sensor
+      if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+        _isCompassAvailable = false;
+        _compassErrorMessage =
+            'Compass sensor is not available on this platform. '
+            'This feature requires a device with a magnetometer sensor (typically mobile phones and tablets).';
+        return;
+      }
+
+      // Check if compass events stream is available
       _isCompassAvailable = FlutterCompass.events != null;
       if (_isCompassAvailable) {
         _initCompass();
       } else {
-        _qiblaStreamController.addError('Compass not available on this device');
+        _compassErrorMessage = 'Compass sensor not available on this device. '
+            'Your device may not have a magnetometer sensor.';
       }
     } catch (e) {
       debugPrint('Error checking compass availability: $e');
       _isCompassAvailable = false;
-      _qiblaStreamController.addError('Compass error: $e');
+      _compassErrorMessage = 'Unable to access compass sensor: $e';
     }
   }
 

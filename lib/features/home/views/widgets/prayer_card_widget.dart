@@ -803,14 +803,17 @@ class _LocationNameWidget extends StatelessWidget {
         return FutureBuilder<String>(
           future: context.read<PrayerTimesCubit>().getCurrentLocationName(),
           builder: (context, snapshot) {
-            // Don't show if loading, no data, or contains coordinates
-            if (!snapshot.hasData ||
-                snapshot.data == null ||
-                snapshot.data!.contains('°')) {
+            // Don't show if loading or no data
+            if (!snapshot.hasData || snapshot.data == null) {
               return const SizedBox.shrink();
             }
 
             final locationName = snapshot.data!;
+
+            // Don't show if it's the default "location not specified" message
+            if (locationName == 'موقع غير محدد') {
+              return const SizedBox.shrink();
+            }
 
             return Container(
               padding: EdgeInsets.symmetric(

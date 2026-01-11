@@ -56,7 +56,8 @@ class WindowsConfig {
   static const bool enableCrashReporting = true;
 
   // URLs
-  static const String updateCheckUrl = 'https://api.github.com/repos/OmarZen/WADHAKIR/releases/latest';
+  static const String updateCheckUrl =
+      'https://api.github.com/repos/OmarZen/WADHAKIR/releases/latest';
   static const String websiteUrl = 'https://wadhakir.app';
   static const String supportUrl = 'https://github.com/OmarZen/WADHAKIR/issues';
 

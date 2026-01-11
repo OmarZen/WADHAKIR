@@ -5,7 +5,8 @@
     "save": "حفظ",
     "ok": "موافق",
     "downloading": "جارِ التحميل",
-    "retry": "إعادة المحاولة"
+    "retry": "إعادة المحاولة",
+    "loading": "جارِ التحميل..."
   },
   "global": {
     "jan": "يناير",
@@ -222,7 +223,17 @@
     "enable_notifications_subtitle": "إرسال تنبيه عند حلول وقت كل صلاة",
     "persistent_notification": "إشعار دائم للصلاة القادمة",
     "persistent_notification_subtitle": "عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي",
+    "persistent_notification_mobile_only": "هذه الميزة متاحة على الهواتف فقط",
     "test_notification": "اختبار الإشعار",
+    "test_notification_subtitle": "إرسال إشعار تجريبي للتحقق من عمل النظام على الهاتف",
+    "sending_test_notification": "إرسال إشعار تجريبي...",
+    "test_notification_sent": "تم إرسال الإشعار التجريبي! تحقق من إشعارات الهاتف",
+    "test_scheduled_notification": "اختبار الإشعار المجدول",
+    "test_scheduled_notification_subtitle": "إرسال إشعار تجريبي بعد 5 ثوانِ لاختبار الجدولة",
+    "scheduling_test_notification": "جدولة إشعار تجريبي بعد 5 ثوانِ...",
+    "test_scheduled_notification_set": "تم جدولة الإشعار! سيظهر بعد 5 ثوانِ",
+    "with_custom_adhan": "مع الأذان المخصص",
+    "with_default_sound": "مع الصوت الافتراضي",
     "notification_timing": "وقت التنبيه",
     "notification_timing_subtitle": "اختر متى تريد استلام التنبيه",
     "customize_prayers": "تخصيص كل صلاة",
@@ -303,7 +314,10 @@
     "close": "قريب",
     "searching": "ابحث",
     "high_accuracy": "دقة عالية",
-    "from_target": "من الهدف"
+    "from_target": "من الهدف",
+    "error": "خطأ",
+    "compass_unavailable": "البوصلة غير متاحة",
+    "compass_requirement": "تتطلب هذه الميزة جهازًا مزودًا بمستشعر البوصلة (المغناطيس) والذي يتوفر عادة في الهواتف الذكية والأجهزة اللوحية فقط."
   },
   "prayer_times": {
     "title": "مواقيت الصلاة",

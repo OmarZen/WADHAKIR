@@ -119,7 +119,13 @@ class PalestineSupportCardWidget extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CountryFlag.fromCountryCode('PS', width: 24, height: 16),
+          CountryFlag.fromCountryCode(
+            'PS',
+            theme: ImageTheme(
+              width: 20,
+              height: 14,
+            ),
+          ),
           const SizedBox(width: 8),
           Text(
             l10n?.translate('home.palestine_support_call_to_action') ??

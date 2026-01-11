@@ -640,9 +640,12 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
     final text = state.category.items[_currentPage].text;
     final category = state.category.title;
 
-    await Share.share(
-      '$text\n\n${context.l10n?.translate('azkar.from') ?? 'من'} $category',
-      subject: category,
+    await SharePlus.instance.share(
+      ShareParams(
+        text:
+            '$text\n\n${context.l10n?.translate('azkar.from') ?? 'من'} $category\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
+        subject: category,
+      ),
     );
   }
 }

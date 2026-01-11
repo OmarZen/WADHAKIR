@@ -189,7 +189,12 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                         tooltip:
                             l10n?.translate('home.hadith_share') ?? 'مشاركة',
                         onTap: () {
-                          Share.share('من الأربعين النووية\n\n$title\n\n$body');
+                          SharePlus.instance.share(
+                            ShareParams(
+                              text: 'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
+                              subject: 'من الأربعين النووية',
+                            ),
+                          );
                         },
                       ),
                     ],
@@ -254,7 +259,12 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                         tooltip:
                             l10n?.translate('home.hadith_share') ?? 'مشاركة',
                         onPressed: () {
-                          Share.share('من الأربعين النووية\n\n$title\n\n$body');
+                          SharePlus.instance.share(
+                            ShareParams(
+                              text: 'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
+                              subject: 'من الأربعين النووية',
+                            ),
+                          );
                         },
                         icon: const Icon(Icons.share_rounded),
                       )

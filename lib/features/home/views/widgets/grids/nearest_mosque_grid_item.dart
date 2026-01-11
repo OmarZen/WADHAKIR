@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/home/views/widgets/mosque_list_bottom_sheet.dart';
 
@@ -11,6 +12,13 @@ class NearestMosqueGridItem extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
     final isDark = theme.brightness == Brightness.dark;
+    final isDesktop = PlatformUtils.isDesktop;
+
+    final padding = isDesktop ? 16.0 : 12.0;
+    final verticalPadding = isDesktop ? 12.0 : 10.0;
+    final iconPadding = isDesktop ? 10.0 : 8.0;
+    final iconSize = isDesktop ? 22.0 : 20.0;
+    final spacing = isDesktop ? 12.0 : 10.0;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -19,7 +27,8 @@ class NearestMosqueGridItem extends StatelessWidget {
         onTap: () => _handleNearestMosqueTap(context),
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(
+              horizontal: padding, vertical: verticalPadding),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
@@ -29,23 +38,26 @@ class NearestMosqueGridItem extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(iconPadding),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 ),
                 child: Icon(
                   Icons.mosque,
+                  size: iconSize,
                   color: isDark
                       ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
                       : theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: spacing),
               Expanded(
                 child: Text(
                   l10n?.translate('home.nearest_mosque') ?? 'أقرب مسجد',
-                  style: theme.textTheme.titleMedium,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: isDesktop ? 16 : null,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.right,

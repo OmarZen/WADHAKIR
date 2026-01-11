@@ -1,9 +1,145 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'notification_repository_impl_windows.dart';
 import '../models/notification_settings_model.dart';
 import '../../domain/repositories/notification_repository.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
+/// Factory class to return the appropriate notification repository implementation
+/// based on the current platform
 class NotificationRepositoryImpl implements NotificationRepository {
+  // Singleton pattern
+  static NotificationRepositoryImpl? _instance;
+
+  // Delegate to platform-specific implementation
+  late final NotificationRepository _platformRepository;
+
+  factory NotificationRepositoryImpl() {
+    _instance ??= NotificationRepositoryImpl._internal();
+    return _instance!;
+  }
+
+  NotificationRepositoryImpl._internal() {
+    // Platform detection: Use Windows implementation on Windows, mobile implementation otherwise
+    if (Platform.isWindows) {
+      debugPrint('🪟 Using Windows Notification Repository');
+      _platformRepository = NotificationRepositoryImplWindows();
+    } else {
+      debugPrint(
+          '📱 Using Mobile Notification Repository (awesome_notifications)');
+      _platformRepository = _MobileNotificationRepositoryImpl();
+    }
+  }
+
+  @override
+  Future<void> initialize() => _platformRepository.initialize();
+
+  @override
+  Future<bool> requestPermissions() => _platformRepository.requestPermissions();
+
+  @override
+  Future<bool> hasPermissions() => _platformRepository.hasPermissions();
+
+  @override
+  Future<void> schedulePrayerNotification({
+    required String prayerName,
+    required String prayerNameArabic,
+    required DateTime prayerTime,
+    required PrayerNotificationSettings settings,
+    String? locationName,
+  }) =>
+      _platformRepository.schedulePrayerNotification(
+        prayerName: prayerName,
+        prayerNameArabic: prayerNameArabic,
+        prayerTime: prayerTime,
+        settings: settings,
+        locationName: locationName,
+      );
+
+  @override
+  Future<void> scheduleAllPrayerNotifications({
+    required Map<String, DateTime> prayerTimes,
+    required NotificationSettingsModel settings,
+    String? locationName,
+  }) =>
+      _platformRepository.scheduleAllPrayerNotifications(
+        prayerTimes: prayerTimes,
+        settings: settings,
+        locationName: locationName,
+      );
+
+  @override
+  Future<void> cancelPrayerNotification(String prayerName) =>
+      _platformRepository.cancelPrayerNotification(prayerName);
+
+  @override
+  Future<void> cancelAllNotifications() =>
+      _platformRepository.cancelAllNotifications();
+
+  @override
+  Future<bool> hasActiveNotifications() =>
+      _platformRepository.hasActiveNotifications();
+
+  @override
+  Future<List<int>> getScheduledNotificationIds() =>
+      _platformRepository.getScheduledNotificationIds();
+
+  @override
+  Future<void> showPersistentNotification({
+    required String nextPrayerName,
+    required String nextPrayerNameArabic,
+    required DateTime nextPrayerTime,
+    String? locationName,
+  }) =>
+      _platformRepository.showPersistentNotification(
+        nextPrayerName: nextPrayerName,
+        nextPrayerNameArabic: nextPrayerNameArabic,
+        nextPrayerTime: nextPrayerTime,
+        locationName: locationName,
+      );
+
+  @override
+  Future<void> hidePersistentNotification() =>
+      _platformRepository.hidePersistentNotification();
+
+  @override
+  Future<void> scheduleFastingNotification({
+    required String dayName,
+    required String dayNameArabic,
+    required String notificationTime,
+    required bool enabled,
+    required bool vibration,
+  }) =>
+      _platformRepository.scheduleFastingNotification(
+        dayName: dayName,
+        dayNameArabic: dayNameArabic,
+        notificationTime: notificationTime,
+        enabled: enabled,
+        vibration: vibration,
+      );
+
+  @override
+  Future<void> cancelFastingNotification(String dayName) =>
+      _platformRepository.cancelFastingNotification(dayName);
+
+  @override
+  Future<void> scheduleAllFastingNotifications({
+    required bool mondayEnabled,
+    required bool thursdayEnabled,
+    required String notificationTime,
+    required bool vibration,
+  }) =>
+      _platformRepository.scheduleAllFastingNotifications(
+        mondayEnabled: mondayEnabled,
+        thursdayEnabled: thursdayEnabled,
+        notificationTime: notificationTime,
+        vibration: vibration,
+      );
+}
+
+/// Mobile implementation using awesome_notifications
+/// This is the original implementation moved into a private class
+class _MobileNotificationRepositoryImpl implements NotificationRepository {
   static const String _channelKeyFajr = 'fajr_channel';
   static const String _channelKeyPrayers = 'prayers_channel';
   static const String _channelKeyFajrDefault = 'fajr_channel_default_sound';

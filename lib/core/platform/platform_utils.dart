@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/foundation.dart';
 
 /// Platform utilities for handling platform-specific features
@@ -125,14 +126,6 @@ class PlatformUtils {
   }
 }
 
-/// Size class for window dimensions
-class Size {
-  final double width;
-  final double height;
-
-  const Size(this.width, this.height);
-}
-
 /// Extension methods for platform-specific widget building
 extension PlatformWidgetExtensions on Widget {
   /// Conditionally show widget only on mobile
@@ -149,10 +142,4 @@ extension PlatformWidgetExtensions on Widget {
   Widget showOnWindows() {
     return PlatformUtils.isWindows ? this : const SizedBox.shrink();
   }
-}
-
-class Widget {}
-
-class SizedBox {
-  const SizedBox.shrink();
 }

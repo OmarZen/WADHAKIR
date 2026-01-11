@@ -1,12 +1,15 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
 class RadioPlayerBar extends StatelessWidget {
-  const RadioPlayerBar({super.key});
+  final VoidCallback? onClose;
+
+  const RadioPlayerBar({super.key, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -17,95 +20,172 @@ class RadioPlayerBar extends StatelessWidget {
     return BlocBuilder<RadioCubit, RadioState>(
       builder: (context, state) {
         if (state is! RadioLoaded || state.current == null) {
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
         final current = state.current!;
 
-        return GestureDetector(
-          onTap: () => _openNowPlaying(context),
-          child: Container(
-            margin: EdgeInsets.all(size.width * 0.04),
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.04,
-              vertical: size.height * 0.015,
-            ),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+        return Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTap: () => _openNowPlaying(context),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: PlatformUtils.isDesktop ? 24.0 : size.width * 0.04,
+                vertical: PlatformUtils.isDesktop ? 12.0 : size.height * 0.012,
+              ),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal:
+                      PlatformUtils.isDesktop ? 14.0 : size.width * 0.03,
+                  vertical: PlatformUtils.isDesktop ? 10.0 : size.height * 0.01,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                _RadioIconBox(size: size.width * 0.12),
-                SizedBox(width: size.width * 0.03),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n?.translate('radio.now_playing') ?? 'Now Playing',
-                        style: TextStyle(
-                          fontSize: size.width * 0.03,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        current.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: size.width * 0.04,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      _AudioLevelVisualizer(height: 22),
-                    ],
-                  ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                SizedBox(width: size.width * 0.01),
-                BlocConsumer<RadioCubit, RadioState>(
-                  listenWhen: (prev, curr) => prev != curr,
-                  listener: (context, st) {},
-                  builder: (context, st) {
-                    final playing = st is RadioLoaded && st.isPlaying;
-                    return ElevatedButton(
-                      onPressed: () =>
-                          context.read<RadioCubit>().togglePlayPause(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Row(
+                child: Row(
+                  children: [
+                    _RadioIconBox(
+                        size:
+                            PlatformUtils.isDesktop ? 40.0 : size.width * 0.10),
+                    SizedBox(
+                        width: PlatformUtils.isDesktop
+                            ? 10.0
+                            : size.width * 0.025),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            playing
-                                ? Icons.pause_rounded
-                                : Icons.play_arrow_rounded,
-                          ),
-                          SizedBox(width: 6),
                           Text(
-                            playing
-                                ? (l10n?.translate('radio.pause') ?? 'Pause')
-                                : (l10n?.translate('radio.play') ?? 'Play'),
+                            l10n?.translate('radio.now_playing') ??
+                                'Now Playing',
+                            style: TextStyle(
+                              fontSize: PlatformUtils.isDesktop
+                                  ? 11.0
+                                  : size.width * 0.028,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
+                          Text(
+                            current.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: PlatformUtils.isDesktop
+                                  ? 14.0
+                                  : size.width * 0.036,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: PlatformUtils.isDesktop ? 4.0 : 4.0),
+                          _AudioLevelVisualizer(
+                              height: PlatformUtils.isDesktop ? 18.0 : 18.0),
                         ],
                       ),
-                    );
-                  },
+                    ),
+                    SizedBox(width: size.width * 0.01),
+                    BlocConsumer<RadioCubit, RadioState>(
+                      listenWhen: (prev, curr) => prev != curr,
+                      listener: (context, st) {},
+                      builder: (context, st) {
+                        final playing = st is RadioLoaded && st.isPlaying;
+                        return ElevatedButton(
+                          onPressed: () =>
+                              context.read<RadioCubit>().togglePlayPause(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: PlatformUtils.isDesktop ? 12.0 : 12.0,
+                              vertical: PlatformUtils.isDesktop ? 8.0 : 8.0,
+                            ),
+                            minimumSize: Size.zero,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                playing
+                                    ? Icons.pause_rounded
+                                    : Icons.play_arrow_rounded,
+                                size: PlatformUtils.isDesktop ? 18.0 : 18.0,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                playing
+                                    ? (l10n?.translate('radio.pause') ??
+                                        'Pause')
+                                    : (l10n?.translate('radio.play') ?? 'Play'),
+                                style: TextStyle(
+                                  fontSize:
+                                      PlatformUtils.isDesktop ? 13.0 : 13.0,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    if (onClose != null) ...[
+                      SizedBox(width: size.width * 0.01),
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              theme.colorScheme.primary.withValues(alpha: 0.85),
+                              theme.colorScheme.secondary
+                                  .withValues(alpha: 0.95),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.25),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onClose,
+                            customBorder: const CircleBorder(),
+                            splashColor: Colors.white.withValues(alpha: 0.3),
+                            highlightColor: Colors.white.withValues(alpha: 0.1),
+                            child: Container(
+                              width: PlatformUtils.isDesktop ? 32 : 36,
+                              height: PlatformUtils.isDesktop ? 32 : 36,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: PlatformUtils.isDesktop ? 16 : 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -137,126 +217,142 @@ class _NowPlayingSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final l10n = AppLocalizations.of(context);
+    final isDesktop = PlatformUtils.isDesktop;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.9,
+      initialChildSize: 0.7,
       minChildSize: 0.35,
       maxChildSize: 1.0,
       builder: (_, controller) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+        return Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isDesktop ? size.width * 0.8 : double.infinity,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 24,
-                offset: const Offset(0, -8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 24,
+                    offset: const Offset(0, -8),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.06,
-              vertical: size.height * 0.02,
-            ),
-            child: BlocBuilder<RadioCubit, RadioState>(
-              builder: (context, state) {
-                if (state is! RadioLoaded || state.current == null) {
-                  return Center(
-                    child: Text(l10n?.translate('radio.title') ?? 'Radio'),
-                  );
-                }
-                final current = state.current!;
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 24.0 : size.width * 0.06,
+                  vertical: isDesktop ? 16.0 : size.height * 0.02,
+                ),
+                child: BlocBuilder<RadioCubit, RadioState>(
+                  builder: (context, state) {
+                    if (state is! RadioLoaded || state.current == null) {
+                      return Center(
+                        child: Text(l10n?.translate('radio.title') ?? 'Radio'),
+                      );
+                    }
+                    final current = state.current!;
 
-                return ListView(
-                  controller: controller,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: size.height * 0.02),
-                    Center(child: _RadioIconBox(size: size.width)),
-                    SizedBox(height: size.height * 0.02),
-                    Text(
-                      current.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: size.width * 0.06,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: size.height * 0.012),
-                    Text(
-                      l10n?.translate('radio.title') ?? 'Radio',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: size.width * 0.035,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: size.height * 0.02),
-                    _AudioLevelVisualizer(height: size.width * 0.14),
-                    SizedBox(height: size.height * 0.02),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    return ListView(
+                      controller: controller,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.skip_next_rounded),
-                          iconSize: size.width * 0.08,
-                          onPressed: () =>
-                              context.read<RadioCubit>().nextStation(),
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[400],
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
                         ),
-                        SizedBox(width: size.width * 0.02),
-                        BlocConsumer<RadioCubit, RadioState>(
-                          listenWhen: (prev, curr) => prev != curr,
-                          listener: (context, st) {},
-                          builder: (context, st) {
-                            final playing = st is RadioLoaded && st.isPlaying;
-                            return ElevatedButton(
+                        SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
+                        Center(
+                            child: _RadioIconBox(
+                                size: isDesktop ? 120.0 : size.width * 0.35)),
+                        SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
+                        Text(
+                          current.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: isDesktop ? 24.0 : size.width * 0.06,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: isDesktop ? 8.0 : size.height * 0.012),
+                        Text(
+                          l10n?.translate('radio.title') ?? 'Radio',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: isDesktop ? 14.0 : size.width * 0.035,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: isDesktop ? 20.0 : size.height * 0.02),
+                        _AudioLevelVisualizer(
+                            height: isDesktop ? 50.0 : size.width * 0.14),
+                        SizedBox(height: isDesktop ? 24.0 : size.height * 0.02),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.skip_previous_rounded),
+                              iconSize: isDesktop ? 32.0 : size.width * 0.08,
                               onPressed: () =>
-                                  context.read<RadioCubit>().togglePlayPause(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                foregroundColor: Colors.white,
-                                shape: const CircleBorder(),
-                                padding: EdgeInsets.all(size.width * 0.05),
-                              ),
-                              child: Icon(
-                                playing
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                size: size.width * 0.08,
-                              ),
-                            );
-                          },
+                                  context.read<RadioCubit>().previousStation(),
+                            ),
+                            SizedBox(
+                                width: isDesktop ? 12.0 : size.width * 0.02),
+                            BlocConsumer<RadioCubit, RadioState>(
+                              listenWhen: (prev, curr) => prev != curr,
+                              listener: (context, st) {},
+                              builder: (context, st) {
+                                final playing =
+                                    st is RadioLoaded && st.isPlaying;
+                                return ElevatedButton(
+                                  onPressed: () => context
+                                      .read<RadioCubit>()
+                                      .togglePlayPause(),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: theme.colorScheme.primary,
+                                    foregroundColor: Colors.white,
+                                    shape: const CircleBorder(),
+                                    padding: EdgeInsets.all(
+                                        isDesktop ? 20.0 : size.width * 0.05),
+                                  ),
+                                  child: Icon(
+                                    playing
+                                        ? Icons.pause_rounded
+                                        : Icons.play_arrow_rounded,
+                                    size: isDesktop ? 32.0 : size.width * 0.08,
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(
+                                width: isDesktop ? 12.0 : size.width * 0.02),
+                            IconButton(
+                              icon: const Icon(Icons.skip_next_rounded),
+                              iconSize: isDesktop ? 32.0 : size.width * 0.08,
+                              onPressed: () =>
+                                  context.read<RadioCubit>().nextStation(),
+                            ),
+                          ],
                         ),
-                        SizedBox(width: size.width * 0.02),
-                        IconButton(
-                          icon: const Icon(Icons.skip_previous_rounded),
-                          iconSize: size.width * 0.08,
-                          onPressed: () =>
-                              context.read<RadioCubit>().previousStation(),
-                        ),
+                        SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
                       ],
-                    ),
-                    SizedBox(height: size.height * 0.02),
-                  ],
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         );

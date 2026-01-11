@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
@@ -9,6 +10,12 @@ class PrayerTimesHomeWidget {
   static const String listWidgetProvider = 'PrayerTimesListWidgetProvider';
 
   static Future<void> updatePrayerTimes(PrayerTimesModel prayerTimes) async {
+    // Skip on Windows/Desktop - home_widget not supported
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      debugPrint('⏭️  Skipping home widget update (not supported on desktop)');
+      return;
+    }
+
     try {
       final jsonData = jsonEncode(prayerTimes.toJson());
       debugPrint('Saving prayer times data to widget: $jsonData');
@@ -114,6 +121,12 @@ class PrayerTimesHomeWidget {
   }
 
   static Future<void> setupBackgroundCallback() async {
+    // Skip on Windows/Desktop - home_widget not supported
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      debugPrint('⏭️  Skipping home widget setup (not supported on desktop)');
+      return;
+    }
+
     try {
       await HomeWidget.setAppGroupId('group.com.bloom.wadhakir');
       await HomeWidget.registerInteractivityCallback(backgroundCallback);

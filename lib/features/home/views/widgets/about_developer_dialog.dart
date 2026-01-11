@@ -184,9 +184,13 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
-                  onPressed: () {
-                    Share.share(
-                        'شارك تطبيق واذكِّر لمنفعة الجميع بإذن الله يمكنك الان التحميل من هنا: \n https://play.google.com/store/apps/details?id=com.bloom.wadhakir');
+                  onPressed: () async {
+                    await SharePlus.instance.share(
+                      ShareParams(
+                        text:
+                            'شارك تطبيق واذكِّر لمنفعة الجميع بإذن الله يمكنك الان التحميل من هنا: \n https://play.google.com/store/apps/details?id=com.bloom.wadhakir',
+                      ),
+                    );
                   },
                   style: FilledButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
@@ -106,140 +107,162 @@ class _RadioScreenState extends State<RadioScreen> {
         ),
         body: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                size.width * 0.04,
-                size.width * 0.04,
-                size.width * 0.04,
-                8,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  ),
+            Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: PlatformUtils.isDesktop ? 1400.0 : double.infinity,
                 ),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 10),
-                    Icon(
-                      Icons.search_rounded,
-                      color: theme.colorScheme.primary.withValues(alpha: 0.8),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        textInputAction: TextInputAction.search,
-                        onChanged: (v) => setState(() => _query = v.trim()),
-                        decoration: InputDecoration(
-                          hintText: l10n?.translate('radio.search') ?? 'Search',
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal: 0,
-                          ),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    PlatformUtils.isDesktop ? 24.0 : size.width * 0.04,
+                    PlatformUtils.isDesktop ? 24.0 : size.width * 0.04,
+                    PlatformUtils.isDesktop ? 24.0 : size.width * 0.04,
+                    8,
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 6),
                         ),
+                      ],
+                      border: Border.all(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.12),
                       ),
                     ),
-                    if (_query.isNotEmpty)
-                      IconButton(
-                        style: IconButton.styleFrom(padding: EdgeInsets.zero),
-                        tooltip: l10n?.translate('radio.clear') ?? 'Clear',
-                        icon: const Icon(Icons.close_rounded),
-                        color: theme.colorScheme.primary,
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() => _query = '');
-                        },
-                      )
-                    else
-                      Icon(
-                        Icons.search_rounded,
-                        color: theme.colorScheme.primary.withValues(alpha: 0.8),
-                      ),
-                    SizedBox(width: size.width * 0.03),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04,
-                vertical: 6,
-              ),
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    children: _categories.map((c) {
-                      final selected = _category == c['key'];
-                      return Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 6),
-                        child: ChoiceChip(
-                          showCheckmark: false,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          visualDensity: const VisualDensity(
-                            horizontal: -2,
-                            vertical: -2,
-                          ),
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                _categoryIcons[c['key']] ?? Icons.label_rounded,
-                                size: 18,
-                                color: selected
-                                    ? Colors.white
-                                    : theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(l10n?.translate('radio.${c['label']}') ??
-                                  c['label']!),
-                            ],
-                          ),
-                          selected: selected,
-                          onSelected: (_) =>
-                              setState(() => _category = c['key']!),
-                          selectedColor: theme.colorScheme.primary,
-                          labelStyle: TextStyle(
-                            color: selected
-                                ? Colors.white
-                                : theme.colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                          backgroundColor: theme.colorScheme.surface,
-                          shape: StadiumBorder(
-                            side: BorderSide(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.18,
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 10),
+                        Icon(
+                          Icons.search_rounded,
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.8),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            textInputAction: TextInputAction.search,
+                            onChanged: (v) => setState(() => _query = v.trim()),
+                            decoration: InputDecoration(
+                              hintText:
+                                  l10n?.translate('radio.search') ?? 'Search',
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                                horizontal: 0,
                               ),
                             ),
                           ),
                         ),
-                      );
-                    }).toList(),
+                        if (_query.isNotEmpty)
+                          IconButton(
+                            style:
+                                IconButton.styleFrom(padding: EdgeInsets.zero),
+                            tooltip: l10n?.translate('radio.clear') ?? 'Clear',
+                            icon: const Icon(Icons.close_rounded),
+                            color: theme.colorScheme.primary,
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _query = '');
+                            },
+                          )
+                        else
+                          Icon(
+                            Icons.search_rounded,
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.8),
+                          ),
+                        SizedBox(width: size.width * 0.03),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: PlatformUtils.isDesktop ? 1400.0 : double.infinity,
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal:
+                        PlatformUtils.isDesktop ? 24.0 : size.width * 0.04,
+                    vertical: 6,
+                  ),
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color:
+                            theme.colorScheme.primary.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Row(
+                        children: _categories.map((c) {
+                          final selected = _category == c['key'];
+                          return Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 6),
+                            child: ChoiceChip(
+                              showCheckmark: false,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: const VisualDensity(
+                                horizontal: -2,
+                                vertical: -2,
+                              ),
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _categoryIcons[c['key']] ??
+                                        Icons.label_rounded,
+                                    size: 18,
+                                    color: selected
+                                        ? Colors.white
+                                        : theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(l10n?.translate('radio.${c['label']}') ??
+                                      c['label']!),
+                                ],
+                              ),
+                              selected: selected,
+                              onSelected: (_) =>
+                                  setState(() => _category = c['key']!),
+                              selectedColor: theme.colorScheme.primary,
+                              labelStyle: TextStyle(
+                                color: selected
+                                    ? Colors.white
+                                    : theme.colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                              backgroundColor: theme.colorScheme.surface,
+                              shape: StadiumBorder(
+                                side: BorderSide(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.18,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -275,36 +298,20 @@ class _RadioScreenState extends State<RadioScreen> {
                       );
                     }
 
-                    return ListView.separated(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: size.width * 0.04,
-                        vertical: size.height * 0.01,
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: PlatformUtils.isDesktop
+                              ? 1400.0
+                              : double.infinity,
+                        ),
+                        child: _buildStationsList(
+                          context,
+                          filtered,
+                          state,
+                          size,
+                        ),
                       ),
-                      itemCount: filtered.length,
-                      separatorBuilder: (_, __) =>
-                          SizedBox(height: size.height * 0.012),
-                      itemBuilder: (_, i) {
-                        final station = filtered[i];
-                        final isCurrentStation =
-                            state.current?.id == station.id;
-                        final isActive = isCurrentStation && state.isPlaying;
-                        final isLoading = isCurrentStation && state.isLoading;
-
-                        return RadioStationListItem(
-                          station: station,
-                          isActive: isActive,
-                          isLoading: isLoading,
-                          onTap: () {
-                            if (isCurrentStation && state.isPlaying) {
-                              // If this station is currently playing, pause it
-                              context.read<RadioCubit>().togglePlayPause();
-                            } else {
-                              // Otherwise, play this station
-                              context.read<RadioCubit>().playStation(station);
-                            }
-                          },
-                        );
-                      },
                     );
                   }
                   return const SizedBox();
@@ -317,6 +324,92 @@ class _RadioScreenState extends State<RadioScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildStationsList(
+    BuildContext context,
+    List<dynamic> filtered,
+    RadioLoaded state,
+    Size size,
+  ) {
+    final isDesktop = PlatformUtils.isDesktop;
+    final width = size.width;
+    final horizontalPadding = isDesktop ? 24.0 : size.width * 0.04;
+
+    // Determine grid columns for desktop
+    int crossAxisCount = 1;
+    if (isDesktop) {
+      if (width >= 1400) {
+        crossAxisCount = 3;
+      } else if (width >= 1100) {
+        crossAxisCount = 2;
+      } else if (width >= 900) {
+        crossAxisCount = 2;
+      }
+    }
+
+    if (isDesktop && crossAxisCount > 1) {
+      return GridView.builder(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: size.height * 0.01,
+        ),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: 5.0,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: filtered.length,
+        itemBuilder: (_, i) {
+          final station = filtered[i];
+          final isCurrentStation = state.current?.id == station.id;
+          final isActive = isCurrentStation && state.isPlaying;
+          final isLoading = isCurrentStation && state.isLoading;
+
+          return RadioStationListItem(
+            station: station,
+            isActive: isActive,
+            isLoading: isLoading,
+            onTap: () {
+              if (isCurrentStation && state.isPlaying) {
+                context.read<RadioCubit>().togglePlayPause();
+              } else {
+                context.read<RadioCubit>().playStation(station);
+              }
+            },
+          );
+        },
+      );
+    } else {
+      return ListView.separated(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: size.height * 0.01,
+        ),
+        itemCount: filtered.length,
+        separatorBuilder: (_, __) => SizedBox(height: size.height * 0.012),
+        itemBuilder: (_, i) {
+          final station = filtered[i];
+          final isCurrentStation = state.current?.id == station.id;
+          final isActive = isCurrentStation && state.isPlaying;
+          final isLoading = isCurrentStation && state.isLoading;
+
+          return RadioStationListItem(
+            station: station,
+            isActive: isActive,
+            isLoading: isLoading,
+            onTap: () {
+              if (isCurrentStation && state.isPlaying) {
+                context.read<RadioCubit>().togglePlayPause();
+              } else {
+                context.read<RadioCubit>().playStation(station);
+              }
+            },
+          );
+        },
+      );
+    }
   }
 
   List<dynamic> _applyCategory(RadioState state) {

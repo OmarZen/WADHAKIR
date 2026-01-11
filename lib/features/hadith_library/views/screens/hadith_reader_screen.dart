@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/data/models/hadith_model.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/domain/usecases/add_bookmark_usecase.dart';
 import 'package:wadhakir/data/models/hadith_collection_metadata.dart';
@@ -117,36 +118,47 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
 
                 // Scrollable Content
                 Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.all(size.width * 0.06),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: size.height * 0.02),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth:
+                            PlatformUtils.isDesktop ? 900.0 : double.infinity,
+                      ),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: EdgeInsets.all(
+                          PlatformUtils.isDesktop ? 32.0 : size.width * 0.06,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SizedBox(height: size.height * 0.02),
 
-                        // Collection & Number Badge
-                        _buildHeaderBadge(theme, size),
+                            // Collection & Number Badge
+                            _buildHeaderBadge(theme, size),
 
-                        SizedBox(height: size.height * 0.04),
+                            SizedBox(height: size.height * 0.04),
 
-                        // Arabic Text
-                        _buildArabicText(theme, size),
+                            // Arabic Text
+                            _buildArabicText(theme, size),
 
-                        if (_showTranslation &&
-                            (widget.hadith.hadithTextEnglish?.isNotEmpty ??
-                                false)) ...[
-                          SizedBox(height: size.height * 0.04),
-                          _buildTranslation(theme, size, l10n),
-                        ],
+                            if (_showTranslation &&
+                                (widget.hadith.hadithTextEnglish?.isNotEmpty ??
+                                    false)) ...[
+                              SizedBox(height: size.height * 0.04),
+                              _buildTranslation(theme, size, l10n),
+                            ],
 
-                        if (widget.hadith.narrator?.isNotEmpty ?? false) ...[
-                          SizedBox(height: size.height * 0.03),
-                          _buildNarrator(theme, size),
-                        ],
+                            if (widget.hadith.narrator?.isNotEmpty ??
+                                false) ...[
+                              SizedBox(height: size.height * 0.03),
+                              _buildNarrator(theme, size),
+                            ],
 
-                        SizedBox(height: size.height * 0.1),
-                      ],
+                            SizedBox(height: size.height * 0.1),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -549,6 +561,11 @@ ${(widget.hadith.narrator?.isNotEmpty ?? false) ? 'الراوي: ${widget.hadith
 ${widget.collection.nameArabic} • الحديث رقم ${widget.hadith.ourHadithNumber}
 ''';
 
-    Share.share(text);
+    SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject: widget.collection.nameArabic,
+      ),
+    );
   }
 }

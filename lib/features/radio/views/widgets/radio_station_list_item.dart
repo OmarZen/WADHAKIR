@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/data/models/radio_station_model.dart';
 
 class RadioStationListItem extends StatelessWidget {
@@ -52,19 +53,32 @@ class RadioStationListItem extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.all(size.width * 0.035),
+          padding: EdgeInsets.all(PlatformUtils.isDesktop
+              ? size.width * 0.015
+              : size.width * 0.028),
           child: Row(
             children: [
               Container(
-                width: size.width * 0.14,
-                height: size.width * 0.14,
+                width: PlatformUtils.isDesktop
+                    ? size.width * 0.05
+                    : size.width * 0.12,
+                height: PlatformUtils.isDesktop
+                    ? size.width * 0.05
+                    : size.width * 0.12,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(iconData, color: theme.colorScheme.primary),
+                child: Icon(
+                  iconData,
+                  color: theme.colorScheme.primary,
+                  size: PlatformUtils.isDesktop
+                      ? size.width * 0.02
+                      : size.width * 0.06,
+                ),
               ),
-              SizedBox(width: size.width * 0.04),
+              SizedBox(
+                  width: PlatformUtils.isDesktop ? 12.0 : size.width * 0.03),
               Expanded(
                 child: Text(
                   station.name,
@@ -72,15 +86,23 @@ class RadioStationListItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: size.width * 0.040,
+                    fontSize:
+                        PlatformUtils.isDesktop ? 14.0 : size.width * 0.038,
                     color: isLoading ? Colors.grey : null,
                   ),
                 ),
               ),
-              SizedBox(width: size.width * 0.02),
+              SizedBox(
+                  width: PlatformUtils.isDesktop
+                      ? size.width * 0.015
+                      : size.width * 0.015),
               Container(
-                width: size.width * 0.10,
-                height: size.width * 0.10,
+                width: PlatformUtils.isDesktop
+                    ? size.width * 0.05
+                    : size.width * 0.08,
+                height: PlatformUtils.isDesktop
+                    ? size.width * 0.05
+                    : size.width * 0.08,
                 decoration: BoxDecoration(
                   color: isActive
                       ? theme.colorScheme.primary
@@ -89,7 +111,9 @@ class RadioStationListItem extends StatelessWidget {
                 ),
                 child: isLoading
                     ? Padding(
-                        padding: EdgeInsets.all(size.width * 0.02),
+                        padding: EdgeInsets.all(PlatformUtils.isDesktop
+                            ? size.width * 0.01
+                            : size.width * 0.02),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
@@ -103,6 +127,9 @@ class RadioStationListItem extends StatelessWidget {
                             : Icons.play_arrow_rounded,
                         color:
                             isActive ? Colors.white : theme.colorScheme.primary,
+                        size: PlatformUtils.isDesktop
+                            ? size.width * 0.03
+                            : size.width * 0.05,
                       ),
               ),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/widgets/loading_indicator.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/domain/usecases/get_books_list_usecase.dart';
@@ -97,6 +98,9 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
     AppLocalizations? l10n,
   ) {
     final filteredCollections = _getFilteredCollections(state.collections);
+    final isDesktop = PlatformUtils.isDesktop;
+    final horizontalPadding = isDesktop ? size.width * 0.04 : size.width * 0.04;
+    final maxWidth = isDesktop ? 1400.0 : double.infinity;
 
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
@@ -106,72 +110,74 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
 
         // Bookmarks Quick Access
         SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(size.width * 0.04),
-            child: BookmarksQuickAccessCard(),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Padding(
+                padding: EdgeInsets.all(horizontalPadding),
+                child: BookmarksQuickAccessCard(),
+              ),
+            ),
           ),
         ),
 
         // Collections Header
         SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.04,
-              vertical: size.height * 0.015,
-            ),
-            child: Row(
-              children: [
-                Text(
-                  l10n?.translate('hadith_library.all_collections') ??
-                      'All Collections',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Almarai',
-                    letterSpacing: 0.3,
-                  ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: size.height * 0.015,
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${filteredCollections.length}',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.primaryColor,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Almarai',
+                child: Row(
+                  children: [
+                    Text(
+                      l10n?.translate('hadith_library.all_collections') ??
+                          'All Collections',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Almarai',
+                        letterSpacing: 0.3,
+                      ),
                     ),
-                  ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${filteredCollections.length}',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Almarai',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
 
-        // Collections List
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final collection = filteredCollections[index];
-                return Padding(
-                  padding: EdgeInsets.only(bottom: size.height * 0.015),
-                  child: _buildModernCollectionCard(
-                    context,
-                    collection,
-                    theme,
-                    size,
-                  ),
-                );
-              },
-              childCount: filteredCollections.length,
+        // Collections List/Grid
+        SliverToBoxAdapter(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: isDesktop
+                  ? _buildCollectionsGrid(context, filteredCollections, theme,
+                      size, horizontalPadding)
+                  : _buildCollectionsList(context, filteredCollections, theme,
+                      size, horizontalPadding),
             ),
           ),
         ),
@@ -809,6 +815,74 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCollectionsList(
+    BuildContext context,
+    List<dynamic> collections,
+    ThemeData theme,
+    Size size,
+    double horizontalPadding,
+  ) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Column(
+        children: collections.map((collection) {
+          return Padding(
+            padding: EdgeInsets.only(bottom: size.height * 0.015),
+            child: _buildModernCollectionCard(
+              context,
+              collection,
+              theme,
+              size,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildCollectionsGrid(
+    BuildContext context,
+    List<dynamic> collections,
+    ThemeData theme,
+    Size size,
+    double horizontalPadding,
+  ) {
+    final width = size.width;
+    int crossAxisCount = 2;
+    if (width >= 1400) {
+      crossAxisCount = 4;
+    } else if (width >= 900) {
+      crossAxisCount = 3;
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: size.width >= 1400
+              ? 2.5
+              : size.width >= 900
+                  ? 2.4
+                  : 2.3,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+        ),
+        itemCount: collections.length,
+        itemBuilder: (context, index) {
+          return _buildModernCollectionCard(
+            context,
+            collections[index],
+            theme,
+            size,
+          );
+        },
+      ),
     );
   }
 }

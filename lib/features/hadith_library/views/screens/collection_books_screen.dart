@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/widgets/loading_indicator.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/domain/usecases/get_books_list_usecase.dart';
@@ -150,72 +151,81 @@ class _CollectionBooksView extends StatelessWidget {
     Size size,
     AppLocalizations? l10n,
   ) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-      padding: EdgeInsets.all(size.width * 0.04),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            collection.color.withValues(alpha: 0.1),
-            collection.color.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: collection.color.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final isDesktop = PlatformUtils.isDesktop;
+    final horizontalPadding = isDesktop ? 24.0 : size.width * 0.04;
+    final maxWidth = isDesktop ? 1400.0 : double.infinity;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          padding: EdgeInsets.all(size.width * 0.04),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                collection.color.withValues(alpha: 0.1),
+                collection.color.withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: collection.color.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                Icons.info_outline_rounded,
-                color: collection.color,
-                size: 20,
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: collection.color,
+                    size: 20,
+                  ),
+                  SizedBox(width: size.width * 0.02),
+                  Text(
+                    l10n?.translate('hadith_library.about_collection') ??
+                        'About Collection',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: collection.color,
+                      fontFamily: 'Almarai',
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: size.width * 0.02),
+              SizedBox(height: size.height * 0.01),
               Text(
-                l10n?.translate('hadith_library.about_collection') ??
-                    'About Collection',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: collection.color,
+                collection.description,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.6,
                   fontFamily: 'Almarai',
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: size.height * 0.01),
-          Text(
-            collection.description,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              height: 1.6,
-              fontFamily: 'Almarai',
-            ),
-          ),
-          SizedBox(height: size.height * 0.015),
-          Wrap(
-            spacing: size.width * 0.02,
-            runSpacing: size.height * 0.01,
-            children: [
-              _buildInfoChip(
-                context,
-                Icons.menu_book_rounded,
-                '${collection.totalHadiths} حديث',
-                theme,
-              ),
-              _buildInfoChip(
-                context,
-                Icons.category_rounded,
-                collection.nameEnglish,
-                theme,
+              SizedBox(height: size.height * 0.015),
+              Wrap(
+                spacing: size.width * 0.02,
+                runSpacing: size.height * 0.01,
+                children: [
+                  _buildInfoChip(
+                    context,
+                    Icons.menu_book_rounded,
+                    '${collection.totalHadiths} حديث',
+                    theme,
+                  ),
+                  _buildInfoChip(
+                    context,
+                    Icons.category_rounded,
+                    collection.nameEnglish,
+                    theme,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -262,23 +272,60 @@ class _CollectionBooksView extends StatelessWidget {
   ) {
     // state.books is Map<int, String> - bookNumber: bookName
     final bookEntries = state.books.entries.toList();
+    final isDesktop = PlatformUtils.isDesktop;
+    final width = size.width;
+    final horizontalPadding = isDesktop ? 24.0 : size.width * 0.04;
+    final maxWidth = isDesktop ? 1400.0 : double.infinity;
 
-    return SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final entry = bookEntries[index];
-            return Padding(
-              padding: EdgeInsets.only(bottom: size.height * 0.015),
-              child: BookItemCard(
-                bookNumber: entry.key,
-                bookName: entry.value,
-                collection: collection,
-              ),
-            );
-          },
-          childCount: bookEntries.length,
+    // Determine grid columns for desktop
+    int crossAxisCount = 1;
+    if (isDesktop) {
+      if (width >= 1400) {
+        crossAxisCount = 3;
+      } else if (width >= 900) {
+        crossAxisCount = 2;
+      }
+    }
+
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: isDesktop && crossAxisCount > 1
+                ? GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: 4.0,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: bookEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = bookEntries[index];
+                      return BookItemCard(
+                        bookNumber: entry.key,
+                        bookName: entry.value,
+                        collection: collection,
+                      );
+                    },
+                  )
+                : Column(
+                    children: bookEntries.map((entry) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: size.height * 0.015),
+                        child: BookItemCard(
+                          bookNumber: entry.key,
+                          bookName: entry.value,
+                          collection: collection,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+          ),
         ),
       ),
     );

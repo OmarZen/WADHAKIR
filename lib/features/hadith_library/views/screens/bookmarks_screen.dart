@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/widgets/loading_indicator.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/domain/usecases/add_bookmark_usecase.dart';
@@ -189,17 +190,25 @@ class _BookmarksViewState extends State<_BookmarksView> {
     Size size,
     AppLocalizations? l10n,
   ) {
+    final isDesktop = PlatformUtils.isDesktop;
+    final maxWidth = isDesktop ? 1400.0 : double.infinity;
+
     // All Bookmarks
-    return _buildBookmarksList(
-      context,
-      state.bookmarks
-          .where((b) =>
-              _searchQuery.isEmpty ||
-              (b.note?.toLowerCase().contains(_searchQuery) ?? false))
-          .toList(),
-      theme,
-      size,
-      l10n,
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: _buildBookmarksList(
+          context,
+          state.bookmarks
+              .where((b) =>
+                  _searchQuery.isEmpty ||
+                  (b.note?.toLowerCase().contains(_searchQuery) ?? false))
+              .toList(),
+          theme,
+          size,
+          l10n,
+        ),
+      ),
     );
   }
 

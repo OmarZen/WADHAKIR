@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
 class AllahNamesGridItem extends StatelessWidget {
@@ -11,6 +12,13 @@ class AllahNamesGridItem extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
     final isDark = theme.brightness == Brightness.dark;
+    final isDesktop = PlatformUtils.isDesktop;
+    
+    final padding = isDesktop ? 16.0 : 12.0;
+    final verticalPadding = isDesktop ? 12.0 : 10.0;
+    final iconPadding = isDesktop ? 10.0 : 8.0;
+    final iconSize = isDesktop ? 22.0 : 20.0;
+    final spacing = isDesktop ? 12.0 : 10.0;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -19,7 +27,7 @@ class AllahNamesGridItem extends StatelessWidget {
         onTap: () => _showAllahNamesSheet(context),
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: padding, vertical: verticalPadding),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
@@ -29,7 +37,7 @@ class AllahNamesGridItem extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(iconPadding),
                 decoration: BoxDecoration(
                   shape: BoxShape.rectangle,
                   borderRadius: BorderRadius.circular(8.0),
@@ -37,16 +45,19 @@ class AllahNamesGridItem extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.collections_bookmark,
+                  size: iconSize,
                   color: isDark
                       ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
                       : theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: spacing),
               Expanded(
                 child: Text(
                   l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
-                  style: theme.textTheme.titleMedium,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontSize: isDesktop ? 16 : null,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.right,

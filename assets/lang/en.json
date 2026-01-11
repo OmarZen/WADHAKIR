@@ -5,7 +5,8 @@
     "save": "Save",
     "ok": "OK",
     "downloading": "Downloading",
-    "retry": "Retry"
+    "retry": "Retry",
+    "loading": "Loading..."
   },
   "global": {
     "jan": "January",
@@ -222,7 +223,17 @@
     "enable_notifications_subtitle": "Send notification when each prayer time arrives",
     "persistent_notification": "Persistent Next Prayer Notification",
     "persistent_notification_subtitle": "Show a persistent notification displaying the next prayer time and remaining time",
+    "persistent_notification_mobile_only": "This feature is available on mobile only",
     "test_notification": "Test Notification",
+    "test_notification_subtitle": "Send a test notification to verify the system works on your phone",
+    "sending_test_notification": "Sending test notification...",
+    "test_notification_sent": "Test notification sent! Check your phone notifications",
+    "test_scheduled_notification": "Test Scheduled Notification",
+    "test_scheduled_notification_subtitle": "Send a test notification after 5 seconds to test scheduling",
+    "scheduling_test_notification": "Scheduling test notification in 5 seconds...",
+    "test_scheduled_notification_set": "Notification scheduled! Will appear in 5 seconds",
+    "with_custom_adhan": "with custom adhan",
+    "with_default_sound": "with default sound",
     "notification_timing": "Notification Timing",
     "notification_timing_subtitle": "Choose when to receive the notification",
     "customize_prayers": "Customize Each Prayer",
@@ -303,7 +314,10 @@
     "close": "Close",
     "searching": "Searching",
     "high_accuracy": "High Accuracy",
-    "from_target": "from target"
+    "from_target": "from target",
+    "error": "Error",
+    "compass_unavailable": "Compass Unavailable",
+    "compass_requirement": "This feature requires a device with a magnetometer sensor (compass), which is typically available on mobile phones and tablets only."
   },
   "prayer_times": {
     "title": "Prayer Times",

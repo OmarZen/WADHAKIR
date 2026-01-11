@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/widgets/loading_indicator.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/models/hadith_collection_metadata.dart';
@@ -142,13 +143,17 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.bookName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Almarai',
-                fontSize: 16,
+            Flexible(
+              child: Text(
+                widget.bookName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Almarai',
+                  fontSize: 16,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
@@ -158,6 +163,8 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
                 fontSize: 12,
                 fontFamily: 'Almarai',
               ),
+              maxLines: 1,
+              overflow: TextOverflow.clip,
             ),
           ],
         ),
@@ -183,22 +190,61 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
     ThemeData theme,
     Size size,
   ) {
-    return SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final hadith = state.hadiths[index];
-            return Padding(
-              padding: EdgeInsets.only(bottom: size.height * 0.015),
-              child: HadithPreviewCard(
-                hadith: hadith,
-                collection: widget.collection,
-                showTranslation: _showTranslation,
-              ),
-            );
-          },
-          childCount: state.hadiths.length,
+    final isDesktop = PlatformUtils.isDesktop;
+    final width = size.width;
+    final horizontalPadding = isDesktop ? 24.0 : size.width * 0.04;
+    final maxWidth = isDesktop ? 1400.0 : double.infinity;
+
+    // Determine grid columns for desktop
+    int crossAxisCount = 1;
+    if (isDesktop) {
+      if (width >= 1400) {
+        crossAxisCount = 2;
+      } else if (width >= 1100) {
+        crossAxisCount = 2;
+      }
+    }
+
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: isDesktop && crossAxisCount > 1
+                ? GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: 1.2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: state.hadiths.length,
+                    itemBuilder: (context, index) {
+                      final hadith = state.hadiths[index];
+                      return HadithPreviewCard(
+                        hadith: hadith,
+                        collection: widget.collection,
+                        showTranslation: _showTranslation,
+                      );
+                    },
+                  )
+                : Column(
+                    children: List.generate(state.hadiths.length, (index) {
+                      final hadith = state.hadiths[index];
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: size.height * 0.015),
+                        child: HadithPreviewCard(
+                          hadith: hadith,
+                          collection: widget.collection,
+                          showTranslation: _showTranslation,
+                        ),
+                      );
+                    }),
+                  ),
+          ),
         ),
       ),
     );

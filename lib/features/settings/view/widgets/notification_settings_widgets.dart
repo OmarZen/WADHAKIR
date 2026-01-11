@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/core/utils/alarm_permission_helper.dart';
@@ -128,6 +129,10 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final isEnabled =
         settings.notificationSettings.persistentNotificationEnabled;
 
+    // Check if platform is Windows - persistent notifications not supported
+    final bool isDesktop =
+        Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -156,17 +161,50 @@ class NotificationSettingsWidgets extends StatelessWidget {
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            l10n?.translate('settings.persistent_notification_subtitle') ??
-                'عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 12,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n?.translate('settings.persistent_notification_subtitle') ??
+                    'عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  fontSize: 12,
+                ),
+              ),
+              if (isDesktop) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        l10n?.translate(
+                                'settings.persistent_notification_mobile_only') ??
+                            'هذه الميزة متاحة على الهواتف فقط',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.7),
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
           ),
         ),
         value: isEnabled,
-        onChanged: (value) => cubit.togglePersistentNotification(value),
+        onChanged: isDesktop
+            ? null
+            : (value) => cubit.togglePersistentNotification(value),
         activeThumbColor: theme.colorScheme.primary,
         secondary: Container(
           padding: const EdgeInsets.all(8),

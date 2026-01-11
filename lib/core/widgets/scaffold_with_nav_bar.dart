@@ -111,39 +111,16 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
               !_showRadioPlayer) {
             return const SizedBox.shrink();
           }
-          return SafeArea(
-            child: Stack(
-              children: [
-                const RadioPlayerBar(),
-                Positioned(
-                  right: 18,
-                  top: 6,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: IconButton(
-                      visualDensity: const VisualDensity(
-                        horizontal: -2,
-                        vertical: -2,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black.withValues(alpha: 0.06),
-                        minimumSize: const Size(32, 32),
-                        padding: EdgeInsets.zero,
-                      ),
-                      iconSize: 18,
-                      tooltip: 'Close',
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () async {
-                        final cubit = context.read<RadioCubit>();
-                        await cubit.stop();
-                        setState(() {
-                          _showRadioPlayer = false;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ],
+          return Container(
+            color: Colors.transparent,
+            child: RadioPlayerBar(
+              onClose: () async {
+                final cubit = context.read<RadioCubit>();
+                await cubit.stop();
+                setState(() {
+                  _showRadioPlayer = false;
+                });
+              },
             ),
           );
         },

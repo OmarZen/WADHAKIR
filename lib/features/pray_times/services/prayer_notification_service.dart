@@ -187,49 +187,30 @@ class PrayerNotificationService {
       }
     }
 
-    // Determine if using custom adhan
-    final bool useCustomAdhan =
-        customSoundPath != null && customSoundPath.isNotEmpty;
-    final bool isFajr = prayerName.toLowerCase() == 'fajr';
-
-    // Use appropriate channel based on sound preference
-    final String channelKey = useCustomAdhan
-        ? (isFajr ? 'fajr_channel' : 'prayers_channel')
-        : (isFajr
-            ? 'fajr_channel_default_sound'
-            : 'prayers_channel_default_sound');
-
-    // Create immediate notification
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: 999, // Test notification ID
-        channelKey: channelKey,
-        groupKey: 'prayer_notifications',
-        title: '🕌 اختبار: حان وقت صلاة $prayerNameArabic',
-        body:
-            'هذا إشعار تجريبي${useCustomAdhan ? ' - اضغط أزرار الصوت أو اقلب الهاتف للإيقاف' : ''}',
-        notificationLayout: NotificationLayout.Default,
-        payload: {
-          'prayer': prayerName,
-          'time': DateTime.now().toIso8601String(),
-          'soundPath': customSoundPath ?? '',
-          'useCustomAdhan': useCustomAdhan.toString(),
-          'isTest': 'true',
-        },
-        wakeUpScreen: true,
-        category: NotificationCategory.Reminder,
-        criticalAlert: isFajr,
-      ),
-      actionButtons: [
-        NotificationActionButton(
-          key: 'DISMISS',
-          label: 'تم',
-          actionType: ActionType.DismissAction,
+    // Use repository to send test notification (platform-aware)
+    // This will use Windows implementation on Windows, mobile on mobile
+    try {
+      // Create a test notification using the repository's implementation
+      await _repository.schedulePrayerNotification(
+        prayerName: 'TestNotification',
+        prayerNameArabic: prayerNameArabic,
+        prayerTime: DateTime.now()
+            .add(const Duration(seconds: 2)), // Schedule 2 seconds from now
+        settings: PrayerNotificationSettings(
+          enabled: true,
+          timing: NotificationTiming.onTime,
+          sound: NotificationSound.defaultSound,
+          vibration: true,
+          customSoundPath: customSoundPath,
         ),
-      ],
-    );
+        locationName: 'Test Location',
+      );
 
-    log('🔔 Test notification sent for $prayerName');
+      log('🔔 Test notification scheduled successfully for $prayerName');
+    } catch (e) {
+      log('❌ Error scheduling test notification: $e');
+      rethrow;
+    }
   }
 
   /// Schedule all fasting notifications

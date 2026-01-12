@@ -110,6 +110,9 @@ dev_dependencies:
 
   # JSON serialization generators
   json_serializable: ^6.7.1
+  
+  # MSIX packaging for Windows
+  msix: ^3.16.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -198,3 +201,28 @@ flutter:
           weight: 400
         - asset: assets/fonts/ScheherazadeNew/ScheherazadeNew-Bold.ttf
           weight: 700
+
+msix_config:
+  display_name: WADHAKIR
+  publisher_display_name: OmarZenhom
+  identity_name: com.bloom.wadhakir
+  msix_version: 1.0.0.0
+  publisher: com.bloom.wadhakir
+  capabilities: 'internetClient,location'
+  execution_alias: wadhakir
+  
+  # Store submission info
+  languages: ar, en
+  
+  # App info
+  description: >
+    WADHAKIR is an Islamic app for prayer times, Quran, and Islamic content.
+    تطبيق وَذَكِّر الإسلامي لأوقات الصلاة والقرآن والمحتوى الإسلامي.
+  
+  # Icons - specify all required sizes
+  icons_background_color: '#FFFFFF'
+  
+  # Remove problematic fields
+  protocol_activation: 
+  file_extension: 
+  install_certificate: false

@@ -82,6 +82,21 @@
                 android:resource="@xml/prayer_times_list_widget_info" />
         </receiver>
 
+        <!-- Hijri Calendar Widget -->
+        <receiver
+            android:name=".HijriCalendarWidgetProvider"
+            android:label="Hijri Calendar"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+                <action android:name="com.bloom.wadhakir.HIJRI_CALENDAR_ACTION" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hijri_calendar_widget_info" />
+        </receiver>
+
         <!-- Home Widget Background Receiver -->
         <receiver 
             android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver" 

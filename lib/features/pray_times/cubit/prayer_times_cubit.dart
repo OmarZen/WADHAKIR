@@ -14,6 +14,7 @@ import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/pray_times/services/persistent_notification_manager.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
+import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/hijri_calendar_home_widget.dart';
 
 class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   final GetPrayerTimesUseCase _getPrayerTimesUseCase;
@@ -87,6 +88,9 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         debugPrint(
             'Updating widget with prayer times for: ${dateKey.toString()}');
         await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
+
+        // Update Hijri calendar widget
+        await HijriCalendarHomeWidget.updateCalendar();
 
         // Schedule prayer notifications for today
         await _scheduleNotificationsForToday(todayPrayerTimes);

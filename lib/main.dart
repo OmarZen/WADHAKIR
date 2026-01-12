@@ -35,6 +35,7 @@ import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
+import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/hijri_calendar_home_widget.dart';
 
 void main() async {
   // Initialize widgets binding and preserve splash screen
@@ -54,8 +55,13 @@ void main() async {
     ),
   );
 
-  // Initialize home widget
+  // Initialize home widgets
   await PrayerTimesHomeWidget.setupBackgroundCallback();
+  await HijriCalendarHomeWidget.setupBackgroundCallback();
+  await HijriCalendarHomeWidget.updateCalendar();
+
+  // Initialize Hijri calendar widget with current date
+  await HijriCalendarHomeWidget.updateCalendar();
 
   // Initialize notification service
   final notificationService = PrayerNotificationService();

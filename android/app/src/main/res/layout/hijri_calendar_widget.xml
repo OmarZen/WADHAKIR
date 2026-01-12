@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="6dp">
+
+    <!-- Main Card with Rounded Corners -->
+    <LinearLayout
+        android:id="@+id/widget_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="0dp"
+        android:background="@drawable/main_card_background"
+        android:clipToOutline="true">
+
+        <!-- Header Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#20497D"
+            android:paddingHorizontal="14dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="10dp">
+
+            <!-- Month Navigation Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingBottom="10dp">
+
+                <!-- Next Month Button (Right Arrow) -->
+                <TextView
+                    android:id="@+id/next_month_button"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:text="◄"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:background="@drawable/arrow_button_background"
+                    android:clickable="true"/>
+
+                <!-- Month and Year -->
+                <TextView
+                    android:id="@+id/hijri_month_year"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="رجب 1447"
+                    android:textColor="#FFFFFF"
+                    android:textSize="19sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:letterSpacing="0.05"/>
+
+                <!-- Previous Month Button (Left Arrow) -->
+                <TextView
+                    android:id="@+id/prev_month_button"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:text="►"
+                    android:textColor="#FFFFFF"
+                    android:textSize="18sp"
+                    android:gravity="center"
+                    android:background="@drawable/arrow_button_background"
+                    android:clickable="true"/>
+
+            </LinearLayout>
+
+            <!-- Today's Date Card with Rounded Design -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="@drawable/date_card_background"
+                android:paddingVertical="8dp"
+                android:paddingHorizontal="14dp">
+
+                <TextView
+                    android:id="@+id/hijri_date_display"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="23 رجب"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.03"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" • "
+                    android:textColor="#DDFFFFFF"
+                    android:textSize="13sp"
+                    android:paddingHorizontal="8dp"/>
+
+                <TextView
+                    android:id="@+id/gregorian_date_display"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12 يناير"
+                    android:textColor="#F0F0F0"
+                    android:textSize="13sp"
+                    android:textStyle="normal"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Day Headers -->
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="7"
+            android:rowCount="1"
+            android:background="#1a406f"
+            android:paddingVertical="7dp"
+            android:paddingHorizontal="6dp"
+            android:alignmentMode="alignBounds">
+
+            <TextView style="@style/DayHeader" android:text="ح"/>
+            <TextView style="@style/DayHeader" android:text="ن"/>
+            <TextView style="@style/DayHeader" android:text="ث"/>
+            <TextView style="@style/DayHeader" android:text="ر"/>
+            <TextView style="@style/DayHeader" android:text="خ"/>
+            <TextView style="@style/DayHeader" android:text="ج"/>
+            <TextView style="@style/DayHeader" android:text="س"/>
+        </GridLayout>
+
+        <!-- Calendar Grid -->
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:columnCount="7"
+            android:rowCount="5"
+            android:background="#14324d"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="6dp"
+            android:alignmentMode="alignBounds"
+            android:useDefaultMargins="false">
+
+            <!-- Row 1 -->
+            <TextView android:id="@+id/day_1" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_2" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_3" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_4" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_5" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_6" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_7" style="@style/CalendarDay"/>
+
+            <!-- Row 2 -->
+            <TextView android:id="@+id/day_8" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_9" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_10" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_11" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_12" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_13" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_14" style="@style/CalendarDay"/>
+
+            <!-- Row 3 -->
+            <TextView android:id="@+id/day_15" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_16" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_17" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_18" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_19" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_20" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_21" style="@style/CalendarDay"/>
+
+            <!-- Row 4 -->
+            <TextView android:id="@+id/day_22" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_23" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_24" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_25" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_26" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_27" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_28" style="@style/CalendarDay"/>
+
+            <!-- Row 5 -->
+            <TextView android:id="@+id/day_29" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_30" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_31" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_32" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_33" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_34" style="@style/CalendarDay"/>
+            <TextView android:id="@+id/day_35" style="@style/CalendarDay"/>
+
+        </GridLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

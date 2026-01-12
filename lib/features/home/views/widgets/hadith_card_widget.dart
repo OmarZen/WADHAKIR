@@ -191,7 +191,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                         onTap: () {
                           SharePlus.instance.share(
                             ShareParams(
-                              text: 'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
+                              text:
+                                  'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
                               subject: 'من الأربعين النووية',
                             ),
                           );
@@ -261,7 +262,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                         onPressed: () {
                           SharePlus.instance.share(
                             ShareParams(
-                              text: 'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
+                              text:
+                                  'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
                               subject: 'من الأربعين النووية',
                             ),
                           );

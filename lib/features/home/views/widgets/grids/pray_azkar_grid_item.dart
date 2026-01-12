@@ -14,7 +14,7 @@ class PrayAzkarGridItem extends StatelessWidget {
     final l10n = context.l10n;
     final isDark = theme.brightness == Brightness.dark;
     final isDesktop = PlatformUtils.isDesktop;
-    
+
     final padding = isDesktop ? 16.0 : 12.0;
     final verticalPadding = isDesktop ? 12.0 : 10.0;
     final iconPadding = isDesktop ? 10.0 : 8.0;
@@ -29,7 +29,8 @@ class PrayAzkarGridItem extends StatelessWidget {
             _showAzkarSheet(context, 'assets/json_data/pray_azkar.json'),
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: padding, vertical: verticalPadding),
+          padding: EdgeInsets.symmetric(
+              horizontal: padding, vertical: verticalPadding),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(

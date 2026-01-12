@@ -27,6 +27,11 @@ class PrayerTimesListWidgetProvider : HomeWidgetProvider() {
                 val asr = widgetData.getString("asr", "--:--")
                 val maghrib = widgetData.getString("maghrib", "--:--")
                 val isha = widgetData.getString("isha", "--:--")
+                
+                // Get date information
+                val hijriDate = widgetData.getString("hijri_date", "")
+                val gregorianDate = widgetData.getString("gregorian_date", "")
+                val dayName = widgetData.getString("day_name", "")
 
                 // Log the retrieved values
                 Log.d("PrayerTimesListWidget", """
@@ -36,6 +41,9 @@ class PrayerTimesListWidgetProvider : HomeWidgetProvider() {
                     Asr: $asr
                     Maghrib: $maghrib
                     Isha: $isha
+                    Hijri Date: $hijriDate
+                    Gregorian Date: $gregorianDate
+                    Day Name: $dayName
                 """.trimIndent())
 
                 // Update all prayer times
@@ -44,6 +52,11 @@ class PrayerTimesListWidgetProvider : HomeWidgetProvider() {
                 views.setTextViewText(R.id.asr_time, asr ?: "--:--")
                 views.setTextViewText(R.id.maghrib_time, maghrib ?: "--:--")
                 views.setTextViewText(R.id.isha_time, isha ?: "--:--")
+                
+                // Update date information
+                views.setTextViewText(R.id.hijri_date, hijriDate ?: "")
+                views.setTextViewText(R.id.gregorian_date, gregorianDate ?: "")
+                views.setTextViewText(R.id.day_name, dayName ?: "")
 
                 // Get current prayer and highlight it
                 val currentPrayer = widgetData.getString("currentPrayer", "")?.uppercase()

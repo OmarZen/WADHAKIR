@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 
@@ -49,6 +50,30 @@ class PrayerTimesHomeWidget {
       final now = DateTime.now();
       final gregorianDate = '${now.day}/${now.month}/${now.year}';
       await HomeWidget.saveWidgetData('date', gregorianDate);
+      
+      // Save formatted dates for list widget
+      final arabicMonths = [
+        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+      ];
+      final arabicDays = [
+        'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'
+      ];
+      
+      final gregorianDateFormatted = '${now.day} ${arabicMonths[now.month - 1]}';
+      final dayName = arabicDays[now.weekday - 1];
+      
+      await HomeWidget.saveWidgetData('gregorian_date', gregorianDateFormatted);
+      await HomeWidget.saveWidgetData('day_name', dayName);
+      
+      // Calculate and save Hijri date
+      try {
+        final hijriDate = _calculateHijriDate(now);
+        await HomeWidget.saveWidgetData('hijri_date', hijriDate);
+      } catch (e) {
+        debugPrint('Error calculating Hijri date: $e');
+        await HomeWidget.saveWidgetData('hijri_date', '');
+      }
 
       // Calculate current and next prayer
       DateTime? nextPrayerTime;
@@ -155,6 +180,23 @@ class PrayerTimesHomeWidget {
       }
     } catch (e) {
       debugPrint('Error in background callback: $e');
+    }
+  }
+  
+  static String _calculateHijriDate(DateTime gregorian) {
+    try {
+      // Import required for Hijri calculations
+      // Using syncfusion_flutter_core which is already in pubspec
+      final hijri = HijriDateTime.fromDateTime(gregorian);
+      final hijriMonths = [
+        'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني',
+        'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
+        'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
+      ];
+      return '${hijri.day} ${hijriMonths[hijri.month - 1]}';
+    } catch (e) {
+      debugPrint('Error in Hijri calculation: $e');
+      return '';
     }
   }
 }

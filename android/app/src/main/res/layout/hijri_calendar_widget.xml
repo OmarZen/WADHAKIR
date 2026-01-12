@@ -123,13 +123,13 @@
             android:paddingHorizontal="6dp"
             android:alignmentMode="alignBounds">
 
-            <TextView style="@style/DayHeader" android:text="ح"/>
-            <TextView style="@style/DayHeader" android:text="ن"/>
-            <TextView style="@style/DayHeader" android:text="ث"/>
-            <TextView style="@style/DayHeader" android:text="ر"/>
-            <TextView style="@style/DayHeader" android:text="خ"/>
-            <TextView style="@style/DayHeader" android:text="ج"/>
-            <TextView style="@style/DayHeader" android:text="س"/>
+            <TextView style="@style/DayHeader" android:text="S"/>
+            <TextView style="@style/DayHeader" android:text="M"/>
+            <TextView style="@style/DayHeader" android:text="Tu"/>
+            <TextView style="@style/DayHeader" android:text="W"/>
+            <TextView style="@style/DayHeader" android:text="Th"/>
+            <TextView style="@style/DayHeader" android:text="F"/>
+            <TextView style="@style/DayHeader" android:text="S"/>
         </GridLayout>
 
         <!-- Calendar Grid -->

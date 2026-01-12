@@ -109,7 +109,8 @@
     "palestine_support_call_to_action": "Prayer and support",
     "palestine_duah": "Do not forget to remember Allah's mercy",
     "close": "Close",
-    "support_developer": "Support the Developer"
+    "support_developer": "Support the Developer",
+    "support_developer_title": "If you find this app useful, you can support me by donating to continue developing more free Islamic apps."
   },
   "quran": {
     "meccan": "Meccan",
@@ -214,7 +215,7 @@
     "medium": "Medium",
     "large": "Large",
     "app_description": "Wadhakir is an app that helps you memorize the Quran",
-    "version": "Version 2.3.1+8",
+    "version": "Version 2.3.2+9",
     "copyright": "© 2025 All rights reserved",
     "close": "Close",
     "notifications": "Notifications",
@@ -495,6 +496,7 @@
   },
   "calendar": {
     "hijri_calendar": "Hijri Calendar",
+    "gregorian_calendar": "Gregorian Calendar",
     "hijri": "AH",
     "selected_date": "Selected Date",
     "today": "Today"

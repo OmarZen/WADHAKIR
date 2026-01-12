@@ -4,15 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#20497D"
+    android:background="@drawable/widget_background_rounded"
     android:padding="0dp">
 
-    <!-- Header Section with Dates -->
+    <!-- Compact Header with Dates -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="12dp"
+        android:background="@drawable/widget_header_background"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="3dp"
         android:gravity="center_vertical">
 
         <!-- Hijri Date (Right) -->
@@ -22,22 +24,25 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="24 رجب"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:textColor="#B3D9FF"
+            android:textSize="9sp"
             android:textStyle="bold"
-            android:gravity="end"/>
+            android:gravity="end|center_vertical"
+            android:singleLine="true"
+            android:ellipsize="end"/>
 
         <!-- Day Name (Center) -->
         <TextView
             android:id="@+id/day_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="الثلاثاء"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
+            android:text="الاثنين"
+            android:textColor="#B3D9FF"
+            android:textSize="10sp"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_marginHorizontal="12dp"/>
+            android:paddingHorizontal="10dp"
+            android:singleLine="true"/>
 
         <!-- Gregorian Date (Left) -->
         <TextView
@@ -45,30 +50,24 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="13 يناير"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
+            android:text="12 يناير"
+            android:textColor="#B3D9FF"
+            android:textSize="9sp"
             android:textStyle="bold"
-            android:gravity="start"/>
+            android:gravity="start|center_vertical"
+            android:singleLine="true"
+            android:ellipsize="end"/>
     </LinearLayout>
 
-    <!-- Divider -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#44FFFFFF"
-        android:layout_marginHorizontal="12dp"
-        android:layout_marginBottom="8dp"/>
-
-    <!-- Prayer Times Section -->
+    <!-- Compact Prayer Times Section -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:orientation="horizontal"
         android:weightSum="5"
         android:gravity="center"
-        android:paddingVertical="8dp">
+        android:paddingHorizontal="4dp"
+        android:paddingVertical="3dp">
 
         <!-- Fajr -->
         <LinearLayout
@@ -78,32 +77,27 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="6dp">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/icon_fajr"
-                android:layout_marginBottom="3dp"
-                android:contentDescription="Fajr"/>
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="الفجر"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="8sp"
                 android:textStyle="bold"
+                android:singleLine="true"
                 android:layout_marginBottom="1dp"/>
 
             <TextView
                 android:id="@+id/fajr_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="05:20"
+                android:text="5:20"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:singleLine="true"/>
         </LinearLayout>
 
         <!-- Dhuhr -->
@@ -114,21 +108,16 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="6dp">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/icon_dhuhr"
-                android:layout_marginBottom="3dp"
-                android:contentDescription="Dhuhr"/>
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="الظهر"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:singleLine="true"
                 android:layout_marginBottom="1dp"/>
 
             <TextView
@@ -137,8 +126,9 @@
                 android:layout_height="wrap_content"
                 android:text="12:04"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:singleLine="true"/>
         </LinearLayout>
 
         <!-- Asr -->
@@ -149,31 +139,27 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="6dp">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/icon_asr"
-                android:layout_marginBottom="3dp"
-                android:contentDescription="Asr"/>
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="العصر"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:singleLine="true"
                 android:layout_marginBottom="1dp"/>
 
             <TextView
                 android:id="@+id/asr_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="02:56"
+                android:text="2:56"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:singleLine="true"/>
         </LinearLayout>
 
         <!-- Maghrib -->
@@ -184,31 +170,27 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="6dp">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/icon_maghrib"
-                android:layout_marginBottom="3dp"
-                android:contentDescription="Maghrib"/>
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="المغرب"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:singleLine="true"
                 android:layout_marginBottom="1dp"/>
 
             <TextView
                 android:id="@+id/maghrib_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="05:15"
+                android:text="5:15"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:singleLine="true"/>
         </LinearLayout>
 
         <!-- Isha -->
@@ -219,31 +201,28 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
-            android:padding="6dp">
-
-            <ImageView
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/icon_isha"
-                android:layout_marginBottom="3dp"
-                android:contentDescription="Isha"/>
+            android:paddingHorizontal="2dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="العشاء"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="8sp"
+                android:textStyle="bold"
+                android:singleLine="true"
                 android:layout_marginBottom="1dp"/>
 
             <TextView
                 android:id="@+id/isha_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="06:37"
+                android:text="6:37"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:textStyle="bold"/>
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:singleLine="true"/>
         </LinearLayout>
+
     </LinearLayout>
 </LinearLayout>

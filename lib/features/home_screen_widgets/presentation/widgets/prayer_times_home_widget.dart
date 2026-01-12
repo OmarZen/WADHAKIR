@@ -50,22 +50,39 @@ class PrayerTimesHomeWidget {
       final now = DateTime.now();
       final gregorianDate = '${now.day}/${now.month}/${now.year}';
       await HomeWidget.saveWidgetData('date', gregorianDate);
-      
+
       // Save formatted dates for list widget
       final arabicMonths = [
-        'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-        'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+        'يناير',
+        'فبراير',
+        'مارس',
+        'أبريل',
+        'مايو',
+        'يونيو',
+        'يوليو',
+        'أغسطس',
+        'سبتمبر',
+        'أكتوبر',
+        'نوفمبر',
+        'ديسمبر'
       ];
       final arabicDays = [
-        'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'
+        'الاثنين',
+        'الثلاثاء',
+        'الأربعاء',
+        'الخميس',
+        'الجمعة',
+        'السبت',
+        'الأحد'
       ];
-      
-      final gregorianDateFormatted = '${now.day} ${arabicMonths[now.month - 1]}';
+
+      final gregorianDateFormatted =
+          '${now.day} ${arabicMonths[now.month - 1]}';
       final dayName = arabicDays[now.weekday - 1];
-      
+
       await HomeWidget.saveWidgetData('gregorian_date', gregorianDateFormatted);
       await HomeWidget.saveWidgetData('day_name', dayName);
-      
+
       // Calculate and save Hijri date
       try {
         final hijriDate = _calculateHijriDate(now);
@@ -182,16 +199,25 @@ class PrayerTimesHomeWidget {
       debugPrint('Error in background callback: $e');
     }
   }
-  
+
   static String _calculateHijriDate(DateTime gregorian) {
     try {
       // Import required for Hijri calculations
       // Using syncfusion_flutter_core which is already in pubspec
       final hijri = HijriDateTime.fromDateTime(gregorian);
       final hijriMonths = [
-        'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني',
-        'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان',
-        'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
+        'محرم',
+        'صفر',
+        'ربيع الأول',
+        'ربيع الثاني',
+        'جمادى الأولى',
+        'جمادى الآخرة',
+        'رجب',
+        'شعبان',
+        'رمضان',
+        'شوال',
+        'ذو القعدة',
+        'ذو الحجة'
       ];
       return '${hijri.day} ${hijriMonths[hijri.month - 1]}';
     } catch (e) {

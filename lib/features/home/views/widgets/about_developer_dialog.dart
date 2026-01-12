@@ -147,40 +147,45 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                   ],
                 ),
                 const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: () async {
-                    final url = Uri.parse(
-                        'https://ipn.eg/S/omarzen2002/instapay/5uPbfh');
-                    if (!context.mounted) return;
-                    try {
-                      await launchUrl(url,
-                          mode: LaunchMode.externalApplication);
-                    } catch (e) {
-                      try {
-                        await launchUrl(url, mode: LaunchMode.platformDefault);
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Could not open donation link')),
-                        );
-                      }
-                    }
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.green.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                Text(
+                  l10n?.translate('home.support_developer_title') ??
+                      'دعم المطور',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _supportChip(
+                      context,
+                      icon: Icons.favorite_rounded,
+                      label: 'GitHub',
+                      url: 'https://github.com/sponsors/OmarZen',
                     ),
-                  ),
-                  icon: const Icon(Icons.favorite, size: 22),
-                  label: Text(
-                    l10n?.translate('home.support_developer') ??
-                        'ادعم المطور (InstaPay)',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
+                    _supportChip(
+                      context,
+                      icon: Icons.local_cafe_rounded,
+                      label: 'Ko-fi',
+                      url: 'https://ko-fi.com/omarzenhom',
+                    ),
+                    _supportChip(
+                      context,
+                      icon: Icons.coffee_rounded,
+                      label: 'Coffee',
+                      url: 'https://buymeacoffee.com/omarwaleede',
+                    ),
+                    _supportChip(
+                      context,
+                      icon: Icons.payment_rounded,
+                      label: 'InstaPay',
+                      url: 'https://ipn.eg/S/omarzen2002/instapay/5uPbfh',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
@@ -260,6 +265,63 @@ Widget _circleIconButton(
           color: isDark
               ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
               : theme.colorScheme.primary),
+    ),
+  );
+}
+
+Widget _supportChip(
+  BuildContext context, {
+  required IconData icon,
+  required String label,
+  required String url,
+}) {
+  final theme = Theme.of(context);
+  return InkWell(
+    onTap: () async {
+      final uri = Uri.parse(url);
+      if (!context.mounted) return;
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } catch (e) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not open link: $url')),
+          );
+        }
+      }
+    },
+    borderRadius: BorderRadius.circular(20),
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: theme.colorScheme.primary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }

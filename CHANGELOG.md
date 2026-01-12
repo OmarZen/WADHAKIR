@@ -7,6 +7,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.2] - 2026-01-12
+
+### Added - Home Screen Widgets
+- **Hijri Calendar Widget**:
+  - Interactive home screen widget displaying Hijri calendar
+  - Month navigation (next/previous) with smooth transitions
+  - Day selection with visual feedback and highlighting
+  - Today indicator with distinct styling
+  - Displays current Hijri and Gregorian dates
+  - Bidirectional communication between widget and app
+  - Compact 4x2 grid layout optimized for home screens
+
+- **Prayer Times List Widget Enhanced**:
+  - Redesigned compact 4x1 widget layout
+  - Added header section with three date displays:
+    - Hijri date (right-aligned)
+    - Day name in center (highlighted in light blue)
+    - Gregorian date (left-aligned)
+  - Rounded corners with modern card-like appearance
+  - Custom drawable backgrounds for professional look
+  - Optimized text sizing to prevent line wrapping
+  - All text set to single-line with ellipsize
+  - App theme color integration (#20497D primary, #B3D9FF accent)
+
+### Improved - Widget System
+- **Widget Architecture**:
+  - Proper RemoteViews compatibility
+  - Removed problematic View separators causing loading issues
+  - Simplified layouts for better performance
+  - Background drawables with rounded corners (8dp radius)
+  - Header with darker blue background (#1A3A5D) for visual separation
+
+- **Data Flow**:
+  - Enhanced Hijri date calculation using Syncfusion
+  - Arabic month and day name formatting
+  - Automatic date field updates in widget data
+  - SharedPreferences integration for widget state
+
+### Fixed - CI/CD & Build
+- **GitHub Actions**:
+  - Updated Flutter version in CI from 3.35.3 to 3.27.1
+  - Fixed timezone package dependency resolution error
+  - Dart SDK compatibility with timezone ^0.11.0
+  - All build checks now passing
+
+- **Widget Stability**:
+  - Fixed "can't load widget" errors in prayer times widget
+  - Resolved RemoteViews compatibility issues
+  - Simplified widget layouts for reliability
+  - Removed complex UI elements causing rendering failures
+
+### Changed - UI/UX Polish
+- **Text Optimization**:
+  - Header dates: 9-10sp for compact display
+  - Prayer labels: 8sp
+  - Prayer times: 11sp (bold)
+  - All text with singleLine and ellipsize attributes
+  - Prevented text wrapping in small widget spaces
+
+- **Color Scheme**:
+  - Day name changed from gold to light blue (#B3D9FF)
+  - Consistent blue theme throughout widgets
+  - Better contrast and readability
+
+### Technical Details
+- **Files Modified**: 15+ files
+- **New Drawables**: 3 (widget_background_rounded, widget_header_background, current_prayer_background)
+- **Removed Drawables**: 5 prayer icon XMLs (simplified approach)
+- **Widget Providers**: 2 (HijriCalendarWidgetProvider, PrayerTimesListWidgetProvider)
+- **Quality Assurance**: All flutter analyze checks passing
+- **Backward Compatibility**: Full - existing widgets update seamlessly
+
+### User-Facing Changes
+- **New Features**:
+  - Hijri calendar widget on home screen
+  - Enhanced prayer times widget with dates
+  
+- **UI Improvements**:
+  - Cleaner, more compact widget designs
+  - Better readability with optimized text sizes
+  - Professional appearance with rounded corners
+  - Consistent color theming
+  
+- **Reliability**:
+  - Widgets load consistently without errors
+  - Simplified design prevents rendering issues
+  - Better performance on all Android versions
+
+### Migration Notes
+- Update from 2.3.1 by installing 2.3.2+9
+- Existing widgets will update automatically
+- No user action required
+- Widget sizes: Hijri Calendar (4x2), Prayer Times (4x1)
+
 ## [2.3.0] - 2025-12-31
 
 ### Added - Fasting Notifications System

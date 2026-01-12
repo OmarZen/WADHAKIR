@@ -109,7 +109,8 @@
     "palestine_support_call_to_action": "دعاء ونصرة",
     "palestine_duah": "لا تنسوهم من دعائكم",
     "close": "إغلاق",
-    "support_developer": "ادعم المطور"  
+    "support_developer": "ادعم المطور",
+    "support_developer_title": "إذا وجدت هذا التطبيق مفيداً، يمكنك دعمي من خلال التبرع لمواصلة تطوير المزيد من التطبيقات الإسلامية المجانية."
   },
   "quran": {
     "meccan": "مكية",
@@ -214,7 +215,7 @@
     "medium": "متوسط",
     "large": "كبير",
     "app_description": "تطبيق وذكّر لمساعدتك في شعائر الإسلام",
-    "version": "الإصدار 2.3.1+8",
+    "version": "الإصدار 2.3.2+9",
     "copyright": "© 2025 جميع الحقوق محفوظة",
     "close": "إغلاق",
     "notifications": "التنبيهات",
@@ -492,6 +493,7 @@
   },
   "calendar": {
     "hijri_calendar": "التقويم الهجري",
+    "gregorian_calendar": "التقويم الميلادي",
     "hijri": "هـ",
     "selected_date": "التاريخ المحدد",
     "today": "اليوم"

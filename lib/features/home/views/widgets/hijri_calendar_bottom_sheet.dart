@@ -16,29 +16,50 @@ class HijriCalendarBottomSheet extends StatefulWidget {
       _HijriCalendarBottomSheetState();
 }
 
-class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
-  late HijriDatePickerController _controller;
-  HijriDateTime? _selectedDate;
+class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
+    with SingleTickerProviderStateMixin {
+  late HijriDatePickerController _hijriController;
+  late DateRangePickerController _gregorianController;
+  late TabController _tabController;
+  HijriDateTime? _selectedHijriDate;
+  DateTime? _selectedGregorianDate;
 
   @override
   void initState() {
     super.initState();
-    _controller = HijriDatePickerController();
-    _controller.selectedDate = widget.initialDate;
-    _selectedDate = widget.initialDate;
+    _tabController = TabController(length: 2, vsync: this);
+    _hijriController = HijriDatePickerController();
+    _gregorianController = DateRangePickerController();
+    _hijriController.selectedDate = widget.initialDate;
+    _selectedHijriDate = widget.initialDate;
+    _selectedGregorianDate = widget.initialDate.toDateTime();
+    _gregorianController.selectedDate = _selectedGregorianDate;
   }
 
-  void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
+  void _onHijriSelectionChanged(DateRangePickerSelectionChangedArgs args) {
     setState(() {
       if (args.value is HijriDateTime) {
-        _selectedDate = args.value;
+        _selectedHijriDate = args.value;
+        _selectedGregorianDate = _selectedHijriDate!.toDateTime();
+      }
+    });
+  }
+
+  void _onGregorianSelectionChanged(DateRangePickerSelectionChangedArgs args) {
+    setState(() {
+      if (args.value is DateTime) {
+        _selectedGregorianDate = args.value;
+        _selectedHijriDate =
+            HijriDateTime.fromDateTime(_selectedGregorianDate!);
       }
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _hijriController.dispose();
+    _gregorianController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -53,12 +74,12 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
       context: context,
       locale: locale,
       child: Container(
+        height: MediaQuery.of(context).size.height * 0.6,
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             // Drag Handle
             Container(
@@ -71,128 +92,98 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
               ),
             ),
 
-            // Header
+            // Tab Bar
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: isDark
-                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
-                    : theme.colorScheme.primary,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
+                    ? theme.colorScheme.surfaceContainerHighest
+                    : theme.colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.calendar_month_rounded,
-                    color: isDark
-                        ? theme.colorScheme.onPrimaryContainer
-                            .withValues(alpha: 0.8)
-                        : theme.colorScheme.onPrimary,
-                    size: 22,
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                labelColor: theme.colorScheme.onPrimary,
+                unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                splashBorderRadius: BorderRadius.circular(10),
+                tabs: [
+                  Tab(
+                    height: 44,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.mosque, size: 18),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            l10n?.translate('calendar.hijri_calendar') ??
+                                'هجري',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    l10n?.translate('calendar.hijri_calendar') ??
-                        'التقويم الهجري',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark
-                          ? theme.colorScheme.onPrimaryContainer
-                              .withValues(alpha: 0.8)
-                          : theme.colorScheme.onPrimary,
+                  Tab(
+                    height: 44,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.calendar_today, size: 18),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            l10n?.translate('calendar.gregorian_calendar') ??
+                                'ميلادي',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Syncfusion Hijri Date Picker
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: SfHijriDateRangePicker(
-                controller: _controller,
-                initialSelectedDate: widget.initialDate,
-                onSelectionChanged: _onSelectionChanged,
-                showTodayButton: true,
-                showNavigationArrow: true,
-                selectionMode: DateRangePickerSelectionMode.single,
-                todayHighlightColor: theme.colorScheme.primary,
-                selectionColor: theme.colorScheme.primary,
-                monthViewSettings: HijriDatePickerMonthViewSettings(
-                  firstDayOfWeek: 6, // Saturday
-                  viewHeaderStyle: DateRangePickerViewHeaderStyle(
-                    textStyle: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                          : theme.colorScheme.primary.withValues(alpha: 0.7),
-                    ),
-                  ),
-                  dayFormat: 'EEE',
-                  showWeekNumber: true,
-                ),
-                monthCellStyle: HijriDatePickerMonthCellStyle(
-                  textStyle: TextStyle(
-                    fontSize: 12,
-                    color: isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-                        : theme.colorScheme.primary.withValues(alpha: 0.8),
-                  ),
-                  todayTextStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                yearCellStyle: HijriDatePickerYearCellStyle(
-                  textStyle: TextStyle(
-                    fontSize: 13,
-                    color: isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-                        : theme.colorScheme.primary.withValues(alpha: 0.8),
-                  ),
-                  todayTextStyle: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                  todayCellDecoration: BoxDecoration(
-                    border: Border.all(
-                      color: theme.colorScheme.primary,
-                      width: 2,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                headerStyle: DateRangePickerHeaderStyle(
-                  textAlign: TextAlign.center,
-                  textStyle: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.9)
-                        : theme.colorScheme.primary,
-                  ),
-                ),
-                headerHeight: 45,
-                navigationDirection:
-                    DateRangePickerNavigationDirection.horizontal,
-                navigationMode: DateRangePickerNavigationMode.snap,
+            // Tab Bar View
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Hijri Calendar Tab
+                  _buildHijriCalendar(theme, isDark),
+                  // Gregorian Calendar Tab
+                  _buildGregorianCalendar(theme, isDark, l10n),
+                ],
               ),
             ),
 
             // Selected Date Display
-            if (_selectedDate != null)
+            if (_selectedHijriDate != null && _selectedGregorianDate != null)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding:
@@ -218,7 +209,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${_selectedDate!.day} ${_getHijriMonthName(_selectedDate!.month, l10n)}',
+                      '${_selectedHijriDate!.day} ${_getHijriMonthName(_selectedHijriDate!.month, l10n)}',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -246,7 +237,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _formatGregorianDate(_selectedDate!.toDateTime(), l10n),
+                      _formatGregorianDate(_selectedGregorianDate!, l10n),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -290,5 +281,160 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet> {
       l10n?.translate('global.dec') ?? 'Dec',
     ];
     return '${date.day} ${months[date.month - 1]}';
+  }
+
+  Widget _buildHijriCalendar(ThemeData theme, bool isDark) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: SfHijriDateRangePicker(
+          controller: _hijriController,
+          initialSelectedDate: widget.initialDate,
+          onSelectionChanged: _onHijriSelectionChanged,
+          showTodayButton: true,
+          showNavigationArrow: true,
+          selectionMode: DateRangePickerSelectionMode.single,
+          todayHighlightColor: theme.colorScheme.primary,
+          selectionColor: theme.colorScheme.primary,
+          monthViewSettings: HijriDatePickerMonthViewSettings(
+            firstDayOfWeek: 6, // Saturday
+            viewHeaderStyle: DateRangePickerViewHeaderStyle(
+              textStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                    : theme.colorScheme.primary.withValues(alpha: 0.7),
+              ),
+            ),
+            dayFormat: 'EEE',
+            showWeekNumber: true,
+          ),
+          monthCellStyle: HijriDatePickerMonthCellStyle(
+            textStyle: TextStyle(
+              fontSize: 12,
+              color: isDark
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                  : theme.colorScheme.primary.withValues(alpha: 0.8),
+            ),
+            todayTextStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          yearCellStyle: HijriDatePickerYearCellStyle(
+            textStyle: TextStyle(
+              fontSize: 13,
+              color: isDark
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                  : theme.colorScheme.primary.withValues(alpha: 0.8),
+            ),
+            todayTextStyle: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+            todayCellDecoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
+              shape: BoxShape.circle,
+            ),
+          ),
+          headerStyle: DateRangePickerHeaderStyle(
+            textAlign: TextAlign.center,
+            textStyle: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: isDark
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.9)
+                  : theme.colorScheme.primary,
+            ),
+          ),
+          headerHeight: 45,
+          navigationDirection: DateRangePickerNavigationDirection.horizontal,
+          navigationMode: DateRangePickerNavigationMode.snap,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGregorianCalendar(
+      ThemeData theme, bool isDark, AppLocalizations? l10n) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: SfDateRangePicker(
+          controller: _gregorianController,
+          initialSelectedDate: _selectedGregorianDate,
+          onSelectionChanged: _onGregorianSelectionChanged,
+          showTodayButton: true,
+          showNavigationArrow: true,
+          selectionMode: DateRangePickerSelectionMode.single,
+          todayHighlightColor: theme.colorScheme.primary,
+          selectionColor: theme.colorScheme.primary,
+          monthViewSettings: DateRangePickerMonthViewSettings(
+            firstDayOfWeek: 6, // Saturday
+            viewHeaderStyle: DateRangePickerViewHeaderStyle(
+              textStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                    : theme.colorScheme.primary.withValues(alpha: 0.7),
+              ),
+            ),
+            dayFormat: 'EEE',
+            showWeekNumber: true,
+          ),
+          monthCellStyle: DateRangePickerMonthCellStyle(
+            textStyle: TextStyle(
+              fontSize: 12,
+              color: isDark
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                  : theme.colorScheme.primary.withValues(alpha: 0.8),
+            ),
+            todayTextStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          yearCellStyle: DateRangePickerYearCellStyle(
+            textStyle: TextStyle(
+              fontSize: 13,
+              color: isDark
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                  : theme.colorScheme.primary.withValues(alpha: 0.8),
+            ),
+            todayTextStyle: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+            todayCellDecoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
+              shape: BoxShape.circle,
+            ),
+          ),
+          headerStyle: DateRangePickerHeaderStyle(
+            textAlign: TextAlign.center,
+            textStyle: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: isDark
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.9)
+                  : theme.colorScheme.primary,
+            ),
+          ),
+          headerHeight: 45,
+          navigationDirection: DateRangePickerNavigationDirection.horizontal,
+          navigationMode: DateRangePickerNavigationMode.snap,
+        ),
+      ),
+    );
   }
 }

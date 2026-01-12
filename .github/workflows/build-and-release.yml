@@ -33,7 +33,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 📦 Get Dependencies
+      - name: � Disable Flutter Analytics
+        run: flutter config --no-analytics
+
+      - name: �📦 Get Dependencies
         run: flutter pub get
 
       - name: 🔍 Analyze Code
@@ -64,7 +67,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 📦 Get Dependencies
+      - name: � Disable Flutter Analytics
+        run: flutter config --no-analytics
+
+      - name: �📦 Get Dependencies
         run: flutter pub get
 
       - name: 🔨 Build APK
@@ -99,7 +105,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 📦 Get Dependencies
+      - name: � Disable Flutter Analytics
+        run: flutter config --no-analytics
+
+      - name: �📦 Get Dependencies
         run: flutter pub get
 
       - name: 🔨 Build App Bundle
@@ -128,7 +137,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 📦 Get Dependencies
+      - name: � Disable Flutter Analytics
+        run: flutter config --no-analytics
+
+      - name: �📦 Get Dependencies
         run: flutter pub get
 
       - name: 🔨 Build Windows
@@ -162,7 +174,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 📦 Get Dependencies
+      - name: � Disable Flutter Analytics
+        run: flutter config --no-analytics
+
+      - name: �📦 Get Dependencies
         run: flutter pub get
 
       - name: 🔨 Build Web
@@ -196,7 +211,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 📦 Get Dependencies
+      - name: � Disable Flutter Analytics
+        run: flutter config --no-analytics
+
+      - name: �📦 Get Dependencies
         run: flutter pub get
 
       - name: 🔨 Build iOS (no codesign)

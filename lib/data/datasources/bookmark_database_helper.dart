@@ -124,16 +124,21 @@ class BookmarkDatabaseHelper {
     ''');
 
     // Create indexes for better query performance
-    await db
-        .execute('CREATE INDEX idx_bookmarks_hadith ON bookmarks(hadith_id)');
     await db.execute(
-        'CREATE INDEX idx_bookmarks_favorite ON bookmarks(is_favorite)');
+      'CREATE INDEX idx_bookmarks_hadith ON bookmarks(hadith_id)',
+    );
     await db.execute(
-        'CREATE INDEX idx_bookmark_collections_bookmark ON bookmark_collections(bookmark_id)');
+      'CREATE INDEX idx_bookmarks_favorite ON bookmarks(is_favorite)',
+    );
     await db.execute(
-        'CREATE INDEX idx_bookmark_collections_collection ON bookmark_collections(collection_id)');
+      'CREATE INDEX idx_bookmark_collections_bookmark ON bookmark_collections(bookmark_id)',
+    );
     await db.execute(
-        'CREATE INDEX idx_reading_history_last_read ON reading_history(last_read)');
+      'CREATE INDEX idx_bookmark_collections_collection ON bookmark_collections(collection_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_reading_history_last_read ON reading_history(last_read)',
+    );
 
     // Insert default "Favorites" collection
     await db.insert('collections', {
@@ -169,8 +174,10 @@ class BookmarkDatabaseHelper {
     await db.delete('bookmark_collections');
     await db.delete('bookmarks');
     await db.delete('tags');
-    await db.delete('collections',
-        where: 'is_default = 0'); // Keep favorites collection
+    await db.delete(
+      'collections',
+      where: 'is_default = 0',
+    ); // Keep favorites collection
     await db.delete('reading_history');
   }
 

@@ -28,8 +28,8 @@ class FastingNotificationSettingsWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -100,8 +100,8 @@ class FastingNotificationSettingsWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -215,17 +215,11 @@ class FastingNotificationSettingsWidget extends StatelessWidget {
           onTap: () => _showTimePickerDialog(context, settings, cubit),
           borderRadius: BorderRadius.circular(10),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 6,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: theme.colorScheme.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: theme.colorScheme.primary,
-                width: 1,
-              ),
+              border: Border.all(color: theme.colorScheme.primary, width: 1),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -239,11 +233,7 @@ class FastingNotificationSettingsWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Icon(
-                  Icons.edit,
-                  size: 14,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(Icons.edit, size: 14, color: theme.colorScheme.primary),
               ],
             ),
           ),

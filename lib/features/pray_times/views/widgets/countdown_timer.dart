@@ -123,7 +123,9 @@ class _CountdownTimerState extends State<CountdownTimer>
         // Time display with decorative elements
         Container(
           padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.06, vertical: size.height * 0.01),
+            horizontal: size.width * 0.06,
+            vertical: size.height * 0.01,
+          ),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(15),
@@ -182,7 +184,8 @@ class _CountdownTimerState extends State<CountdownTimer>
                   children: [
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 500),
-                      width: (size.width - (size.width * 0.08)) *
+                      width:
+                          (size.width - (size.width * 0.08)) *
                           progress.clamp(0.0, 1.0),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(

@@ -33,7 +33,9 @@ class HadithLibraryGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: EdgeInsets.symmetric(
-              horizontal: padding, vertical: verticalPadding),
+            horizontal: padding,
+            vertical: verticalPadding,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(

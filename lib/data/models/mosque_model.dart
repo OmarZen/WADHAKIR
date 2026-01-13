@@ -20,33 +20,36 @@ class MosqueModel {
       id: json['_id'] as String? ?? '',
       name: json['masjidName'] as String? ?? 'Unknown Masjid',
       address: MosqueAddress.fromJson(
-          json['masjidAddress'] as Map<String, dynamic>? ?? {}),
+        json['masjidAddress'] as Map<String, dynamic>? ?? {},
+      ),
       location: MosqueLocation.fromJson(
-          json['masjidLocation'] as Map<String, dynamic>? ?? {}),
+        json['masjidLocation'] as Map<String, dynamic>? ?? {},
+      ),
       timings: MosqueTimings.fromJson(
-          json['masjidTimings'] as Map<String, dynamic>? ?? {}),
+        json['masjidTimings'] as Map<String, dynamic>? ?? {},
+      ),
     );
   }
 
   /// Calculate distance from a given point in kilometers
   double distanceFromPoint(double lat, double lng) {
-    return _calculateDistance(
-      lat,
-      lng,
-      location.latitude,
-      location.longitude,
-    );
+    return _calculateDistance(lat, lng, location.latitude, location.longitude);
   }
 
   /// Calculate distance between two points using Haversine formula
   static double _calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const double earthRadiusKm = 6371.0;
 
     final double dLat = _degreesToRadians(lat2 - lat1);
     final double dLon = _degreesToRadians(lon2 - lon1);
 
-    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final double a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_degreesToRadians(lat1)) *
             math.cos(_degreesToRadians(lat2)) *
             math.sin(dLon / 2) *

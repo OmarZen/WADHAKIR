@@ -107,7 +107,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
   @override
   Future<void> setCalculationParameters(
-      CalculationParameters parameters) async {
+    CalculationParameters parameters,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final methodName = CalculationMethodMapper.getMethodName(parameters);
     await prefs.setString(_calculationMethodKey, methodName);
@@ -144,7 +145,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
       if (!serviceEnabled) {
         debugPrint(
-            'Location services are disabled. Attempting to load last saved location.');
+          'Location services are disabled. Attempting to load last saved location.',
+        );
         // Try to load last saved location
         final savedCoordinates = await _loadLastSavedLocation();
         if (savedCoordinates != null) {
@@ -154,7 +156,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
         }
         // If no saved location, use Mecca as default (don't throw exception)
         debugPrint(
-            'No saved location found. Using Mecca coordinates as default.');
+          'No saved location found. Using Mecca coordinates as default.',
+        );
         _coordinates = Coordinates(21.422487, 39.826206);
         return _coordinates!;
       }
@@ -238,7 +241,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       }
 
       debugPrint(
-          'Saved location: ${coordinates.latitude}, ${coordinates.longitude}');
+        'Saved location: ${coordinates.latitude}, ${coordinates.longitude}',
+      );
     } catch (e) {
       debugPrint('Error saving location: $e');
     }
@@ -336,7 +340,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
       if (!serviceEnabled) {
         throw Exception(
-            'Location services are disabled. Please enable location services in your device settings.');
+          'Location services are disabled. Please enable location services in your device settings.',
+        );
       }
 
       // Request permission if needed
@@ -353,7 +358,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       await _saveLastLocation(_coordinates!);
 
       debugPrint(
-          'Location updated successfully: ${_coordinates!.latitude}, ${_coordinates!.longitude}');
+        'Location updated successfully: ${_coordinates!.latitude}, ${_coordinates!.longitude}',
+      );
     } catch (e) {
       debugPrint('Error forcing location update: $e');
       rethrow;
@@ -394,7 +400,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   Future<bool> isFirstTimeUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final hasLocation = prefs.containsKey(_lastLatitudeKey) &&
+      final hasLocation =
+          prefs.containsKey(_lastLatitudeKey) &&
           prefs.containsKey(_lastLongitudeKey);
       return !hasLocation;
     } catch (e) {

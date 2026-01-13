@@ -25,14 +25,14 @@ class IslamicHistoryGridItem extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const IslamicHistoryScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const IslamicHistoryScreen()),
         ),
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: EdgeInsets.symmetric(
-              horizontal: padding, vertical: verticalPadding),
+            horizontal: padding,
+            vertical: verticalPadding,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(

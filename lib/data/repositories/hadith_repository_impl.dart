@@ -41,8 +41,9 @@ class HadithRepositoryImpl implements HadithRepository {
 
           if (hadithsById.containsKey(hadith.id)) {
             // Merge translations
-            hadithsById[hadith.id] =
-                hadithsById[hadith.id]!.mergeTranslation(hadith);
+            hadithsById[hadith.id] = hadithsById[hadith.id]!.mergeTranslation(
+              hadith,
+            );
           } else {
             hadithsById[hadith.id] = hadith;
           }
@@ -129,9 +130,9 @@ class HadithRepositoryImpl implements HadithRepository {
         if (bookNumber != null && hadith.bookNumber != bookNumber) continue;
 
         if (hadith.hadithTextArabic.contains(query) ||
-            (hadith.hadithTextEnglish
-                    ?.toLowerCase()
-                    .contains(query.toLowerCase()) ??
+            (hadith.hadithTextEnglish?.toLowerCase().contains(
+                  query.toLowerCase(),
+                ) ??
                 false)) {
           results.add(hadith);
         }
@@ -152,8 +153,10 @@ class HadithRepositoryImpl implements HadithRepository {
     if (bookNumber == null) return null;
 
     try {
-      final hadiths =
-          await loadBook(collection: collection, bookNumber: bookNumber);
+      final hadiths = await loadBook(
+        collection: collection,
+        bookNumber: bookNumber,
+      );
       return hadiths.firstWhere((h) => h.id == hadithId);
     } catch (e) {
       return null;
@@ -172,13 +175,17 @@ class HadithRepositoryImpl implements HadithRepository {
     final randomBook = Random().nextInt(5) + 1;
 
     try {
-      final hadiths =
-          await loadBook(collection: randomCollection, bookNumber: randomBook);
+      final hadiths = await loadBook(
+        collection: randomCollection,
+        bookNumber: randomBook,
+      );
 
       if (hadiths.isEmpty) {
         // Fallback to book 1
-        final fallbackHadiths =
-            await loadBook(collection: randomCollection, bookNumber: 1);
+        final fallbackHadiths = await loadBook(
+          collection: randomCollection,
+          bookNumber: 1,
+        );
         return fallbackHadiths[Random().nextInt(fallbackHadiths.length)];
       }
 

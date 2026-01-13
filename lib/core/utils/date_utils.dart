@@ -3,13 +3,17 @@ import 'package:wadhakir/core/localization/app_localizations.dart';
 
 class AppDateUtils {
   static String getFormattedHijriDate(
-      HijriDateTime date, AppLocalizations? l10n) {
+    HijriDateTime date,
+    AppLocalizations? l10n,
+  ) {
     String month = _getHijriMonthName(date.month, l10n);
     return '${date.day} $month ${date.year}';
   }
 
   static String getShortFormattedHijriDate(
-      HijriDateTime date, AppLocalizations? l10n) {
+    HijriDateTime date,
+    AppLocalizations? l10n,
+  ) {
     String month = _getShortHijriMonthName(date.month, l10n);
     return '${date.day} $month';
   }

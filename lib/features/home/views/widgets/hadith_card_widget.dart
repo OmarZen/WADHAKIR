@@ -25,8 +25,9 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
 
   Future<void> _loadHadiths() async {
     try {
-      final jsonString =
-          await rootBundle.loadString('assets/json_data/40-hadith-nawawi.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/json_data/40-hadith-nawawi.json',
+      );
       final List<dynamic> data = json.decode(jsonString) as List<dynamic>;
       final texts = data
           .map((e) => (e as Map<String, dynamic>)['hadith'])
@@ -80,8 +81,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
         child: _loading
             ? _buildSkeleton(theme)
             : _hadithTexts.isEmpty
-                ? _buildError(theme)
-                : _buildGlassCard(theme, _hadithTexts[_currentIndex]),
+            ? _buildError(theme)
+            : _buildGlassCard(theme, _hadithTexts[_currentIndex]),
       ),
     );
   }
@@ -95,8 +96,10 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _headerRow(theme,
-              l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية'),
+          _headerRow(
+            theme,
+            l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية',
+          ),
           const SizedBox(height: 12),
           _shimmerBar(theme, 18, 0.85),
           const SizedBox(height: 8),
@@ -117,8 +120,10 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _headerRow(theme,
-              l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية'),
+          _headerRow(
+            theme,
+            l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية',
+          ),
           const SizedBox(height: 12),
           Text(
             l10n?.translate('home.hadith_error') ??
@@ -174,14 +179,16 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                       _actionChip(
                         context,
                         icon: Icons.autorenew_rounded,
-                        label: l10n?.translate('home.hadith_shuffle') ??
+                        label:
+                            l10n?.translate('home.hadith_shuffle') ??
                             'حديث آخر',
                         onTap: _shuffle,
                       ),
                       Text(
                         '${_currentIndex + 1} / ${_hadithTexts.length}',
-                        style: theme.textTheme.labelMedium
-                            ?.copyWith(color: _accent(theme)),
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: _accent(theme),
+                        ),
                       ),
                       _iconCircle(
                         context,
@@ -199,7 +206,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                         },
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -210,7 +217,10 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
   }
 
   Future<void> _showHadithSheet(
-      BuildContext context, String title, String body) async {
+    BuildContext context,
+    String title,
+    String body,
+  ) async {
     final theme = Theme.of(context);
     await showModalBottomSheet(
       context: context,
@@ -241,12 +251,16 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
-                      Icon(Icons.menu_book_rounded,
-                          color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.menu_book_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -269,7 +283,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                           );
                         },
                         icon: const Icon(Icons.share_rounded),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -304,8 +318,10 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
       children: [
         Row(
           children: [
-            _badge(theme,
-                l10n?.translate('home.hadith_nawawi') ?? 'الأربعون النووية'),
+            _badge(
+              theme,
+              l10n?.translate('home.hadith_nawawi') ?? 'الأربعون النووية',
+            ),
             const Spacer(),
             _iconCircle(
               context,
@@ -381,19 +397,21 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: _accent(theme),
-                  fontWeight: FontWeight.w700,
-                ),
+              color: _accent(theme),
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _actionChip(BuildContext context,
-      {required IconData icon,
-      required String label,
-      required VoidCallback onTap}) {
+  Widget _actionChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
     final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
@@ -404,7 +422,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
           color: theme.colorScheme.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -414,7 +433,9 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
             Text(
               label,
               style: theme.textTheme.labelMedium?.copyWith(
-                  color: _accent(theme), fontWeight: FontWeight.w700),
+                color: _accent(theme),
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),
@@ -422,10 +443,12 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     );
   }
 
-  Widget _iconCircle(BuildContext context,
-      {required IconData icon,
-      required String tooltip,
-      required VoidCallback onTap}) {
+  Widget _iconCircle(
+    BuildContext context, {
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+  }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     return Tooltip(
@@ -442,7 +465,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                 ? theme.colorScheme.surface.withValues(alpha: 0.12)
                 : theme.colorScheme.primary.withValues(alpha: 0.08),
             border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
           ),
           child: Icon(icon, color: _accent(theme)),
         ),
@@ -469,8 +493,10 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
   String _extractTitle(String text) {
     final lines = text.split('\n');
     // Expect pattern: "الحديث الأول" on first line
-    final firstNonEmpty =
-        lines.firstWhere((l) => l.trim().isNotEmpty, orElse: () => '');
+    final firstNonEmpty = lines.firstWhere(
+      (l) => l.trim().isNotEmpty,
+      orElse: () => '',
+    );
     if (firstNonEmpty.contains('الحديث')) {
       return 'من الأربعين النووية • ${firstNonEmpty.trim()}';
     }

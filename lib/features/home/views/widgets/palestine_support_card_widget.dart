@@ -44,7 +44,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
                           Icon(
                             // tree leaf
                             FontAwesomeIcons.leaf,
-                          )
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -73,8 +73,9 @@ class PalestineSupportCardWidget extends StatelessWidget {
     return BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       color: theme.colorScheme.surface.withValues(alpha: 0.06),
-      border:
-          Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.16)),
+      border: Border.all(
+        color: theme.colorScheme.primary.withValues(alpha: 0.16),
+      ),
       gradient: LinearGradient(
         colors: [
           Colors.white.withValues(alpha: 0.12),
@@ -113,18 +114,16 @@ class PalestineSupportCardWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border:
-            Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           CountryFlag.fromCountryCode(
             'PS',
-            theme: ImageTheme(
-              width: 20,
-              height: 14,
-            ),
+            theme: ImageTheme(width: 20, height: 14),
           ),
           const SizedBox(width: 8),
           Text(
@@ -158,7 +157,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 10,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
         ),
         child: Material(
@@ -194,11 +193,14 @@ class PalestineSupportCardWidget extends StatelessWidget {
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
         child: Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           backgroundColor: theme.colorScheme.surface,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
@@ -250,8 +252,10 @@ class PalestineSupportCardWidget extends StatelessWidget {
                     alignment: Alignment.center,
                     child: TextButton.icon(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.check_circle_outline,
-                          color: theme.colorScheme.primary),
+                      icon: Icon(
+                        Icons.check_circle_outline,
+                        color: theme.colorScheme.primary,
+                      ),
                       label: Text(
                         l10n?.translate('home.close') ?? 'إغلاق',
                         style: TextStyle(color: theme.colorScheme.primary),
@@ -272,8 +276,9 @@ class PalestineSupportCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: theme.colorScheme.primary.withValues(alpha: 0.05),
-        border:
-            Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+        ),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(

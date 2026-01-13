@@ -68,45 +68,62 @@ class UnsplashCubit extends Cubit<UnsplashState> {
       startAutoRefresh();
     } catch (error) {
       await _loadLocalImages();
-      emit(state.copyWith(
-          status: UnsplashStatus.failure, errorMessage: error.toString()));
+      emit(
+        state.copyWith(
+          status: UnsplashStatus.failure,
+          errorMessage: error.toString(),
+        ),
+      );
     }
   }
 
   Future<void> _fetchFromUnsplash() async {
     try {
       final url = Uri.parse(
-          'https://api.unsplash.com/search/photos/?client_id=$apiKey&query=Mosque&orientation=landscape&per_page=20');
+        'https://api.unsplash.com/search/photos/?client_id=$apiKey&query=Mosque&orientation=landscape&per_page=20',
+      );
 
       // Add timeout to prevent long waits
-      final response = await http.get(url).timeout(const Duration(seconds: 10),
-          onTimeout: () {
-        log('Unsplash API request timed out after 10 seconds');
-        throw TimeoutException('Connection timeout');
-      });
+      final response = await http
+          .get(url)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              log('Unsplash API request timed out after 10 seconds');
+              throw TimeoutException('Connection timeout');
+            },
+          );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final results = data['results'] as List<dynamic>;
 
         if (results.isNotEmpty) {
-          final photos =
-              results.map((photo) => UnsplashPhoto.fromJson(photo)).toList();
+          final photos = results
+              .map((photo) => UnsplashPhoto.fromJson(photo))
+              .toList();
 
           // Filter out any photos with empty URLs (defensive coding)
           final validPhotos = photos
-              .where((photo) =>
-                  photo.imageUrl.isNotEmpty &&
-                  photo.imageUrl.startsWith('http'))
+              .where(
+                (photo) =>
+                    photo.imageUrl.isNotEmpty &&
+                    photo.imageUrl.startsWith('http'),
+              )
               .toList();
 
           if (validPhotos.isNotEmpty) {
-            emit(state.copyWith(
+            emit(
+              state.copyWith(
                 status: UnsplashStatus.success,
                 photos: validPhotos,
-                currentPhotoIndex: 0));
+                currentPhotoIndex: 0,
+              ),
+            );
           } else {
-            log('No valid photos found in Unsplash response, falling back to local images');
+            log(
+              'No valid photos found in Unsplash response, falling back to local images',
+            );
             await _loadLocalImages();
           }
         } else {
@@ -114,14 +131,20 @@ class UnsplashCubit extends Cubit<UnsplashState> {
           await _loadLocalImages();
         }
       } else {
-        log('Failed to fetch from Unsplash: ${response.statusCode} - ${response.body}');
+        log(
+          'Failed to fetch from Unsplash: ${response.statusCode} - ${response.body}',
+        );
         await _loadLocalImages();
       }
     } catch (error) {
       log('Exception while fetching from Unsplash: $error');
       await _loadLocalImages();
-      emit(state.copyWith(
-          status: UnsplashStatus.failure, errorMessage: error.toString()));
+      emit(
+        state.copyWith(
+          status: UnsplashStatus.failure,
+          errorMessage: error.toString(),
+        ),
+      );
     }
   }
 
@@ -142,23 +165,31 @@ class UnsplashCubit extends Cubit<UnsplashState> {
         final fileName = path.split('/').last;
         final photographerName = fileName.split('-')[1].replaceAll('.jpg', '');
 
-        localPhotos.add(UnsplashPhoto(
-          id: 'local-${localImages.indexOf(path)}',
-          imageUrl: path,
-          photographerName: photographerName,
-          description: 'Beautiful Mosque',
-          photographerUsername: 'local',
-        ));
+        localPhotos.add(
+          UnsplashPhoto(
+            id: 'local-${localImages.indexOf(path)}',
+            imageUrl: path,
+            photographerName: photographerName,
+            description: 'Beautiful Mosque',
+            photographerUsername: 'local',
+          ),
+        );
       }
 
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           status: UnsplashStatus.success,
           photos: localPhotos,
-          currentPhotoIndex: 0));
+          currentPhotoIndex: 0,
+        ),
+      );
     } catch (error) {
-      emit(state.copyWith(
+      emit(
+        state.copyWith(
           status: UnsplashStatus.failure,
-          errorMessage: 'Failed to load local images: ${error.toString()}'));
+          errorMessage: 'Failed to load local images: ${error.toString()}',
+        ),
+      );
     }
   }
 

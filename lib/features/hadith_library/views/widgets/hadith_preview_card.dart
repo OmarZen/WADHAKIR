@@ -26,10 +26,8 @@ class HadithPreviewCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => HadithReaderScreen(
-              hadith: hadith,
-              collection: collection,
-            ),
+            builder: (context) =>
+                HadithReaderScreen(hadith: hadith, collection: collection),
           ),
         );
       },

@@ -9,10 +9,7 @@ import 'package:wadhakir/core/localization/app_localizations.dart';
 class MosqueListBottomSheet extends StatefulWidget {
   final Position userPosition;
 
-  const MosqueListBottomSheet({
-    super.key,
-    required this.userPosition,
-  });
+  const MosqueListBottomSheet({super.key, required this.userPosition});
 
   @override
   State<MosqueListBottomSheet> createState() => _MosqueListBottomSheetState();
@@ -64,7 +61,8 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
     } catch (e) {
       if (mounted) {
         // Check if it's a network error
-        final isNetworkError = e.toString().contains('SocketException') ||
+        final isNetworkError =
+            e.toString().contains('SocketException') ||
             e.toString().contains('Failed host lookup') ||
             e.toString().contains('Network is unreachable') ||
             e.toString().contains('TimeoutException');
@@ -87,7 +85,8 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
       mapsUrl = Uri.parse('http://maps.apple.com/?q=mosque&ll=$lat,$lng');
     } else {
       mapsUrl = Uri.parse(
-          'https://www.google.com/maps/search/?api=1&query=mosque&query=$lat,$lng');
+        'https://www.google.com/maps/search/?api=1&query=mosque&query=$lat,$lng',
+      );
     }
 
     try {
@@ -97,10 +96,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
       );
 
       if (!launched) {
-        await launchUrl(
-          mapsUrl,
-          mode: LaunchMode.platformDefault,
-        );
+        await launchUrl(mapsUrl, mode: LaunchMode.platformDefault);
       }
     } catch (e) {
       if (!mounted) return;
@@ -129,7 +125,8 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
     } else {
       // Google Maps directions
       mapsUrl = Uri.parse(
-          'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&destination_place_id=${mosque.address.googlePlaceId.isNotEmpty ? mosque.address.googlePlaceId : ''}&travelmode=driving');
+        'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&destination_place_id=${mosque.address.googlePlaceId.isNotEmpty ? mosque.address.googlePlaceId : ''}&travelmode=driving',
+      );
     }
 
     try {
@@ -139,10 +136,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
       );
 
       if (!launched) {
-        await launchUrl(
-          mapsUrl,
-          mode: LaunchMode.platformDefault,
-        );
+        await launchUrl(mapsUrl, mode: LaunchMode.platformDefault);
       }
     } catch (e) {
       if (!mounted) return;
@@ -214,8 +208,9 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
                         Text(
                           '${_mosques!.length} ${_mosques!.length == 1 ? (l10n?.translate('home.nearest_mosque') ?? 'مسجد') : (l10n?.translate('home.nearest_mosques') ?? 'مساجد')}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                     ],
@@ -233,76 +228,72 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
             child: _isLoading
                 ? _buildLoadingState(theme, l10n)
                 : _isOffline
-                    ? _buildOfflineState(theme, l10n)
-                    : _mosques == null || _mosques!.isEmpty
-                        ? _buildEmptyState(theme, l10n)
-                        : Column(
-                            children: [
-                              Expanded(
-                                child: ListView.separated(
-                                  padding: const EdgeInsets.all(16),
-                                  itemCount: _mosques!.length,
-                                  separatorBuilder: (_, __) =>
-                                      const SizedBox(height: 10),
-                                  itemBuilder: (context, index) {
-                                    final mosque = _mosques![index];
-                                    final distance = mosque.distanceFromPoint(
-                                      widget.userPosition.latitude,
-                                      widget.userPosition.longitude,
-                                    );
+                ? _buildOfflineState(theme, l10n)
+                : _mosques == null || _mosques!.isEmpty
+                ? _buildEmptyState(theme, l10n)
+                : Column(
+                    children: [
+                      Expanded(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _mosques!.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final mosque = _mosques![index];
+                            final distance = mosque.distanceFromPoint(
+                              widget.userPosition.latitude,
+                              widget.userPosition.longitude,
+                            );
 
-                                    return _AnimatedMosqueCard(
-                                      mosque: mosque,
-                                      distance: distance,
-                                      index: index,
-                                      onTap: () =>
-                                          _openDirectionsToMosque(mosque),
-                                    );
-                                  },
-                                ),
+                            return _AnimatedMosqueCard(
+                              mosque: mosque,
+                              distance: distance,
+                              index: index,
+                              onTap: () => _openDirectionsToMosque(mosque),
+                            );
+                          },
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          border: Border(
+                            top: BorderSide(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.1,
                               ),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface,
-                                  border: Border(
-                                    top: BorderSide(
-                                      color: theme.colorScheme.onSurface
-                                          .withValues(alpha: 0.1),
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: FilledButton.icon(
-                                    onPressed: _openMapsWithMosqueSearch,
-                                    icon: const Icon(Icons.map_outlined,
-                                        size: 20),
-                                    label: Text(
-                                      l10n?.translate(
-                                              'home.get_more_mosques') ??
-                                          'المزيد من المساجد',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    style: FilledButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // add some space under the button
-                              const SizedBox(height: 16),
-                            ],
+                              width: 1,
+                            ),
                           ),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: _openMapsWithMosqueSearch,
+                            icon: const Icon(Icons.map_outlined, size: 20),
+                            label: Text(
+                              l10n?.translate('home.get_more_mosques') ??
+                                  'المزيد من المساجد',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // add some space under the button
+                      const SizedBox(height: 16),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -444,9 +435,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
                   ),
                 ),
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -494,18 +483,12 @@ class _AnimatedMosqueCardState extends State<_AnimatedMosqueCard>
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     // Stagger animation based on index
     Future.delayed(Duration(milliseconds: widget.index * 100), () {
@@ -603,10 +586,13 @@ class _MosqueCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -658,8 +644,9 @@ class _MosqueCard extends StatelessWidget {
                       child: Text(
                         mosque.address.formattedAddress,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                           fontSize: 11,
                         ),
                         maxLines: 2,

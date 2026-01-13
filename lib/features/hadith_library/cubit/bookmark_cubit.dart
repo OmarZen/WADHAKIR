@@ -24,12 +24,12 @@ class BookmarkCubit extends Cubit<BookmarkState> {
     required GetAllBookmarksUseCase getAllBookmarksUseCase,
     required GetAllCollectionsUseCase getAllCollectionsUseCase,
     required BookmarkRepository bookmarkRepository,
-  })  : _addBookmarkUseCase = addBookmarkUseCase,
-        _removeBookmarkUseCase = removeBookmarkUseCase,
-        _getAllBookmarksUseCase = getAllBookmarksUseCase,
-        _getAllCollectionsUseCase = getAllCollectionsUseCase,
-        _bookmarkRepository = bookmarkRepository,
-        super(const BookmarkInitial());
+  }) : _addBookmarkUseCase = addBookmarkUseCase,
+       _removeBookmarkUseCase = removeBookmarkUseCase,
+       _getAllBookmarksUseCase = getAllBookmarksUseCase,
+       _getAllCollectionsUseCase = getAllCollectionsUseCase,
+       _bookmarkRepository = bookmarkRepository,
+       super(const BookmarkInitial());
 
   /// Load all bookmarks
   Future<void> loadBookmarks({String? collectionId}) async {
@@ -43,12 +43,14 @@ class BookmarkCubit extends Cubit<BookmarkState> {
       final collections = await _getAllCollectionsUseCase();
       final totalCount = await _bookmarkRepository.getTotalBookmarkCount();
 
-      emit(BookmarksLoaded(
-        bookmarks: bookmarks,
-        collections: collections,
-        selectedCollectionId: collectionId,
-        totalCount: totalCount,
-      ));
+      emit(
+        BookmarksLoaded(
+          bookmarks: bookmarks,
+          collections: collections,
+          selectedCollectionId: collectionId,
+          totalCount: totalCount,
+        ),
+      );
     } catch (e) {
       emit(BookmarkError('Failed to load bookmarks: ${e.toString()}'));
     }
@@ -158,8 +160,9 @@ class BookmarkCubit extends Cubit<BookmarkState> {
   /// Add bookmark to collection
   Future<void> addToCollection(String hadithId, String collectionId) async {
     try {
-      final bookmark =
-          await _bookmarkRepository.getBookmarkByHadithId(hadithId);
+      final bookmark = await _bookmarkRepository.getBookmarkByHadithId(
+        hadithId,
+      );
       if (bookmark != null) {
         await _bookmarkRepository.addBookmarkToCollection(
           bookmark.id,

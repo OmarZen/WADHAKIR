@@ -26,15 +26,25 @@ class PrayerTimesHomeWidget {
 
       // Save formatted prayer times
       await HomeWidget.saveWidgetData(
-          'fajr', prayerTimes.formatTime(prayerTimes.fajr));
+        'fajr',
+        prayerTimes.formatTime(prayerTimes.fajr),
+      );
       await HomeWidget.saveWidgetData(
-          'dhuhr', prayerTimes.formatTime(prayerTimes.dhuhr));
+        'dhuhr',
+        prayerTimes.formatTime(prayerTimes.dhuhr),
+      );
       await HomeWidget.saveWidgetData(
-          'asr', prayerTimes.formatTime(prayerTimes.asr));
+        'asr',
+        prayerTimes.formatTime(prayerTimes.asr),
+      );
       await HomeWidget.saveWidgetData(
-          'maghrib', prayerTimes.formatTime(prayerTimes.maghrib));
+        'maghrib',
+        prayerTimes.formatTime(prayerTimes.maghrib),
+      );
       await HomeWidget.saveWidgetData(
-          'isha', prayerTimes.formatTime(prayerTimes.isha));
+        'isha',
+        prayerTimes.formatTime(prayerTimes.isha),
+      );
 
       // Save current location
       try {
@@ -64,7 +74,7 @@ class PrayerTimesHomeWidget {
         'سبتمبر',
         'أكتوبر',
         'نوفمبر',
-        'ديسمبر'
+        'ديسمبر',
       ];
       final arabicDays = [
         'الاثنين',
@@ -73,7 +83,7 @@ class PrayerTimesHomeWidget {
         'الخميس',
         'الجمعة',
         'السبت',
-        'الأحد'
+        'الأحد',
       ];
 
       final gregorianDateFormatted =
@@ -114,8 +124,9 @@ class PrayerTimesHomeWidget {
 
           if (i > 0) {
             currentPrayerName = prayers[i - 1]['name'] as String;
-            currentPrayerTime =
-                prayerTimes.formatTime(prayers[i - 1]['time'] as DateTime);
+            currentPrayerTime = prayerTimes.formatTime(
+              prayers[i - 1]['time'] as DateTime,
+            );
           }
           break;
         }
@@ -131,11 +142,17 @@ class PrayerTimesHomeWidget {
 
       // Save current and next prayer info
       await HomeWidget.saveWidgetData(
-          'currentPrayer', currentPrayerName?.toUpperCase() ?? '');
+        'currentPrayer',
+        currentPrayerName?.toUpperCase() ?? '',
+      );
       await HomeWidget.saveWidgetData(
-          'currentPrayerTime', currentPrayerTime ?? '');
+        'currentPrayerTime',
+        currentPrayerTime ?? '',
+      );
       await HomeWidget.saveWidgetData(
-          'nextPrayer', nextPrayerName?.toUpperCase() ?? '');
+        'nextPrayer',
+        nextPrayerName?.toUpperCase() ?? '',
+      );
 
       // Calculate and save time until next prayer
       final remaining = nextPrayerTime.difference(now);
@@ -181,8 +198,9 @@ class PrayerTimesHomeWidget {
     try {
       if (uri?.host == 'updatewidget') {
         // Retrieve the saved prayer times
-        final prayerTimesJson =
-            await HomeWidget.getWidgetData<String>('prayer_times');
+        final prayerTimesJson = await HomeWidget.getWidgetData<String>(
+          'prayer_times',
+        );
         if (prayerTimesJson != null) {
           // Update both widgets with the saved data
           await HomeWidget.updateWidget(
@@ -217,7 +235,7 @@ class PrayerTimesHomeWidget {
         'رمضان',
         'شوال',
         'ذو القعدة',
-        'ذو الحجة'
+        'ذو الحجة',
       ];
       return '${hijri.day} ${hijriMonths[hijri.month - 1]}';
     } catch (e) {

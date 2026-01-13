@@ -112,7 +112,9 @@ class AboutSectionWidgets extends StatelessWidget {
                     child: Text(
                       l10n?.translate('settings.about_app') ?? 'حول التطبيق',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -127,8 +129,9 @@ class AboutSectionWidgets extends StatelessWidget {
                       width: 70,
                       height: 70,
                       decoration: BoxDecoration(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.15),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.15,
+                        ),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -153,18 +156,14 @@ class AboutSectionWidgets extends StatelessWidget {
                   Center(
                     child: Text(
                       l10n?.translate('settings.version') ?? 'الإصدار 2.3.2+9',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 13,
-                      ),
+                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     l10n?.translate('settings.app_description') ??
                         'تطبيق وذكّر لمساعدتك في شعائر الإسلام',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 14,
-                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -182,7 +181,9 @@ class AboutSectionWidgets extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                   ),
                   child: Text(
                     l10n?.translate('settings.close') ?? 'إغلاق',

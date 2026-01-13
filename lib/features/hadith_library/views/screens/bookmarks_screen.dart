@@ -200,9 +200,11 @@ class _BookmarksViewState extends State<_BookmarksView> {
         child: _buildBookmarksList(
           context,
           state.bookmarks
-              .where((b) =>
-                  _searchQuery.isEmpty ||
-                  (b.note?.toLowerCase().contains(_searchQuery) ?? false))
+              .where(
+                (b) =>
+                    _searchQuery.isEmpty ||
+                    (b.note?.toLowerCase().contains(_searchQuery) ?? false),
+              )
               .toList(),
           theme,
           size,
@@ -245,9 +247,10 @@ class _BookmarksViewState extends State<_BookmarksView> {
               if (collection == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(l10n?.translate(
-                            'hadith_library.collection_not_found') ??
-                        'Collection not found'),
+                    content: Text(
+                      l10n?.translate('hadith_library.collection_not_found') ??
+                          'Collection not found',
+                    ),
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -258,16 +261,16 @@ class _BookmarksViewState extends State<_BookmarksView> {
               showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                builder: (context) =>
+                    const Center(child: CircularProgressIndicator()),
               );
 
               try {
                 // Load the hadith from repository
                 final hadithRepo = HadithRepositoryImpl();
-                final hadith =
-                    await hadithRepo.getHadithById(bookmark.hadithId);
+                final hadith = await hadithRepo.getHadithById(
+                  bookmark.hadithId,
+                );
 
                 // Close loading dialog
                 if (context.mounted) {
@@ -278,9 +281,10 @@ class _BookmarksViewState extends State<_BookmarksView> {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(l10n?.translate(
-                                'hadith_library.hadith_not_found') ??
-                            'Hadith not found'),
+                        content: Text(
+                          l10n?.translate('hadith_library.hadith_not_found') ??
+                              'Hadith not found',
+                        ),
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -307,7 +311,8 @@ class _BookmarksViewState extends State<_BookmarksView> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                          '${l10n?.translate('hadith_library.error_loading_hadith') ?? 'Error loading hadith'}: $e'),
+                        '${l10n?.translate('hadith_library.error_loading_hadith') ?? 'Error loading hadith'}: $e',
+                      ),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -320,11 +325,7 @@ class _BookmarksViewState extends State<_BookmarksView> {
     );
   }
 
-  Widget _buildEmptyState(
-    ThemeData theme,
-    Size size,
-    AppLocalizations? l10n,
-  ) {
+  Widget _buildEmptyState(ThemeData theme, Size size, AppLocalizations? l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

@@ -11,11 +11,7 @@ class PrayerTime extends Equatable {
     this.isNext = false,
   });
 
-  PrayerTime copyWith({
-    String? name,
-    String? time,
-    bool? isNext,
-  }) {
+  PrayerTime copyWith({String? name, String? time, bool? isNext}) {
     return PrayerTime(
       name: name ?? this.name,
       time: time ?? this.time,

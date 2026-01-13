@@ -6,10 +6,7 @@ import 'package:wadhakir/features/hadith_library/views/screens/collection_books_
 class CollectionCard extends StatelessWidget {
   final HadithCollectionMetadata collection;
 
-  const CollectionCard({
-    super.key,
-    required this.collection,
-  });
+  const CollectionCard({super.key, required this.collection});
 
   @override
   Widget build(BuildContext context) {
@@ -103,8 +100,9 @@ class CollectionCard extends StatelessWidget {
                     Text(
                       collection.nameEnglish,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.textTheme.bodySmall?.color
-                            ?.withValues(alpha: 0.7),
+                        color: theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: 0.7,
+                        ),
                         fontWeight: FontWeight.w500,
                       ),
                       maxLines: 1,

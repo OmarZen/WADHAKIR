@@ -142,8 +142,9 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.18),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.18,
+                      ),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -159,10 +160,12 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
                 ),
                 child: GNav(
                   gap: 8,
-                  rippleColor:
-                      theme.colorScheme.onPrimary.withValues(alpha: 0.1),
-                  hoverColor:
-                      theme.colorScheme.onPrimary.withValues(alpha: 0.06),
+                  rippleColor: theme.colorScheme.onPrimary.withValues(
+                    alpha: 0.1,
+                  ),
+                  hoverColor: theme.colorScheme.onPrimary.withValues(
+                    alpha: 0.06,
+                  ),
                   haptic: true,
                   tabBorderRadius: 16,
                   curve: Curves.easeOutCubic,

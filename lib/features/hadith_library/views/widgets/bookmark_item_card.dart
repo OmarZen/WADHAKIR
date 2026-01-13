@@ -39,11 +39,7 @@ class BookmarkItemCard extends StatelessWidget {
           color: theme.colorScheme.error,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(
-          Icons.delete_rounded,
-          color: Colors.white,
-          size: 28,
-        ),
+        child: const Icon(Icons.delete_rounded, color: Colors.white, size: 28),
       ),
       confirmDismiss: (direction) async {
         final l10n = AppLocalizations.of(context);
@@ -51,11 +47,14 @@ class BookmarkItemCard extends StatelessWidget {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text(l10n?.translate('hadith_library.delete_bookmark') ??
-                  'Delete Bookmark'),
+              title: Text(
+                l10n?.translate('hadith_library.delete_bookmark') ??
+                    'Delete Bookmark',
+              ),
               content: Text(
-                  l10n?.translate('hadith_library.delete_bookmark_confirm') ??
-                      'Are you sure you want to delete this bookmark?'),
+                l10n?.translate('hadith_library.delete_bookmark_confirm') ??
+                    'Are you sure you want to delete this bookmark?',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -64,7 +63,8 @@ class BookmarkItemCard extends StatelessWidget {
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
                   child: Text(
-                      l10n?.translate('hadith_library.delete') ?? 'Delete'),
+                    l10n?.translate('hadith_library.delete') ?? 'Delete',
+                  ),
                 ),
               ],
             );
@@ -184,7 +184,9 @@ class BookmarkItemCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               _formatHadithReference(
-                                  bookmark.hadithId, context),
+                                bookmark.hadithId,
+                                context,
+                              ),
                               style: theme.textTheme.titleSmall?.copyWith(
                                 color: collection.color,
                                 fontWeight: FontWeight.bold,
@@ -215,8 +217,9 @@ class BookmarkItemCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              AppLocalizations.of(context)?.translate(
-                                      'hadith_library.tap_to_read') ??
+                              AppLocalizations.of(
+                                    context,
+                                  )?.translate('hadith_library.tap_to_read') ??
                                   'Tap to read the full hadith',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: collection.color.withValues(alpha: 0.9),
@@ -273,15 +276,17 @@ class BookmarkItemCard extends StatelessWidget {
                         Icon(
                           Icons.access_time_rounded,
                           size: 12,
-                          color: theme.textTheme.bodySmall?.color
-                              ?.withValues(alpha: 0.5),
+                          color: theme.textTheme.bodySmall?.color?.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _formatDate(bookmark.createdAt, context),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.textTheme.bodySmall?.color
-                                ?.withValues(alpha: 0.5),
+                            color: theme.textTheme.bodySmall?.color?.withValues(
+                              alpha: 0.5,
+                            ),
                             fontFamily: 'Almarai',
                           ),
                         ),

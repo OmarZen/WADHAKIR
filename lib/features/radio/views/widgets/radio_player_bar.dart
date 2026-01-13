@@ -35,8 +35,9 @@ class RadioPlayerBar extends StatelessWidget {
               ),
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal:
-                      PlatformUtils.isDesktop ? 14.0 : size.width * 0.03,
+                  horizontal: PlatformUtils.isDesktop
+                      ? 14.0
+                      : size.width * 0.03,
                   vertical: PlatformUtils.isDesktop ? 10.0 : size.height * 0.01,
                 ),
                 decoration: BoxDecoration(
@@ -53,12 +54,13 @@ class RadioPlayerBar extends StatelessWidget {
                 child: Row(
                   children: [
                     _RadioIconBox(
-                        size:
-                            PlatformUtils.isDesktop ? 40.0 : size.width * 0.10),
+                      size: PlatformUtils.isDesktop ? 40.0 : size.width * 0.10,
+                    ),
                     SizedBox(
-                        width: PlatformUtils.isDesktop
-                            ? 10.0
-                            : size.width * 0.025),
+                      width: PlatformUtils.isDesktop
+                          ? 10.0
+                          : size.width * 0.025,
+                    ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +90,8 @@ class RadioPlayerBar extends StatelessWidget {
                           ),
                           SizedBox(height: PlatformUtils.isDesktop ? 4.0 : 4.0),
                           _AudioLevelVisualizer(
-                              height: PlatformUtils.isDesktop ? 18.0 : 18.0),
+                            height: PlatformUtils.isDesktop ? 18.0 : 18.0,
+                          ),
                         ],
                       ),
                     ),
@@ -126,11 +129,12 @@ class RadioPlayerBar extends StatelessWidget {
                               Text(
                                 playing
                                     ? (l10n?.translate('radio.pause') ??
-                                        'Pause')
+                                          'Pause')
                                     : (l10n?.translate('radio.play') ?? 'Play'),
                                 style: TextStyle(
-                                  fontSize:
-                                      PlatformUtils.isDesktop ? 13.0 : 13.0,
+                                  fontSize: PlatformUtils.isDesktop
+                                      ? 13.0
+                                      : 13.0,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -149,14 +153,16 @@ class RadioPlayerBar extends StatelessWidget {
                             end: Alignment.bottomRight,
                             colors: [
                               theme.colorScheme.primary.withValues(alpha: 0.85),
-                              theme.colorScheme.secondary
-                                  .withValues(alpha: 0.95),
+                              theme.colorScheme.secondary.withValues(
+                                alpha: 0.95,
+                              ),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.25),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.25,
+                              ),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -273,8 +279,10 @@ class _NowPlayingSheet extends StatelessWidget {
                         ),
                         SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
                         Center(
-                            child: _RadioIconBox(
-                                size: isDesktop ? 120.0 : size.width * 0.35)),
+                          child: _RadioIconBox(
+                            size: isDesktop ? 120.0 : size.width * 0.35,
+                          ),
+                        ),
                         SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
                         Text(
                           current.name,
@@ -298,7 +306,8 @@ class _NowPlayingSheet extends StatelessWidget {
                         ),
                         SizedBox(height: isDesktop ? 20.0 : size.height * 0.02),
                         _AudioLevelVisualizer(
-                            height: isDesktop ? 50.0 : size.width * 0.14),
+                          height: isDesktop ? 50.0 : size.width * 0.14,
+                        ),
                         SizedBox(height: isDesktop ? 24.0 : size.height * 0.02),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -310,7 +319,8 @@ class _NowPlayingSheet extends StatelessWidget {
                                   context.read<RadioCubit>().previousStation(),
                             ),
                             SizedBox(
-                                width: isDesktop ? 12.0 : size.width * 0.02),
+                              width: isDesktop ? 12.0 : size.width * 0.02,
+                            ),
                             BlocConsumer<RadioCubit, RadioState>(
                               listenWhen: (prev, curr) => prev != curr,
                               listener: (context, st) {},
@@ -326,7 +336,8 @@ class _NowPlayingSheet extends StatelessWidget {
                                     foregroundColor: Colors.white,
                                     shape: const CircleBorder(),
                                     padding: EdgeInsets.all(
-                                        isDesktop ? 20.0 : size.width * 0.05),
+                                      isDesktop ? 20.0 : size.width * 0.05,
+                                    ),
                                   ),
                                   child: Icon(
                                     playing
@@ -338,7 +349,8 @@ class _NowPlayingSheet extends StatelessWidget {
                               },
                             ),
                             SizedBox(
-                                width: isDesktop ? 12.0 : size.width * 0.02),
+                              width: isDesktop ? 12.0 : size.width * 0.02,
+                            ),
                             IconButton(
                               icon: const Icon(Icons.skip_next_rounded),
                               iconSize: isDesktop ? 32.0 : size.width * 0.08,

@@ -17,9 +17,7 @@ class LocationDisabledDialog extends StatelessWidget {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.08,
-      ),
+      insetPadding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -70,7 +68,8 @@ class LocationDisabledDialog extends StatelessWidget {
                   Expanded(
                     child: Text(
                       l10n?.translate(
-                              'prayer_times.location_services_disabled_title') ??
+                            'prayer_times.location_services_disabled_title',
+                          ) ??
                           'خدمات الموقع معطلة',
                       style: TextStyle(
                         color: Colors.white,
@@ -185,7 +184,8 @@ class LocationDisabledDialog extends StatelessWidget {
                       icon: const Icon(Icons.settings),
                       label: Text(
                         l10n?.translate(
-                                'prayer_times.open_location_settings') ??
+                              'prayer_times.open_location_settings',
+                            ) ??
                             'فتح إعدادات الموقع',
                       ),
                       style: ElevatedButton.styleFrom(

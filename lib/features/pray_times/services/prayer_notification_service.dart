@@ -37,7 +37,8 @@ class PrayerNotificationService {
   /// Called when a notification action is received
   @pragma('vm:entry-point')
   static Future<void> _onActionReceivedMethod(
-      ReceivedAction receivedAction) async {
+    ReceivedAction receivedAction,
+  ) async {
     // Handle notification actions here
     // For example: Mark prayer as done, snooze, etc.
     log('Notification action received: ${receivedAction.actionType}');
@@ -49,14 +50,16 @@ class PrayerNotificationService {
   /// Called when a notification is created
   @pragma('vm:entry-point')
   static Future<void> _onNotificationCreatedMethod(
-      ReceivedNotification receivedNotification) async {
+    ReceivedNotification receivedNotification,
+  ) async {
     log('Notification created: ${receivedNotification.id}');
   }
 
   /// Called when a notification is displayed
   @pragma('vm:entry-point')
   static Future<void> _onNotificationDisplayedMethod(
-      ReceivedNotification receivedNotification) async {
+    ReceivedNotification receivedNotification,
+  ) async {
     log('Notification displayed: ${receivedNotification.id}');
 
     // Get sound settings from payload
@@ -65,7 +68,9 @@ class PrayerNotificationService {
         receivedNotification.payload?['useCustomAdhan'] == 'true';
     final prayerName = receivedNotification.payload?['prayer'];
 
-    log('Notification for $prayerName - useCustomAdhan: $useCustomAdhan, soundPath: ${soundPath ?? "none"}');
+    log(
+      'Notification for $prayerName - useCustomAdhan: $useCustomAdhan, soundPath: ${soundPath ?? "none"}',
+    );
 
     // Only play custom adhan if explicitly using custom sound
     // Default notification sound is handled by the channel itself
@@ -85,7 +90,8 @@ class PrayerNotificationService {
   /// Called when a notification is dismissed
   @pragma('vm:entry-point')
   static Future<void> _onDismissActionReceivedMethod(
-      ReceivedAction receivedAction) async {
+    ReceivedAction receivedAction,
+  ) async {
     log('Notification dismissed: ${receivedAction.id}');
 
     // Stop adhan playback when notification is dismissed
@@ -194,8 +200,9 @@ class PrayerNotificationService {
       await _repository.schedulePrayerNotification(
         prayerName: 'TestNotification',
         prayerNameArabic: prayerNameArabic,
-        prayerTime: DateTime.now()
-            .add(const Duration(seconds: 2)), // Schedule 2 seconds from now
+        prayerTime: DateTime.now().add(
+          const Duration(seconds: 2),
+        ), // Schedule 2 seconds from now
         settings: PrayerNotificationSettings(
           enabled: true,
           timing: NotificationTiming.onTime,

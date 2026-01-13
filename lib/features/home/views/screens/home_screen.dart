@@ -35,8 +35,9 @@ class HomeScreenContent extends StatelessWidget {
       backgroundColor: theme.colorScheme.surface,
       body: BlocBuilder<UnsplashCubit, UnsplashState>(
         builder: (context, state) {
-          final mosqueImage =
-              context.read<UnsplashCubit>().getCurrentMosqueImage();
+          final mosqueImage = context
+              .read<UnsplashCubit>()
+              .getCurrentMosqueImage();
 
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -49,29 +50,17 @@ class HomeScreenContent extends StatelessWidget {
                 ),
               ),
               // Compact Prayer Times Card
-              SliverToBoxAdapter(
-                child: CompactPrayerCardWidget(),
-              ),
+              SliverToBoxAdapter(child: CompactPrayerCardWidget()),
               // Hadith Card (Nawawi 40) - appears after the compact prayer card
-              const SliverToBoxAdapter(
-                child: HadithCardWidget(),
-              ),
+              const SliverToBoxAdapter(child: HadithCardWidget()),
               // More Islamic Excerpts
-              const SliverToBoxAdapter(
-                child: MoreIslamicExcerptsWidget(),
-              ),
+              const SliverToBoxAdapter(child: MoreIslamicExcerptsWidget()),
               // Tight spacing between sections
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 6),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 6)),
               // Palestine Support Card
-              const SliverToBoxAdapter(
-                child: PalestineSupportCardWidget(),
-              ),
+              const SliverToBoxAdapter(child: PalestineSupportCardWidget()),
               // more space
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 100),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           );
         },

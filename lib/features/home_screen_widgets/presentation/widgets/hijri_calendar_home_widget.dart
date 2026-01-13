@@ -14,7 +14,8 @@ class HijriCalendarHomeWidget {
     // Skip on Windows/Desktop - home_widget not supported
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       debugPrint(
-          '⏭️  Skipping Hijri calendar widget update (not supported on desktop)');
+        '⏭️  Skipping Hijri calendar widget update (not supported on desktop)',
+      );
       return;
     }
 
@@ -40,9 +41,11 @@ class HijriCalendarHomeWidget {
 
       debugPrint('🕌 Updating Hijri calendar widget');
       debugPrint(
-          '   Today: ${hijriToday.day} ${_getHijriMonthName(hijriToday.month)} ${hijriToday.year} هـ');
+        '   Today: ${hijriToday.day} ${_getHijriMonthName(hijriToday.month)} ${hijriToday.year} هـ',
+      );
       debugPrint(
-          '   Display Month: ${_getHijriMonthName(displayMonth.month)} ${displayMonth.year} (offset: $monthOffset)');
+        '   Display Month: ${_getHijriMonthName(displayMonth.month)} ${displayMonth.year} (offset: $monthOffset)',
+      );
 
       // Save month offset
       await HomeWidget.saveWidgetData(_monthOffsetKey, monthOffset.toString());
@@ -60,14 +63,18 @@ class HijriCalendarHomeWidget {
       }
 
       // Calculate first day offset (which day of week the month starts)
-      final firstDayOfMonth =
-          HijriDateTime(displayMonth.year, displayMonth.month, 1);
+      final firstDayOfMonth = HijriDateTime(
+        displayMonth.year,
+        displayMonth.month,
+        1,
+      );
       final firstDayGregorian = firstDayOfMonth.toDateTime();
       final firstDayOffset =
           firstDayGregorian.weekday % 7; // 0 = Sunday, 1 = Monday, etc.
 
       // Check if today is in this displayed month
-      final todayDay = (monthOffset == 0 &&
+      final todayDay =
+          (monthOffset == 0 &&
               hijriToday.month == displayMonth.month &&
               hijriToday.year == displayMonth.year)
           ? hijriToday.day
@@ -85,7 +92,9 @@ class HijriCalendarHomeWidget {
       // Save calendar data
       await HomeWidget.saveWidgetData('days_in_month', daysInMonth.toString());
       await HomeWidget.saveWidgetData(
-          'first_day_offset', firstDayOffset.toString());
+        'first_day_offset',
+        firstDayOffset.toString(),
+      );
       await HomeWidget.saveWidgetData('today_day', todayDay.toString());
 
       // Save formatted date displays
@@ -95,7 +104,9 @@ class HijriCalendarHomeWidget {
 
       await HomeWidget.saveWidgetData('hijri_date_display', hijriDateDisplay);
       await HomeWidget.saveWidgetData(
-          'gregorian_date_display', gregorianDateDisplay);
+        'gregorian_date_display',
+        gregorianDateDisplay,
+      );
 
       debugPrint('   Hijri display: $hijriDateDisplay');
       debugPrint('   Gregorian display: $gregorianDateDisplay');
@@ -158,8 +169,9 @@ class HijriCalendarHomeWidget {
 
     try {
       // Get current offset
-      final currentOffset =
-          await HomeWidget.getWidgetData<String>(_monthOffsetKey);
+      final currentOffset = await HomeWidget.getWidgetData<String>(
+        _monthOffsetKey,
+      );
       final offset = int.tryParse(currentOffset ?? '0') ?? 0;
 
       // Move to previous month (increase offset)
@@ -177,8 +189,9 @@ class HijriCalendarHomeWidget {
 
     try {
       // Get current offset
-      final currentOffset =
-          await HomeWidget.getWidgetData<String>(_monthOffsetKey);
+      final currentOffset = await HomeWidget.getWidgetData<String>(
+        _monthOffsetKey,
+      );
       final offset = int.tryParse(currentOffset ?? '0') ?? 0;
 
       // Move to next month (decrease offset)
@@ -251,13 +264,16 @@ class HijriCalendarHomeWidget {
 
       await HomeWidget.saveWidgetData('hijri_date_display', hijriDateDisplay);
       await HomeWidget.saveWidgetData(
-          'gregorian_date_display', gregorianDateDisplay);
+        'gregorian_date_display',
+        gregorianDateDisplay,
+      );
 
       // Save selected day for highlighting
       await HomeWidget.saveWidgetData('selected_day', day.toString());
 
       debugPrint(
-          '   Updated date display: $hijriDateDisplay • $gregorianDateDisplay');
+        '   Updated date display: $hijriDateDisplay • $gregorianDateDisplay',
+      );
 
       // Update the widget
       await HomeWidget.updateWidget(

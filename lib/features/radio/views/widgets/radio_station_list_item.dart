@@ -53,9 +53,9 @@ class RadioStationListItem extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: EdgeInsets.all(PlatformUtils.isDesktop
-              ? size.width * 0.015
-              : size.width * 0.028),
+          padding: EdgeInsets.all(
+            PlatformUtils.isDesktop ? size.width * 0.015 : size.width * 0.028,
+          ),
           child: Row(
             children: [
               Container(
@@ -78,7 +78,8 @@ class RadioStationListItem extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                  width: PlatformUtils.isDesktop ? 12.0 : size.width * 0.03),
+                width: PlatformUtils.isDesktop ? 12.0 : size.width * 0.03,
+              ),
               Expanded(
                 child: Text(
                   station.name,
@@ -86,16 +87,18 @@ class RadioStationListItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize:
-                        PlatformUtils.isDesktop ? 14.0 : size.width * 0.038,
+                    fontSize: PlatformUtils.isDesktop
+                        ? 14.0
+                        : size.width * 0.038,
                     color: isLoading ? Colors.grey : null,
                   ),
                 ),
               ),
               SizedBox(
-                  width: PlatformUtils.isDesktop
-                      ? size.width * 0.015
-                      : size.width * 0.015),
+                width: PlatformUtils.isDesktop
+                    ? size.width * 0.015
+                    : size.width * 0.015,
+              ),
               Container(
                 width: PlatformUtils.isDesktop
                     ? size.width * 0.05
@@ -111,9 +114,11 @@ class RadioStationListItem extends StatelessWidget {
                 ),
                 child: isLoading
                     ? Padding(
-                        padding: EdgeInsets.all(PlatformUtils.isDesktop
-                            ? size.width * 0.01
-                            : size.width * 0.02),
+                        padding: EdgeInsets.all(
+                          PlatformUtils.isDesktop
+                              ? size.width * 0.01
+                              : size.width * 0.02,
+                        ),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
@@ -125,8 +130,9 @@ class RadioStationListItem extends StatelessWidget {
                         isActive
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
-                        color:
-                            isActive ? Colors.white : theme.colorScheme.primary,
+                        color: isActive
+                            ? Colors.white
+                            : theme.colorScheme.primary,
                         size: PlatformUtils.isDesktop
                             ? size.width * 0.03
                             : size.width * 0.05,

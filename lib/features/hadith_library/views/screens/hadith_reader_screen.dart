@@ -47,10 +47,7 @@ class _HadithReaderView extends StatefulWidget {
   final HadithModel hadith;
   final HadithCollectionMetadata collection;
 
-  const _HadithReaderView({
-    required this.hadith,
-    required this.collection,
-  });
+  const _HadithReaderView({required this.hadith, required this.collection});
 
   @override
   State<_HadithReaderView> createState() => _HadithReaderViewState();
@@ -66,9 +63,7 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
     // Set status bar icon brightness for immersive experience
     // Note: statusBarColor is deprecated in Android 15 for edge-to-edge apps
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.light,
-      ),
+      const SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light),
     );
   }
 
@@ -77,9 +72,7 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
     // Restore status bar icon brightness
     // Note: statusBarColor is deprecated in Android 15 for edge-to-edge apps
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarIconBrightness: Brightness.dark,
-      ),
+      const SystemUiOverlayStyle(statusBarIconBrightness: Brightness.dark),
     );
     super.dispose();
   }
@@ -121,8 +114,9 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth:
-                            PlatformUtils.isDesktop ? 900.0 : double.infinity,
+                        maxWidth: PlatformUtils.isDesktop
+                            ? 900.0
+                            : double.infinity,
                       ),
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
@@ -205,8 +199,10 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
                       setState(() => _fontSize -= 2);
                     }
                   },
-                  icon: const Icon(Icons.text_decrease_rounded,
-                      color: Colors.white),
+                  icon: const Icon(
+                    Icons.text_decrease_rounded,
+                    color: Colors.white,
+                  ),
                   iconSize: 20,
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.all(8),
@@ -218,8 +214,10 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
                       setState(() => _fontSize += 2);
                     }
                   },
-                  icon: const Icon(Icons.text_increase_rounded,
-                      color: Colors.white),
+                  icon: const Icon(
+                    Icons.text_increase_rounded,
+                    color: Colors.white,
+                  ),
                   iconSize: 20,
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.all(8),
@@ -274,11 +272,7 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              widget.collection.icon,
-              color: Colors.white,
-              size: 16,
-            ),
+            Icon(widget.collection.icon, color: Colors.white, size: 16),
             SizedBox(width: size.width * 0.02),
             Text(
               '${widget.collection.nameArabic} • #${widget.hadith.ourHadithNumber}',
@@ -510,8 +504,10 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
       context.read<BookmarkCubit>().removeBookmark(widget.hadith.id);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n?.translate('hadith_library.bookmark_removed') ??
-              'Bookmark removed'),
+          content: Text(
+            l10n?.translate('hadith_library.bookmark_removed') ??
+                'Bookmark removed',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -520,8 +516,10 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
       context.read<BookmarkCubit>().addBookmark(hadithId: widget.hadith.id);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n?.translate('hadith_library.bookmark_added') ??
-              'Bookmark added'),
+          content: Text(
+            l10n?.translate('hadith_library.bookmark_added') ??
+                'Bookmark added',
+          ),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -530,7 +528,8 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
 
   void _handleCopy(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final text = '''
+    final text =
+        '''
 ${widget.hadith.hadithTextArabic}
 
 ${(widget.hadith.hadithTextEnglish?.isNotEmpty ?? false) ? widget.hadith.hadithTextEnglish! : ''}
@@ -543,15 +542,18 @@ ${widget.collection.nameArabic} • الحديث رقم ${widget.hadith.ourHadit
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(l10n?.translate('hadith_library.copied_to_clipboard') ??
-            'Copied to clipboard'),
+        content: Text(
+          l10n?.translate('hadith_library.copied_to_clipboard') ??
+              'Copied to clipboard',
+        ),
         duration: const Duration(seconds: 2),
       ),
     );
   }
 
   void _handleShare() {
-    final text = '''
+    final text =
+        '''
 ${widget.hadith.hadithTextArabic}
 
 ${(widget.hadith.hadithTextEnglish?.isNotEmpty ?? false) ? widget.hadith.hadithTextEnglish! : ''}
@@ -562,10 +564,7 @@ ${widget.collection.nameArabic} • الحديث رقم ${widget.hadith.ourHadit
 ''';
 
     SharePlus.instance.share(
-      ShareParams(
-        text: text,
-        subject: widget.collection.nameArabic,
-      ),
+      ShareParams(text: text, subject: widget.collection.nameArabic),
     );
   }
 }

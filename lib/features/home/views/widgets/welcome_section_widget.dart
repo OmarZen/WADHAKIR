@@ -31,8 +31,10 @@ class WelcomeSectionWidget extends StatelessWidget {
     // Responsive sizing based on platform
     final maxWidth = isDesktop ? 1400.0 : double.infinity;
     final horizontalPadding = _getResponsivePadding(size.width, isDesktop);
-    final verticalPadding =
-        _getResponsiveVerticalPadding(size.height, isDesktop);
+    final verticalPadding = _getResponsiveVerticalPadding(
+      size.height,
+      isDesktop,
+    );
     final borderRadius = isDesktop ? 24.0 : 32.0;
 
     return Center(
@@ -110,16 +112,19 @@ class WelcomeSectionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderRow(BuildContext context, Size size, bool isDesktop,
-      AppLocalizations? l10n, DateTime now) {
+  Widget _buildHeaderRow(
+    BuildContext context,
+    Size size,
+    bool isDesktop,
+    AppLocalizations? l10n,
+    DateTime now,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // Date Card - Clickable
-        Flexible(
-          child: _buildDateCard(context, size, isDesktop, l10n, now),
-        ),
+        Flexible(child: _buildDateCard(context, size, isDesktop, l10n, now)),
 
         SizedBox(width: isDesktop ? 20 : 12),
 
@@ -129,12 +134,20 @@ class WelcomeSectionWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDateCard(BuildContext context, Size size, bool isDesktop,
-      AppLocalizations? l10n, DateTime now) {
+  Widget _buildDateCard(
+    BuildContext context,
+    Size size,
+    bool isDesktop,
+    AppLocalizations? l10n,
+    DateTime now,
+  ) {
     final iconSize = _getResponsiveIconSize(size.width, isDesktop, small: true);
     final fontSize = _getResponsiveFontSize(size.width, isDesktop, scale: 0.85);
-    final smallFontSize =
-        _getResponsiveFontSize(size.width, isDesktop, scale: 0.7);
+    final smallFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.7,
+    );
     final cardPadding = isDesktop ? 16.0 : size.width * 0.03;
 
     return Material(
@@ -145,9 +158,8 @@ class WelcomeSectionWidget extends StatelessWidget {
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
-            builder: (context) => HijriCalendarBottomSheet(
-              initialDate: hijriDate,
-            ),
+            builder: (context) =>
+                HijriCalendarBottomSheet(initialDate: hijriDate),
           );
         },
         borderRadius: BorderRadius.circular(12),
@@ -198,7 +210,9 @@ class WelcomeSectionWidget extends StatelessWidget {
                       SizedBox(width: isDesktop ? 8 : 6),
                       Text(
                         AppDateUtils.getShortFormattedHijriDate(
-                            hijriDate, l10n),
+                          hijriDate,
+                          l10n,
+                        ),
                         style: TextStyle(
                           fontSize: smallFontSize,
                           fontWeight: FontWeight.w500,
@@ -263,15 +277,31 @@ class WelcomeSectionWidget extends StatelessWidget {
   }
 
   Widget _buildWelcomeSection(
-      BuildContext context, Size size, bool isDesktop, AppLocalizations? l10n) {
-    final titleFontSize =
-        _getResponsiveFontSize(size.width, isDesktop, scale: 1.8);
-    final subtitleFontSize =
-        _getResponsiveFontSize(size.width, isDesktop, scale: 0.9);
-    final quoteFontSize =
-        _getResponsiveFontSize(size.width, isDesktop, scale: 0.8);
-    final sourceFontSize =
-        _getResponsiveFontSize(size.width, isDesktop, scale: 0.65);
+    BuildContext context,
+    Size size,
+    bool isDesktop,
+    AppLocalizations? l10n,
+  ) {
+    final titleFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 1.8,
+    );
+    final subtitleFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.9,
+    );
+    final quoteFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.8,
+    );
+    final sourceFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.65,
+    );
     final iconSize = _getResponsiveIconSize(size.width, isDesktop, small: true);
 
     return Column(
@@ -369,8 +399,11 @@ class WelcomeSectionWidget extends StatelessWidget {
     return height * 0.015; // Mobile: 1.5% of height
   }
 
-  double _getResponsiveFontSize(double width, bool isDesktop,
-      {double scale = 1.0}) {
+  double _getResponsiveFontSize(
+    double width,
+    bool isDesktop, {
+    double scale = 1.0,
+  }) {
     if (isDesktop) {
       // Desktop: Fixed sizes with scale
       final baseSize = 16.0;
@@ -380,8 +413,11 @@ class WelcomeSectionWidget extends StatelessWidget {
     return (width * 0.035) * scale;
   }
 
-  double _getResponsiveIconSize(double width, bool isDesktop,
-      {bool small = false}) {
+  double _getResponsiveIconSize(
+    double width,
+    bool isDesktop, {
+    bool small = false,
+  }) {
     if (isDesktop) {
       return small ? 18.0 : 24.0;
     }
@@ -389,7 +425,9 @@ class WelcomeSectionWidget extends StatelessWidget {
   }
 
   Widget _buildMosqueBackground(
-      BuildContext context, UnsplashPhoto mosqueImage) {
+    BuildContext context,
+    UnsplashPhoto mosqueImage,
+  ) {
     // Check if it's a network image or local asset
     if (mosqueImage.imageUrl.startsWith('http')) {
       return CachedNetworkImage(
@@ -445,7 +483,9 @@ class WelcomeSectionWidget extends StatelessWidget {
         color: Colors.black.withValues(alpha: 0.1),
         colorBlendMode: BlendMode.darken,
         errorBuilder: (context, error, stackTrace) {
-          log('Error loading asset image: $error for path: ${mosqueImage.imageUrl}');
+          log(
+            'Error loading asset image: $error for path: ${mosqueImage.imageUrl}',
+          );
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -504,11 +544,7 @@ class _CompactIconButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(50),
           child: Padding(
             padding: EdgeInsets.all(padding),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: size,
-            ),
+            child: Icon(icon, color: Colors.white, size: size),
           ),
         ),
       ),

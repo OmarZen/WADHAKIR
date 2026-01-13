@@ -8,13 +8,16 @@ class RadioRepositoryImpl implements RadioRepository {
 
   @override
   Future<List<RadioStationModel>> fetchRadios({String? language}) async {
-    final uri = Uri.parse(_baseUrl).replace(queryParameters: {
-      if (language != null && language.isNotEmpty) 'language': language,
-    });
+    final uri = Uri.parse(_baseUrl).replace(
+      queryParameters: {
+        if (language != null && language.isNotEmpty) 'language': language,
+      },
+    );
 
-    final response = await http.get(uri, headers: {
-      'Accept': 'application/json',
-    });
+    final response = await http.get(
+      uri,
+      headers: {'Accept': 'application/json'},
+    );
 
     if (response.statusCode != 200) {
       throw Exception('Failed to load radios (${response.statusCode})');

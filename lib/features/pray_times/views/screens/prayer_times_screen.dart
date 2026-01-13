@@ -85,14 +85,18 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
     final theme = Theme.of(context);
 
     // Calculate animations
-    final fadeAnimation =
-        CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
+    final fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
 
     final slideAnimation = Tween(begin: const Offset(0, 0.3), end: Offset.zero)
-        .animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -124,10 +128,7 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
                   return Column(
                     children: [
                       // Custom header
-                      PrayerTimesHeader(
-                        size: size,
-                        cubit: cubit,
-                      ),
+                      PrayerTimesHeader(size: size, cubit: cubit),
 
                       // Main prayer times content
                       Expanded(
@@ -141,10 +142,7 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
                     ],
                   );
                 } else if (state is PrayerTimesError) {
-                  return PrayerTimesErrorWidget(
-                    size: size,
-                    state: state,
-                  );
+                  return PrayerTimesErrorWidget(size: size, state: state);
                 } else {
                   return loading_widget.PrayerTimesLoadingWidget(
                     size: size,

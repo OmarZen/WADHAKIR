@@ -45,9 +45,7 @@ void main() async {
   // Set system UI overlay style for edge-to-edge experience
   // Note: In Android 15+, color settings are deprecated for edge-to-edge.
   // Only icon brightness should be controlled.
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-  );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarIconBrightness: Brightness.dark,
@@ -100,17 +98,21 @@ void main() async {
   final setThemeModeUseCase = SetThemeModeUseCase(appSettingsRepository);
   final setLanguageUseCase = SetLanguageUseCase(appSettingsRepository);
 
-  final setNotificationSettingsUseCase =
-      SetNotificationSettingsUseCase(appSettingsRepository);
+  final setNotificationSettingsUseCase = SetNotificationSettingsUseCase(
+    appSettingsRepository,
+  );
 
   // Create prayer times use cases
   final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
-  final getPrayerTimesRangeUseCase =
-      GetPrayerTimesRangeUseCase(prayerTimesRepository);
-  final getCalculationMethodUseCase =
-      GetCalculationMethodUseCase(prayerTimesRepository);
-  final setCalculationMethodUseCase =
-      SetCalculationMethodUseCase(prayerTimesRepository);
+  final getPrayerTimesRangeUseCase = GetPrayerTimesRangeUseCase(
+    prayerTimesRepository,
+  );
+  final getCalculationMethodUseCase = GetCalculationMethodUseCase(
+    prayerTimesRepository,
+  );
+  final setCalculationMethodUseCase = SetCalculationMethodUseCase(
+    prayerTimesRepository,
+  );
 
   runApp(
     MyApp(
@@ -185,8 +187,9 @@ class MyApp extends StatelessWidget {
           lazy: false,
         ),
         BlocProvider<RadioCubit>(
-          create: (_) => RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
-            ..loadStations(),
+          create: (_) =>
+              RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
+                ..loadStations(),
           lazy: false,
         ),
         BlocProvider<PrayerTimesCubit>(

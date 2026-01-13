@@ -11,7 +11,7 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   final Uuid _uuid = const Uuid();
 
   BookmarkRepositoryImpl({BookmarkDatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? BookmarkDatabaseHelper.instance;
+    : _dbHelper = dbHelper ?? BookmarkDatabaseHelper.instance;
 
   // ===== Bookmark Operations =====
 
@@ -33,11 +33,7 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   @override
   Future<void> removeBookmark(String hadithId) async {
     final db = await _dbHelper.database;
-    await db.delete(
-      'bookmarks',
-      where: 'hadith_id = ?',
-      whereArgs: [hadithId],
-    );
+    await db.delete('bookmarks', where: 'hadith_id = ?', whereArgs: [hadithId]);
   }
 
   @override
@@ -55,9 +51,38 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   @override
   Future<List<BookmarkModel>> getAllBookmarks() async {
     final db = await _dbHelper.database;
-    final maps = await db.query(
-      'bookmarks',
-      orderBy: 'created_at DESC',
+    final maps = await db.query('bookmarks', orderBy: 'created_at DESC');
+
+    final bookmarks = <BookmarkModel>[];
+    for (final map in maps) {
+      final bookmark = BookmarkModel.fromMap(map);
+      final collections = await getCollectionsForBookmark(bookmark.id);
+      final tags = await getTagsForBookmark(bookmark.id);
+
+      bookmarks.add(
+        bookmark.copyWith(
+          collectionIds: collections.map((c) => c.id).toList(),
+          tags: tags,
+        ),
+      );
+    }
+
+    return bookmarks;
+  }
+
+  @override
+  Future<List<BookmarkModel>> getBookmarksByCollection(
+    String collectionId,
+  ) async {
+    final db = await _dbHelper.database;
+    final maps = await db.rawQuery(
+      '''
+      SELECT b.* FROM bookmarks b
+      INNER JOIN bookmark_collections bc ON b.id = bc.bookmark_id
+      WHERE bc.collection_id = ?
+      ORDER BY b.created_at DESC
+    ''',
+      [collectionId],
     );
 
     final bookmarks = <BookmarkModel>[];
@@ -66,36 +91,12 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
       final collections = await getCollectionsForBookmark(bookmark.id);
       final tags = await getTagsForBookmark(bookmark.id);
 
-      bookmarks.add(bookmark.copyWith(
-        collectionIds: collections.map((c) => c.id).toList(),
-        tags: tags,
-      ));
-    }
-
-    return bookmarks;
-  }
-
-  @override
-  Future<List<BookmarkModel>> getBookmarksByCollection(
-      String collectionId) async {
-    final db = await _dbHelper.database;
-    final maps = await db.rawQuery('''
-      SELECT b.* FROM bookmarks b
-      INNER JOIN bookmark_collections bc ON b.id = bc.bookmark_id
-      WHERE bc.collection_id = ?
-      ORDER BY b.created_at DESC
-    ''', [collectionId]);
-
-    final bookmarks = <BookmarkModel>[];
-    for (final map in maps) {
-      final bookmark = BookmarkModel.fromMap(map);
-      final collections = await getCollectionsForBookmark(bookmark.id);
-      final tags = await getTagsForBookmark(bookmark.id);
-
-      bookmarks.add(bookmark.copyWith(
-        collectionIds: collections.map((c) => c.id).toList(),
-        tags: tags,
-      ));
+      bookmarks.add(
+        bookmark.copyWith(
+          collectionIds: collections.map((c) => c.id).toList(),
+          tags: tags,
+        ),
+      );
     }
 
     return bookmarks;
@@ -118,10 +119,7 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
     final db = await _dbHelper.database;
     await db.update(
       'bookmarks',
-      {
-        'note': note,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      {'note': note, 'updated_at': DateTime.now().millisecondsSinceEpoch},
       where: 'hadith_id = ?',
       whereArgs: [hadithId],
     );
@@ -206,11 +204,7 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
     final collection = await getCollectionById(collectionId);
     if (collection?.isDefault == true) return;
 
-    await db.delete(
-      'collections',
-      where: 'id = ?',
-      whereArgs: [collectionId],
-    );
+    await db.delete('collections', where: 'id = ?', whereArgs: [collectionId]);
   }
 
   @override
@@ -245,27 +239,28 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
     if (maps.isEmpty) return null;
 
     final count = await getBookmarkCountForCollection(collectionId);
-    return UserCollectionModel.fromMap(maps.first)
-        .copyWith(bookmarkCount: count);
+    return UserCollectionModel.fromMap(
+      maps.first,
+    ).copyWith(bookmarkCount: count);
   }
 
   @override
   Future<void> addBookmarkToCollection(
-      String bookmarkId, String collectionId) async {
+    String bookmarkId,
+    String collectionId,
+  ) async {
     final db = await _dbHelper.database;
-    await db.insert(
-      'bookmark_collections',
-      {
-        'bookmark_id': bookmarkId,
-        'collection_id': collectionId,
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('bookmark_collections', {
+      'bookmark_id': bookmarkId,
+      'collection_id': collectionId,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   @override
   Future<void> removeBookmarkFromCollection(
-      String bookmarkId, String collectionId) async {
+    String bookmarkId,
+    String collectionId,
+  ) async {
     final db = await _dbHelper.database;
     await db.delete(
       'bookmark_collections',
@@ -276,14 +271,18 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
 
   @override
   Future<List<UserCollectionModel>> getCollectionsForBookmark(
-      String bookmarkId) async {
+    String bookmarkId,
+  ) async {
     final db = await _dbHelper.database;
-    final maps = await db.rawQuery('''
+    final maps = await db.rawQuery(
+      '''
       SELECT c.* FROM collections c
       INNER JOIN bookmark_collections bc ON c.id = bc.collection_id
       WHERE bc.bookmark_id = ?
       ORDER BY c.is_default DESC, c.name ASC
-    ''', [bookmarkId]);
+    ''',
+      [bookmarkId],
+    );
 
     return maps.map((map) => UserCollectionModel.fromMap(map)).toList();
   }
@@ -291,10 +290,13 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   @override
   Future<int> getBookmarkCountForCollection(String collectionId) async {
     final db = await _dbHelper.database;
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT COUNT(*) as count FROM bookmark_collections
       WHERE collection_id = ?
-    ''', [collectionId]);
+    ''',
+      [collectionId],
+    );
 
     return (result.first['count'] as int?) ?? 0;
   }
@@ -317,21 +319,14 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
     if (existingTags.isNotEmpty) {
       tagId = existingTags.first['id'] as String;
     } else {
-      await db.insert('tags', {
-        'id': tagId,
-        'name': tagName,
-      });
+      await db.insert('tags', {'id': tagId, 'name': tagName});
     }
 
     // Link bookmark to tag
-    await db.insert(
-      'bookmark_tags',
-      {
-        'bookmark_id': bookmarkId,
-        'tag_id': tagId,
-      },
-      conflictAlgorithm: ConflictAlgorithm.ignore,
-    );
+    await db.insert('bookmark_tags', {
+      'bookmark_id': bookmarkId,
+      'tag_id': tagId,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   @override
@@ -354,12 +349,15 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   @override
   Future<List<String>> getTagsForBookmark(String bookmarkId) async {
     final db = await _dbHelper.database;
-    final maps = await db.rawQuery('''
+    final maps = await db.rawQuery(
+      '''
       SELECT t.name FROM tags t
       INNER JOIN bookmark_tags bt ON t.id = bt.tag_id
       WHERE bt.bookmark_id = ?
       ORDER BY t.name ASC
-    ''', [bookmarkId]);
+    ''',
+      [bookmarkId],
+    );
 
     return maps.map((map) => map['name'] as String).toList();
   }
@@ -406,10 +404,12 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
     );
 
     return Map.fromEntries(
-      maps.map((map) => MapEntry(
-            map['hadith_id'] as String,
-            DateTime.fromMillisecondsSinceEpoch(map['last_read'] as int),
-          )),
+      maps.map(
+        (map) => MapEntry(
+          map['hadith_id'] as String,
+          DateTime.fromMillisecondsSinceEpoch(map['last_read'] as int),
+        ),
+      ),
     );
   }
 
@@ -437,10 +437,13 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   @override
   Future<int> getBookmarksCreatedInRange(DateTime start, DateTime end) async {
     final db = await _dbHelper.database;
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT COUNT(*) as count FROM bookmarks
       WHERE created_at >= ? AND created_at <= ?
-    ''', [start.millisecondsSinceEpoch, end.millisecondsSinceEpoch]);
+    ''',
+      [start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
+    );
 
     return (result.first['count'] as int?) ?? 0;
   }

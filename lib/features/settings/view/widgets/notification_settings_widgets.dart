@@ -30,8 +30,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -78,7 +78,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
                   SnackBar(
                     content: Text(
                       l10n?.translate(
-                              'settings.exact_alarm_permission_warning') ??
+                            'settings.exact_alarm_permission_warning',
+                          ) ??
                           'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
                     ),
                     action: SnackBarAction(
@@ -86,7 +87,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
                           l10n?.translate('settings.settings') ?? 'الإعدادات',
                       onPressed: () =>
                           AlarmPermissionHelper.showPermissionDeniedDialog(
-                              context),
+                            context,
+                          ),
                     ),
                   ),
                 );
@@ -138,8 +140,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -185,11 +187,13 @@ class NotificationSettingsWidgets extends StatelessWidget {
                     Expanded(
                       child: Text(
                         l10n?.translate(
-                                'settings.persistent_notification_mobile_only') ??
+                              'settings.persistent_notification_mobile_only',
+                            ) ??
                             'هذه الميزة متاحة على الهواتف فقط',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.7),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.7,
+                          ),
                           fontSize: 11,
                           fontStyle: FontStyle.italic,
                         ),
@@ -336,7 +340,9 @@ class NotificationSettingsWidgets extends StatelessWidget {
                       l10n?.translate('settings.notification_timing') ??
                           'وقت التنبيه',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -391,7 +397,9 @@ class NotificationSettingsWidgets extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                   ),
                   child: Text(
                     l10n?.translate('common.close') ?? 'إغلاق',
@@ -426,16 +434,21 @@ class NotificationSettingsWidgets extends StatelessWidget {
       onTap: () {
         final notificationSettings = settings.notificationSettings;
         final newSettings = notificationSettings.copyWith(
-          fajrSettings:
-              notificationSettings.fajrSettings.copyWith(timing: timing),
-          dhuhrSettings:
-              notificationSettings.dhuhrSettings.copyWith(timing: timing),
-          asrSettings:
-              notificationSettings.asrSettings.copyWith(timing: timing),
-          maghribSettings:
-              notificationSettings.maghribSettings.copyWith(timing: timing),
-          ishaSettings:
-              notificationSettings.ishaSettings.copyWith(timing: timing),
+          fajrSettings: notificationSettings.fajrSettings.copyWith(
+            timing: timing,
+          ),
+          dhuhrSettings: notificationSettings.dhuhrSettings.copyWith(
+            timing: timing,
+          ),
+          asrSettings: notificationSettings.asrSettings.copyWith(
+            timing: timing,
+          ),
+          maghribSettings: notificationSettings.maghribSettings.copyWith(
+            timing: timing,
+          ),
+          ishaSettings: notificationSettings.ishaSettings.copyWith(
+            timing: timing,
+          ),
         );
         cubit.setNotificationSettings(newSettings);
         Navigator.pop(context);
@@ -610,7 +623,9 @@ class NotificationSettingsWidgets extends StatelessWidget {
                       l10n?.translate('settings.customize_prayers') ??
                           'تخصيص كل صلاة',
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ],
@@ -672,7 +687,9 @@ class NotificationSettingsWidgets extends StatelessWidget {
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                   ),
                   child: Text(
                     l10n?.translate('common.close') ?? 'إغلاق',
@@ -723,8 +740,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(

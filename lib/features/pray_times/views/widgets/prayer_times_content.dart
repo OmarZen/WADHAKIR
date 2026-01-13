@@ -44,7 +44,8 @@ class PrayerTimesContent extends StatelessWidget {
 
     final now = DateTime.now();
     final selectedDate = state.selectedDate;
-    final isToday = selectedDate.year == now.year &&
+    final isToday =
+        selectedDate.year == now.year &&
         selectedDate.month == now.month &&
         selectedDate.day == now.day;
 
@@ -59,15 +60,29 @@ class PrayerTimesContent extends StatelessWidget {
             child: Column(
               children: [
                 _buildDateCard(
-                    context, selectedDate, isToday, prayerTimes, theme, isDark),
+                  context,
+                  selectedDate,
+                  isToday,
+                  prayerTimes,
+                  theme,
+                  isDark,
+                ),
                 SizedBox(height: size.height * 0.03),
 
                 // Prayer Times Grid or List based on screen width
                 size.width > 600
                     ? _buildPrayerTimesGrid(
-                        context, prayerTimes, isToday, isDark)
+                        context,
+                        prayerTimes,
+                        isToday,
+                        isDark,
+                      )
                     : _buildPrayerTimesList(
-                        context, prayerTimes, isToday, isDark),
+                        context,
+                        prayerTimes,
+                        isToday,
+                        isDark,
+                      ),
 
                 // Qiyam times info card
                 _buildQiyamTimesInfo(context, theme),
@@ -210,10 +225,12 @@ class PrayerTimesContent extends StatelessWidget {
     final asrColor = isDark ? darkPrayerAzkarColor : prayerAzkarColor;
     final maghribColor = isDark ? darkSleepAzkarColor : sleepAzkarColor;
     final ishaColor = isDark ? darkEveningAzkarColor : eveningAzkarColor;
-    final midnightColor =
-        isDark ? darkMidnightPrayerColor : midnightPrayerColor;
-    final lastThirdColor =
-        isDark ? darkLastThirdPrayerColor : lastThirdPrayerColor;
+    final midnightColor = isDark
+        ? darkMidnightPrayerColor
+        : midnightPrayerColor;
+    final lastThirdColor = isDark
+        ? darkLastThirdPrayerColor
+        : lastThirdPrayerColor;
 
     return GridView.count(
       crossAxisCount: 2,
@@ -286,7 +303,8 @@ class PrayerTimesContent extends StatelessWidget {
         PrayerCard(
           size: size,
           icon: Icons.bedtime_outlined,
-          prayerName: l10n?.translate('prayer_times.middle_of_the_night') ??
+          prayerName:
+              l10n?.translate('prayer_times.middle_of_the_night') ??
               'منتصف الليل',
           prayerTime: prayerTimes.formatTime(prayerTimes.middleOfTheNight),
           isNext: isToday && prayerTimes.nextPrayerName == 'منتصف الليل',
@@ -297,7 +315,8 @@ class PrayerTimesContent extends StatelessWidget {
         PrayerCard(
           size: size,
           icon: Icons.nightlight,
-          prayerName: l10n?.translate('prayer_times.last_third_of_the_night') ??
+          prayerName:
+              l10n?.translate('prayer_times.last_third_of_the_night') ??
               'الثلث الأخير من الليل',
           prayerTime: prayerTimes.formatTime(prayerTimes.lastThirdOfTheNight),
           isNext:
@@ -325,10 +344,12 @@ class PrayerTimesContent extends StatelessWidget {
     final asrColor = isDark ? darkPrayerAzkarColor : prayerAzkarColor;
     final maghribColor = isDark ? darkSleepAzkarColor : sleepAzkarColor;
     final ishaColor = isDark ? darkEveningAzkarColor : eveningAzkarColor;
-    final midnightColor =
-        isDark ? darkMidnightPrayerColor : midnightPrayerColor;
-    final lastThirdColor =
-        isDark ? darkLastThirdPrayerColor : lastThirdPrayerColor;
+    final midnightColor = isDark
+        ? darkMidnightPrayerColor
+        : midnightPrayerColor;
+    final lastThirdColor = isDark
+        ? darkLastThirdPrayerColor
+        : lastThirdPrayerColor;
 
     return Column(
       children: [
@@ -395,7 +416,8 @@ class PrayerTimesContent extends StatelessWidget {
         PrayerCard(
           size: size,
           icon: Icons.bedtime_outlined,
-          prayerName: l10n?.translate('prayer_times.middle_of_the_night') ??
+          prayerName:
+              l10n?.translate('prayer_times.middle_of_the_night') ??
               'منتصف الليل',
           prayerTime: prayerTimes.formatTime(prayerTimes.middleOfTheNight),
           isNext: isToday && prayerTimes.nextPrayerName == 'منتصف الليل',
@@ -406,7 +428,8 @@ class PrayerTimesContent extends StatelessWidget {
         PrayerCard(
           size: size,
           icon: Icons.nightlight,
-          prayerName: l10n?.translate('prayer_times.last_third_of_the_night') ??
+          prayerName:
+              l10n?.translate('prayer_times.last_third_of_the_night') ??
               'الثلث الأخير من الليل',
           prayerTime: prayerTimes.formatTime(prayerTimes.lastThirdOfTheNight),
           isNext:
@@ -427,14 +450,15 @@ class PrayerTimesContent extends StatelessWidget {
       builder: (context, snapshot) {
         String methodName =
             l10n?.translate('prayer_times.loading_calculation_method') ??
-                'جاري تحميل طريقة حساب مواقيت الصلاة';
+            'جاري تحميل طريقة حساب مواقيت الصلاة';
 
         if (snapshot.hasData && snapshot.data != null) {
           final calculationMethodName = CalculationMethodMapper.getMethodName(
             snapshot.data!,
           );
-          methodName =
-              CalculationMethodMapper.getArabicName(calculationMethodName);
+          methodName = CalculationMethodMapper.getArabicName(
+            calculationMethodName,
+          );
         }
 
         return Container(
@@ -476,8 +500,9 @@ class PrayerTimesContent extends StatelessWidget {
   Widget _buildQiyamTimesInfo(BuildContext context, ThemeData theme) {
     final l10n = context.l10n;
     final bool isDark = theme.brightness == Brightness.dark;
-    final qiyamInfoColor =
-        isDark ? const Color(0xFF4A148C) : const Color(0xFF7B1FA2);
+    final qiyamInfoColor = isDark
+        ? const Color(0xFF4A148C)
+        : const Color(0xFF7B1FA2);
 
     return Container(
       margin: EdgeInsets.only(top: size.height * 0.02),
@@ -534,8 +559,9 @@ class PrayerTimesContent extends StatelessWidget {
                           'أوقات مستحبة لقيام الليل والدعاء',
                       style: TextStyle(
                         fontSize: size.width * 0.028,
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                         fontFamily: 'Almarai',
                       ),
                     ),

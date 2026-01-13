@@ -53,9 +53,7 @@ class _BookmarksQuickAccessContent extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const BookmarksScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const BookmarksScreen()),
             );
           },
           child: Container(
@@ -124,8 +122,9 @@ class _BookmarksQuickAccessContent extends StatelessWidget {
                           Icon(
                             Icons.bookmark_outline_rounded,
                             size: 16,
-                            color: theme.textTheme.bodySmall?.color
-                                ?.withValues(alpha: 0.7),
+                            color: theme.textTheme.bodySmall?.color?.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                           SizedBox(width: size.width * 0.01),
                           Text(

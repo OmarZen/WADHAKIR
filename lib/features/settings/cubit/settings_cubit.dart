@@ -27,14 +27,14 @@ class SettingsCubit extends Cubit<SettingsState> {
     required SetLanguageUseCase setLanguageUseCase,
     required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
     PrayerNotificationService? notificationService,
-  })  : _getSettingsUseCase = getSettingsUseCase,
-        _getSettingsStreamUseCase = getSettingsStreamUseCase,
-        _setThemeModeUseCase = setThemeModeUseCase,
-        _setLanguageUseCase = setLanguageUseCase,
-        _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
-        _notificationService =
-            notificationService ?? PrayerNotificationService(),
-        super(const SettingsInitial()) {
+  }) : _getSettingsUseCase = getSettingsUseCase,
+       _getSettingsStreamUseCase = getSettingsStreamUseCase,
+       _setThemeModeUseCase = setThemeModeUseCase,
+       _setLanguageUseCase = setLanguageUseCase,
+       _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
+       _notificationService =
+           notificationService ?? PrayerNotificationService(),
+       super(const SettingsInitial()) {
     loadSettings();
     _listenToSettingsChanges();
   }
@@ -74,7 +74,8 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   /// Update notification settings
   Future<void> setNotificationSettings(
-      NotificationSettingsModel settings) async {
+    NotificationSettingsModel settings,
+  ) async {
     try {
       await _setNotificationSettingsUseCase(settings);
 
@@ -82,7 +83,8 @@ class SettingsCubit extends Cubit<SettingsState> {
       // This ensures old notifications are cancelled and new ones are created
       // Note: This requires prayer times to be loaded first
       debugPrint(
-          'Notification settings updated, rescheduling notifications...');
+        'Notification settings updated, rescheduling notifications...',
+      );
       // Settings will be updated through the stream listener
     } catch (e) {
       emit(SettingsError(e.toString()));
@@ -93,8 +95,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> toggleNotifications(bool enabled) async {
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;
-      final newNotificationSettings =
-          currentSettings.notificationSettings.copyWith(masterEnabled: enabled);
+      final newNotificationSettings = currentSettings.notificationSettings
+          .copyWith(masterEnabled: enabled);
 
       await setNotificationSettings(newNotificationSettings);
 
@@ -125,31 +127,36 @@ class SettingsCubit extends Cubit<SettingsState> {
         case 'الفجر':
           debugPrint('🔔 CUBIT: Updating Fajr settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
-              fajrSettings: prayerSettings);
+            fajrSettings: prayerSettings,
+          );
           break;
         case 'dhuhr':
         case 'الظهر':
           debugPrint('🔔 CUBIT: Updating Dhuhr settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
-              dhuhrSettings: prayerSettings);
+            dhuhrSettings: prayerSettings,
+          );
           break;
         case 'asr':
         case 'العصر':
           debugPrint('🔔 CUBIT: Updating Asr settings');
-          newNotificationSettings =
-              currentNotificationSettings.copyWith(asrSettings: prayerSettings);
+          newNotificationSettings = currentNotificationSettings.copyWith(
+            asrSettings: prayerSettings,
+          );
           break;
         case 'maghrib':
         case 'المغرب':
           debugPrint('🔔 CUBIT: Updating Maghrib settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
-              maghribSettings: prayerSettings);
+            maghribSettings: prayerSettings,
+          );
           break;
         case 'isha':
         case 'العشاء':
           debugPrint('🔔 CUBIT: Updating Isha settings');
           newNotificationSettings = currentNotificationSettings.copyWith(
-              ishaSettings: prayerSettings);
+            ishaSettings: prayerSettings,
+          );
           break;
         default:
           debugPrint('🔔 CUBIT: Unknown prayer name: $prayerName');
@@ -161,7 +168,8 @@ class SettingsCubit extends Cubit<SettingsState> {
       debugPrint('🔔 CUBIT: setNotificationSettings completed');
     } else {
       debugPrint(
-          '🔔 CUBIT: State is not SettingsLoaded, current state: $state');
+        '🔔 CUBIT: State is not SettingsLoaded, current state: $state',
+      );
     }
   }
 
@@ -178,24 +186,31 @@ class SettingsCubit extends Cubit<SettingsState> {
 
       // Update all 4 prayers at once
       final newNotificationSettings = notificationSettings.copyWith(
-        dhuhrSettings: notificationSettings.dhuhrSettings
-            .copyWith(customSoundPath: customSoundPath),
-        asrSettings: notificationSettings.asrSettings
-            .copyWith(customSoundPath: customSoundPath),
-        maghribSettings: notificationSettings.maghribSettings
-            .copyWith(customSoundPath: customSoundPath),
-        ishaSettings: notificationSettings.ishaSettings
-            .copyWith(customSoundPath: customSoundPath),
+        dhuhrSettings: notificationSettings.dhuhrSettings.copyWith(
+          customSoundPath: customSoundPath,
+        ),
+        asrSettings: notificationSettings.asrSettings.copyWith(
+          customSoundPath: customSoundPath,
+        ),
+        maghribSettings: notificationSettings.maghribSettings.copyWith(
+          customSoundPath: customSoundPath,
+        ),
+        ishaSettings: notificationSettings.ishaSettings.copyWith(
+          customSoundPath: customSoundPath,
+        ),
       );
 
       debugPrint(
-          '🔔 CUBIT: Calling setNotificationSettings (single update)...');
+        '🔔 CUBIT: Calling setNotificationSettings (single update)...',
+      );
       await setNotificationSettings(newNotificationSettings);
       debugPrint(
-          '🔔 CUBIT: All regular prayers updated successfully with sound: $customSoundPath');
+        '🔔 CUBIT: All regular prayers updated successfully with sound: $customSoundPath',
+      );
     } else {
       debugPrint(
-          '🔔 CUBIT: State is not SettingsLoaded, current state: $state');
+        '🔔 CUBIT: State is not SettingsLoaded, current state: $state',
+      );
     }
   }
 
@@ -240,7 +255,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   /// Toggle Thursday fasting notification
   Future<void> toggleThursdayFasting(bool enabled) async {
     debugPrint(
-        '🍽️ CUBIT: toggleThursdayFasting called with enabled: $enabled');
+      '🍽️ CUBIT: toggleThursdayFasting called with enabled: $enabled',
+    );
 
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;
@@ -287,7 +303,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   /// Toggle fasting notification vibration
   Future<void> toggleFastingVibration(bool enabled) async {
     debugPrint(
-        '🍽️ CUBIT: toggleFastingVibration called with enabled: $enabled');
+      '🍽️ CUBIT: toggleFastingVibration called with enabled: $enabled',
+    );
 
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;

@@ -54,11 +54,14 @@ abstract class BookmarkRepository {
 
   /// Remove bookmark from collection
   Future<void> removeBookmarkFromCollection(
-      String bookmarkId, String collectionId);
+    String bookmarkId,
+    String collectionId,
+  );
 
   /// Get collections for a bookmark
   Future<List<UserCollectionModel>> getCollectionsForBookmark(
-      String bookmarkId);
+    String bookmarkId,
+  );
 
   /// Get bookmark count for a collection
   Future<int> getBookmarkCountForCollection(String collectionId);

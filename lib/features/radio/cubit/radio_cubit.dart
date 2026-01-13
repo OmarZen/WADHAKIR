@@ -29,7 +29,7 @@ class RadioCubit extends Cubit<RadioState> {
         final isPlaying = playerState.playing;
         final isLoading =
             playerState.processingState == ProcessingState.loading ||
-                playerState.processingState == ProcessingState.buffering;
+            playerState.processingState == ProcessingState.buffering;
 
         // Only emit if state actually changed
         if (currentState.isPlaying != isPlaying ||
@@ -256,7 +256,7 @@ class RadioCubit extends Cubit<RadioState> {
     if (currentState.stations.isEmpty) return;
     final safeIndex =
         (index % currentState.stations.length + currentState.stations.length) %
-            currentState.stations.length;
+        currentState.stations.length;
     final target = currentState.stations[safeIndex];
     await playStation(target);
   }
@@ -319,7 +319,8 @@ class RadioCubit extends Cubit<RadioState> {
       final ms = pos.inMilliseconds;
       final vol = (currentVolume ?? 0.5).clamp(0.0, 1.0);
       // Multi-frequency composite for a natural feel
-      final v = 0.5 +
+      final v =
+          0.5 +
           0.25 * math.sin(ms * 0.008) +
           0.15 * math.sin(ms * 0.014 + 1.3) +
           0.10 * math.sin(ms * 0.021 + 2.6);

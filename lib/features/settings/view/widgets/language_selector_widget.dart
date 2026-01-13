@@ -64,8 +64,9 @@ class LanguageSelectorWidget extends StatelessWidget {
                           ? 'العربية 🇸🇦'
                           : 'English 🇺🇸',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                         fontSize: 12,
                       ),
                     ),
@@ -202,10 +203,7 @@ class LanguageSelectorWidget extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Text(
-                flag,
-                style: const TextStyle(fontSize: 28),
-              ),
+              Text(flag, style: const TextStyle(fontSize: 28)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -214,16 +212,18 @@ class LanguageSelectorWidget extends StatelessWidget {
                     Text(
                       title,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
                         fontSize: 14,
                       ),
                     ),
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                         fontSize: 12,
                       ),
                     ),

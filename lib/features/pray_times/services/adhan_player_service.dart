@@ -46,21 +46,24 @@ class AdhanPlayerService {
 
       // Configure audio session for alarm/notification
       final session = await AudioSession.instance;
-      await session.configure(const AudioSessionConfiguration(
-        avAudioSessionCategory: AVAudioSessionCategory.playback,
-        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
-        avAudioSessionMode: AVAudioSessionMode.defaultMode,
-        avAudioSessionRouteSharingPolicy:
-            AVAudioSessionRouteSharingPolicy.defaultPolicy,
-        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-        androidAudioAttributes: AndroidAudioAttributes(
-          contentType: AndroidAudioContentType.sonification,
-          flags: AndroidAudioFlags.none,
-          usage: AndroidAudioUsage.alarm, // Use alarm volume
+      await session.configure(
+        const AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playback,
+          avAudioSessionCategoryOptions:
+              AVAudioSessionCategoryOptions.duckOthers,
+          avAudioSessionMode: AVAudioSessionMode.defaultMode,
+          avAudioSessionRouteSharingPolicy:
+              AVAudioSessionRouteSharingPolicy.defaultPolicy,
+          avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+          androidAudioAttributes: AndroidAudioAttributes(
+            contentType: AndroidAudioContentType.sonification,
+            flags: AndroidAudioFlags.none,
+            usage: AndroidAudioUsage.alarm, // Use alarm volume
+          ),
+          androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+          androidWillPauseWhenDucked: false,
         ),
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-        androidWillPauseWhenDucked: false,
-      ));
+      );
 
       // Load and play the sound
       await _audioPlayer!.setAsset(soundPath);
@@ -86,7 +89,8 @@ class AdhanPlayerService {
       });
 
       debugPrint(
-          '🔔 Adhan playing - Press volume buttons or flip phone to stop');
+        '🔔 Adhan playing - Press volume buttons or flip phone to stop',
+      );
       debugPrint('🔔 ═══════════════════════════════════════════════════');
     } catch (e) {
       debugPrint('❌ Error playing adhan: $e');
@@ -124,29 +128,31 @@ class AdhanPlayerService {
       // Track face-up/face-down orientation
       bool? wasFaceUp;
 
-      _accelerometerSubscription = accelerometerEventStream(
-              samplingPeriod: SensorInterval.normalInterval)
-          .listen((AccelerometerEvent event) {
-        // Z-axis: positive = face up, negative = face down
-        // When phone is face up: z ≈ 9.8 (gravity)
-        // When phone is face down: z ≈ -9.8
-        final double z = event.z;
+      _accelerometerSubscription =
+          accelerometerEventStream(
+            samplingPeriod: SensorInterval.normalInterval,
+          ).listen((AccelerometerEvent event) {
+            // Z-axis: positive = face up, negative = face down
+            // When phone is face up: z ≈ 9.8 (gravity)
+            // When phone is face down: z ≈ -9.8
+            final double z = event.z;
 
-        // Determine current orientation (with threshold to avoid jitter)
-        bool isFaceUp = z > 5.0; // Phone facing up
-        bool isFaceDown = z < -5.0; // Phone facing down
+            // Determine current orientation (with threshold to avoid jitter)
+            bool isFaceUp = z > 5.0; // Phone facing up
+            bool isFaceDown = z < -5.0; // Phone facing down
 
-        if (isFaceUp && wasFaceUp == null) {
-          // Initial state - phone is face up
-          wasFaceUp = true;
-          debugPrint('🔔 Phone is face up (z: ${z.toStringAsFixed(2)})');
-        } else if (isFaceDown && wasFaceUp == true) {
-          // Phone flipped from face-up to face-down
-          debugPrint(
-              '🔔 Phone flipped face down (z: ${z.toStringAsFixed(2)}) - stopping adhan');
-          stopAdhan();
-        }
-      });
+            if (isFaceUp && wasFaceUp == null) {
+              // Initial state - phone is face up
+              wasFaceUp = true;
+              debugPrint('🔔 Phone is face up (z: ${z.toStringAsFixed(2)})');
+            } else if (isFaceDown && wasFaceUp == true) {
+              // Phone flipped from face-up to face-down
+              debugPrint(
+                '🔔 Phone flipped face down (z: ${z.toStringAsFixed(2)}) - stopping adhan',
+              );
+              stopAdhan();
+            }
+          });
 
       debugPrint('🔔 Flip-to-mute listener activated');
     } catch (e) {

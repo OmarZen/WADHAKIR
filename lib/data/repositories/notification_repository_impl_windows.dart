@@ -33,9 +33,7 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
       // Initialize WindowsNotification
       // Setting applicationId to null allows Windows to use the app's own icon
       // This will show the Flutter app icon instead of PowerShell icon
-      _winNotifyPlugin = WindowsNotification(
-        applicationId: null,
-      );
+      _winNotifyPlugin = WindowsNotification(applicationId: null);
 
       _isInitialized = true;
       debugPrint('✅ Windows Notification Service initialized');
@@ -147,7 +145,8 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
     });
 
     debugPrint(
-        '⏰ Scheduled Windows notification for $prayerName at $notificationTime');
+      '⏰ Scheduled Windows notification for $prayerName at $notificationTime',
+    );
   }
 
   @override
@@ -165,7 +164,8 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
 
     if (!settings.masterEnabled) {
       debugPrint(
-          '⚠️  Master notification toggle is OFF - no notifications scheduled');
+        '⚠️  Master notification toggle is OFF - no notifications scheduled',
+      );
       debugPrint('🔔 ═══════════════════════════════════════════════════');
       return;
     }
@@ -211,13 +211,16 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
     final String notificationId = _getNotificationId(prayerName);
 
     // Remove from scheduled notifications
-    _scheduledNotifications
-        .removeWhere((key, value) => value['id'] == notificationId);
+    _scheduledNotifications.removeWhere(
+      (key, value) => value['id'] == notificationId,
+    );
 
     // Remove from Windows Action Center
     try {
       await _winNotifyPlugin.removeNotificationId(
-          notificationId, 'prayer_notifications');
+        notificationId,
+        'prayer_notifications',
+      );
       debugPrint('🗑️  Cancelled notification for $prayerName');
     } catch (e) {
       debugPrint('⚠️  Error cancelling notification for $prayerName: $e');
@@ -288,7 +291,9 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
   Future<void> hidePersistentNotification() async {
     try {
       await _winNotifyPlugin.removeNotificationId(
-          _persistentId, 'persistent_prayer');
+        _persistentId,
+        'persistent_prayer',
+      );
       debugPrint('🗑️  Persistent notification removed');
     } catch (e) {
       debugPrint('⚠️  Error removing persistent notification: $e');
@@ -319,8 +324,9 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
 
     // Calculate next occurrence
     final now = DateTime.now();
-    final targetWeekday =
-        dayName.toLowerCase() == 'monday' ? DateTime.monday : DateTime.thursday;
+    final targetWeekday = dayName.toLowerCase() == 'monday'
+        ? DateTime.monday
+        : DateTime.thursday;
 
     int daysUntilTarget = targetWeekday - now.weekday;
     if (daysUntilTarget <= 0) {
@@ -344,7 +350,8 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
     );
 
     debugPrint(
-        '🍽️  Scheduling fasting notification for $dayName at $nextNotificationDate');
+      '🍽️  Scheduling fasting notification for $dayName at $nextNotificationDate',
+    );
 
     // Schedule using Future.delayed and repeat weekly
     _scheduleFastingNotificationRecurring(
@@ -414,7 +421,9 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
 
     try {
       await _winNotifyPlugin.removeNotificationId(
-          notificationId, 'fasting_reminders');
+        notificationId,
+        'fasting_reminders',
+      );
       debugPrint('🗑️  Cancelled fasting notification for $dayName');
     } catch (e) {
       debugPrint('⚠️  Error cancelling fasting notification: $e');
@@ -458,11 +467,7 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
     required String group,
   }) async {
     try {
-      final message = NotificationMessage.fromPluginTemplate(
-        id,
-        title,
-        body,
-      );
+      final message = NotificationMessage.fromPluginTemplate(id, title, body);
 
       await _winNotifyPlugin.showNotificationPluginTemplate(message);
       debugPrint('📬 Windows notification sent: $title');

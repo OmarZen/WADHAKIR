@@ -15,10 +15,10 @@ class HadithLibraryCubit extends Cubit<HadithLibraryState> {
     required GetHadithBookUseCase getHadithBookUseCase,
     required GetBooksListUseCase getBooksListUseCase,
     required BookmarkRepository bookmarkRepository,
-  })  : _getHadithBookUseCase = getHadithBookUseCase,
-        _getBooksListUseCase = getBooksListUseCase,
-        _bookmarkRepository = bookmarkRepository,
-        super(const HadithLibraryInitial());
+  }) : _getHadithBookUseCase = getHadithBookUseCase,
+       _getBooksListUseCase = getBooksListUseCase,
+       _bookmarkRepository = bookmarkRepository,
+       super(const HadithLibraryInitial());
 
   /// Load all collections (home screen)
   Future<void> loadCollections() async {
@@ -29,10 +29,12 @@ class HadithLibraryCubit extends Cubit<HadithLibraryState> {
       final popularCollections =
           HadithCollectionMetadata.getPopularCollections();
 
-      emit(HadithCollectionsLoaded(
-        collections: allCollections,
-        popularCollections: popularCollections,
-      ));
+      emit(
+        HadithCollectionsLoaded(
+          collections: allCollections,
+          popularCollections: popularCollections,
+        ),
+      );
     } catch (e) {
       emit(HadithLibraryError('Failed to load collections: ${e.toString()}'));
     }
@@ -51,11 +53,13 @@ class HadithLibraryCubit extends Cubit<HadithLibraryState> {
 
       final books = await _getBooksListUseCase(collectionId);
 
-      emit(HadithBooksLoaded(
-        collectionId: collectionId,
-        collection: collection,
-        books: books,
-      ));
+      emit(
+        HadithBooksLoaded(
+          collectionId: collectionId,
+          collection: collection,
+          books: books,
+        ),
+      );
     } catch (e) {
       emit(HadithLibraryError('Failed to load books: ${e.toString()}'));
     }
@@ -83,13 +87,15 @@ class HadithLibraryCubit extends Cubit<HadithLibraryState> {
 
       final bookName = hadiths.first.bookName;
 
-      emit(HadithsLoaded(
-        collectionId: collectionId,
-        bookNumber: bookNumber,
-        bookName: bookName,
-        hadiths: hadiths,
-        activeLanguages: languages,
-      ));
+      emit(
+        HadithsLoaded(
+          collectionId: collectionId,
+          bookNumber: bookNumber,
+          bookName: bookName,
+          hadiths: hadiths,
+          activeLanguages: languages,
+        ),
+      );
     } catch (e) {
       emit(HadithLibraryError('Failed to load hadiths: ${e.toString()}'));
     }
@@ -129,12 +135,14 @@ class HadithLibraryCubit extends Cubit<HadithLibraryState> {
       final availableLanguages =
           collectionMetadata?.availableLanguages ?? ['arabic', 'english'];
 
-      emit(HadithReaderLoaded(
-        hadith: hadith,
-        availableLanguages: availableLanguages,
-        activeLanguages: languages,
-        isBookmarked: isBookmarked,
-      ));
+      emit(
+        HadithReaderLoaded(
+          hadith: hadith,
+          availableLanguages: availableLanguages,
+          activeLanguages: languages,
+          isBookmarked: isBookmarked,
+        ),
+      );
 
       // Record as read
       await _bookmarkRepository.recordRead(hadithId);
@@ -169,15 +177,18 @@ class HadithLibraryCubit extends Cubit<HadithLibraryState> {
   Future<void> refreshBookmarkStatus() async {
     final currentState = state;
     if (currentState is HadithReaderLoaded) {
-      final isBookmarked =
-          await _bookmarkRepository.isBookmarked(currentState.hadith.id);
+      final isBookmarked = await _bookmarkRepository.isBookmarked(
+        currentState.hadith.id,
+      );
 
-      emit(HadithReaderLoaded(
-        hadith: currentState.hadith,
-        availableLanguages: currentState.availableLanguages,
-        activeLanguages: currentState.activeLanguages,
-        isBookmarked: isBookmarked,
-      ));
+      emit(
+        HadithReaderLoaded(
+          hadith: currentState.hadith,
+          availableLanguages: currentState.availableLanguages,
+          activeLanguages: currentState.activeLanguages,
+          isBookmarked: isBookmarked,
+        ),
+      );
     }
   }
 }

@@ -13,10 +13,7 @@ import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.da
 class AzkarCategoryDetailsScreen extends StatefulWidget {
   final AzkarCategory category;
 
-  const AzkarCategoryDetailsScreen({
-    super.key,
-    required this.category,
-  });
+  const AzkarCategoryDetailsScreen({super.key, required this.category});
 
   @override
   State<AzkarCategoryDetailsScreen> createState() =>
@@ -120,9 +117,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
     final theme = Theme.of(context);
 
     return BlocProvider(
-      create: (context) => AzkarCubit(
-        azkarRepository: AzkarRepositoryImpl(),
-      )..selectCategory(widget.category),
+      create: (context) =>
+          AzkarCubit(azkarRepository: AzkarRepositoryImpl())
+            ..selectCategory(widget.category),
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: _buildBody(theme),
@@ -137,16 +134,17 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
           return _buildCategoryContent(context, state, theme);
         }
         return Center(
-          child: CircularProgressIndicator(
-            color: theme.colorScheme.primary,
-          ),
+          child: CircularProgressIndicator(color: theme.colorScheme.primary),
         );
       },
     );
   }
 
   Widget _buildCategoryContent(
-      BuildContext context, AzkarCategorySelected state, ThemeData theme) {
+    BuildContext context,
+    AzkarCategorySelected state,
+    ThemeData theme,
+  ) {
     final size = MediaQuery.of(context).size;
     if (state.category.items.isEmpty) {
       return Center(
@@ -189,8 +187,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
@@ -204,8 +203,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -230,8 +230,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                               Text(
                                 '${state.category.items.length} ${context.l10n?.translate('azkar.items') ?? 'أذكار'}',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
                             ],
@@ -248,10 +249,13 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -268,7 +272,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
-                              value: ((_currentPage + 1) /
+                              value:
+                                  ((_currentPage + 1) /
                                   state.category.items.length),
                               backgroundColor: theme.colorScheme.primary
                                   .withValues(alpha: 0.1),
@@ -288,16 +293,20 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: _autoAdvance
-                                  ? theme.colorScheme.primary
-                                      .withValues(alpha: 0.1)
+                                  ? theme.colorScheme.primary.withValues(
+                                      alpha: 0.1,
+                                    )
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.3),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
                             ),
                             child: Row(
@@ -355,13 +364,16 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                         return FadeTransition(
                           opacity: _animationController,
                           child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.1),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: _animationController,
-                              curve: Curves.easeOut,
-                            )),
+                            position:
+                                Tween<Offset>(
+                                  begin: const Offset(0, 0.1),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: _animationController,
+                                    curve: Curves.easeOut,
+                                  ),
+                                ),
                             child: _buildAdhkarPage(context, item, theme),
                           ),
                         );
@@ -381,7 +393,10 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
   }
 
   Widget _buildAdhkarPage(
-      BuildContext context, AdhkarItem item, ThemeData theme) {
+    BuildContext context,
+    AdhkarItem item,
+    ThemeData theme,
+  ) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -416,8 +431,10 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                 if (item.count > 1) ...[
                   const SizedBox(height: 16),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -454,7 +471,10 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
   }
 
   Widget _buildBottomPanel(
-      BuildContext context, AzkarCategorySelected state, ThemeData theme) {
+    BuildContext context,
+    AzkarCategorySelected state,
+    ThemeData theme,
+  ) {
     final currentItem = state.category.items[_currentPage];
     final maxCount = currentItem.count > 0 ? currentItem.count : 1;
     final progress = _repeatCount / maxCount;
@@ -533,8 +553,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                             '${context.l10n?.translate('azkar.from') ?? 'من'} $maxCount',
                             style: TextStyle(
                               fontSize: 14,
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.6),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                             ),
                           ),
                       ],
@@ -598,11 +619,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
+            Icon(icon, color: theme.colorScheme.primary, size: 24),
             const SizedBox(height: 4),
             Text(
               label,
@@ -618,8 +635,11 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
     );
   }
 
-  void _copyTextToClipboard(BuildContext context, AzkarCategorySelected state,
-      ThemeData theme) async {
+  void _copyTextToClipboard(
+    BuildContext context,
+    AzkarCategorySelected state,
+    ThemeData theme,
+  ) async {
     final text = state.category.items[_currentPage].text;
     await Clipboard.setData(ClipboardData(text: text));
 

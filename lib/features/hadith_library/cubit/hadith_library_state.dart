@@ -67,8 +67,13 @@ class HadithsLoaded extends HadithLibraryState {
   });
 
   @override
-  List<Object?> get props =>
-      [collectionId, bookNumber, bookName, hadiths, activeLanguages];
+  List<Object?> get props => [
+    collectionId,
+    bookNumber,
+    bookName,
+    hadiths,
+    activeLanguages,
+  ];
 }
 
 /// Single hadith loaded for reading
@@ -86,8 +91,12 @@ class HadithReaderLoaded extends HadithLibraryState {
   });
 
   @override
-  List<Object?> get props =>
-      [hadith, availableLanguages, activeLanguages, isBookmarked];
+  List<Object?> get props => [
+    hadith,
+    availableLanguages,
+    activeLanguages,
+    isBookmarked,
+  ];
 }
 
 /// Error state

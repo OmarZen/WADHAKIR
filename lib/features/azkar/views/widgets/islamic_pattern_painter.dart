@@ -5,10 +5,7 @@ class IslamicPatternPainter extends CustomPainter {
   final Color color;
   final double gridSize;
 
-  IslamicPatternPainter({
-    required this.color,
-    this.gridSize = 40.0,
-  });
+  IslamicPatternPainter({required this.color, this.gridSize = 40.0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -37,7 +34,12 @@ class IslamicPatternPainter extends CustomPainter {
   }
 
   void _drawStar(
-      Canvas canvas, Paint paint, double cx, double cy, double radius) {
+    Canvas canvas,
+    Paint paint,
+    double cx,
+    double cy,
+    double radius,
+  ) {
     final starPath = Path();
     final vertices = 8; // 8-pointed star
 
@@ -59,7 +61,12 @@ class IslamicPatternPainter extends CustomPainter {
   }
 
   void _drawOctagon(
-      Canvas canvas, Paint paint, double cx, double cy, double radius) {
+    Canvas canvas,
+    Paint paint,
+    double cx,
+    double cy,
+    double radius,
+  ) {
     final path = Path();
     final sides = 8;
 

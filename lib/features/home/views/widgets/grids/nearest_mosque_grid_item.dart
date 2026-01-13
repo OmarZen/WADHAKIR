@@ -28,7 +28,9 @@ class NearestMosqueGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: EdgeInsets.symmetric(
-              horizontal: padding, vertical: verticalPadding),
+            horizontal: padding,
+            vertical: verticalPadding,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
@@ -100,8 +102,10 @@ class NearestMosqueGridItem extends StatelessWidget {
 
     // Show loading indicator
     if (!context.mounted) return;
-    _showLoadingSnackBar(context,
-        l10n?.translate('home.getting_location') ?? 'جارٍ الحصول على موقعك...');
+    _showLoadingSnackBar(
+      context,
+      l10n?.translate('home.getting_location') ?? 'جارٍ الحصول على موقعك...',
+    );
 
     try {
       // Get current position
@@ -120,9 +124,7 @@ class NearestMosqueGridItem extends StatelessWidget {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (context) => MosqueListBottomSheet(
-          userPosition: position,
-        ),
+        builder: (context) => MosqueListBottomSheet(userPosition: position),
       );
     } catch (e) {
       if (!context.mounted) return;
@@ -143,9 +145,7 @@ class NearestMosqueGridItem extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n?.translate('home.location_services_disabled') ??
               'خدمات الموقع معطلة',
@@ -159,9 +159,7 @@ class NearestMosqueGridItem extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n?.translate('common.cancel') ?? 'إلغاء',
-            ),
+            child: Text(l10n?.translate('common.cancel') ?? 'إلغاء'),
           ),
           FilledButton(
             onPressed: () {
@@ -185,9 +183,7 @@ class NearestMosqueGridItem extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n?.translate('home.location_permission_denied') ??
               'تم رفض إذن الموقع',
@@ -201,9 +197,7 @@ class NearestMosqueGridItem extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n?.translate('common.ok') ?? 'موافق',
-            ),
+            child: Text(l10n?.translate('common.ok') ?? 'موافق'),
           ),
         ],
       ),
@@ -218,9 +212,7 @@ class NearestMosqueGridItem extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n?.translate('home.location_permission_denied_permanently') ??
               'تم رفض إذن الموقع بشكل دائم',
@@ -228,16 +220,15 @@ class NearestMosqueGridItem extends StatelessWidget {
         ),
         content: Text(
           l10n?.translate(
-                  'home.location_permission_denied_permanently_message') ??
+                'home.location_permission_denied_permanently_message',
+              ) ??
               'يرجى الذهاب إلى الإعدادات وتفعيل إذن الموقع للعثور على أقرب مسجد',
           style: theme.textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n?.translate('common.cancel') ?? 'إلغاء',
-            ),
+            child: Text(l10n?.translate('common.cancel') ?? 'إلغاء'),
           ),
           FilledButton(
             onPressed: () {

@@ -6,10 +6,7 @@ import 'package:wadhakir/core/localization/app_localizations.dart';
 class HijriCalendarBottomSheet extends StatefulWidget {
   final HijriDateTime initialDate;
 
-  const HijriCalendarBottomSheet({
-    super.key,
-    required this.initialDate,
-  });
+  const HijriCalendarBottomSheet({super.key, required this.initialDate});
 
   @override
   State<HijriCalendarBottomSheet> createState() =>
@@ -49,8 +46,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
     setState(() {
       if (args.value is DateTime) {
         _selectedGregorianDate = args.value;
-        _selectedHijriDate =
-            HijriDateTime.fromDateTime(_selectedGregorianDate!);
+        _selectedHijriDate = HijriDateTime.fromDateTime(
+          _selectedGregorianDate!,
+        );
       }
     });
   }
@@ -186,8 +184,10 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
             if (_selectedHijriDate != null && _selectedGregorianDate != null)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
@@ -223,8 +223,9 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
                       child: Icon(
                         Icons.arrow_forward,
                         size: 16,
-                        color: theme.textTheme.bodyMedium?.color
-                            ?.withValues(alpha: 0.5),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                     // Gregorian Date
@@ -335,10 +336,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
               color: theme.colorScheme.primary,
             ),
             todayCellDecoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.primary,
-                width: 2,
-              ),
+              border: Border.all(color: theme.colorScheme.primary, width: 2),
               shape: BoxShape.circle,
             ),
           ),
@@ -361,7 +359,10 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
   }
 
   Widget _buildGregorianCalendar(
-      ThemeData theme, bool isDark, AppLocalizations? l10n) {
+    ThemeData theme,
+    bool isDark,
+    AppLocalizations? l10n,
+  ) {
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -413,10 +414,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
               color: theme.colorScheme.primary,
             ),
             todayCellDecoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.primary,
-                width: 2,
-              ),
+              border: Border.all(color: theme.colorScheme.primary, width: 2),
               shape: BoxShape.circle,
             ),
           ),

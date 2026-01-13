@@ -40,8 +40,9 @@ class _QiblaScreenState extends State<QiblaScreen>
     // Initialize synchronously to avoid late initialization error
     qiblaRepository = QiblaRepositoryImpl();
     getQiblaDirectionUseCase = GetQiblaDirectionUseCase(qiblaRepository);
-    requestQiblaPermissionsUseCase =
-        RequestQiblaPermissionsUseCase(qiblaRepository);
+    requestQiblaPermissionsUseCase = RequestQiblaPermissionsUseCase(
+      qiblaRepository,
+    );
     qiblaCubit = QiblaCubit(
       getQiblaDirectionUseCase,
       requestQiblaPermissionsUseCase,
@@ -118,10 +119,14 @@ class _QiblaScreenState extends State<QiblaScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n?.translate('campus.location_service_disabled') ??
-            'خدمة الموقع معطلة'),
-        content: Text(l10n?.translate('campus.enable_location_service') ??
-            'يرجى تفعيل خدمة الموقع لتحديد اتجاه القبلة'),
+        title: Text(
+          l10n?.translate('campus.location_service_disabled') ??
+              'خدمة الموقع معطلة',
+        ),
+        content: Text(
+          l10n?.translate('campus.enable_location_service') ??
+              'يرجى تفعيل خدمة الموقع لتحديد اتجاه القبلة',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -145,14 +150,18 @@ class _QiblaScreenState extends State<QiblaScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-            l10n?.translate('campus.permission_required') ?? 'الإذن مطلوب'),
-        content: Text(l10n?.translate('campus.location_permission_required') ??
-            'يحتاج التطبيق إلى إذن الموقع لتحديد اتجاه القبلة'),
+          l10n?.translate('campus.permission_required') ?? 'الإذن مطلوب',
+        ),
+        content: Text(
+          l10n?.translate('campus.location_permission_required') ??
+              'يحتاج التطبيق إلى إذن الموقع لتحديد اتجاه القبلة',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-                AppLocalizations.of(context)?.translate('cancel') ?? 'إلغاء'),
+              AppLocalizations.of(context)?.translate('cancel') ?? 'إلغاء',
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -171,10 +180,13 @@ class _QiblaScreenState extends State<QiblaScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            Text(l10n?.translate('campus.permission_denied') ?? 'تم رفض الإذن'),
-        content: Text(l10n?.translate('campus.open_app_settings') ??
-            'يرجى فتح إعدادات التطبيق لمنح إذن الموقع'),
+        title: Text(
+          l10n?.translate('campus.permission_denied') ?? 'تم رفض الإذن',
+        ),
+        content: Text(
+          l10n?.translate('campus.open_app_settings') ??
+              'يرجى فتح إعدادات التطبيق لمنح إذن الموقع',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -257,10 +269,10 @@ class _QiblaScreenState extends State<QiblaScreen>
                         child: state is QiblaLoading
                             ? _buildLoadingState()
                             : state is QiblaLoaded
-                                ? _buildQiblaContent(context, state)
-                                : state is QiblaError
-                                    ? _buildErrorState(context, state)
-                                    : _buildDefaultState(),
+                            ? _buildQiblaContent(context, state)
+                            : state is QiblaError
+                            ? _buildErrorState(context, state)
+                            : _buildDefaultState(),
                       ),
                     ],
                   );
@@ -434,11 +446,7 @@ class _QiblaScreenState extends State<QiblaScreen>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.check_circle,
-                  color: Colors.white,
-                  size: 18,
-                ),
+                const Icon(Icons.check_circle, color: Colors.white, size: 18),
                 const SizedBox(width: 6),
                 Text(
                   l10n?.translate('campus.aligned_with_qibla') ??
@@ -455,9 +463,9 @@ class _QiblaScreenState extends State<QiblaScreen>
         Text(
           '${state.qiblaModel.qiblaDirection.toStringAsFixed(1)}°',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: state.isAligned ? const Color(0xFF00C853) : null,
-              ),
+            fontWeight: FontWeight.bold,
+            color: state.isAligned ? const Color(0xFF00C853) : null,
+          ),
         ),
         SizedBox(height: size.height * 0.01),
         // Accuracy indicator
@@ -487,7 +495,8 @@ class _QiblaScreenState extends State<QiblaScreen>
                     // Location info
                     _buildInfoCard(
                       icon: Icons.location_on,
-                      title: l10n?.translate('campus.your_location') ??
+                      title:
+                          l10n?.translate('campus.your_location') ??
                           'موقعك الحالي',
                       value:
                           '${state.qiblaModel.latitude.toStringAsFixed(4)}, ${state.qiblaModel.longitude.toStringAsFixed(4)}',
@@ -498,8 +507,9 @@ class _QiblaScreenState extends State<QiblaScreen>
 
                     // Instructions
                     Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: size.width * 0.04),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.04,
+                      ),
                       child: Text(
                         l10n?.translate('campus.qibla_instructions') ??
                             'قم بتوجيه الهاتف وفقًا للسهم للإشارة إلى اتجاه القبلة',
@@ -650,9 +660,7 @@ class _QiblaScreenState extends State<QiblaScreen>
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(
-          color: color.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -762,7 +770,8 @@ class _QiblaScreenState extends State<QiblaScreen>
     final isDesktop = PlatformUtils.isDesktop;
 
     // Check if this is a compass sensor error
-    final isCompassError = state.message.contains('Compass') ||
+    final isCompassError =
+        state.message.contains('Compass') ||
         state.message.contains('compass') ||
         state.message.contains('magnetometer') ||
         state.message.contains('sensor');
@@ -783,28 +792,23 @@ class _QiblaScreenState extends State<QiblaScreen>
                 decoration: BoxDecoration(
                   gradient: isCompassError
                       ? LinearGradient(
-                          colors: [
-                            Colors.orange[100]!,
-                            Colors.deepOrange[50]!,
-                          ],
+                          colors: [Colors.orange[100]!, Colors.deepOrange[50]!],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
                       : LinearGradient(
-                          colors: [
-                            Colors.red[100]!,
-                            Colors.red[50]!,
-                          ],
+                          colors: [Colors.red[100]!, Colors.red[50]!],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: (isCompassError
-                              ? Colors.orange[200]!
-                              : Colors.red[200]!)
-                          .withValues(alpha: 0.3),
+                      color:
+                          (isCompassError
+                                  ? Colors.orange[200]!
+                                  : Colors.red[200]!)
+                              .withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -813,8 +817,9 @@ class _QiblaScreenState extends State<QiblaScreen>
                 child: Icon(
                   isCompassError ? Icons.explore_off : Icons.error_outline,
                   size: isDesktop ? 80.0 : size.width * 0.2,
-                  color:
-                      isCompassError ? Colors.deepOrange[400] : Colors.red[400],
+                  color: isCompassError
+                      ? Colors.deepOrange[400]
+                      : Colors.red[400],
                 ),
               ),
               SizedBox(height: isDesktop ? 32.0 : size.height * 0.03),
@@ -823,12 +828,12 @@ class _QiblaScreenState extends State<QiblaScreen>
               Text(
                 isCompassError
                     ? (l10n?.translate('campus.compass_unavailable') ??
-                        'البوصلة غير متاحة')
+                          'البوصلة غير متاحة')
                     : (l10n?.translate('campus.error') ?? 'خطأ'),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
@@ -837,11 +842,10 @@ class _QiblaScreenState extends State<QiblaScreen>
               Text(
                 state.message,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.8),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: isDesktop ? 24.0 : size.height * 0.03),
@@ -853,10 +857,9 @@ class _QiblaScreenState extends State<QiblaScreen>
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Column(
@@ -870,15 +873,14 @@ class _QiblaScreenState extends State<QiblaScreen>
                     Text(
                       isCompassError
                           ? (l10n?.translate('campus.compass_requirement') ??
-                              'تتطلب هذه الميزة جهازًا مزودًا بمستشعر البوصلة (المغناطيس) والذي يتوفر عادة في الهواتف الذكية والأجهزة اللوحية فقط.')
+                                'تتطلب هذه الميزة جهازًا مزودًا بمستشعر البوصلة (المغناطيس) والذي يتوفر عادة في الهواتف الذكية والأجهزة اللوحية فقط.')
                           : (l10n?.translate('campus.qibla_error_message') ??
-                              'تأكد من تفعيل خدمة الموقع وإذن الوصول للموقع'),
+                                'تأكد من تفعيل خدمة الموقع وإذن الوصول للموقع'),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.7),
-                          ),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -893,8 +895,9 @@ class _QiblaScreenState extends State<QiblaScreen>
                     context.read<QiblaCubit>().getQiblaDirection();
                   },
                   icon: const Icon(Icons.refresh),
-                  label:
-                      Text(l10n?.translate('campus.retry') ?? 'إعادة المحاولة'),
+                  label: Text(
+                    l10n?.translate('campus.retry') ?? 'إعادة المحاولة',
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(
                       horizontal: isDesktop ? 32.0 : size.width * 0.06,
@@ -918,8 +921,9 @@ class _QiblaScreenState extends State<QiblaScreen>
   Widget _buildDefaultState() {
     final l10n = AppLocalizations.of(context);
     return Center(
-      child: Text(l10n?.translate('campus.preparing_compass') ??
-          'جاري تحضير البوصلة...'),
+      child: Text(
+        l10n?.translate('campus.preparing_compass') ?? 'جاري تحضير البوصلة...',
+      ),
     );
   }
 }

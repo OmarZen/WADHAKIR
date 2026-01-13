@@ -95,7 +95,8 @@ class PersistentNotificationManager {
       );
 
       debugPrint(
-          '📱 Updated notification: ${nextPrayerInfo['nameAr']} at ${nextPrayerInfo['time']}');
+        '📱 Updated notification: ${nextPrayerInfo['nameAr']} at ${nextPrayerInfo['time']}',
+      );
     } catch (e) {
       debugPrint('❌ Error updating persistent notification: $e');
     }
@@ -103,33 +104,15 @@ class PersistentNotificationManager {
 
   /// Get the next prayer information
   Map<String, dynamic>? _getNextPrayer(
-      DateTime now, PrayerTimesModel prayerTimes) {
+    DateTime now,
+    PrayerTimesModel prayerTimes,
+  ) {
     final prayers = [
-      {
-        'nameEn': 'Fajr',
-        'nameAr': 'الفجر',
-        'time': prayerTimes.fajr,
-      },
-      {
-        'nameEn': 'Dhuhr',
-        'nameAr': 'الظهر',
-        'time': prayerTimes.dhuhr,
-      },
-      {
-        'nameEn': 'Asr',
-        'nameAr': 'العصر',
-        'time': prayerTimes.asr,
-      },
-      {
-        'nameEn': 'Maghrib',
-        'nameAr': 'المغرب',
-        'time': prayerTimes.maghrib,
-      },
-      {
-        'nameEn': 'Isha',
-        'nameAr': 'العشاء',
-        'time': prayerTimes.isha,
-      },
+      {'nameEn': 'Fajr', 'nameAr': 'الفجر', 'time': prayerTimes.fajr},
+      {'nameEn': 'Dhuhr', 'nameAr': 'الظهر', 'time': prayerTimes.dhuhr},
+      {'nameEn': 'Asr', 'nameAr': 'العصر', 'time': prayerTimes.asr},
+      {'nameEn': 'Maghrib', 'nameAr': 'المغرب', 'time': prayerTimes.maghrib},
+      {'nameEn': 'Isha', 'nameAr': 'العشاء', 'time': prayerTimes.isha},
     ];
 
     // Find the next prayer

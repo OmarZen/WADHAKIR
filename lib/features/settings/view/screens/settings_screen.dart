@@ -137,7 +137,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 child: SettingsSection(
                   title: l10n?.translate('settings.theme') ?? 'السمة',
                   icon: Icons.palette_outlined,
-                  subtitle: l10n?.translate('settings.theme_subtitle') ??
+                  subtitle:
+                      l10n?.translate('settings.theme_subtitle') ??
                       'تخصيص مظهر التطبيق',
                   children: [
                     ThemeSelectorWidget(settings: settings, cubit: cubit),
@@ -149,10 +150,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                 child: SettingsSection(
                   title: l10n?.translate('settings.language') ?? 'اللغة',
                   icon: Icons.language_outlined,
-                  subtitle: l10n?.translate('settings.language_subtitle') ??
+                  subtitle:
+                      l10n?.translate('settings.language_subtitle') ??
                       'تغيير لغة التطبيق',
                   children: [
-                    LanguageSelectorWidget(settings: settings, cubit: cubit)
+                    LanguageSelectorWidget(settings: settings, cubit: cubit),
                   ],
                 ),
               ),
@@ -164,25 +166,34 @@ class _SettingsScreenState extends State<SettingsScreen>
                   icon: Icons.notifications_outlined,
                   subtitle:
                       l10n?.translate('settings.notifications_subtitle') ??
-                          'تنبيهات أوقات الصلاة',
+                      'تنبيهات أوقات الصلاة',
                   children: [
                     NotificationSettingsWidgets.buildNotificationMasterToggle(
-                        context, settings, cubit),
+                      context,
+                      settings,
+                      cubit,
+                    ),
                     if (settings.notificationSettings.masterEnabled) ...[
                       _buildDivider(theme),
-                      NotificationSettingsWidgets
-                          .buildPersistentNotificationToggle(
-                              context, settings, cubit),
+                      NotificationSettingsWidgets.buildPersistentNotificationToggle(
+                        context,
+                        settings,
+                        cubit,
+                      ),
                       _buildDivider(theme),
-                      NotificationSettingsWidgets
-                          .buildNotificationTimingSelector(
-                              context, settings, cubit),
+                      NotificationSettingsWidgets.buildNotificationTimingSelector(
+                        context,
+                        settings,
+                        cubit,
+                      ),
                       _buildDivider(theme),
                       const AdhanSoundsSectionWidget(),
                       _buildDivider(theme),
-                      NotificationSettingsWidgets
-                          .buildPrayerNotificationsSettings(
-                              context, settings, cubit),
+                      NotificationSettingsWidgets.buildPrayerNotificationsSettings(
+                        context,
+                        settings,
+                        cubit,
+                      ),
                     ],
                   ],
                 ),
@@ -190,24 +201,37 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildAnimatedSection(
                 delay: 250,
                 child: SettingsSection(
-                  title: l10n?.translate('settings.fasting_notifications') ??
+                  title:
+                      l10n?.translate('settings.fasting_notifications') ??
                       'تنبيهات الصيام',
                   icon: Icons.restaurant_menu_outlined,
-                  subtitle: l10n?.translate(
-                          'settings.fasting_notifications_subtitle') ??
+                  subtitle:
+                      l10n?.translate(
+                        'settings.fasting_notifications_subtitle',
+                      ) ??
                       'تذكير بصيام الإثنين والخميس',
                   children: [
                     FastingNotificationSettingsWidget.buildMondayFastingToggle(
-                        context, settings, cubit),
+                      context,
+                      settings,
+                      cubit,
+                    ),
                     _buildDivider(theme),
-                    FastingNotificationSettingsWidget
-                        .buildThursdayFastingToggle(context, settings, cubit),
+                    FastingNotificationSettingsWidget.buildThursdayFastingToggle(
+                      context,
+                      settings,
+                      cubit,
+                    ),
                     if (settings.notificationSettings.mondayFastingEnabled ||
                         settings
-                            .notificationSettings.thursdayFastingEnabled) ...[
+                            .notificationSettings
+                            .thursdayFastingEnabled) ...[
                       _buildDivider(theme),
                       FastingNotificationSettingsWidget.buildFastingTimePicker(
-                          context, settings, cubit),
+                        context,
+                        settings,
+                        cubit,
+                      ),
                     ],
                   ],
                 ),
@@ -217,7 +241,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 child: SettingsSection(
                   title: l10n?.translate('settings.about_app') ?? 'حول التطبيق',
                   icon: Icons.info_outline,
-                  subtitle: l10n?.translate('settings.about_subtitle') ??
+                  subtitle:
+                      l10n?.translate('settings.about_subtitle') ??
                       'معلومات عن التطبيق',
                   children: [
                     AboutSectionWidgets.buildAboutTile(context),
@@ -251,8 +276,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         final settings = state is SettingsLoaded ? state.settings : null;
 
         // Count active notifications
-        final notificationCount =
-            settings != null ? _countActiveNotifications(settings) : 0;
+        final notificationCount = settings != null
+            ? _countActiveNotifications(settings)
+            : 0;
 
         // Get language display
         final languageDisplay = settings?.languageCode == 'ar' ? 'AR' : 'EN';
@@ -328,10 +354,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                               l10n?.translate('settings.description') ??
                                   'خصص تجربتك مع التطبيق',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: (isDark
-                                        ? theme.colorScheme.onSurface
-                                        : Colors.white)
-                                    .withValues(alpha: 0.7),
+                                color:
+                                    (isDark
+                                            ? theme.colorScheme.onSurface
+                                            : Colors.white)
+                                        .withValues(alpha: 0.7),
                                 fontSize: 12,
                               ),
                             ),
@@ -352,10 +379,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                           .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: (isDark
-                                ? theme.colorScheme.onSurface
-                                : Colors.white)
-                            .withValues(alpha: 0.2),
+                        color:
+                            (isDark
+                                    ? theme.colorScheme.onSurface
+                                    : Colors.white)
+                                .withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -373,10 +401,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                         Container(
                           width: 1,
                           height: 24,
-                          color: (isDark
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.white)
-                              .withValues(alpha: 0.2),
+                          color:
+                              (isDark
+                                      ? theme.colorScheme.onSurface
+                                      : Colors.white)
+                                  .withValues(alpha: 0.2),
                         ),
                         _buildStatItem(
                           Icons.language,
@@ -388,10 +417,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                         Container(
                           width: 1,
                           height: 24,
-                          color: (isDark
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.white)
-                              .withValues(alpha: 0.2),
+                          color:
+                              (isDark
+                                      ? theme.colorScheme.onSurface
+                                      : Colors.white)
+                                  .withValues(alpha: 0.2),
                         ),
                         _buildStatItem(
                           Icons.palette,
@@ -460,10 +490,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildAnimatedSection({
-    required int delay,
-    required Widget child,
-  }) {
+  Widget _buildAnimatedSection({required int delay, required Widget child}) {
     return TweenAnimationBuilder(
       tween: Tween<double>(begin: 0, end: 1),
       duration: Duration(milliseconds: 600 + delay),
@@ -471,10 +498,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, value, _) {
         return Transform.translate(
           offset: Offset(0, 30 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
     );

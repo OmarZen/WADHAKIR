@@ -45,9 +45,8 @@ class AlarmPermissionHelper {
     final shouldRequest = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => _PermissionExplanationDialog(
-        l10n: l10n,
-      ),
+      builder: (BuildContext context) =>
+          _PermissionExplanationDialog(l10n: l10n),
     );
 
     if (shouldRequest != true) return false;
@@ -58,9 +57,8 @@ class AlarmPermissionHelper {
     final shouldOpenSettings = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext dialogContext) => _SettingsPermissionDialog(
-        l10n: l10n,
-      ),
+      builder: (BuildContext dialogContext) =>
+          _SettingsPermissionDialog(l10n: l10n),
     );
 
     if (shouldOpenSettings != true) return false;
@@ -111,7 +109,8 @@ class AlarmPermissionHelper {
               openAppSettings();
             },
             child: Text(
-                l10n?.translate('settings.open_settings') ?? 'فتح الإعدادات'),
+              l10n?.translate('settings.open_settings') ?? 'فتح الإعدادات',
+            ),
           ),
         ],
       ),
@@ -120,7 +119,8 @@ class AlarmPermissionHelper {
 
   /// Request POST_NOTIFICATIONS permission for Android 13+
   static Future<bool> requestNotificationPermission(
-      BuildContext context) async {
+    BuildContext context,
+  ) async {
     if (!Platform.isAndroid) return true;
 
     final status = await Permission.notification.status;
@@ -139,9 +139,8 @@ class AlarmPermissionHelper {
     final shouldOpenSettings = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) => _NotificationPermissionDialog(
-        l10n: l10n,
-      ),
+      builder: (BuildContext context) =>
+          _NotificationPermissionDialog(l10n: l10n),
     );
 
     if (shouldOpenSettings != true) {
@@ -164,7 +163,8 @@ class AlarmPermissionHelper {
   /// Request all required permissions at once
   /// Call this when user enables notifications in settings
   static Future<Map<String, bool>> requestAllPermissions(
-      BuildContext context) async {
+    BuildContext context,
+  ) async {
     final results = <String, bool>{};
 
     // 1. Request POST_NOTIFICATIONS first (Android 13+)
@@ -194,9 +194,7 @@ class _NotificationPermissionDialog extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -262,8 +260,9 @@ class _NotificationPermissionDialog extends StatelessWidget {
                       l10n?.translate('settings.later') ?? 'لاحقاً',
                       style: TextStyle(
                         fontSize: 16,
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                   ),
@@ -309,9 +308,7 @@ class _PermissionExplanationDialog extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -377,8 +374,9 @@ class _PermissionExplanationDialog extends StatelessWidget {
                       l10n?.translate('settings.later') ?? 'لاحقاً',
                       style: TextStyle(
                         fontSize: 16,
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                   ),
@@ -464,9 +462,7 @@ class _SettingsPermissionDialogState extends State<_SettingsPermissionDialog> {
     final theme = Theme.of(context);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -547,8 +543,9 @@ class _SettingsPermissionDialogState extends State<_SettingsPermissionDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color:
-                    theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
@@ -592,8 +589,9 @@ class _SettingsPermissionDialogState extends State<_SettingsPermissionDialog> {
                       widget.l10n?.translate('common.cancel') ?? 'إلغاء',
                       style: TextStyle(
                         fontSize: 16,
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                   ),

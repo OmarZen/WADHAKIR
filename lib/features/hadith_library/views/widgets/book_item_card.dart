@@ -90,8 +90,9 @@ class BookItemCard extends StatelessWidget {
                   Text(
                     collection.nameEnglish,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color
-                          ?.withValues(alpha: 0.6),
+                      color: theme.textTheme.bodySmall?.color?.withValues(
+                        alpha: 0.6,
+                      ),
                     ),
                   ),
                 ],

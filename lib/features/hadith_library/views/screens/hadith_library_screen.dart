@@ -174,10 +174,20 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxWidth),
               child: isDesktop
-                  ? _buildCollectionsGrid(context, filteredCollections, theme,
-                      size, horizontalPadding)
-                  : _buildCollectionsList(context, filteredCollections, theme,
-                      size, horizontalPadding),
+                  ? _buildCollectionsGrid(
+                      context,
+                      filteredCollections,
+                      theme,
+                      size,
+                      horizontalPadding,
+                    )
+                  : _buildCollectionsList(
+                      context,
+                      filteredCollections,
+                      theme,
+                      size,
+                      horizontalPadding,
+                    ),
             ),
           ),
         ),
@@ -252,7 +262,11 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                         onPressed: () {
                           if (state is HadithCollectionsLoaded) {
                             _showSearchDialog(
-                                context, theme, l10n, state.collections);
+                              context,
+                              theme,
+                              l10n,
+                              state.collections,
+                            );
                           }
                         },
                         icon: Icon(
@@ -356,11 +370,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                       color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      collection.icon,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+                    child: Icon(collection.icon, color: Colors.white, size: 24),
                   ),
                   SizedBox(width: size.width * 0.04),
                   Column(
@@ -386,8 +396,9 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                       Text(
                         collection.nameEnglish,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.textTheme.bodySmall?.color
-                              ?.withValues(alpha: 0.6),
+                          color: theme.textTheme.bodySmall?.color?.withValues(
+                            alpha: 0.6,
+                          ),
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.3,
                         ),
@@ -433,8 +444,9 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.08),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.08,
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
@@ -469,8 +481,9 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                             vertical: 10,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.08),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.08,
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Row(
@@ -518,8 +531,12 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
     }).toList();
   }
 
-  void _showSearchDialog(BuildContext context, ThemeData theme,
-      AppLocalizations? l10n, List collections) {
+  void _showSearchDialog(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations? l10n,
+    List collections,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -588,10 +605,13 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                     setModalState(() {});
                   },
                   decoration: InputDecoration(
-                    hintText: l10n?.translate('hadith_library.search_hint') ??
+                    hintText:
+                        l10n?.translate('hadith_library.search_hint') ??
                         'Search by name or description...',
-                    prefixIcon:
-                        Icon(Icons.search_rounded, color: theme.primaryColor),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: theme.primaryColor,
+                    ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             onPressed: () {
@@ -620,8 +640,10 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: theme.primaryColor, width: 2),
+                      borderSide: BorderSide(
+                        color: theme.primaryColor,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -671,7 +693,11 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                         ),
                       )
                     : _buildSearchResults(
-                        collections, theme, MediaQuery.of(context).size, l10n),
+                        collections,
+                        theme,
+                        MediaQuery.of(context).size,
+                        l10n,
+                      ),
               ),
             ],
           ),
@@ -681,7 +707,11 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
   }
 
   Widget _buildSearchResults(
-      List collections, ThemeData theme, Size size, AppLocalizations? l10n) {
+    List collections,
+    ThemeData theme,
+    Size size,
+    AppLocalizations? l10n,
+  ) {
     final filteredCollections = _getFilteredCollections(collections);
 
     if (filteredCollections.isEmpty) {
@@ -750,11 +780,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                       color: collection.color,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      collection.icon,
-                      color: Colors.white,
-                      size: 22,
-                    ),
+                    child: Icon(collection.icon, color: Colors.white, size: 22),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -772,8 +798,9 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                         Text(
                           collection.nameEnglish,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.textTheme.bodySmall?.color
-                                ?.withValues(alpha: 0.7),
+                            color: theme.textTheme.bodySmall?.color?.withValues(
+                              alpha: 0.7,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -831,12 +858,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
         children: collections.map((collection) {
           return Padding(
             padding: EdgeInsets.only(bottom: size.height * 0.015),
-            child: _buildModernCollectionCard(
-              context,
-              collection,
-              theme,
-              size,
-            ),
+            child: _buildModernCollectionCard(context, collection, theme, size),
           );
         }).toList(),
       ),
@@ -868,8 +890,8 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
           childAspectRatio: size.width >= 1400
               ? 2.5
               : size.width >= 900
-                  ? 2.4
-                  : 2.3,
+              ? 2.4
+              : 2.3,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),

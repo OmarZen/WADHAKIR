@@ -48,12 +48,12 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     required PrayerTimesRepository repository,
     PrayerNotificationService? notificationService,
     PersistentNotificationManager? persistentManager,
-  })  : _repository = repository,
-        _notificationService =
-            notificationService ?? PrayerNotificationService(),
-        _persistentManager =
-            persistentManager ?? PersistentNotificationManager(),
-        super(const PrayerTimesInitial()) {
+  }) : _repository = repository,
+       _notificationService =
+           notificationService ?? PrayerNotificationService(),
+       _persistentManager =
+           persistentManager ?? PersistentNotificationManager(),
+       super(const PrayerTimesInitial()) {
     // Load saved time adjustments
     _loadSavedTimeAdjustments();
   }
@@ -76,17 +76,20 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       final adjustedPrayerTimes = _applyTimeAdjustments(prayerTimes);
 
       // Update state
-      emit(PrayerTimesLoaded(
-        prayerTimes: adjustedPrayerTimes,
-        selectedDate: today,
-      ));
+      emit(
+        PrayerTimesLoaded(
+          prayerTimes: adjustedPrayerTimes,
+          selectedDate: today,
+        ),
+      );
 
       // Update home screen widget with today's prayer times
       final dateKey = DateTime(today.year, today.month, today.day);
       final todayPrayerTimes = adjustedPrayerTimes[dateKey];
       if (todayPrayerTimes != null) {
         debugPrint(
-            'Updating widget with prayer times for: ${dateKey.toString()}');
+          'Updating widget with prayer times for: ${dateKey.toString()}',
+        );
         await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
 
         // Update Hijri calendar widget
@@ -116,7 +119,8 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
   /// Schedule notifications for today's prayer times
   Future<void> _scheduleNotificationsForToday(
-      PrayerTimesModel prayerTimes) async {
+    PrayerTimesModel prayerTimes,
+  ) async {
     try {
       // This method is called automatically when prayer times are loaded
       // Actual scheduling happens through scheduleNotificationsWithSettings
@@ -162,7 +166,8 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       debugPrint('\n🔄 Notification Settings Changed');
       debugPrint('Master Enabled: ${settings.masterEnabled}');
       debugPrint(
-          'Persistent Enabled: ${settings.persistentNotificationEnabled}');
+        'Persistent Enabled: ${settings.persistentNotificationEnabled}',
+      );
       debugPrint('Location: $locationName');
 
       // Schedule all prayer notifications
@@ -188,7 +193,8 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
   // Apply time adjustments to all prayer times
   Map<DateTime, PrayerTimesModel> _applyTimeAdjustments(
-      Map<DateTime, PrayerTimesModel> prayerTimes) {
+    Map<DateTime, PrayerTimesModel> prayerTimes,
+  ) {
     final result = <DateTime, PrayerTimesModel>{};
 
     prayerTimes.forEach((date, model) {
@@ -201,17 +207,27 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   // Apply time adjustments to a single prayer times model
   PrayerTimesModel _applyTimeAdjustmentToModel(PrayerTimesModel model) {
     // Apply minutes adjustments to each prayer time
-    final adjustedFajr =
-        _adjustTime(model.fajr, _timeAdjustments['الفجر'] ?? 0);
-    final adjustedSunrise =
-        _adjustTime(model.sunrise, _timeAdjustments['الشروق'] ?? 0);
-    final adjustedDhuhr =
-        _adjustTime(model.dhuhr, _timeAdjustments['الظهر'] ?? 0);
+    final adjustedFajr = _adjustTime(
+      model.fajr,
+      _timeAdjustments['الفجر'] ?? 0,
+    );
+    final adjustedSunrise = _adjustTime(
+      model.sunrise,
+      _timeAdjustments['الشروق'] ?? 0,
+    );
+    final adjustedDhuhr = _adjustTime(
+      model.dhuhr,
+      _timeAdjustments['الظهر'] ?? 0,
+    );
     final adjustedAsr = _adjustTime(model.asr, _timeAdjustments['العصر'] ?? 0);
-    final adjustedMaghrib =
-        _adjustTime(model.maghrib, _timeAdjustments['المغرب'] ?? 0);
-    final adjustedIsha =
-        _adjustTime(model.isha, _timeAdjustments['العشاء'] ?? 0);
+    final adjustedMaghrib = _adjustTime(
+      model.maghrib,
+      _timeAdjustments['المغرب'] ?? 0,
+    );
+    final adjustedIsha = _adjustTime(
+      model.isha,
+      _timeAdjustments['العشاء'] ?? 0,
+    );
 
     // Create a new model with adjusted times
     // Note: Qiyam times (midnight and last third) are kept as-is since they're calculated times
@@ -249,11 +265,13 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         final todayPrayerTimes = currentState.prayerTimes[dateKey];
         if (todayPrayerTimes != null) {
           debugPrint(
-              'Refreshing widget with prayer times for: ${dateKey.toString()}');
+            'Refreshing widget with prayer times for: ${dateKey.toString()}',
+          );
           await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
         } else {
           debugPrint(
-              'No prayer times found for today during refresh: ${dateKey.toString()}');
+            'No prayer times found for today during refresh: ${dateKey.toString()}',
+          );
         }
       }
     } catch (e) {
@@ -268,10 +286,12 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       // Check if we already have this date in our cache
       final dateKey = DateTime(date.year, date.month, date.day);
       if (currentState.prayerTimes.containsKey(dateKey)) {
-        emit(PrayerTimesLoaded(
-          prayerTimes: currentState.prayerTimes,
-          selectedDate: date,
-        ));
+        emit(
+          PrayerTimesLoaded(
+            prayerTimes: currentState.prayerTimes,
+            selectedDate: date,
+          ),
+        );
         return;
       }
 
@@ -280,18 +300,22 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         final prayerTimesForDate = await _getPrayerTimesUseCase(date: date);
 
         // Apply time adjustments to the new prayer times
-        final adjustedPrayerTimes =
-            _applyTimeAdjustmentToModel(prayerTimesForDate);
+        final adjustedPrayerTimes = _applyTimeAdjustmentToModel(
+          prayerTimesForDate,
+        );
 
         // Add the new date to our map
-        final updatedPrayerTimes =
-            Map<DateTime, PrayerTimesModel>.from(currentState.prayerTimes);
+        final updatedPrayerTimes = Map<DateTime, PrayerTimesModel>.from(
+          currentState.prayerTimes,
+        );
         updatedPrayerTimes[dateKey] = adjustedPrayerTimes;
 
-        emit(PrayerTimesLoaded(
-          prayerTimes: updatedPrayerTimes,
-          selectedDate: date,
-        ));
+        emit(
+          PrayerTimesLoaded(
+            prayerTimes: updatedPrayerTimes,
+            selectedDate: date,
+          ),
+        );
       } catch (e) {
         emit(PrayerTimesError(e.toString()));
       }
@@ -314,8 +338,9 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   void previousDay() {
     if (state is PrayerTimesLoaded) {
       final currentState = state as PrayerTimesLoaded;
-      final previousDate =
-          currentState.selectedDate.subtract(const Duration(days: 1));
+      final previousDate = currentState.selectedDate.subtract(
+        const Duration(days: 1),
+      );
       selectDate(previousDate);
     }
   }
@@ -363,10 +388,12 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         final currentState = state as PrayerTimesLoaded;
 
         // Re-emit the state to update the countdown timer
-        emit(PrayerTimesLoaded(
-          prayerTimes: currentState.prayerTimes,
-          selectedDate: currentState.selectedDate,
-        ));
+        emit(
+          PrayerTimesLoaded(
+            prayerTimes: currentState.prayerTimes,
+            selectedDate: currentState.selectedDate,
+          ),
+        );
       }
     });
   }
@@ -379,22 +406,24 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
       if (jsonString != null && jsonString.isNotEmpty) {
         // Parse the JSON string to a Map<String, dynamic>
-        final Map<String, dynamic> jsonMap =
-            Map<String, dynamic>.from(jsonString
-                .split(',')
-                .map((entry) {
-                  final parts = entry.split(':');
-                  return MapEntry(parts[0], int.parse(parts[1]));
-                })
-                .toList()
-                .fold({}, (map, entry) {
-                  map[entry.key] = entry.value;
-                  return map;
-                }));
+        final Map<String, dynamic> jsonMap = Map<String, dynamic>.from(
+          jsonString
+              .split(',')
+              .map((entry) {
+                final parts = entry.split(':');
+                return MapEntry(parts[0], int.parse(parts[1]));
+              })
+              .toList()
+              .fold({}, (map, entry) {
+                map[entry.key] = entry.value;
+                return map;
+              }),
+        );
 
         // Convert to Map<String, int> and update the cache
-        _timeAdjustments =
-            jsonMap.map((key, value) => MapEntry(key, value as int));
+        _timeAdjustments = jsonMap.map(
+          (key, value) => MapEntry(key, value as int),
+        );
 
         debugPrint('Loaded time adjustments: $_timeAdjustments');
       }
@@ -438,14 +467,17 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         final currentState = state as PrayerTimesLoaded;
 
         // Apply adjustments to all prayer times
-        final adjustedPrayerTimes =
-            _applyTimeAdjustments(currentState.prayerTimes);
+        final adjustedPrayerTimes = _applyTimeAdjustments(
+          currentState.prayerTimes,
+        );
 
         // Emit updated state
-        emit(PrayerTimesLoaded(
-          prayerTimes: adjustedPrayerTimes,
-          selectedDate: currentState.selectedDate,
-        ));
+        emit(
+          PrayerTimesLoaded(
+            prayerTimes: adjustedPrayerTimes,
+            selectedDate: currentState.selectedDate,
+          ),
+        );
       } else {
         // If not in a loaded state, reload prayer times
         await loadPrayerTimes();
@@ -490,7 +522,8 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
       if (!isEnabled) {
         throw Exception(
-            'Location services are disabled. Please enable location services in your device settings to get accurate prayer times.');
+          'Location services are disabled. Please enable location services in your device settings to get accurate prayer times.',
+        );
       }
 
       // Force update location

@@ -23,8 +23,9 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     // Get theme setting
     final themeInt = _sharedPreferences.getInt(AppConstants.themeKey);
-    final ThemeMode themeMode =
-        themeInt != null ? ThemeMode.values[themeInt] : ThemeMode.light;
+    final ThemeMode themeMode = themeInt != null
+        ? ThemeMode.values[themeInt]
+        : ThemeMode.light;
 
     // Get language setting
     final languageCode =
@@ -35,13 +36,15 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
         _sharedPreferences.getBool(AppConstants.showBasmalaKey) ?? true;
 
     // Get notification settings
-    final notificationSettingsJson =
-        _sharedPreferences.getString(AppConstants.notificationSettingsKey);
+    final notificationSettingsJson = _sharedPreferences.getString(
+      AppConstants.notificationSettingsKey,
+    );
     NotificationSettingsModel notificationSettings;
     if (notificationSettingsJson != null) {
       try {
         notificationSettings = NotificationSettingsModel.fromJson(
-            jsonDecode(notificationSettingsJson) as Map<String, dynamic>);
+          jsonDecode(notificationSettingsJson) as Map<String, dynamic>,
+        );
       } catch (e) {
         notificationSettings = NotificationSettingsModel.defaultSettings();
       }
@@ -89,15 +92,17 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
   @override
   Future<void> setNotificationSettings(
-      NotificationSettingsModel notificationSettings) async {
+    NotificationSettingsModel notificationSettings,
+  ) async {
     await _sharedPreferences.setString(
       AppConstants.notificationSettingsKey,
       jsonEncode(notificationSettings.toJson()),
     );
 
     final settings = await getSettings();
-    _cachedSettings =
-        settings.copyWith(notificationSettings: notificationSettings);
+    _cachedSettings = settings.copyWith(
+      notificationSettings: notificationSettings,
+    );
     _settingsController.add(_cachedSettings!);
   }
 

@@ -64,7 +64,8 @@ class PrayerTimesErrorWidget extends StatelessWidget {
               },
               icon: const Icon(Icons.refresh),
               label: Text(
-                  l10n?.translate('prayer_times.retry') ?? 'إعادة المحاولة'),
+                l10n?.translate('prayer_times.retry') ?? 'إعادة المحاولة',
+              ),
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(
                   horizontal: size.width * 0.06,

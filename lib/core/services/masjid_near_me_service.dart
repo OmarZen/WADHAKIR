@@ -24,15 +24,15 @@ class MasjidNearMeService {
         },
       );
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(
-        const Duration(seconds: 15),
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
@@ -55,11 +55,13 @@ class MasjidNearMeService {
           return mosques;
         } else {
           throw Exception(
-              'API returned error: ${jsonData['message'] ?? 'Unknown error'}');
+            'API returned error: ${jsonData['message'] ?? 'Unknown error'}',
+          );
         }
       } else {
         throw Exception(
-            'Failed to fetch mosques. Status code: ${response.statusCode}');
+          'Failed to fetch mosques. Status code: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error fetching mosques: $e');
@@ -70,21 +72,19 @@ class MasjidNearMeService {
   /// [name] - Name of the mosque to search for
   Future<List<MosqueModel>> searchByName(String name) async {
     try {
-      final uri = Uri.parse('$_baseUrl/search').replace(
-        queryParameters: {
-          'name': name,
-        },
-      );
+      final uri = Uri.parse(
+        '$_baseUrl/search',
+      ).replace(queryParameters: {'name': name});
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(
-        const Duration(seconds: 15),
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
@@ -98,11 +98,13 @@ class MasjidNearMeService {
               .toList();
         } else {
           throw Exception(
-              'API returned error: ${jsonData['message'] ?? 'Unknown error'}');
+            'API returned error: ${jsonData['message'] ?? 'Unknown error'}',
+          );
         }
       } else {
         throw Exception(
-            'Failed to fetch mosques. Status code: ${response.statusCode}');
+          'Failed to fetch mosques. Status code: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error fetching mosques: $e');
@@ -113,21 +115,19 @@ class MasjidNearMeService {
   /// [city] - Name of the city to search in
   Future<List<MosqueModel>> searchByCity(String city) async {
     try {
-      final uri = Uri.parse('$_baseUrl/search').replace(
-        queryParameters: {
-          'city': city,
-        },
-      );
+      final uri = Uri.parse(
+        '$_baseUrl/search',
+      ).replace(queryParameters: {'city': city});
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(
-        const Duration(seconds: 15),
-      );
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
@@ -141,11 +141,13 @@ class MasjidNearMeService {
               .toList();
         } else {
           throw Exception(
-              'API returned error: ${jsonData['message'] ?? 'Unknown error'}');
+            'API returned error: ${jsonData['message'] ?? 'Unknown error'}',
+          );
         }
       } else {
         throw Exception(
-            'Failed to fetch mosques. Status code: ${response.statusCode}');
+          'Failed to fetch mosques. Status code: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error fetching mosques: $e');

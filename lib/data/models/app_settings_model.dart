@@ -40,9 +40,9 @@ class AppSettingsModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        themeMode,
-        languageCode,
-        showBasmala,
-        notificationSettings,
-      ];
+    themeMode,
+    languageCode,
+    showBasmala,
+    notificationSettings,
+  ];
 }

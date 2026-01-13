@@ -83,13 +83,18 @@ class _AzkarScreenState extends State<AzkarScreen>
   }
 
   Widget _buildMainContent(
-      BuildContext context, AzkarCategoriesLoaded state, ThemeData theme) {
+    BuildContext context,
+    AzkarCategoriesLoaded state,
+    ThemeData theme,
+  ) {
     final filteredCategories = _searchQuery.isEmpty
         ? state.categories
         : state.categories
-            .where((c) =>
-                c.title.toLowerCase().contains(_searchQuery.toLowerCase()))
-            .toList();
+              .where(
+                (c) =>
+                    c.title.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
 
     return Stack(
       children: [
@@ -140,8 +145,9 @@ class _AzkarScreenState extends State<AzkarScreen>
                           context.l10n?.translate('azkar.daily_remembrance') ??
                               'أذكار المسلم اليومية',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                       ],
@@ -157,7 +163,8 @@ class _AzkarScreenState extends State<AzkarScreen>
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: context.l10n?.translate('azkar.search_azkar') ??
+                  hintText:
+                      context.l10n?.translate('azkar.search_azkar') ??
                       'البحث في الأذكار...',
                   prefixIcon: Icon(
                     Icons.search,
@@ -204,7 +211,9 @@ class _AzkarScreenState extends State<AzkarScreen>
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -227,8 +236,10 @@ class _AzkarScreenState extends State<AzkarScreen>
             Expanded(
               child: ListView.builder(
                 physics: const BouncingScrollPhysics(),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 itemCount: filteredCategories.length,
                 itemBuilder: (context, index) {
                   return _AnimatedCategoryCard(
@@ -393,8 +404,9 @@ class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
                       Text(
                         '${widget.category.items.length} ${context.l10n?.translate('azkar.items') ?? 'أذكار'}',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                     ],

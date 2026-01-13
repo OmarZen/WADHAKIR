@@ -76,10 +76,7 @@ class _RadioScreenState extends State<RadioScreen> {
             SnackBar(
               content: Row(
                 children: [
-                  Icon(
-                    Icons.error_outline_rounded,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.error_outline_rounded, color: Colors.white),
                   const SizedBox(width: 12),
                   Expanded(child: Text(state.message)),
                 ],
@@ -131,8 +128,9 @@ class _RadioScreenState extends State<RadioScreen> {
                         ),
                       ],
                       border: Border.all(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -140,8 +138,9 @@ class _RadioScreenState extends State<RadioScreen> {
                         const SizedBox(width: 10),
                         Icon(
                           Icons.search_rounded,
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.8),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.8,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -163,8 +162,9 @@ class _RadioScreenState extends State<RadioScreen> {
                         ),
                         if (_query.isNotEmpty)
                           IconButton(
-                            style:
-                                IconButton.styleFrom(padding: EdgeInsets.zero),
+                            style: IconButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                            ),
                             tooltip: l10n?.translate('radio.clear') ?? 'Clear',
                             icon: const Icon(Icons.close_rounded),
                             color: theme.colorScheme.primary,
@@ -176,8 +176,9 @@ class _RadioScreenState extends State<RadioScreen> {
                         else
                           Icon(
                             Icons.search_rounded,
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.8),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                         SizedBox(width: size.width * 0.03),
                       ],
@@ -193,8 +194,9 @@ class _RadioScreenState extends State<RadioScreen> {
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal:
-                        PlatformUtils.isDesktop ? 24.0 : size.width * 0.04,
+                    horizontal: PlatformUtils.isDesktop
+                        ? 24.0
+                        : size.width * 0.04,
                     vertical: 6,
                   ),
                   child: Container(
@@ -203,8 +205,9 @@ class _RadioScreenState extends State<RadioScreen> {
                       color: theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color:
-                            theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                       ),
                     ),
                     child: SingleChildScrollView(
@@ -235,8 +238,10 @@ class _RadioScreenState extends State<RadioScreen> {
                                         : theme.colorScheme.primary,
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(l10n?.translate('radio.${c['label']}') ??
-                                      c['label']!),
+                                  Text(
+                                    l10n?.translate('radio.${c['label']}') ??
+                                        c['label']!,
+                                  ),
                                 ],
                               ),
                               selected: selected,
@@ -284,9 +289,9 @@ class _RadioScreenState extends State<RadioScreen> {
                   if (state is RadioLoaded) {
                     final filtered = _applyCategory(state)
                         .where(
-                          (s) => s.name
-                              .toLowerCase()
-                              .contains(_query.toLowerCase()),
+                          (s) => s.name.toLowerCase().contains(
+                            _query.toLowerCase(),
+                          ),
                         )
                         .toList();
 
@@ -637,8 +642,11 @@ class _CustomRadioAppBar extends StatelessWidget
           gradient: LinearGradient(
             colors: [
               primary,
-              Color.lerp(primary,
-                  isDark ? Colors.black : const Color(0xFF0D1122), 0.3)!,
+              Color.lerp(
+                primary,
+                isDark ? Colors.black : const Color(0xFF0D1122),
+                0.3,
+              )!,
             ],
             begin: AlignmentDirectional.topStart,
             end: AlignmentDirectional.bottomEnd,
@@ -697,8 +705,9 @@ class _CustomRadioAppBar extends StatelessWidget
                               ),
                             ),
                             child: IconButton(
-                              tooltip: MaterialLocalizations.of(context)
-                                  .backButtonTooltip,
+                              tooltip: MaterialLocalizations.of(
+                                context,
+                              ).backButtonTooltip,
                               icon: Icon(
                                 Icons.arrow_back_rounded,
                                 color: onPrimary,
@@ -757,8 +766,9 @@ class _CustomRadioAppBar extends StatelessWidget
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFF27AE60)
-                                              .withValues(alpha: 0.5),
+                                          color: const Color(
+                                            0xFF27AE60,
+                                          ).withValues(alpha: 0.5),
                                           blurRadius: 8,
                                           spreadRadius: 2,
                                         ),
@@ -832,7 +842,8 @@ class _WavePatternPainter extends CustomPainter {
       final yOffset = size.height * (0.3 + i * 0.2);
 
       for (var x = -waveLength; x <= size.width + waveLength; x += 0.5) {
-        final y = yOffset +
+        final y =
+            yOffset +
             waveHeight *
                 (0.5 + 0.5 * (i % 2 == 0 ? 1 : -1)) *
                 (1 + 0.3 * i) *
@@ -920,11 +931,7 @@ class _ErrorView extends StatelessWidget {
                 color: errorColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                _getErrorIcon(),
-                size: 80,
-                color: errorColor,
-              ),
+              child: Icon(_getErrorIcon(), size: 80, color: errorColor),
             ),
             const SizedBox(height: 24),
             Text(
@@ -939,9 +946,9 @@ class _ErrorView extends StatelessWidget {
             Text(
               errorType == 'network'
                   ? (l10n?.translate('radio.error_network_check') ??
-                      'تأكد من اتصالك بالإنترنت وحاول مرة أخرى')
+                        'تأكد من اتصالك بالإنترنت وحاول مرة أخرى')
                   : (l10n?.translate('radio.error_try_again_later') ??
-                      'حاول مرة أخرى بعد قليل'),
+                        'حاول مرة أخرى بعد قليل'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
@@ -952,7 +959,8 @@ class _ErrorView extends StatelessWidget {
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
               label: Text(
-                  l10n?.translate('radio.retry_button') ?? 'إعادة المحاولة'),
+                l10n?.translate('radio.retry_button') ?? 'إعادة المحاولة',
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: errorColor,
                 foregroundColor: Colors.white,

@@ -16,10 +16,7 @@ import 'package:wadhakir/features/hadith_library/views/widgets/book_item_card.da
 class CollectionBooksScreen extends StatelessWidget {
   final HadithCollectionMetadata collection;
 
-  const CollectionBooksScreen({
-    super.key,
-    required this.collection,
-  });
+  const CollectionBooksScreen({super.key, required this.collection});
 
   @override
   Widget build(BuildContext context) {
@@ -63,9 +60,7 @@ class _CollectionBooksView extends StatelessWidget {
                 // App Bar with collection info
                 _buildAppBar(context, theme, size, l10n),
 
-                SliverToBoxAdapter(
-                  child: SizedBox(height: size.height * 0.02),
-                ),
+                SliverToBoxAdapter(child: SizedBox(height: size.height * 0.02)),
 
                 // Collection Description
                 SliverToBoxAdapter(

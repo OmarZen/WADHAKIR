@@ -59,7 +59,8 @@ class QiblaRepositoryImpl implements QiblaRepository {
       if (_isCompassAvailable) {
         _initCompass();
       } else {
-        _compassErrorMessage = 'Compass sensor not available on this device. '
+        _compassErrorMessage =
+            'Compass sensor not available on this device. '
             'Your device may not have a magnetometer sensor.';
       }
     } catch (e) {
@@ -126,7 +127,8 @@ class QiblaRepositoryImpl implements QiblaRepository {
     if (permission == LocationPermission.deniedForever) {
       // Permissions are permanently denied, handle accordingly.
       _qiblaStreamController.addError(
-          'Location permissions are permanently denied, please enable in app settings');
+        'Location permissions are permanently denied, please enable in app settings',
+      );
       return false;
     }
 
@@ -162,15 +164,19 @@ class QiblaRepositoryImpl implements QiblaRepository {
     try {
       // Calculate Qibla direction
       double qiblaDirection = _calculateQiblaDirection(
-          _currentPosition!.latitude, _currentPosition!.longitude);
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+      );
 
       // Add new Qibla model to stream
-      _qiblaStreamController.add(QiblaModel(
-        latitude: _currentPosition!.latitude,
-        longitude: _currentPosition!.longitude,
-        qiblaDirection: qiblaDirection,
-        compassDirection: compassEvent?.heading ?? 0.0,
-      ));
+      _qiblaStreamController.add(
+        QiblaModel(
+          latitude: _currentPosition!.latitude,
+          longitude: _currentPosition!.longitude,
+          qiblaDirection: qiblaDirection,
+          compassDirection: compassEvent?.heading ?? 0.0,
+        ),
+      );
     } catch (e) {
       debugPrint('Error updating Qibla direction: $e');
     }
@@ -184,7 +190,8 @@ class QiblaRepositoryImpl implements QiblaRepository {
 
     // Formula to calculate Qibla direction
     double y = math.sin(kaabaLongRad - longRad);
-    double x = math.cos(latRad) * math.tan(kaabaLatRad) -
+    double x =
+        math.cos(latRad) * math.tan(kaabaLatRad) -
         math.sin(latRad) * math.cos(kaabaLongRad - longRad);
 
     double qiblaRad = math.atan2(y, x);

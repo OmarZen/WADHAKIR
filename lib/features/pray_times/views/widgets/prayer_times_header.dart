@@ -7,11 +7,7 @@ class PrayerTimesHeader extends StatelessWidget {
   final Size size;
   final PrayerTimesCubit cubit;
 
-  const PrayerTimesHeader({
-    super.key,
-    required this.size,
-    required this.cubit,
-  });
+  const PrayerTimesHeader({super.key, required this.size, required this.cubit});
 
   @override
   Widget build(BuildContext context) {

@@ -55,7 +55,9 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
 
   // Play sound with modal state update
   Future<void> _playSoundWithModalState(
-      String? path, StateSetter setModalState) async {
+    String? path,
+    StateSetter setModalState,
+  ) async {
     try {
       // If clicking the same sound that's playing, stop it
       if (_isPlaying && _playingPath == path) {
@@ -91,24 +93,27 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
 
       // Configure audio session for notification/ring mode (not media)
       final session = await AudioSession.instance;
-      await session.configure(const AudioSessionConfiguration(
-        avAudioSessionCategory: AVAudioSessionCategory.playback,
-        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
-        avAudioSessionMode: AVAudioSessionMode.defaultMode,
-        avAudioSessionRouteSharingPolicy:
-            AVAudioSessionRouteSharingPolicy.defaultPolicy,
-        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-        androidAudioAttributes: AndroidAudioAttributes(
-          contentType: AndroidAudioContentType
-              .sonification, // Use notification sound type
-          flags: AndroidAudioFlags.none,
-          usage: AndroidAudioUsage
-              .notification, // Controlled by notification volume
+      await session.configure(
+        const AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playback,
+          avAudioSessionCategoryOptions:
+              AVAudioSessionCategoryOptions.duckOthers,
+          avAudioSessionMode: AVAudioSessionMode.defaultMode,
+          avAudioSessionRouteSharingPolicy:
+              AVAudioSessionRouteSharingPolicy.defaultPolicy,
+          avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+          androidAudioAttributes: AndroidAudioAttributes(
+            contentType: AndroidAudioContentType
+                .sonification, // Use notification sound type
+            flags: AndroidAudioFlags.none,
+            usage: AndroidAudioUsage
+                .notification, // Controlled by notification volume
+          ),
+          androidAudioFocusGainType:
+              AndroidAudioFocusGainType.gainTransientMayDuck,
+          androidWillPauseWhenDucked: true,
         ),
-        androidAudioFocusGainType:
-            AndroidAudioFocusGainType.gainTransientMayDuck,
-        androidWillPauseWhenDucked: true,
-      ));
+      );
 
       await _audioPlayer.setAsset(path);
 
@@ -202,8 +207,9 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
               color: isDark
                   ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
                   : theme.colorScheme.surface,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             child: Row(
               children: [
@@ -239,7 +245,8 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              itemCount: widget.soundOptions.length +
+              itemCount:
+                  widget.soundOptions.length +
                   1, // +1 for default option at top
               itemBuilder: (context, index) {
                 // Default sound option
@@ -303,11 +310,11 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
       decoration: BoxDecoration(
         color: isSelected
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : (isDark
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
-                : theme.colorScheme.surface),
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
+                  : theme.colorScheme.surface),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected
@@ -324,22 +331,24 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           decoration: BoxDecoration(
             color: isSelected
                 ? isDark
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
-                    : theme.colorScheme.primary
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+                      : theme.colorScheme.primary
                 : (isDark
-                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-                    : theme.colorScheme.surface),
+                      ? theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.2,
+                        )
+                      : theme.colorScheme.surface),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             option.isDefault ? Icons.notifications : Icons.music_note,
             color: isSelected
                 ? isDark
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onPrimary
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimary
                 : isDark
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                    : theme.colorScheme.primary,
+                ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                : theme.colorScheme.primary,
             size: 18,
           ),
         ),
@@ -349,11 +358,11 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: isSelected
                 ? isDark
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onPrimary
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimary
                 : isDark
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-                    : theme.colorScheme.onSurface,
+                ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                : theme.colorScheme.onSurface,
             fontSize: 14,
           ),
           maxLines: 2,
@@ -409,9 +418,11 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
         ),
         onTap: () {
           debugPrint(
-              '🎵 Sound option tapped: ${option.name} (path: ${option.path})');
+            '🎵 Sound option tapped: ${option.name} (path: ${option.path})',
+          );
           debugPrint(
-              '🎵 Calling widget.onSoundSelected with path: ${option.path}');
+            '🎵 Calling widget.onSoundSelected with path: ${option.path}',
+          );
           widget.onSoundSelected(option.path);
           debugPrint('🎵 Closing modal...');
           Navigator.pop(context);
@@ -431,8 +442,8 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
       decoration: BoxDecoration(
         color: widget.enabled
             ? (isDark
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-                : theme.colorScheme.surface)
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+                  : theme.colorScheme.surface)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -491,10 +502,7 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: theme.colorScheme.primary,
-                  width: 1,
-                ),
+                border: Border.all(color: theme.colorScheme.primary, width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

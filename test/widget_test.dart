@@ -45,12 +45,15 @@ void main() {
           AppSettingsRepositoryImpl(sharedPreferences),
         ),
         getPrayerTimesUseCase: GetPrayerTimesUseCase(prayerTimesRepository),
-        getPrayerTimesRangeUseCase:
-            GetPrayerTimesRangeUseCase(prayerTimesRepository),
-        getCalculationMethodUseCase:
-            GetCalculationMethodUseCase(prayerTimesRepository),
-        setCalculationMethodUseCase:
-            SetCalculationMethodUseCase(prayerTimesRepository),
+        getPrayerTimesRangeUseCase: GetPrayerTimesRangeUseCase(
+          prayerTimesRepository,
+        ),
+        getCalculationMethodUseCase: GetCalculationMethodUseCase(
+          prayerTimesRepository,
+        ),
+        setCalculationMethodUseCase: SetCalculationMethodUseCase(
+          prayerTimesRepository,
+        ),
         prayerTimesRepository: prayerTimesRepository,
       ),
     );

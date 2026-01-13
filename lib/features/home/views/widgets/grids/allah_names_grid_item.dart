@@ -28,7 +28,9 @@ class AllahNamesGridItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Container(
           padding: EdgeInsets.symmetric(
-              horizontal: padding, vertical: verticalPadding),
+            horizontal: padding,
+            vertical: verticalPadding,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
@@ -73,15 +75,18 @@ class AllahNamesGridItem extends StatelessWidget {
 
   Future<void> _showAllahNamesSheet(BuildContext context) async {
     final theme = Theme.of(context);
-    final data =
-        await rootBundle.loadString('assets/json_data/Names_Of_Allah.json');
+    final data = await rootBundle.loadString(
+      'assets/json_data/Names_Of_Allah.json',
+    );
     final List<dynamic> list = json.decode(data) as List<dynamic>;
     final items = list
-        .map((e) => (
-              id: e['id'] as int,
-              name: e['name'] as String,
-              text: e['text'] as String,
-            ))
+        .map(
+          (e) => (
+            id: e['id'] as int,
+            name: e['name'] as String,
+            text: e['text'] as String,
+          ),
+        )
         .toList(growable: false);
 
     if (!context.mounted) return;
@@ -110,12 +115,16 @@ class AllahNamesGridItem extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
-                    Icon(Icons.menu_book_rounded,
-                        color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.menu_book_rounded,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
@@ -128,8 +137,10 @@ class AllahNamesGridItem extends StatelessWidget {
               Expanded(
                 child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
@@ -139,8 +150,9 @@ class AllahNamesGridItem extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         color: theme.colorScheme.surface,
                         border: Border.all(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.18),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.18,
+                          ),
                         ),
                       ),
                       padding: const EdgeInsets.all(14),
@@ -159,8 +171,9 @@ class AllahNamesGridItem extends StatelessWidget {
                           Text(
                             item.text,
                             textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge
-                                ?.copyWith(height: 1.6),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              height: 1.6,
+                            ),
                           ),
                         ],
                       ),
@@ -186,21 +199,26 @@ class _IslamicDivider extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-              child: Divider(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2))),
+            child: Divider(
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
+          ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 8),
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Icon(Icons.star, size: 12, color: theme.colorScheme.primary),
           ),
           Expanded(
-              child: Divider(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2))),
+            child: Divider(
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
+          ),
         ],
       ),
     );

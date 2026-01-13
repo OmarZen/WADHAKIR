@@ -4,19 +4,10 @@ import 'package:equatable/equatable.dart';
 const Object _undefined = Object();
 
 /// Enum for notification timing options
-enum NotificationTiming {
-  onTime,
-  before5Min,
-  before10Min,
-  before15Min,
-}
+enum NotificationTiming { onTime, before5Min, before10Min, before15Min }
 
 /// Enum for notification sound options
-enum NotificationSound {
-  defaultSound,
-  adhan,
-  silent,
-}
+enum NotificationSound { defaultSound, adhan, silent }
 
 /// Model for individual prayer notification settings
 class PrayerNotificationSettings extends Equatable {
@@ -84,8 +75,13 @@ class PrayerNotificationSettings extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [enabled, timing, sound, vibration, customSoundPath];
+  List<Object?> get props => [
+    enabled,
+    timing,
+    sound,
+    vibration,
+    customSoundPath,
+  ];
 }
 
 /// Complete notification settings model
@@ -191,23 +187,28 @@ class NotificationSettingsModel extends Equatable {
           json['persistentNotificationEnabled'] as bool? ?? false,
       fajrSettings: json['fajrSettings'] != null
           ? PrayerNotificationSettings.fromJson(
-              json['fajrSettings'] as Map<String, dynamic>)
+              json['fajrSettings'] as Map<String, dynamic>,
+            )
           : PrayerNotificationSettings.defaultSettings(),
       dhuhrSettings: json['dhuhrSettings'] != null
           ? PrayerNotificationSettings.fromJson(
-              json['dhuhrSettings'] as Map<String, dynamic>)
+              json['dhuhrSettings'] as Map<String, dynamic>,
+            )
           : PrayerNotificationSettings.defaultSettings(),
       asrSettings: json['asrSettings'] != null
           ? PrayerNotificationSettings.fromJson(
-              json['asrSettings'] as Map<String, dynamic>)
+              json['asrSettings'] as Map<String, dynamic>,
+            )
           : PrayerNotificationSettings.defaultSettings(),
       maghribSettings: json['maghribSettings'] != null
           ? PrayerNotificationSettings.fromJson(
-              json['maghribSettings'] as Map<String, dynamic>)
+              json['maghribSettings'] as Map<String, dynamic>,
+            )
           : PrayerNotificationSettings.defaultSettings(),
       ishaSettings: json['ishaSettings'] != null
           ? PrayerNotificationSettings.fromJson(
-              json['ishaSettings'] as Map<String, dynamic>)
+              json['ishaSettings'] as Map<String, dynamic>,
+            )
           : PrayerNotificationSettings.defaultSettings(),
       mondayFastingEnabled: json['mondayFastingEnabled'] as bool? ?? false,
       thursdayFastingEnabled: json['thursdayFastingEnabled'] as bool? ?? false,
@@ -242,16 +243,16 @@ class NotificationSettingsModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        masterEnabled,
-        persistentNotificationEnabled,
-        fajrSettings,
-        dhuhrSettings,
-        asrSettings,
-        maghribSettings,
-        ishaSettings,
-        mondayFastingEnabled,
-        thursdayFastingEnabled,
-        fastingNotificationTime,
-        fastingVibration,
-      ];
+    masterEnabled,
+    persistentNotificationEnabled,
+    fajrSettings,
+    dhuhrSettings,
+    asrSettings,
+    maghribSettings,
+    ishaSettings,
+    mondayFastingEnabled,
+    thursdayFastingEnabled,
+    fastingNotificationTime,
+    fastingVibration,
+  ];
 }

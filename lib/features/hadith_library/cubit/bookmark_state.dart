@@ -35,8 +35,12 @@ class BookmarksLoaded extends BookmarkState {
   });
 
   @override
-  List<Object?> get props =>
-      [bookmarks, collections, selectedCollectionId, totalCount];
+  List<Object?> get props => [
+    bookmarks,
+    collections,
+    selectedCollectionId,
+    totalCount,
+  ];
 }
 
 /// Bookmark added successfully

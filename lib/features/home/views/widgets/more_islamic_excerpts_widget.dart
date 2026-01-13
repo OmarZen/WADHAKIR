@@ -31,8 +31,9 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
 
     return Center(
       child: Container(
-        constraints:
-            BoxConstraints(maxWidth: isDesktop ? 1400 : double.infinity),
+        constraints: BoxConstraints(
+          maxWidth: isDesktop ? 1400 : double.infinity,
+        ),
         padding: EdgeInsets.symmetric(
           horizontal: horizontalPadding,
           vertical: verticalPadding,
@@ -70,7 +71,8 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
               ],
             ),
             SizedBox(
-                height: isDesktop ? size.height * 0.04 : size.height * 0.03),
+              height: isDesktop ? size.height * 0.04 : size.height * 0.03,
+            ),
             GridView.count(
               crossAxisCount: crossAxisCount,
               childAspectRatio: childAspectRatio,

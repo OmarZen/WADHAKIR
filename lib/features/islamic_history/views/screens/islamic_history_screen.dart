@@ -51,8 +51,9 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
 
   Future<void> _loadHistoryData() async {
     try {
-      final String response =
-          await rootBundle.loadString('assets/json_data/history.json');
+      final String response = await rootBundle.loadString(
+        'assets/json_data/history.json',
+      );
       final List<dynamic> data = json.decode(response);
 
       setState(() {
@@ -205,9 +206,7 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      color: theme.colorScheme.primary,
-                    ),
+                    CircularProgressIndicator(color: theme.colorScheme.primary),
                     const SizedBox(height: 16),
                     Text(
                       l10n?.translate('common.loading') ?? 'جارٍ التحميل...',
@@ -251,25 +250,29 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth:
-                        PlatformUtils.isDesktop ? 1400.0 : double.infinity,
+                    maxWidth: PlatformUtils.isDesktop
+                        ? 1400.0
+                        : double.infinity,
                   ),
                   child: Padding(
-                    padding:
-                        EdgeInsets.all(PlatformUtils.isDesktop ? 24.0 : 16.0),
+                    padding: EdgeInsets.all(
+                      PlatformUtils.isDesktop ? 24.0 : 16.0,
+                    ),
                     child: Container(
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -321,8 +324,9 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth:
-                        PlatformUtils.isDesktop ? 1400.0 : double.infinity,
+                    maxWidth: PlatformUtils.isDesktop
+                        ? 1400.0
+                        : double.infinity,
                   ),
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
@@ -368,12 +372,14 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth:
-                        PlatformUtils.isDesktop ? 1400.0 : double.infinity,
+                    maxWidth: PlatformUtils.isDesktop
+                        ? 1400.0
+                        : double.infinity,
                   ),
                   child: Padding(
-                    padding:
-                        EdgeInsets.all(PlatformUtils.isDesktop ? 24.0 : 16.0),
+                    padding: EdgeInsets.all(
+                      PlatformUtils.isDesktop ? 24.0 : 16.0,
+                    ),
                     child: _buildHistoryList(context),
                   ),
                 ),
@@ -428,7 +434,10 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
   }
 
   Widget _buildHistoryCard(
-      HistoryEvent event, int index, BuildContext context) {
+    HistoryEvent event,
+    int index,
+    BuildContext context,
+  ) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isDesktop = PlatformUtils.isDesktop;
@@ -506,8 +515,9 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary
-                                      .withValues(alpha: 0.1),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
@@ -521,11 +531,11 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       event.hijriYear,
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.primary,
-                                        fontSize: size.width * 0.028,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontSize: size.width * 0.028,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -539,16 +549,19 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      theme.colorScheme.primary
-                                          .withValues(alpha: 0.15),
-                                      theme.colorScheme.primary
-                                          .withValues(alpha: 0.08),
+                                      theme.colorScheme.primary.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      theme.colorScheme.primary.withValues(
+                                        alpha: 0.08,
+                                      ),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
-                                    color: theme.colorScheme.primary
-                                        .withValues(alpha: 0.2),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     width: 0.5,
                                   ),
                                 ),
@@ -565,12 +578,12 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                       event.lunarMonth
                                           .replaceAll('الشهر القمري : ', '')
                                           .replaceAll('الشهر القمري :', ''),
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.primary,
-                                        fontSize: size.width * 0.028,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontSize: size.width * 0.028,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -582,8 +595,9 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary
-                                      .withValues(alpha: 0.1),
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -670,8 +684,10 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
               ),
               // Header
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -735,16 +751,19 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                theme.colorScheme.primary
-                                    .withValues(alpha: 0.12),
-                                theme.colorScheme.primary
-                                    .withValues(alpha: 0.06),
+                                theme.colorScheme.primary.withValues(
+                                  alpha: 0.12,
+                                ),
+                                theme.colorScheme.primary.withValues(
+                                  alpha: 0.06,
+                                ),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.25),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.25,
+                              ),
                               width: 1.5,
                             ),
                           ),
@@ -797,9 +816,9 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                           event.hijriYear,
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
-                                            fontFamily: 'Almarai',
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                                fontFamily: 'Almarai',
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -813,10 +832,12 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        theme.colorScheme.primary
-                                            .withValues(alpha: 0.2),
-                                        theme.colorScheme.primary
-                                            .withValues(alpha: 0.1),
+                                        theme.colorScheme.primary.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                        theme.colorScheme.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(10),
@@ -838,10 +859,11 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                           event.lunarMonth,
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
-                                            fontFamily: 'Almarai',
-                                            fontWeight: FontWeight.w600,
-                                            color: theme.colorScheme.primary,
-                                          ),
+                                                fontFamily: 'Almarai',
+                                                fontWeight: FontWeight.w600,
+                                                color:
+                                                    theme.colorScheme.primary,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -869,9 +891,9 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                                           event.gregorianYear,
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
-                                            fontFamily: 'Almarai',
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                                fontFamily: 'Almarai',
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -887,8 +909,9 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
                           color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: theme.colorScheme.primary
-                                .withValues(alpha: 0.2),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.2,
+                            ),
                           ),
                         ),
                         child: SelectableText(
@@ -976,7 +999,12 @@ class IslamicPatternPainter extends CustomPainter {
   }
 
   void _drawStar(
-      Canvas canvas, Paint paint, Offset center, double radius, int points) {
+    Canvas canvas,
+    Paint paint,
+    Offset center,
+    double radius,
+    int points,
+  ) {
     final path = Path();
     final angle = (2 * 3.14159) / points;
 

@@ -261,10 +261,12 @@ Widget _circleIconButton(
           }
         }
       },
-      icon: Icon(icon,
-          color: isDark
-              ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-              : theme.colorScheme.primary),
+      icon: Icon(
+        icon,
+        color: isDark
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+            : theme.colorScheme.primary,
+      ),
     ),
   );
 }
@@ -287,9 +289,9 @@ Widget _supportChip(
           await launchUrl(uri, mode: LaunchMode.platformDefault);
         } catch (e) {
           if (!context.mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not open link: $url')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
         }
       }
     },
@@ -306,11 +308,7 @@ Widget _supportChip(
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 18,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(icon, size: 18, color: theme.colorScheme.primary),
           const SizedBox(width: 6),
           Text(
             label,

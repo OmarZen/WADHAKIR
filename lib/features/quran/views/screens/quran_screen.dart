@@ -15,8 +15,9 @@ class QuranScreen extends StatelessWidget {
       parentContext: context,
       isDark: isDarkMode,
       ayahIconColor: theme.colorScheme.primary,
-      ayahSelectedBackgroundColor:
-          theme.colorScheme.primary.withValues(alpha: 0.25),
+      ayahSelectedBackgroundColor: theme.colorScheme.primary.withValues(
+        alpha: 0.25,
+      ),
       ayahSelectedFontColor: theme.colorScheme.onSurface,
       // bannerStyle: BannerStyle(),
       // basmalaStyle: BasmalaStyle(
@@ -31,18 +32,14 @@ class QuranScreen extends StatelessWidget {
         downloadButtonBackgroundColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
             : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-        downloadingStyle: TextStyle(
-          color: theme.colorScheme.onSurface,
-        ),
+        downloadingStyle: TextStyle(color: theme.colorScheme.onSurface),
         iconColor: theme.colorScheme.primary,
         linearProgressBackgroundColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
             : theme.colorScheme.onSurface.withValues(alpha: 0.08),
         linearProgressColor: theme.colorScheme.primary,
         notesColor: theme.colorScheme.onSurface,
-        notesStyle: TextStyle(
-          color: theme.colorScheme.onSurface,
-        ),
+        notesStyle: TextStyle(color: theme.colorScheme.onSurface),
         titleColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
             : theme.colorScheme.onSurface.withValues(alpha: 0.98),
@@ -89,7 +86,8 @@ class QuranScreen extends StatelessWidget {
         // Translations
         fontsDialogTitle:
             l10n?.translate('quran.fonts_dialog_title') ?? 'Fonts',
-        fontsDialogNotes: l10n?.translate('quran.fonts_dialog_notes') ??
+        fontsDialogNotes:
+            l10n?.translate('quran.fonts_dialog_notes') ??
             'Download Quran fonts to match Medina Mushaf style',
         fontsDialogDownloadingText:
             l10n?.translate('common.downloading') ?? 'Downloading',

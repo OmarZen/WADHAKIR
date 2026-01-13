@@ -44,10 +44,12 @@ const Color darkWakeupAzkarColor = Color(0xFF1ABC9C); // Brighter teal
 const Color darkMosqueAzkarColor = Color(0xFFE67E22); // Brighter orange
 const Color darkMaathurDuaColor = Color(0xFF8FC779); // Brighter sage green
 const Color darkQuranDuaColor = Color(0xFFF1C40F); // Brighter gold
-const Color darkMidnightPrayerColor =
-    Color(0xFFAB47BC); // Brighter purple for midnight
-const Color darkLastThirdPrayerColor =
-    Color(0xFF5C6BC0); // Brighter indigo for last third
+const Color darkMidnightPrayerColor = Color(
+  0xFFAB47BC,
+); // Brighter purple for midnight
+const Color darkLastThirdPrayerColor = Color(
+  0xFF5C6BC0,
+); // Brighter indigo for last third
 
 // Typography settings
 const String _primaryFont = 'Almarai';
@@ -130,9 +132,7 @@ final ThemeData lightTheme = ThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: _primaryColor,
       foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
@@ -141,18 +141,14 @@ final ThemeData lightTheme = ThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: _primaryColor,
       side: const BorderSide(color: _primaryColor, width: 1.5),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
   ),
   cardTheme: CardThemeData(
     color: _cardColor,
     elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     shadowColor: _primaryColor.withValues(alpha: 0.2),
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -249,9 +245,7 @@ final ThemeData darkTheme = ThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: _darkPrimaryColor,
       foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
@@ -260,18 +254,14 @@ final ThemeData darkTheme = ThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: Colors.white,
       side: const BorderSide(color: Colors.white, width: 1.5),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
   ),
   cardTheme: CardThemeData(
     color: _darkCardColor,
     elevation: 3,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     shadowColor: Colors.black.withValues(alpha: 0.4),
   ),
   floatingActionButtonTheme: FloatingActionButtonThemeData(

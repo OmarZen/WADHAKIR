@@ -20,10 +20,7 @@ class ArabicText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = TextStyle(
-      fontFamily: 'Amiri',
-      fontSize: 16,
-    );
+    final defaultStyle = TextStyle(fontFamily: 'Amiri', fontSize: 16);
 
     return Text(
       text,

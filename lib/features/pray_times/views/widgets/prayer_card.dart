@@ -39,10 +39,7 @@ class PrayerCard extends StatelessWidget {
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(0, 40 * (1 - delayedAnimation.value)),
-          child: Opacity(
-            opacity: delayedAnimation.value,
-            child: child,
-          ),
+          child: Opacity(opacity: delayedAnimation.value, child: child),
         );
       },
       child: Container(

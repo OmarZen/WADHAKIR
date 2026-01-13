@@ -69,8 +69,9 @@ class PrayerTimesModel extends Equatable {
       maghrib: parseTime(json['maghrib']),
       isha: parseTime(json['isha']),
       date: DateTime.parse(json['date']),
-      calculationParameters:
-          CalculationMethodMapper.getParameters('muslim_world_league'),
+      calculationParameters: CalculationMethodMapper.getParameters(
+        'muslim_world_league',
+      ),
       coordinates: const Coordinates(0, 0), // Default coordinates
       middleOfTheNight: parseTime(json['middleOfTheNight']),
       lastThirdOfTheNight: parseTime(json['lastThirdOfTheNight']),
@@ -189,16 +190,16 @@ class PrayerTimesModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        fajr,
-        sunrise,
-        dhuhr,
-        asr,
-        maghrib,
-        isha,
-        date,
-        calculationParameters,
-        coordinates,
-        middleOfTheNight,
-        lastThirdOfTheNight,
-      ];
+    fajr,
+    sunrise,
+    dhuhr,
+    asr,
+    maghrib,
+    isha,
+    date,
+    calculationParameters,
+    coordinates,
+    middleOfTheNight,
+    lastThirdOfTheNight,
+  ];
 }

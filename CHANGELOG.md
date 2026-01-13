@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.2+9] - 2026-01-13
+
+### Added
+- **Flutter 3.38.6 Compatibility**: Full support for latest Flutter stable version
+- **Enhanced Home Screen Widgets**:
+  - Hijri Calendar Widget with interactive month navigation
+  - Redesigned Prayer Times List Widget with improved UI
+  - Better widget data persistence and updates
+
+### Changed
+- **SDK Requirements**: Updated minimum SDK to 3.10.0 and Flutter to 3.24.0+
+- **Code Quality**: Applied comprehensive code formatting across entire codebase
+- **Dependencies**: Updated all packages to ensure compatibility with Flutter 3.38.6
+- **Build System**: Updated Gradle and build configurations for better stability
+
+### Improved
+- **App Performance**: Enhanced overall app responsiveness and stability
+- **CI/CD Pipeline**: 
+  - Multi-platform workflow improvements
+  - Analytics disabled in CI builds for faster processing
+  - Better error handling in automated builds
+
+### Fixed
+- **Flutter Version Conflicts**: Resolved compatibility issues after Flutter upgrade
+- **Widget Loading**: Fixed RemoteViews compatibility issues in home widgets
+- **Build Issues**: Resolved dependencies conflicts and build warnings
+
+### Technical
+- Total of 103 files updated with code formatting improvements
+- Improved code consistency and maintainability
+- Better error handling across features
+- Enhanced widget-to-app communication
+
 ## [2.3.2] - 2026-01-12
 
 ### Added - Home Screen Widgets

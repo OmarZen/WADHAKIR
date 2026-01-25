@@ -1,104 +1,70 @@
 import 'dart:math';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
+import 'package:wadhakir/data/models/history_event_model.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/data/repositories/islamic_history_repository_impl.dart';
+import 'package:wadhakir/features/islamic_history/cubit/islamic_history_cubit.dart';
+import 'package:wadhakir/features/islamic_history/cubit/islamic_history_state.dart';
 
-class IslamicHistoryScreen extends StatefulWidget {
+class IslamicHistoryScreen extends StatelessWidget {
   const IslamicHistoryScreen({super.key});
 
   @override
-  State<IslamicHistoryScreen> createState() => _IslamicHistoryScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          IslamicHistoryCubit(repository: IslamicHistoryRepositoryImpl())
+            ..loadInitialEvents(),
+      child: const _IslamicHistoryScreenContent(),
+    );
+  }
 }
 
-class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
-  List<HistoryEvent> historyEvents = [];
-  List<HistoryEvent> filteredEvents = [];
-  bool isLoading = true;
-  String? error;
+class _IslamicHistoryScreenContent extends StatefulWidget {
+  const _IslamicHistoryScreenContent();
+
+  @override
+  State<_IslamicHistoryScreenContent> createState() =>
+      _IslamicHistoryScreenContentState();
+}
+
+class _IslamicHistoryScreenContentState
+    extends State<_IslamicHistoryScreenContent> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _loadHistoryData();
-    _searchController.addListener(_filterEvents);
+    _scrollController.addListener(_onScroll);
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _filterEvents() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        filteredEvents = historyEvents;
-      } else {
-        filteredEvents = historyEvents.where((event) {
-          return event.title.toLowerCase().contains(query) ||
-              event.text.toLowerCase().contains(query) ||
-              event.hijriYear.toLowerCase().contains(query) ||
-              event.lunarMonth.toLowerCase().contains(query) ||
-              event.gregorianYear.toLowerCase().contains(query);
-        }).toList();
-      }
-    });
+  void _onScroll() {
+    if (_isBottom) {
+      context.read<IslamicHistoryCubit>().loadMoreEvents();
+    }
   }
 
-  Future<void> _loadHistoryData() async {
-    try {
-      final String response = await rootBundle.loadString(
-        'assets/json_data/history.json',
-      );
-      final List<dynamic> data = json.decode(response);
+  bool get _isBottom {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll * 0.9);
+  }
 
-      setState(() {
-        historyEvents = data.map((json) {
-          final dateList = json['date'] as List?;
-          final dateLength = dateList?.length ?? 0;
-
-          String hijriYear = '';
-          String lunarMonth = '';
-          String gregorianYear = '';
-
-          if (dateLength >= 2) {
-            hijriYear = dateList![0].toString();
-            // Check if middle element is lunar month or gregorian year
-            final secondElement = dateList[1].toString();
-            if (secondElement.contains('الشهر القمري')) {
-              lunarMonth = secondElement;
-              if (dateLength >= 3) {
-                gregorianYear = dateList[2].toString();
-              }
-            } else {
-              gregorianYear = secondElement;
-            }
-          } else if (dateLength == 1) {
-            hijriYear = dateList![0].toString();
-          }
-
-          return HistoryEvent(
-            id: json['id'],
-            title: json['title'],
-            text: json['text'],
-            hijriYear: hijriYear,
-            lunarMonth: lunarMonth,
-            gregorianYear: gregorianYear,
-          );
-        }).toList();
-        filteredEvents = historyEvents;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        error = e.toString();
-        isLoading = false;
-      });
-    }
+  void _onSearchChanged() {
+    final query = _searchController.text;
+    context.read<IslamicHistoryCubit>().searchEvents(query);
   }
 
   @override
@@ -108,291 +74,304 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: size.height * 0.25,
-            floating: false,
-            pinned: true,
-            backgroundColor: theme.colorScheme.primary,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                l10n?.translate('home.islamic_history') ?? 'السيرة النبوية',
-                style: const TextStyle(
-                  fontFamily: 'Almarai',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 3.0,
-                      color: Color.fromARGB(100, 0, 0, 0),
-                    ),
-                  ],
-                ),
-              ),
-              centerTitle: true,
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Gradient background
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.85),
-                          theme.colorScheme.primary.withValues(alpha: 0.7),
-                        ],
-                      ),
+      body: BlocBuilder<IslamicHistoryCubit, IslamicHistoryState>(
+        builder: (context, state) {
+          return CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverAppBar(
+                expandedHeight: size.height * 0.25,
+                floating: false,
+                pinned: true,
+                backgroundColor: theme.colorScheme.primary,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text(
+                    l10n?.translate('home.islamic_history') ?? 'السيرة النبوية',
+                    style: const TextStyle(
+                      fontFamily: 'Almarai',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(0, 1),
+                          blurRadius: 3.0,
+                          color: Color.fromARGB(100, 0, 0, 0),
+                        ),
+                      ],
                     ),
                   ),
-                  // Islamic geometric pattern overlay
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: IslamicPatternPainter(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
-                    ),
-                  ),
-                  // Center decorative element
-                  Positioned(
-                    top: 60,
-                    left: 0,
-                    right: 0,
-                    child: Column(
-                      children: [
-                        // Decorative Islamic star
-                        Container(
-                          width: size.width * 0.2,
-                          height: size.width * 0.2,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.15),
-                          ),
-                          child: Icon(
-                            Icons.auto_stories_rounded,
-                            size: size.width * 0.12,
-                            color: Colors.white.withValues(alpha: 0.9),
+                  centerTitle: true,
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Gradient background
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              theme.colorScheme.primary,
+                              theme.colorScheme.primary.withValues(alpha: 0.85),
+                              theme.colorScheme.primary.withValues(alpha: 0.7),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        // Decorative line
-                        Container(
-                          width: size.width * 0.15,
-                          height: 2,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withValues(alpha: 0.0),
-                                Colors.white.withValues(alpha: 0.4),
-                                Colors.white.withValues(alpha: 0.0),
-                              ],
+                      ),
+                      // Islamic geometric pattern overlay
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: IslamicPatternPainter(
+                            color: Colors.white.withValues(alpha: 0.08),
+                          ),
+                        ),
+                      ),
+                      // Center decorative element
+                      Positioned(
+                        top: 60,
+                        left: 0,
+                        right: 0,
+                        child: Column(
+                          children: [
+                            // Decorative Islamic star
+                            Container(
+                              width: size.width * 0.2,
+                              height: size.width * 0.2,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.15),
+                              ),
+                              child: Icon(
+                                Icons.auto_stories_rounded,
+                                size: size.width * 0.12,
+                                color: Colors.white.withValues(alpha: 0.9),
+                              ),
                             ),
+                            const SizedBox(height: 8),
+                            // Decorative line
+                            Container(
+                              width: size.width * 0.15,
+                              height: 2,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.0),
+                                    Colors.white.withValues(alpha: 0.4),
+                                    Colors.white.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Search bar
+              SliverToBoxAdapter(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: PlatformUtils.isDesktop
+                          ? 1400.0
+                          : double.infinity,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(
+                        PlatformUtils.isDesktop ? 24.0 : 16.0,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _searchController,
+                          builder: (context, value, child) {
+                            return TextField(
+                              controller: _searchController,
+                              style: theme.textTheme.bodyLarge,
+                              decoration: InputDecoration(
+                                hintText: 'ابحث في السيرة النبوية...',
+                                hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.hintColor.withValues(alpha: 0.6),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.search_rounded,
+                                  color: theme.colorScheme.primary,
+                                  size: 24,
+                                ),
+                                suffixIcon: value.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.clear_rounded,
+                                          color: theme.hintColor,
+                                        ),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                        },
+                                      )
+                                    : null,
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Result count
+              if (state is IslamicHistoryLoaded)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: PlatformUtils.isDesktop
+                            ? 1400.0
+                            : double.infinity,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          PlatformUtils.isDesktop ? 24.0 : 16.0,
+                          8,
+                          PlatformUtils.isDesktop ? 24.0 : 16.0,
+                          0,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.filter_list_rounded,
+                                size: 16,
+                                color: theme.colorScheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${state.totalCount} ${state.totalCount == 1 ? 'حدث' : 'أحداث'}',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              // Content
+              if (state is IslamicHistoryLoading)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n?.translate('common.loading') ??
+                              'جارٍ التحميل...',
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (state is IslamicHistoryError)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: size.width * 0.2,
+                          color: Colors.red[300],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n?.translate('common.error') ?? 'حدث خطأ',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            state.message,
+                            style: theme.textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          if (isLoading)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: theme.colorScheme.primary),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n?.translate('common.loading') ?? 'جارٍ التحميل...',
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else if (error != null)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: size.width * 0.2,
-                      color: Colors.red[300],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n?.translate('common.error') ?? 'حدث خطأ',
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        error!,
-                        style: theme.textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
+                )
+              else if (state is IslamicHistoryLoaded)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: PlatformUtils.isDesktop
+                            ? 1400.0
+                            : double.infinity,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: PlatformUtils.isDesktop
-                        ? 1400.0
-                        : double.infinity,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(
-                      PlatformUtils.isDesktop ? 24.0 : 16.0,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.3,
-                          ),
-                          width: 1.5,
+                      child: Padding(
+                        padding: EdgeInsets.all(
+                          PlatformUtils.isDesktop ? 24.0 : 16.0,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.1,
-                            ),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: _searchController,
-                        builder: (context, value, child) {
-                          return TextField(
-                            controller: _searchController,
-                            style: theme.textTheme.bodyLarge,
-                            decoration: InputDecoration(
-                              hintText: 'ابحث في السيرة النبوية...',
-                              hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.hintColor.withValues(alpha: 0.6),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search_rounded,
-                                color: theme.colorScheme.primary,
-                                size: 24,
-                              ),
-                              suffixIcon: value.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: Icon(
-                                        Icons.clear_rounded,
-                                        color: theme.hintColor,
-                                      ),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                      },
-                                    )
-                                  : null,
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                          );
-                        },
+                        child: _buildHistoryList(context, state),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          if (!isLoading && error == null)
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: PlatformUtils.isDesktop
-                        ? 1400.0
-                        : double.infinity,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      PlatformUtils.isDesktop ? 24.0 : 16.0,
-                      8,
-                      PlatformUtils.isDesktop ? 24.0 : 16.0,
-                      0,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.filter_list_rounded,
-                            size: 16,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${filteredEvents.length} ${filteredEvents.length == 1 ? 'حدث' : 'أحداث'}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          if (!isLoading && error == null)
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: PlatformUtils.isDesktop
-                        ? 1400.0
-                        : double.infinity,
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(
-                      PlatformUtils.isDesktop ? 24.0 : 16.0,
-                    ),
-                    child: _buildHistoryList(context),
-                  ),
-                ),
-              ),
-            ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildHistoryList(BuildContext context) {
+  Widget _buildHistoryList(BuildContext context, IslamicHistoryLoaded state) {
     final isDesktop = PlatformUtils.isDesktop;
     final width = MediaQuery.of(context).size.width;
+    final events = state.events;
 
     // Determine grid columns for desktop
     int crossAxisCount = 1;
@@ -404,33 +383,57 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
       }
     }
 
-    if (isDesktop && crossAxisCount > 1) {
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: 1.2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: filteredEvents.length,
-        itemBuilder: (context, index) {
-          final event = filteredEvents[index];
-          return _buildHistoryCard(event, index, context);
-        },
-      );
-    } else {
-      return Column(
-        children: List.generate(filteredEvents.length, (index) {
-          final event = filteredEvents[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _buildHistoryCard(event, index, context),
-          );
-        }),
-      );
-    }
+    return Column(
+      children: [
+        if (isDesktop && crossAxisCount > 1)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              childAspectRatio: 1.2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+            ),
+            itemCount: events.length,
+            itemBuilder: (context, index) {
+              final event = events[index];
+              return _buildHistoryCard(event, index, context);
+            },
+          )
+        else
+          ...List.generate(events.length, (index) {
+            final event = events[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildHistoryCard(event, index, context),
+            );
+          }),
+        // Loading more indicator
+        if (state.isLoadingMore)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        // End of list indicator
+        if (!state.hasMorePages && events.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Text(
+                'تم عرض جميع الأحداث',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).hintColor,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildHistoryCard(
@@ -933,24 +936,6 @@ class _IslamicHistoryScreenState extends State<IslamicHistoryScreen> {
       ),
     );
   }
-}
-
-class HistoryEvent {
-  final int id;
-  final String title;
-  final String text;
-  final String hijriYear;
-  final String lunarMonth;
-  final String gregorianYear;
-
-  HistoryEvent({
-    required this.id,
-    required this.title,
-    required this.text,
-    required this.hijriYear,
-    required this.lunarMonth,
-    required this.gregorianYear,
-  });
 }
 
 // Custom painter for Islamic geometric pattern

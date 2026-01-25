@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.3.2+9
+version: 2.3.3+10
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
@@ -112,7 +112,7 @@ dev_dependencies:
   json_serializable: ^6.7.1
   
   # MSIX packaging for Windows
-  msix: ^3.16.7
+  msix: ^3.16.12
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -203,26 +203,28 @@ flutter:
           weight: 700
 
 msix_config:
-  display_name: WADHAKIR
-  publisher_display_name: OmarZenhom
-  identity_name: com.bloom.wadhakir
-  msix_version: 1.0.0.0
-  publisher: com.bloom.wadhakir
-  capabilities: 'internetClient,location'
-  execution_alias: wadhakir
+  display_name: Wadhakir
+  publisher_display_name: Omar Waleed
+  publisher: CN=DF776E6F-2B42-431A-B1DB-7378360B1BC1
+  identity_name: OmarWaleed.Wadhakir
+  msix_version: 2.3.3.0
+  capabilities: "internetClient,location"
   
-  # Store submission info
-  languages: ar, en
+  # Store submission settings
+  store: true
+  architecture: x64
   
-  # App info
+  # Languages
+  languages: ar, en-us
+  
+  # App description
   description: >
-    WADHAKIR is an Islamic app for prayer times, Quran, and Islamic content.
-    تطبيق وَذَكِّر الإسلامي لأوقات الصلاة والقرآن والمحتوى الإسلامي.
+    WADHAKIR is a complete Islamic companion app featuring prayer times, 
+    Quran, Azkar, Islamic radio, and Qibla finder.
   
-  # Icons - specify all required sizes
+  # Logo configuration
+  logo_path: assets/icons/icon.png
   icons_background_color: '#FFFFFF'
   
-  # Remove problematic fields
-  protocol_activation: 
-  file_extension: 
+  # Certificate settings (not needed for Store, will be signed by MS)
   install_certificate: false

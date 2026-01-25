@@ -6,6 +6,7 @@ import 'grids/allah_names_grid_item.dart';
 import 'grids/nearest_mosque_grid_item.dart';
 import 'grids/hadith_library_grid_item.dart';
 import 'grids/islamic_history_grid_item.dart';
+import 'grids/electronic_tasbih_grid_item.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
@@ -87,6 +88,7 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
                 PrayAzkarGridItem(),
                 RaqiaGridItem(),
                 TasbihGridItem(),
+                ElectronicTasbihGridItem(),
                 NearestMosqueGridItem(),
                 IslamicHistoryGridItem(),
               ],

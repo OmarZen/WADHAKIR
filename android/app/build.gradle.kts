@@ -50,13 +50,18 @@ android {
 
     buildTypes {
         release {
-            // Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            // when release appbundle is ready, change it to release
-            // and use this cmd to export appbundle:
-            // flutter build appbundle --release
-            // signingConfig = signingConfigs.getByName("debug")
+            // Signing configuration for release builds
             signingConfig = signingConfigs.getByName("release")
+            
+            // Enable code shrinking, obfuscation, and optimization
+            isMinifyEnabled = true
+            isShrinkResources = true
+            
+            // Use proguard rules
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -68,4 +73,8 @@ flutter {
 dependencies {
     // Required for edge-to-edge support on Android 15 (API 35)
     implementation("androidx.core:core-ktx:1.13.1")
+    
+    // Google Play feature delivery (Android 14 compatible)
+    implementation("com.google.android.play:feature-delivery:2.1.0")
+    implementation("com.google.android.play:feature-delivery-ktx:2.1.0")
 }

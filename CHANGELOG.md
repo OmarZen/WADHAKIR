@@ -7,6 +7,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.3+10] - 2026-01-13
+
+### Added - Electronic Tasbih Feature
+- **Electronic Tasbih (Prayer Beads Counter)**:
+  - Interactive prayer beads counter with circular visualization of 33 beads
+  - Animated beads that rotate and highlight as you count
+  - Counter display with progress tracking (current/target format)
+  - Large tap button with pulsing animation for easy interaction
+  - Haptic feedback for tactile response on each count
+  - Target selection with presets: 33, 99, 100, 1000, or custom count
+  - Completion dialog with celebration animation when target is reached
+  - Persistent storage using SharedPreferences (saves progress automatically)
+  - Statistics card showing: Total Counter, Target, Progress Percentage
+  - Reset functionality for current count and total count
+  - Clean, modern UI with gradient backgrounds and smooth animations
+  - Integrated into home screen grid for easy access
+  - Full Arabic and English localization support
+  - Compact single-screen layout optimized for all screen sizes
+  - About dialog with usage instructions
+
+- **Islamic History Feature Improvements**:
+  - Refactored Islamic History screen to use BLoC pattern with proper state management
+  - Implemented pagination system for better performance (20 events per page)
+  - Added infinite scroll with "load more" functionality
+  - Created dedicated data models and repository layer
+  - Separated business logic into domain layer with repository interface
+  - Added search debouncing (500ms) for improved user experience
+  - Improved UI with loading states and better error handling
+  - Added "load more" indicator and "end of list" message
+  - Better separation of concerns following Clean Architecture principles
+
+- **Documentation**:
+  - Added comprehensive Google Play crash fix guide (GOOGLE_PLAY_CRASH_FIX_GUIDE.md)
+  - Added Microsoft Store submission guide (MICROSOFT_STORE_SUBMISSION_GUIDE.md)
+  - Added MSIX package ready guide (MSIX_PACKAGE_READY.md)
+  - Detailed proguard configuration documentation
+  - Step-by-step submission instructions for both stores
+
+### Fixed - Google Play & Microsoft Store Submission
+- **Proguard Configuration**:
+  - Added comprehensive proguard rules to prevent release build crashes
+  - Protected Flutter framework and all plugin classes from obfuscation
+  - Fixed code shrinking issues that caused app crashes during Google Play testing
+  - Added rules for all plugins: Awesome Notifications, Just Audio, Hive, Syncfusion, Geolocator, Home Widget, etc.
+  - Configured proper Gson serialization rules
+  - Added Android X and Material Components protection
+  
+- **Android Manifest Updates**:
+  - Added intent queries for Android 11+ compatibility
+  - Added queries for URL launching (http/https)
+  - Added queries for sharing functionality
+  - Added query for app settings navigation
+  
+- **Build Configuration**:
+  - Enabled minifyEnabled and shrinkResources for optimized APK size
+  - Configured proguard-android-optimize.txt with custom rules
+  - Added Google Play Core dependencies for proper feature delivery
+  
+- **Microsoft Store**:
+  - Fixed display name to match Partner Center reservation: "Wadhakir - وَذَكِّر"
+  - Updated publisher ID and identity name for Store submission
+  - Configured proper MSIX settings for Windows Store deployment
+  - Set correct version format (2.3.3.0)
+
+### Improved - UI/UX Enhancements
+- **Prayer Times Screen**:
+  - Added back button to header for better navigation
+  - Improved desktop responsiveness with proper spacing
+  - Enhanced header layout with circular button containers
+  - Added box shadows for better visual depth
+  - Better tooltip support for accessibility
+
+- **Settings Screen**:
+  - Updated version display to 2.3.3+10
+  - Improved about section layout and styling
+
+- **Home Screen**:
+  - Added electronic tasbih grid item with gradient icon
+  - Better grid layout organization
+  - Consistent styling across all grid items
+
+### Changed - Code Quality & Architecture
+- **Architecture Improvements**:
+  - Implemented Clean Architecture for Islamic History feature
+  - Added proper data, domain, and presentation layers
+  - Created repository pattern for data access
+  - Implemented BLoC pattern for state management
+  - Better separation of concerns throughout the codebase
+  - Created reusable models: HistoryEvent model with search capabilities
+  - Improved error handling and state management
+
+- **Dependencies**:
+  - Updated msix package to 3.16.12
+
+### Technical Details
+- **Version Code**: 10 (was 9)
+- **MSIX Version**: 2.3.3.0
+- **Build Type**: Release with full optimization and obfuscation
+- **Files Modified**: 16+ files
+- **New Files**: 8 (including models, repositories, cubits, screens, widgets, and documentation)
+- **Quality Assurance**: All features tested and working
+- **Backward Compatibility**: Full - no breaking changes
+
+### User-Facing Changes
+- **New Features**:
+  - Electronic Tasbih (prayer beads counter) with beautiful animations
+  - Improved Islamic History browsing with pagination and search
+  
+- **UI Improvements**:
+  - Better navigation with back buttons on all screens
+  - Smoother animations and transitions
+  - Improved loading states and feedback
+  - Better desktop support throughout the app
+  
+- **Reliability**:
+  - Fixed potential crashes in release builds
+  - Better error handling across all features
+  - Improved performance with pagination
+  - Persistent storage for all user progress
+
+### Migration Notes
+- Update from 2.3.2+9 by installing 2.3.3+10
+- All existing user data preserved
+- New electronic tasbih feature available in home grid
+- Islamic History now uses new architecture (transparent to users)
+- No user action required
+
+---
+
 ## [2.3.2+9] - 2026-01-13
 
 ### Added

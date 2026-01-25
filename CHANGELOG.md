@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.4+11] - 2026-01-25
+
+### Changed - Asset Updates for Shorebird Compatibility
+- **Version Bump**:
+  - Updated app version to 2.3.4+11 for new Shorebird release
+  - Updated all localization files (ar.json, en.json)
+  - Updated settings screen version display
+  - Updated MSIX version to 2.3.4.0
+  
+- **Release Strategy**:
+  - Created new release to enable Shorebird code push
+  - Asset changes from previous version now properly included in release
+  - Enables future over-the-air patches for bug fixes without store updates
+
+### Technical Details
+- **Version Code**: 11 (was 10)
+- **MSIX Version**: 2.3.4.0 (was 2.3.3.0)
+- **Shorebird**: Release created to enable code push capabilities
+- **Backward Compatibility**: Full - seamless update from 2.3.3+10
+
+### Migration Notes
+- Update from 2.3.3+10 by installing 2.3.4+11
+- All previous features and data preserved
+- Shorebird code push now enabled for future quick updates
+- No user action required
+
+---
+
 ## [2.3.3+10] - 2026-01-13
 
 ### Added - Electronic Tasbih Feature

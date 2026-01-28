@@ -11,7 +11,7 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
   final Uuid _uuid = const Uuid();
 
   BookmarkRepositoryImpl({BookmarkDatabaseHelper? dbHelper})
-    : _dbHelper = dbHelper ?? BookmarkDatabaseHelper.instance;
+      : _dbHelper = dbHelper ?? BookmarkDatabaseHelper.instance;
 
   // ===== Bookmark Operations =====
 
@@ -250,10 +250,13 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
     String collectionId,
   ) async {
     final db = await _dbHelper.database;
-    await db.insert('bookmark_collections', {
-      'bookmark_id': bookmarkId,
-      'collection_id': collectionId,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.insert(
+        'bookmark_collections',
+        {
+          'bookmark_id': bookmarkId,
+          'collection_id': collectionId,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   @override
@@ -323,10 +326,13 @@ class BookmarkRepositoryImpl implements BookmarkRepository {
     }
 
     // Link bookmark to tag
-    await db.insert('bookmark_tags', {
-      'bookmark_id': bookmarkId,
-      'tag_id': tagId,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.insert(
+        'bookmark_tags',
+        {
+          'bookmark_id': bookmarkId,
+          'tag_id': tagId,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   @override

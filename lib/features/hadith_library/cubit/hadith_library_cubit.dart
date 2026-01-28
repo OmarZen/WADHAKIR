@@ -15,10 +15,10 @@ class HadithLibraryCubit extends Cubit<HadithLibraryState> {
     required GetHadithBookUseCase getHadithBookUseCase,
     required GetBooksListUseCase getBooksListUseCase,
     required BookmarkRepository bookmarkRepository,
-  }) : _getHadithBookUseCase = getHadithBookUseCase,
-       _getBooksListUseCase = getBooksListUseCase,
-       _bookmarkRepository = bookmarkRepository,
-       super(const HadithLibraryInitial());
+  })  : _getHadithBookUseCase = getHadithBookUseCase,
+        _getBooksListUseCase = getBooksListUseCase,
+        _bookmarkRepository = bookmarkRepository,
+        super(const HadithLibraryInitial());
 
   /// Load all collections (home screen)
   Future<void> loadCollections() async {

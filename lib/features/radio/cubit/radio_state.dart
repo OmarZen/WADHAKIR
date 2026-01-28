@@ -46,7 +46,7 @@ class RadioLoaded extends RadioState {
 class RadioError extends RadioState {
   final String message;
   final String
-  errorType; // 'network', 'timeout', 'format', 'unknown', 'playback'
+      errorType; // 'network', 'timeout', 'format', 'unknown', 'playback'
 
   const RadioError(this.message, {this.errorType = 'unknown'});
 

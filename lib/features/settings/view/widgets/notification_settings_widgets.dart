@@ -30,8 +30,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                  : theme.colorScheme.primary.withValues(alpha: 0.08))
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -87,8 +87,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
                           l10n?.translate('settings.settings') ?? 'الإعدادات',
                       onPressed: () =>
                           AlarmPermissionHelper.showPermissionDeniedDialog(
-                            context,
-                          ),
+                        context,
+                      ),
                     ),
                   ),
                 );
@@ -140,8 +140,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                  : theme.colorScheme.primary.withValues(alpha: 0.08))
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -740,8 +740,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                  : theme.colorScheme.primary.withValues(alpha: 0.08))
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(

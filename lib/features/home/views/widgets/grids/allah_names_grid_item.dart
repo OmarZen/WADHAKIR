@@ -105,9 +105,8 @@ class AllahNamesGridItem extends StatelessWidget {
       builder: (context) {
         final l10n = context.l10n;
         return Directionality(
-          textDirection: languageCode == 'en'
-              ? TextDirection.ltr
-              : TextDirection.rtl,
+          textDirection:
+              languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.8,
             child: Column(
@@ -137,7 +136,7 @@ class AllahNamesGridItem extends StatelessWidget {
                         languageCode == 'en'
                             ? 'The 99 Names of Allah'
                             : (l10n?.translate('home.asmallah') ??
-                                  'أسماء الله الحسنى'),
+                                'أسماء الله الحسنى'),
                         style: theme.textTheme.titleLarge,
                       ),
                     ],

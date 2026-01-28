@@ -45,8 +45,7 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget>
     // Calculate the angle to rotate the compass
     // Subtract compass direction from Qibla direction to get the relative angle
     double compassAngle = (widget.qiblaModel.compassDirection) * (pi / 180);
-    double qiblaAngle =
-        (widget.qiblaModel.qiblaDirection -
+    double qiblaAngle = (widget.qiblaModel.qiblaDirection -
             widget.qiblaModel.compassDirection) *
         (pi / 180);
     final size = MediaQuery.of(context).size;
@@ -68,12 +67,10 @@ class _QiblaCompassWidgetState extends State<QiblaCompassWidget>
                 animation: _pulseAnimation,
                 builder: (context, child) {
                   return Container(
-                    width:
-                        size.width *
+                    width: size.width *
                         0.65 *
                         (0.98 + _pulseAnimation.value * 0.02),
-                    height:
-                        size.width *
+                    height: size.width *
                         0.65 *
                         (0.98 + _pulseAnimation.value * 0.02),
                     decoration: BoxDecoration(

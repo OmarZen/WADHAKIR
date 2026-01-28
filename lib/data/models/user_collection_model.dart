@@ -86,13 +86,13 @@ class UserCollectionModel extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    description,
-    icon,
-    color,
-    createdAt,
-    bookmarkCount,
-    isDefault,
-  ];
+        id,
+        name,
+        description,
+        icon,
+        color,
+        createdAt,
+        bookmarkCount,
+        isDefault,
+      ];
 }

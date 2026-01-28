@@ -605,8 +605,7 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
                     setModalState(() {});
                   },
                   decoration: InputDecoration(
-                    hintText:
-                        l10n?.translate('hadith_library.search_hint') ??
+                    hintText: l10n?.translate('hadith_library.search_hint') ??
                         'Search by name or description...',
                     prefixIcon: Icon(
                       Icons.search_rounded,
@@ -890,8 +889,8 @@ class _HadithLibraryViewState extends State<_HadithLibraryView>
           childAspectRatio: size.width >= 1400
               ? 2.5
               : size.width >= 900
-              ? 2.4
-              : 2.3,
+                  ? 2.4
+                  : 2.3,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),

@@ -324,9 +324,8 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
 
     // Calculate next occurrence
     final now = DateTime.now();
-    final targetWeekday = dayName.toLowerCase() == 'monday'
-        ? DateTime.monday
-        : DateTime.thursday;
+    final targetWeekday =
+        dayName.toLowerCase() == 'monday' ? DateTime.monday : DateTime.thursday;
 
     int daysUntilTarget = targetWeekday - now.weekday;
     if (daysUntilTarget <= 0) {

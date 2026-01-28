@@ -35,8 +35,7 @@ class QiblaCubit extends Cubit<QiblaState> {
     try {
       // Check if compass is available before doing anything
       if (!_qiblaRepository.isCompassAvailable) {
-        final errorMessage =
-            _qiblaRepository.compassErrorMessage ??
+        final errorMessage = _qiblaRepository.compassErrorMessage ??
             'Compass sensor is not available on this device.';
         emit(QiblaError(errorMessage));
         return;

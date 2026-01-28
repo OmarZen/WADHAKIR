@@ -74,9 +74,8 @@ class IslamicHistoryRepositoryImpl implements IslamicHistoryRepository {
     }
 
     final allEvents = await _loadAllEvents();
-    final filteredEvents = allEvents
-        .where((event) => event.matchesSearchQuery(query))
-        .toList();
+    final filteredEvents =
+        allEvents.where((event) => event.matchesSearchQuery(query)).toList();
 
     final startIndex = page * pageSize;
     final endIndex = (startIndex + pageSize).clamp(0, filteredEvents.length);

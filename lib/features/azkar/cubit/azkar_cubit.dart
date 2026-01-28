@@ -8,8 +8,8 @@ class AzkarCubit extends Cubit<AzkarState> {
   final AzkarRepository _azkarRepository;
 
   AzkarCubit({required AzkarRepository azkarRepository})
-    : _azkarRepository = azkarRepository,
-      super(AzkarInitial());
+      : _azkarRepository = azkarRepository,
+        super(AzkarInitial());
 
   Future<void> loadCategories() async {
     try {

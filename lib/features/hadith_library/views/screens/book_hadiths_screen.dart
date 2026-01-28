@@ -133,9 +133,9 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
           ),
           tooltip: _showTranslation
               ? (l10n?.translate('hadith_library.hide_translation') ??
-                    'Hide Translation')
+                  'Hide Translation')
               : (l10n?.translate('hadith_library.show_translation') ??
-                    'Show Translation'),
+                  'Show Translation'),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -275,9 +275,9 @@ class _BookHadithsViewState extends State<_BookHadithsView> {
           ElevatedButton.icon(
             onPressed: () {
               context.read<HadithLibraryCubit>().loadHadiths(
-                collectionId: widget.collection.id,
-                bookNumber: widget.bookNumber,
-              );
+                    collectionId: widget.collection.id,
+                    bookNumber: widget.bookNumber,
+                  );
             },
             icon: const Icon(Icons.refresh_rounded),
             label: Text(l10n?.translate('hadith_library.retry') ?? 'Retry'),

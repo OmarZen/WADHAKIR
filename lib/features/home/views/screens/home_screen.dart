@@ -35,9 +35,8 @@ class HomeScreenContent extends StatelessWidget {
       backgroundColor: theme.colorScheme.surface,
       body: BlocBuilder<UnsplashCubit, UnsplashState>(
         builder: (context, state) {
-          final mosqueImage = context
-              .read<UnsplashCubit>()
-              .getCurrentMosqueImage();
+          final mosqueImage =
+              context.read<UnsplashCubit>().getCurrentMosqueImage();
 
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),

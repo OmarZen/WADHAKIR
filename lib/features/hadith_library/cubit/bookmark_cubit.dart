@@ -24,12 +24,12 @@ class BookmarkCubit extends Cubit<BookmarkState> {
     required GetAllBookmarksUseCase getAllBookmarksUseCase,
     required GetAllCollectionsUseCase getAllCollectionsUseCase,
     required BookmarkRepository bookmarkRepository,
-  }) : _addBookmarkUseCase = addBookmarkUseCase,
-       _removeBookmarkUseCase = removeBookmarkUseCase,
-       _getAllBookmarksUseCase = getAllBookmarksUseCase,
-       _getAllCollectionsUseCase = getAllCollectionsUseCase,
-       _bookmarkRepository = bookmarkRepository,
-       super(const BookmarkInitial());
+  })  : _addBookmarkUseCase = addBookmarkUseCase,
+        _removeBookmarkUseCase = removeBookmarkUseCase,
+        _getAllBookmarksUseCase = getAllBookmarksUseCase,
+        _getAllCollectionsUseCase = getAllCollectionsUseCase,
+        _bookmarkRepository = bookmarkRepository,
+        super(const BookmarkInitial());
 
   /// Load all bookmarks
   Future<void> loadBookmarks({String? collectionId}) async {

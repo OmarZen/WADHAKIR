@@ -48,24 +48,26 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required DateTime prayerTime,
     required PrayerNotificationSettings settings,
     String? locationName,
-  }) => _platformRepository.schedulePrayerNotification(
-    prayerName: prayerName,
-    prayerNameArabic: prayerNameArabic,
-    prayerTime: prayerTime,
-    settings: settings,
-    locationName: locationName,
-  );
+  }) =>
+      _platformRepository.schedulePrayerNotification(
+        prayerName: prayerName,
+        prayerNameArabic: prayerNameArabic,
+        prayerTime: prayerTime,
+        settings: settings,
+        locationName: locationName,
+      );
 
   @override
   Future<void> scheduleAllPrayerNotifications({
     required Map<String, DateTime> prayerTimes,
     required NotificationSettingsModel settings,
     String? locationName,
-  }) => _platformRepository.scheduleAllPrayerNotifications(
-    prayerTimes: prayerTimes,
-    settings: settings,
-    locationName: locationName,
-  );
+  }) =>
+      _platformRepository.scheduleAllPrayerNotifications(
+        prayerTimes: prayerTimes,
+        settings: settings,
+        locationName: locationName,
+      );
 
   @override
   Future<void> cancelPrayerNotification(String prayerName) =>
@@ -89,12 +91,13 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required String nextPrayerNameArabic,
     required DateTime nextPrayerTime,
     String? locationName,
-  }) => _platformRepository.showPersistentNotification(
-    nextPrayerName: nextPrayerName,
-    nextPrayerNameArabic: nextPrayerNameArabic,
-    nextPrayerTime: nextPrayerTime,
-    locationName: locationName,
-  );
+  }) =>
+      _platformRepository.showPersistentNotification(
+        nextPrayerName: nextPrayerName,
+        nextPrayerNameArabic: nextPrayerNameArabic,
+        nextPrayerTime: nextPrayerTime,
+        locationName: locationName,
+      );
 
   @override
   Future<void> hidePersistentNotification() =>
@@ -107,13 +110,14 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required String notificationTime,
     required bool enabled,
     required bool vibration,
-  }) => _platformRepository.scheduleFastingNotification(
-    dayName: dayName,
-    dayNameArabic: dayNameArabic,
-    notificationTime: notificationTime,
-    enabled: enabled,
-    vibration: vibration,
-  );
+  }) =>
+      _platformRepository.scheduleFastingNotification(
+        dayName: dayName,
+        dayNameArabic: dayNameArabic,
+        notificationTime: notificationTime,
+        enabled: enabled,
+        vibration: vibration,
+      );
 
   @override
   Future<void> cancelFastingNotification(String dayName) =>
@@ -125,12 +129,13 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required bool thursdayEnabled,
     required String notificationTime,
     required bool vibration,
-  }) => _platformRepository.scheduleAllFastingNotifications(
-    mondayEnabled: mondayEnabled,
-    thursdayEnabled: thursdayEnabled,
-    notificationTime: notificationTime,
-    vibration: vibration,
-  );
+  }) =>
+      _platformRepository.scheduleAllFastingNotifications(
+        mondayEnabled: mondayEnabled,
+        thursdayEnabled: thursdayEnabled,
+        notificationTime: notificationTime,
+        vibration: vibration,
+      );
 }
 
 /// Mobile implementation using awesome_notifications
@@ -330,8 +335,7 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
 
     final int notificationId = _getNotificationId(prayerName);
     final bool isFajr = prayerName.toLowerCase() == 'fajr';
-    final bool useCustomAdhan =
-        settings.customSoundPath != null &&
+    final bool useCustomAdhan = settings.customSoundPath != null &&
         settings.customSoundPath!.isNotEmpty;
 
     // Select channel based on sound preference
@@ -489,15 +493,15 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
 
   @override
   Future<bool> hasActiveNotifications() async {
-    final scheduledNotifications = await AwesomeNotifications()
-        .listScheduledNotifications();
+    final scheduledNotifications =
+        await AwesomeNotifications().listScheduledNotifications();
     return scheduledNotifications.isNotEmpty;
   }
 
   @override
   Future<List<int>> getScheduledNotificationIds() async {
-    final scheduledNotifications = await AwesomeNotifications()
-        .listScheduledNotifications();
+    final scheduledNotifications =
+        await AwesomeNotifications().listScheduledNotifications();
     return scheduledNotifications.map((n) => n.content!.id!).toList();
   }
 
@@ -605,9 +609,8 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
 
     // Calculate next occurrence of the day
     final now = DateTime.now();
-    final targetWeekday = dayName.toLowerCase() == 'monday'
-        ? DateTime.monday
-        : DateTime.thursday;
+    final targetWeekday =
+        dayName.toLowerCase() == 'monday' ? DateTime.monday : DateTime.thursday;
 
     // Find next occurrence of the target day
     int daysUntilTarget = targetWeekday - now.weekday;

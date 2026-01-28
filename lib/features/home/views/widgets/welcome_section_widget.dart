@@ -334,9 +334,8 @@ class WelcomeSectionWidget extends StatelessWidget {
             final quote = IslamicQuotes.getRandomQuote();
             final languageCode = Localizations.localeOf(context).languageCode;
             final quoteText = languageCode == 'en' ? quote.textEn : quote.text;
-            final quoteSource = languageCode == 'en'
-                ? quote.sourceEn
-                : quote.source;
+            final quoteSource =
+                languageCode == 'en' ? quote.sourceEn : quote.source;
 
             return Container(
               constraints: BoxConstraints(
@@ -354,9 +353,8 @@ class WelcomeSectionWidget extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.92),
                       fontWeight: FontWeight.w400,
                       height: 1.4,
-                      fontFamily: languageCode == 'en'
-                          ? null
-                          : 'ScheherazadeNew',
+                      fontFamily:
+                          languageCode == 'en' ? null : 'ScheherazadeNew',
                     ),
                   ),
                   SizedBox(height: isDesktop ? 8 : 6),

@@ -400,8 +400,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   Future<bool> isFirstTimeUser() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final hasLocation =
-          prefs.containsKey(_lastLatitudeKey) &&
+      final hasLocation = prefs.containsKey(_lastLatitudeKey) &&
           prefs.containsKey(_lastLongitudeKey);
       return !hasLocation;
     } catch (e) {

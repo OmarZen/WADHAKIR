@@ -48,12 +48,12 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     required PrayerTimesRepository repository,
     PrayerNotificationService? notificationService,
     PersistentNotificationManager? persistentManager,
-  }) : _repository = repository,
-       _notificationService =
-           notificationService ?? PrayerNotificationService(),
-       _persistentManager =
-           persistentManager ?? PersistentNotificationManager(),
-       super(const PrayerTimesInitial()) {
+  })  : _repository = repository,
+        _notificationService =
+            notificationService ?? PrayerNotificationService(),
+        _persistentManager =
+            persistentManager ?? PersistentNotificationManager(),
+        super(const PrayerTimesInitial()) {
     // Load saved time adjustments
     _loadSavedTimeAdjustments();
   }

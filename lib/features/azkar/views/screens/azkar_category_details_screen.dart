@@ -131,9 +131,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
     final theme = Theme.of(context);
 
     return BlocProvider(
-      create: (context) =>
-          AzkarCubit(azkarRepository: AzkarRepositoryImpl())
-            ..selectCategory(widget.category),
+      create: (context) => AzkarCubit(azkarRepository: AzkarRepositoryImpl())
+        ..selectCategory(widget.category),
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: _buildBody(theme),
@@ -288,8 +287,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
-                              value:
-                                  ((_currentPage + 1) /
+                              value: ((_currentPage + 1) /
                                   state.category.items.length),
                               backgroundColor: theme.colorScheme.primary
                                   .withValues(alpha: 0.1),
@@ -380,16 +378,15 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                         return FadeTransition(
                           opacity: _animationController,
                           child: SlideTransition(
-                            position:
-                                Tween<Offset>(
-                                  begin: const Offset(0, 0.1),
-                                  end: Offset.zero,
-                                ).animate(
-                                  CurvedAnimation(
-                                    parent: _animationController,
-                                    curve: Curves.easeOut,
-                                  ),
-                                ),
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 0.1),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(
+                                parent: _animationController,
+                                curve: Curves.easeOut,
+                              ),
+                            ),
                             child: _buildAdhkarPage(context, item, theme),
                           ),
                         );

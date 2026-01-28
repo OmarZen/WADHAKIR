@@ -131,8 +131,8 @@ class HadithRepositoryImpl implements HadithRepository {
 
         if (hadith.hadithTextArabic.contains(query) ||
             (hadith.hadithTextEnglish?.toLowerCase().contains(
-                  query.toLowerCase(),
-                ) ??
+                      query.toLowerCase(),
+                    ) ??
                 false)) {
           results.add(hadith);
         }

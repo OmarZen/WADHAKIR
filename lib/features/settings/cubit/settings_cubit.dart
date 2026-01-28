@@ -27,14 +27,14 @@ class SettingsCubit extends Cubit<SettingsState> {
     required SetLanguageUseCase setLanguageUseCase,
     required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
     PrayerNotificationService? notificationService,
-  }) : _getSettingsUseCase = getSettingsUseCase,
-       _getSettingsStreamUseCase = getSettingsStreamUseCase,
-       _setThemeModeUseCase = setThemeModeUseCase,
-       _setLanguageUseCase = setLanguageUseCase,
-       _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
-       _notificationService =
-           notificationService ?? PrayerNotificationService(),
-       super(const SettingsInitial()) {
+  })  : _getSettingsUseCase = getSettingsUseCase,
+        _getSettingsStreamUseCase = getSettingsStreamUseCase,
+        _setThemeModeUseCase = setThemeModeUseCase,
+        _setLanguageUseCase = setLanguageUseCase,
+        _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
+        _notificationService =
+            notificationService ?? PrayerNotificationService(),
+        super(const SettingsInitial()) {
     loadSettings();
     _listenToSettingsChanges();
   }
@@ -95,8 +95,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> toggleNotifications(bool enabled) async {
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;
-      final newNotificationSettings = currentSettings.notificationSettings
-          .copyWith(masterEnabled: enabled);
+      final newNotificationSettings =
+          currentSettings.notificationSettings.copyWith(masterEnabled: enabled);
 
       await setNotificationSettings(newNotificationSettings);
 

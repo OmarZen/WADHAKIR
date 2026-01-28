@@ -28,8 +28,8 @@ class FastingNotificationSettingsWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                  : theme.colorScheme.primary.withValues(alpha: 0.08))
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -100,8 +100,8 @@ class FastingNotificationSettingsWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
-                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                  : theme.colorScheme.primary.withValues(alpha: 0.08))
+                ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(

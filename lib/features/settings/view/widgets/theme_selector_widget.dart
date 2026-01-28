@@ -44,8 +44,8 @@ class ThemeSelectorWidget extends StatelessWidget {
                   settings.themeMode == ThemeMode.light
                       ? Icons.light_mode
                       : settings.themeMode == ThemeMode.dark
-                      ? Icons.dark_mode
-                      : Icons.brightness_auto,
+                          ? Icons.dark_mode
+                          : Icons.brightness_auto,
                   color: isDark
                       ? theme.colorScheme.onPrimary
                       : theme.colorScheme.onPrimary,
@@ -68,10 +68,12 @@ class ThemeSelectorWidget extends StatelessWidget {
                     Text(
                       settings.themeMode == ThemeMode.system
                           ? l10n?.translate('settings.system_theme') ??
-                                'حسب النظام'
+                              'حسب النظام'
                           : settings.themeMode == ThemeMode.light
-                          ? l10n?.translate('settings.light_theme') ?? 'فاتح'
-                          : l10n?.translate('settings.dark_theme') ?? 'داكن',
+                              ? l10n?.translate('settings.light_theme') ??
+                                  'فاتح'
+                              : l10n?.translate('settings.dark_theme') ??
+                                  'داكن',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,
@@ -172,8 +174,7 @@ class ThemeSelectorWidget extends StatelessWidget {
                     const SizedBox(height: 10),
                     _buildThemeOption(
                       context,
-                      title:
-                          l10n?.translate('settings.system_theme') ??
+                      title: l10n?.translate('settings.system_theme') ??
                           'حسب النظام',
                       icon: Icons.brightness_auto,
                       mode: ThemeMode.system,

@@ -79,16 +79,15 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     final languageCode = Localizations.localeOf(context).languageCode;
 
     return Directionality(
-      textDirection: languageCode == 'en'
-          ? TextDirection.ltr
-          : TextDirection.rtl,
+      textDirection:
+          languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: _loading
             ? _buildSkeleton(theme, languageCode)
             : _hadiths.isEmpty
-            ? _buildError(theme, languageCode)
-            : _buildGlassCard(theme, languageCode, _hadiths[_currentIndex]),
+                ? _buildError(theme, languageCode)
+                : _buildGlassCard(theme, languageCode, _hadiths[_currentIndex]),
       ),
     );
   }
@@ -180,9 +179,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                       maxLines: 5,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        fontFamily: languageCode == 'en'
-                            ? null
-                            : 'ScheherazadeNew',
+                        fontFamily:
+                            languageCode == 'en' ? null : 'ScheherazadeNew',
                         height: 1.4,
                       ),
                     ),
@@ -194,8 +192,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                       _actionChip(
                         context,
                         icon: Icons.autorenew_rounded,
-                        label:
-                            l10n?.translate('home.hadith_shuffle') ??
+                        label: l10n?.translate('home.hadith_shuffle') ??
                             (languageCode == 'en' ? 'Another' : 'حديث آخر'),
                         onTap: _shuffle,
                       ),
@@ -210,8 +207,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                       _iconCircle(
                         context,
                         icon: Icons.share_rounded,
-                        tooltip:
-                            l10n?.translate('home.hadith_share') ??
+                        tooltip: l10n?.translate('home.hadith_share') ??
                             (languageCode == 'en' ? 'Share' : 'مشاركة'),
                         onTap: () => _shareHadith(hadith, languageCode),
                       ),
@@ -248,9 +244,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
       builder: (context) {
         final l10n = context.l10n;
         return Directionality(
-          textDirection: languageCode == 'en'
-              ? TextDirection.ltr
-              : TextDirection.rtl,
+          textDirection:
+              languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.7,
             child: Column(
@@ -306,8 +301,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                             ),
                           ),
                           IconButton(
-                            tooltip:
-                                l10n?.translate('home.hadith_share') ??
+                            tooltip: l10n?.translate('home.hadith_share') ??
                                 (languageCode == 'en' ? 'Share' : 'مشاركة'),
                             onPressed: () => _shareHadith(hadith, languageCode),
                             icon: const Icon(Icons.share_rounded),
@@ -326,9 +320,8 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                       hadithText,
                       textAlign: TextAlign.start,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontFamily: languageCode == 'en'
-                            ? null
-                            : 'ScheherazadeNew',
+                        fontFamily:
+                            languageCode == 'en' ? null : 'ScheherazadeNew',
                         height: 1.6,
                       ),
                     ),
@@ -380,8 +373,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
               icon: languageCode == 'en'
                   ? Icons.arrow_back_ios_new_rounded
                   : Icons.arrow_forward_ios_rounded,
-              tooltip:
-                  l10n?.translate('home.hadith_previous') ??
+              tooltip: l10n?.translate('home.hadith_previous') ??
                   (languageCode == 'en' ? 'Previous' : 'السابق'),
               onTap: () {
                 if (_hadiths.isEmpty) return;
@@ -397,8 +389,7 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
               icon: languageCode == 'en'
                   ? Icons.arrow_forward_ios_rounded
                   : Icons.arrow_back_ios_new_rounded,
-              tooltip:
-                  l10n?.translate('home.hadith_next') ??
+              tooltip: l10n?.translate('home.hadith_next') ??
                   (languageCode == 'en' ? 'Next' : 'التالي'),
               onTap: () {
                 if (_hadiths.isEmpty) return;
@@ -447,9 +438,9 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: _accent(theme),
-              fontWeight: FontWeight.w700,
-            ),
+                  color: _accent(theme),
+                  fontWeight: FontWeight.w700,
+                ),
           ),
         ],
       ),

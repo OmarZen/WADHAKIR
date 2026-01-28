@@ -59,8 +59,7 @@ class QiblaRepositoryImpl implements QiblaRepository {
       if (_isCompassAvailable) {
         _initCompass();
       } else {
-        _compassErrorMessage =
-            'Compass sensor not available on this device. '
+        _compassErrorMessage = 'Compass sensor not available on this device. '
             'Your device may not have a magnetometer sensor.';
       }
     } catch (e) {
@@ -190,8 +189,7 @@ class QiblaRepositoryImpl implements QiblaRepository {
 
     // Formula to calculate Qibla direction
     double y = math.sin(kaabaLongRad - longRad);
-    double x =
-        math.cos(latRad) * math.tan(kaabaLatRad) -
+    double x = math.cos(latRad) * math.tan(kaabaLatRad) -
         math.sin(latRad) * math.cos(kaabaLongRad - longRad);
 
     double qiblaRad = math.atan2(y, x);

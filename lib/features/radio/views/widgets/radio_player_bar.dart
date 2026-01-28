@@ -36,9 +36,8 @@ class RadioPlayerBar extends StatelessWidget {
               ),
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: PlatformUtils.isDesktop
-                      ? 14.0
-                      : size.width * 0.03,
+                  horizontal:
+                      PlatformUtils.isDesktop ? 14.0 : size.width * 0.03,
                   vertical: PlatformUtils.isDesktop ? 10.0 : size.height * 0.01,
                 ),
                 decoration: BoxDecoration(
@@ -58,9 +57,8 @@ class RadioPlayerBar extends StatelessWidget {
                       size: PlatformUtils.isDesktop ? 40.0 : size.width * 0.10,
                     ),
                     SizedBox(
-                      width: PlatformUtils.isDesktop
-                          ? 10.0
-                          : size.width * 0.025,
+                      width:
+                          PlatformUtils.isDesktop ? 10.0 : size.width * 0.025,
                     ),
                     Expanded(
                       child: Column(
@@ -87,9 +85,8 @@ class RadioPlayerBar extends StatelessWidget {
                                   ? 14.0
                                   : size.width * 0.036,
                               fontWeight: FontWeight.w700,
-                              fontFamily: languageCode == 'en'
-                                  ? null
-                                  : 'Almarai',
+                              fontFamily:
+                                  languageCode == 'en' ? null : 'Almarai',
                             ),
                           ),
                           SizedBox(height: PlatformUtils.isDesktop ? 4.0 : 4.0),
@@ -133,12 +130,11 @@ class RadioPlayerBar extends StatelessWidget {
                               Text(
                                 playing
                                     ? (l10n?.translate('radio.pause') ??
-                                          'Pause')
+                                        'Pause')
                                     : (l10n?.translate('radio.play') ?? 'Play'),
                                 style: TextStyle(
-                                  fontSize: PlatformUtils.isDesktop
-                                      ? 13.0
-                                      : 13.0,
+                                  fontSize:
+                                      PlatformUtils.isDesktop ? 13.0 : 13.0,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

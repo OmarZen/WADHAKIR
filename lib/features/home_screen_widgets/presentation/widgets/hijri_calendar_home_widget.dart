@@ -73,8 +73,7 @@ class HijriCalendarHomeWidget {
           firstDayGregorian.weekday % 7; // 0 = Sunday, 1 = Monday, etc.
 
       // Check if today is in this displayed month
-      final todayDay =
-          (monthOffset == 0 &&
+      final todayDay = (monthOffset == 0 &&
               hijriToday.month == displayMonth.month &&
               hijriToday.year == displayMonth.year)
           ? hijriToday.day

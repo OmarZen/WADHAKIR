@@ -16,9 +16,8 @@ class PalestineSupportCardWidget extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Directionality(
-      textDirection: languageCode == 'en'
-          ? TextDirection.ltr
-          : TextDirection.rtl,
+      textDirection:
+          languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: 16.0,
@@ -72,7 +71,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
                                 languageCode == 'en'
                                     ? 'Pray for Palestine\n'
                                     : (l10n?.translate('home.free_palestine') ??
-                                          '\u0641\u0644\u0633\u0637\u064a\u0646 \u062d\u0631\u0629'),
+                                        '\u0641\u0644\u0633\u0637\u064a\u0646 \u062d\u0631\u0629'),
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   fontSize: isDesktop ? 16 : null,
@@ -93,7 +92,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
                           languageCode == 'en'
                               ? 'Keep them in your prayers'
                               : (l10n?.translate('home.palestine_duah') ??
-                                    'دعاء لفلسطين'),
+                                  'دعاء لفلسطين'),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurface.withValues(
                               alpha: 0.7,
@@ -143,9 +142,8 @@ class PalestineSupportCardWidget extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Directionality(
-        textDirection: languageCode == 'en'
-            ? TextDirection.ltr
-            : TextDirection.rtl,
+        textDirection:
+            languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
         child: Container(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -183,7 +181,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
                             languageCode == 'en'
                                 ? 'Prayer for Palestine'
                                 : (l10n?.translate('home.free_palestine') ??
-                                      'فلسطين حرية'),
+                                    'فلسطين حرية'),
                             style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -193,7 +191,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
                             languageCode == 'en'
                                 ? 'Keep them in your prayers'
                                 : (l10n?.translate('home.palestine_duah') ??
-                                      'لا تنسوهم من دعائكم'),
+                                    'لا تنسوهم من دعائكم'),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurface.withValues(
                                 alpha: 0.7,
@@ -221,13 +219,12 @@ class PalestineSupportCardWidget extends StatelessWidget {
                     languageCode == 'en'
                         ? 'O Allah, grant victory to our brothers and sisters in Palestine, protect them from harm, relieve their hardships, make their difficulties easy, and grant them patience and steadfastness. Feed the hungry, secure the fearful, and grant them a clear victory.'
                         : (l10n?.translate('home.palestine_support') ??
-                              'دعم فلسطين'),
+                            'دعم فلسطين'),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       height: 1.8,
                       fontSize: languageCode == 'en' ? 15 : 16,
-                      fontFamily: languageCode == 'en'
-                          ? null
-                          : 'ScheherazadeNew',
+                      fontFamily:
+                          languageCode == 'en' ? null : 'ScheherazadeNew',
                     ),
                   ),
                 ),

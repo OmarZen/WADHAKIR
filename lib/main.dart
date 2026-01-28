@@ -187,9 +187,8 @@ class MyApp extends StatelessWidget {
           lazy: false,
         ),
         BlocProvider<RadioCubit>(
-          create: (_) =>
-              RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
-                ..loadStations(),
+          create: (_) => RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
+            ..loadStations(),
           lazy: false,
         ),
         BlocProvider<PrayerTimesCubit>(

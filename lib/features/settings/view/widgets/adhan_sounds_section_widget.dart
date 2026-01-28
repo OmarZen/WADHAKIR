@@ -56,22 +56,16 @@ class AdhanSoundsSectionWidget extends StatelessWidget {
 
             return AdhanSoundSelector(
               title: l10n?.translate('settings.fajr_adhan') ?? 'أذان الفجر',
-              subtitle:
-                  l10n?.translate('settings.fajr_adhan_subtitle') ??
+              subtitle: l10n?.translate('settings.fajr_adhan_subtitle') ??
                   'اختر صوت أذان الفجر',
               currentSoundPath: state
-                  .settings
-                  .notificationSettings
-                  .fajrSettings
-                  .customSoundPath,
+                  .settings.notificationSettings.fajrSettings.customSoundPath,
               soundOptions: AdhanSounds.fajrSounds,
               onSoundSelected: (path) {
                 debugPrint('🔔 Fajr sound selected: $path');
 
                 final newSettings = state
-                    .settings
-                    .notificationSettings
-                    .fajrSettings
+                    .settings.notificationSettings.fajrSettings
                     .copyWith(customSoundPath: path);
 
                 debugPrint(
@@ -100,17 +94,12 @@ class AdhanSoundsSectionWidget extends StatelessWidget {
             final settingsCubit = builderContext.read<SettingsCubit>();
 
             return AdhanSoundSelector(
-              title:
-                  l10n?.translate('settings.regular_adhan') ??
+              title: l10n?.translate('settings.regular_adhan') ??
                   'أذان الصلوات الأخرى',
-              subtitle:
-                  l10n?.translate('settings.regular_adhan_subtitle') ??
+              subtitle: l10n?.translate('settings.regular_adhan_subtitle') ??
                   'اختر صوت أذان الظهر، العصر، المغرب والعشاء',
               currentSoundPath: state
-                  .settings
-                  .notificationSettings
-                  .dhuhrSettings
-                  .customSoundPath,
+                  .settings.notificationSettings.dhuhrSettings.customSoundPath,
               soundOptions: AdhanSounds.regularSounds,
               onSoundSelected: (path) async {
                 debugPrint('🔔 ════════════════════════════════════════');
@@ -126,8 +115,8 @@ class AdhanSoundsSectionWidget extends StatelessWidget {
                 debugPrint('🔔 All regular prayers updated with sound: $path');
                 debugPrint('🔔 ════════════════════════════════════════');
               },
-              enabled:
-                  state.settings.notificationSettings.dhuhrSettings.enabled ||
+              enabled: state
+                      .settings.notificationSettings.dhuhrSettings.enabled ||
                   state.settings.notificationSettings.asrSettings.enabled ||
                   state.settings.notificationSettings.maghribSettings.enabled ||
                   state.settings.notificationSettings.ishaSettings.enabled,

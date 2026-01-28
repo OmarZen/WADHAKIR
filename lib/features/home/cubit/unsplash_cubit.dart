@@ -84,24 +84,21 @@ class UnsplashCubit extends Cubit<UnsplashState> {
       );
 
       // Add timeout to prevent long waits
-      final response = await http
-          .get(url)
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              log('Unsplash API request timed out after 10 seconds');
-              throw TimeoutException('Connection timeout');
-            },
-          );
+      final response = await http.get(url).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          log('Unsplash API request timed out after 10 seconds');
+          throw TimeoutException('Connection timeout');
+        },
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final results = data['results'] as List<dynamic>;
 
         if (results.isNotEmpty) {
-          final photos = results
-              .map((photo) => UnsplashPhoto.fromJson(photo))
-              .toList();
+          final photos =
+              results.map((photo) => UnsplashPhoto.fromJson(photo)).toList();
 
           // Filter out any photos with empty URLs (defensive coding)
           final validPhotos = photos

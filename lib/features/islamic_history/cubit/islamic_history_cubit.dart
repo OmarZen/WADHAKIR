@@ -11,8 +11,8 @@ class IslamicHistoryCubit extends Cubit<IslamicHistoryState> {
   Timer? _searchDebounce;
 
   IslamicHistoryCubit({required IslamicHistoryRepository repository})
-    : _repository = repository,
-      super(const IslamicHistoryInitial());
+      : _repository = repository,
+        super(const IslamicHistoryInitial());
 
   /// Load initial page of events
   Future<void> loadInitialEvents() async {

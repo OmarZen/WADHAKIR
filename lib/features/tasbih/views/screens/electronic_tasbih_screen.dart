@@ -378,16 +378,14 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                 final beadSize = index == (_counter % 33) && _isPressed
                     ? 10.0
                     : index < (_counter % 33)
-                    ? 8.0
-                    : 6.0;
+                        ? 8.0
+                        : 6.0;
 
                 return Positioned(
-                  left:
-                      size.width * 0.25 +
+                  left: size.width * 0.25 +
                       radius * math.cos(adjustedAngle) -
                       beadSize / 2,
-                  top:
-                      size.width * 0.25 +
+                  top: size.width * 0.25 +
                       radius * math.sin(adjustedAngle) -
                       beadSize / 2,
                   child: AnimatedContainer(

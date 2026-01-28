@@ -184,8 +184,7 @@ class _CountdownTimerState extends State<CountdownTimer>
                   children: [
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 500),
-                      width:
-                          (size.width - (size.width * 0.08)) *
+                      width: (size.width - (size.width * 0.08)) *
                           progress.clamp(0.0, 1.0),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(

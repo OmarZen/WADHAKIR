@@ -114,9 +114,8 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth: PlatformUtils.isDesktop
-                            ? 900.0
-                            : double.infinity,
+                        maxWidth:
+                            PlatformUtils.isDesktop ? 900.0 : double.infinity,
                       ),
                       child: SingleChildScrollView(
                         physics: const BouncingScrollPhysics(),
@@ -528,8 +527,7 @@ class _HadithReaderViewState extends State<_HadithReaderView> {
 
   void _handleCopy(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final text =
-        '''
+    final text = '''
 ${widget.hadith.hadithTextArabic}
 
 ${(widget.hadith.hadithTextEnglish?.isNotEmpty ?? false) ? widget.hadith.hadithTextEnglish! : ''}
@@ -552,8 +550,7 @@ ${widget.collection.nameArabic} • الحديث رقم ${widget.hadith.ourHadit
   }
 
   void _handleShare() {
-    final text =
-        '''
+    final text = '''
 ${widget.hadith.hadithTextArabic}
 
 ${(widget.hadith.hadithTextEnglish?.isNotEmpty ?? false) ? widget.hadith.hadithTextEnglish! : ''}

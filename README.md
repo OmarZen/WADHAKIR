@@ -2,10 +2,12 @@
 
 **Wadhakir** is a comprehensive Islamic Flutter app designed to help Muslims in their daily spiritual practices and worship.
 
-![Flutter](https://img.shields.io/badge/Flutter-3.27.0-blue.svg)
-![Dart](https://img.shields.io/badge/Dart-3.9.0-blue.svg)
+![Flutter](https://img.shields.io/badge/Flutter-3.38.6-blue.svg)
+![Dart](https://img.shields.io/badge/Dart-3.10.7-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 [![CI](https://github.com/OmarZen/WADHAKIR/actions/workflows/ci.yml/badge.svg)](https://github.com/OmarZen/WADHAKIR/actions/workflows/ci.yml)
+[![Release](https://github.com/OmarZen/WADHAKIR/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/OmarZen/WADHAKIR/actions/workflows/build-and-release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/OmarZen/WADHAKIR)](https://github.com/OmarZen/WADHAKIR/releases/latest)
 
 ## ✨ Features
 
@@ -20,8 +22,8 @@
 
 ### Prerequisites
 
-- Flutter SDK (3.27.0 or higher)
-- Dart SDK (3.9.0 or higher)
+- Flutter SDK (3.38.6 or higher)
+- Dart SDK (3.10.7 or higher)
 - Android Studio / VS Code
 - Git
 
@@ -156,8 +158,8 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 ## 📋 Requirements
 
-- **Flutter**: 3.27.0+
-- **Dart**: 3.9.0+
+- **Flutter**: 3.38.6+
+- **Dart**: 3.10.7+
 - **Android**: API 21+ (Android 5.0)
 - **iOS**: 12.0+
 
@@ -175,7 +177,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/OmarZen/WADHAKIR/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/OmarZen/WADHAKIR/discussions)
-- **Email**: [your-email@example.com]
+- **Email**: [omarwaleedzenhom2002@gmail.com](mailto:omarwaleedzenhom2002@gmail.com)
 
 ---
 

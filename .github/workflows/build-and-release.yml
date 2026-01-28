@@ -159,83 +159,83 @@ jobs:
           retention-days: 30
 
   # Build Web
-  build-web:
-    name: 🌐 Build Web
-    needs: analyze
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+  # build-web:
+  #   name: 🌐 Build Web
+  #   needs: analyze
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: 📥 Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: 🐦 Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.6'
-          channel: 'stable'
-          cache: true
+  #     - name: 🐦 Setup Flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         flutter-version: '3.38.6'
+  #         channel: 'stable'
+  #         cache: true
 
-      - name: � Disable Flutter Analytics
-        run: flutter config --no-analytics
+  #     - name: � Disable Flutter Analytics
+  #       run: flutter config --no-analytics
 
-      - name: �📦 Get Dependencies
-        run: flutter pub get
+  #     - name: �📦 Get Dependencies
+  #       run: flutter pub get
 
-      - name: 🔨 Build Web
-        run: flutter build web --release --web-renderer canvaskit
+  #     - name: 🔨 Build Web
+  #       run: flutter build web --release
 
-      - name: 📦 Create Web Archive
-        run: |
-          cd build/web
-          tar -czf ../../wadhakir-web.tar.gz *
+  #     - name: 📦 Create Web Archive
+  #       run: |
+  #         cd build/web
+  #         tar -czf ../../wadhakir-web.tar.gz *
 
-      - name: 📤 Upload Web Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-build
-          path: wadhakir-web.tar.gz
-          retention-days: 30
+  #     - name: 📤 Upload Web Artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: web-build
+  #         path: wadhakir-web.tar.gz
+  #         retention-days: 30
 
   # Build iOS (requires macOS runner)
-  build-ios:
-    name: 🍎 Build iOS
-    needs: analyze
-    runs-on: macos-latest
-    steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+  # build-ios:
+  #   name: 🍎 Build iOS
+  #   needs: analyze
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: 📥 Checkout Code
+  #       uses: actions/checkout@v4
 
-      - name: 🐦 Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.38.6'
-          channel: 'stable'
-          cache: true
+  #     - name: 🐦 Setup Flutter
+  #       uses: subosito/flutter-action@v2
+  #       with:
+  #         flutter-version: '3.38.6'
+  #         channel: 'stable'
+  #         cache: true
 
-      - name: � Disable Flutter Analytics
-        run: flutter config --no-analytics
+  #     - name: � Disable Flutter Analytics
+  #       run: flutter config --no-analytics
 
-      - name: �📦 Get Dependencies
-        run: flutter pub get
+  #     - name: �📦 Get Dependencies
+  #       run: flutter pub get
 
-      - name: 🔨 Build iOS (no codesign)
-        run: flutter build ios --release --no-codesign
+  #     - name: 🔨 Build iOS (no codesign)
+  #       run: flutter build ios --release --no-codesign
 
-      - name: 📦 Create iOS Archive
-        run: |
-          cd build/ios/iphoneos
-          zip -r ../../../wadhakir-ios.zip Runner.app
+  #     - name: 📦 Create iOS Archive
+  #       run: |
+  #         cd build/ios/iphoneos
+  #         zip -r ../../../wadhakir-ios.zip Runner.app
 
-      - name: 📤 Upload iOS Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-build
-          path: wadhakir-ios.zip
-          retention-days: 30
+  #     - name: 📤 Upload iOS Artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: ios-build
+  #         path: wadhakir-ios.zip
+  #         retention-days: 30
 
   # Create Release (only on tags or manual trigger with release option)
   create-release:
     name: 🎉 Create Release
-    needs: [build-android, build-android-bundle, build-windows, build-web, build-ios]
+    needs: [build-android, build-android-bundle, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.create_release == 'yes'
     permissions:
@@ -262,17 +262,17 @@ jobs:
           name: windows-build
           path: artifacts/
 
-      - name: 📥 Download Web Build
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
-          path: artifacts/
+      # - name: 📥 Download Web Build
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: web-build
+      #     path: artifacts/
 
-      - name: 📥 Download iOS Build
-        uses: actions/download-artifact@v4
-        with:
-          name: ios-build
-          path: artifacts/
+      # - name: 📥 Download iOS Build
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: ios-build
+      #     path: artifacts/
 
       - name: 🏷️ Extract Version
         id: version
@@ -306,37 +306,35 @@ jobs:
             artifacts/app-release.apk
             artifacts/app-release.aab
             artifacts/wadhakir-windows.zip
-            artifacts/wadhakir-web.tar.gz
-            artifacts/wadhakir-ios.zip
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Deploy Web to GitHub Pages (optional)
-  deploy-web:
-    name: 🚀 Deploy Web to GitHub Pages
-    needs: build-web
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    steps:
-      - name: 📥 Download Web Build
-        uses: actions/download-artifact@v4
-        with:
-          name: web-build
+  # deploy-web:
+  #   name: 🚀 Deploy Web to GitHub Pages
+  #   needs: build-web
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   permissions:
+  #     contents: read
+  #     pages: write
+  #     id-token: write
+  #   steps:
+  #     - name: 📥 Download Web Build
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: web-build
 
-      - name: 📦 Extract Web Build
-        run: |
-          mkdir -p web
-          tar -xzf wadhakir-web.tar.gz -C web
+  #     - name: 📦 Extract Web Build
+  #       run: |
+  #         mkdir -p web
+  #         tar -xzf wadhakir-web.tar.gz -C web
 
-      - name: 🚀 Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./web
-          # cname: wadhakir.yourdomain.com # Optional: Add your custom domain
+  #     - name: 🚀 Deploy to GitHub Pages
+  #       uses: peaceiris/actions-gh-pages@v3
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         publish_dir: ./web
+  #         # cname: wadhakir.yourdomain.com # Optional: Add your custom domain

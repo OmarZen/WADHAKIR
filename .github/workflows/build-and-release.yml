@@ -73,15 +73,6 @@ jobs:
       - name: �📦 Get Dependencies
         run: flutter pub get
 
-      - name: � Create dummy key.properties
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=android
-          keyPassword=android
-          keyAlias=androiddebugkey
-          storeFile=debug.keystore
-          EOF
-
       - name: �🔨 Build APK
         run: flutter build apk --release
 
@@ -119,15 +110,6 @@ jobs:
 
       - name: �📦 Get Dependencies
         run: flutter pub get
-
-      - name: � Create dummy key.properties
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=android
-          keyPassword=android
-          keyAlias=androiddebugkey
-          storeFile=debug.keystore
-          EOF
 
       - name: �🔨 Build App Bundle
         run: flutter build appbundle --release

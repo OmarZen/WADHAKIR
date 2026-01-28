@@ -16,6 +16,7 @@ class RadioPlayerBar extends StatelessWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final l10n = AppLocalizations.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return BlocBuilder<RadioCubit, RadioState>(
       builder: (context, state) {
@@ -78,7 +79,7 @@ class RadioPlayerBar extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            current.name,
+                            current.getLocalizedName(languageCode),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -86,6 +87,9 @@ class RadioPlayerBar extends StatelessWidget {
                                   ? 14.0
                                   : size.width * 0.036,
                               fontWeight: FontWeight.w700,
+                              fontFamily: languageCode == 'en'
+                                  ? null
+                                  : 'Almarai',
                             ),
                           ),
                           SizedBox(height: PlatformUtils.isDesktop ? 4.0 : 4.0),
@@ -223,6 +227,7 @@ class _NowPlayingSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final l10n = AppLocalizations.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
     final isDesktop = PlatformUtils.isDesktop;
 
     return DraggableScrollableSheet(
@@ -285,13 +290,14 @@ class _NowPlayingSheet extends StatelessWidget {
                         ),
                         SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
                         Text(
-                          current.name,
+                          current.getLocalizedName(languageCode),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: isDesktop ? 24.0 : size.width * 0.06,
                             fontWeight: FontWeight.w800,
+                            fontFamily: languageCode == 'en' ? null : 'Almarai',
                           ),
                         ),
                         SizedBox(height: isDesktop ? 8.0 : size.height * 0.012),

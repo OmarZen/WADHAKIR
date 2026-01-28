@@ -87,11 +87,16 @@ class _AzkarScreenState extends State<AzkarScreen>
     AzkarCategoriesLoaded state,
     ThemeData theme,
   ) {
+    final languageCode = Localizations.localeOf(context).languageCode;
     final filteredCategories = _searchQuery.isEmpty
         ? state.categories
         : state.categories
               .where(
                 (c) =>
+                    c
+                        .getLocalizedTitle(languageCode)
+                        .toLowerCase()
+                        .contains(_searchQuery.toLowerCase()) ||
                     c.title.toLowerCase().contains(_searchQuery.toLowerCase()),
               )
               .toList();
@@ -297,14 +302,28 @@ class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
 
   IconData _getCategoryIcon() {
     final title = widget.category.title;
-    if (title.contains('الصباح')) return Icons.wb_sunny_outlined;
-    if (title.contains('المساء')) return Icons.nights_stay_outlined;
-    if (title.contains('النوم')) return Icons.bedtime_outlined;
-    if (title.contains('الاستيقاظ')) return Icons.light_mode_outlined;
-    if (title.contains('المسجد') || title.contains('الصلاة')) {
+    final titleEn = widget.category.titleEn;
+    if (title.contains('الصباح') || titleEn.contains('Morning')) {
+      return Icons.wb_sunny_outlined;
+    }
+    if (title.contains('المساء') || titleEn.contains('Evening')) {
+      return Icons.nights_stay_outlined;
+    }
+    if (title.contains('النوم') || titleEn.contains('Sleep')) {
+      return Icons.bedtime_outlined;
+    }
+    if (title.contains('الاستيقاظ') || titleEn.contains('Waking')) {
+      return Icons.light_mode_outlined;
+    }
+    if (title.contains('المسجد') ||
+        title.contains('الصلاة') ||
+        titleEn.contains('Mosque') ||
+        titleEn.contains('Prayer')) {
       return Icons.mosque_outlined;
     }
-    if (title.contains('أدعية')) return Icons.auto_awesome_outlined;
+    if (title.contains('أدعية') || titleEn.contains('Dua')) {
+      return Icons.auto_awesome_outlined;
+    }
     if (title.contains('قرآنية')) return Icons.menu_book_outlined;
     return Icons.auto_awesome_outlined;
   }
@@ -393,7 +412,9 @@ class _AnimatedCategoryCardState extends State<_AnimatedCategoryCard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.category.title,
+                        widget.category.getLocalizedTitle(
+                          Localizations.localeOf(context).languageCode,
+                        ),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),

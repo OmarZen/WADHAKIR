@@ -19,31 +19,65 @@ class _RadioScreenState extends State<RadioScreen> {
   String _category = 'all';
   final TextEditingController _searchController = TextEditingController();
   static const List<Map<String, String>> _categories = [
-    {'key': 'all', 'label': 'category_all'},
-    {'key': 'readers', 'label': 'category_readers'},
-    {'key': 'ruqiah', 'label': 'category_ruqiah'},
-    {'key': 'fatwa', 'label': 'category_fatwa'},
-    {'key': 'adhkar', 'label': 'category_adhkar'},
-    {'key': 'qiraat', 'label': 'category_qiraat'},
-    {'key': 'tafsir', 'label': 'category_tafsir'},
-    {'key': 'translations', 'label': 'category_translations'},
-    {'key': 'seerah', 'label': 'category_seerah'},
-    {'key': 'seasons', 'label': 'category_seasons'},
-    {'key': 'featured', 'label': 'category_featured'},
+    {'key': 'all', 'label_ar': 'كل الإذاعات', 'label_en': 'All Radios'},
+    {'key': 'reciters', 'label_ar': 'القراء', 'label_en': 'Reciters'},
+    {
+      'key': 'tafsir',
+      'label_ar': 'التفسير وعلوم القرآن',
+      'label_en': 'Tafsir & Quran Sciences',
+    },
+    {
+      'key': 'translations',
+      'label_ar': 'ترجمة معاني القرآن الكريم',
+      'label_en': 'Quran Translations',
+    },
+    {
+      'key': 'biography',
+      'label_ar': 'السيرة والقصص',
+      'label_en': 'Biography & Stories',
+    },
+    {
+      'key': 'distinguished',
+      'label_ar': 'تلاوات متميزة',
+      'label_en': 'Distinguished Recitations',
+    },
+    {'key': 'ruqyah', 'label_ar': 'الرقية الشرعية', 'label_en': 'Ruqyah'},
+    {'key': 'fatwa', 'label_ar': 'الفتاوى', 'label_en': 'Fatwas'},
+    {
+      'key': 'adhkar',
+      'label_ar': 'الأدعية والأذكار',
+      'label_en': 'Supplications',
+    },
+    {
+      'key': 'readings',
+      'label_ar': 'القراءات العشر',
+      'label_en': 'Ten Readings',
+    },
+    {
+      'key': 'seasons',
+      'label_ar': 'مواسم الخير',
+      'label_en': 'Blessed Seasons',
+    },
+    {
+      'key': 'sunnah',
+      'label_ar': 'السنة النبوية',
+      'label_en': 'Prophetic Sunnah',
+    },
   ];
 
   static const Map<String, IconData> _categoryIcons = {
     'all': Icons.apps_rounded,
-    'readers': Icons.people_alt_rounded,
-    'ruqiah': Icons.health_and_safety_rounded,
-    'fatwa': Icons.record_voice_over_rounded,
-    'adhkar': Icons.self_improvement_rounded,
-    'qiraat': Icons.library_music_rounded,
+    'reciters': Icons.people_alt_rounded,
     'tafsir': Icons.menu_book_rounded,
     'translations': Icons.translate_rounded,
-    'seerah': Icons.history_edu_rounded,
+    'biography': Icons.history_edu_rounded,
+    'distinguished': Icons.star_rounded,
+    'ruqyah': Icons.health_and_safety_rounded,
+    'fatwa': Icons.record_voice_over_rounded,
+    'adhkar': Icons.self_improvement_rounded,
+    'readings': Icons.library_music_rounded,
     'seasons': Icons.event_rounded,
-    'featured': Icons.star_rounded,
+    'sunnah': Icons.auto_stories_rounded,
   };
 
   @override
@@ -239,8 +273,12 @@ class _RadioScreenState extends State<RadioScreen> {
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    l10n?.translate('radio.${c['label']}') ??
-                                        c['label']!,
+                                    Localizations.localeOf(
+                                              context,
+                                            ).languageCode ==
+                                            'en'
+                                        ? c['label_en']!
+                                        : c['label_ar']!,
                                   ),
                                 ],
                               ),
@@ -420,199 +458,33 @@ class _RadioScreenState extends State<RadioScreen> {
   List<dynamic> _applyCategory(RadioState state) {
     if (state is! RadioLoaded) return const [];
     final list = state.stations;
-    switch (_category) {
-      case 'readers':
-        final names = {
-          'أحمد الحواشي',
-          'أحمد الطرابلسي',
-          'أحمد بن علي العجمي',
-          'أحمد خليل شاهين',
-          'أحمد ديبان',
-          'أحمد صابر',
-          'أحمد عامر',
-          'أحمد نعينع',
-          'أكرم العلاقمي',
-          'إبراهيم الأخضر',
-          'إدريس أبكر',
-          'الزين محمد أحمد',
-          'بندر بليله',
-          'توفيق الصايغ',
-          'جمال شاكر عبدالله',
-          'جمعان العصيمي',
-          'حاتم فريد الواعر',
-          'خالد الجليل',
-          'خالد القحطاني',
-          'خالد المهنا',
-          'خالد عبدالكافي',
-          'خليفة الطنيجي',
-          'زكي داغستاني',
-          'سعد الغامدي',
-          'سعود الشريم',
-          'سهل ياسين',
-          'سيد رمضان',
-          'شيخ أبو بكر الشاطري',
-          'شيرزاد عبدالرحمن طاهر',
-          'صابر عبدالحكم',
-          'صلاح البدير',
-          'صلاح الهاشم',
-          'صلاح بو خاطر',
-          'عادل الكلباني',
-          'عادل ريان',
-          'عبدالبارئ الثبيتي',
-          'عبدالبارئ محمد',
-          'عبدالباسط عبدالصمد',
-          'عبدالرحمن السديس',
-          'عبدالرحمن الشحات',
-          'عبدالرحمن الماجد',
-          'عبدالعزيز الأحمد',
-          'عبدالله الخلف',
-          'عبدالله الكندري',
-          'عبدالله المطرود',
-          'عبدالله الموسى',
-          'عبدالله بصفر',
-          'عبدالله خياط',
-          'عبدالله عواد الجهني',
-          'عبدالمحسن الحارثي',
-          'عبدالمحسن العبيكان',
-          'عبدالمحسن القاسم',
-          'عبدالهادي أحمد كناكري',
-          'عبدالودود حنيف',
-          'علي الحذيفي',
-          'علي جابر',
-          'علي حجاج السويسي',
-          'عماد زهير حافظ',
-          'فارس عباد',
-          'ماجد الزامل',
-          'ماهر المعيقلي',
-          'ماهر شخاشيرو',
-          'محمد أبوسنينة',
-          'محمد أيوب',
-          'محمد الأمين قنيوة',
-          'محمد الطبلاوي',
-          'محمد اللحيدان',
-          'محمد جبريل',
-          'محمد رشاد الشريف',
-          'محمد صالح عالم شاه',
-          'محمد صديق المنشاوي',
-          'محمد عبدالكريم',
-          'محمد عثمان خان',
-          'محمود الرفاعي',
-          'محمود خليل الحصري',
-          'محمود علي البنا',
-          'مشاري العفاسي',
-          'مصطفى إسماعيل',
-          'مصطفى اللاهوني',
-          'مصطفى رعد العزاوي',
-          'معيض الحارثي',
-          'مفتاح السلطني',
-          'موسى بلال',
-          'ناصر العصفور',
-          'ناصر القطامي',
-          'ناصر الماجد',
-          'نبيل الرفاعي',
-          'نعمة الحسان',
-          'هاني الرفاعي',
-          'هيثم الجدعاني',
-          'ياسر الدوسري',
-          'ياسر القرشي',
-          'يحيى حوا',
-          'يوسف الشويعي',
-          'يوسف بن نوح أحمد',
-        };
-        return list.where((s) => names.any((n) => s.name.contains(n))).toList();
-      case 'ruqiah':
-        return list.where((s) {
-          final n = s.name;
-          final u = s.url;
-          return n.contains('الرقية') ||
-              n.contains('السكينة') ||
-              u.contains('roqiah') ||
-              u.contains('sakeenah');
-        }).toList();
-      case 'fatwa':
-        return list.where((s) {
-          final n = s.name;
-          final u = s.url;
-          return n.contains('الفتاوى') ||
-              n.contains('الاختيارات الفقهية') ||
-              u.contains('fatwa') ||
-              u.contains('alaikhtiarat_alfiqhayh_bin_baz');
-        }).toList();
-      case 'adhkar':
-        return list.where((s) {
-          final n = s.name;
-          final u = s.url;
-          return n.contains('أذكار الصباح') ||
-              n.contains('أذكار المساء') ||
-              n.contains('تكبيرات العيد') ||
-              u.contains('athkar_sabah') ||
-              u.contains('athkar_masa') ||
-              u.contains('eid');
-        }).toList();
-      case 'qiraat':
-        const qiraatUrls = {
-          // Explicit riwayat by URL to disambiguate duplicates
-          'ahmed_altrabulsi', // قالون عن نافع
-          'ibrahim_aldosari', // ورش عن نافع
-          'addokali_mohammad_alalim', // قالون عن نافع
-          'aloyoon_alkoshi', // ورش عن نافع
-          'alfateh_alzubair', // الدوري عن أبي عمرو
-          'alqaria_yassen', // ورش عن نافع
-          'tareq_abdulgani_daawob', // قالون عن نافع
-          'abdulbasit_abdulsamad_warsh', // ورش عن نافع
-          'abdulrasheed_soufi_assosi', // السوسي عن أبي عمرو
-          'abdulrasheed_soufi_khalaf', // خلف عن حمزة
-          'omar_alqazabri', // ورش عن نافع
-          'mohammad_alabdullah_albizi', // البزي/قنبل عن ابن كثير
-          'mohammad_alabdullah_aldorai', // الدوري عن الكسائي
-          'mohammad_abdullkarem_alasbahani', // ورش عن نافع (طريق أبي بكر الأصبهاني)
-          'mahmood_alsheimy', // الدوري عن الكسائي
-          'mahmoud_khalil_alhussary_warsh', // ورش عن نافع
-          'muftah_alsaltany_ibn_thakwan_an_ibn_amr', // ابن ذكوان عن ابن عامر
-          'muftah_alsaltany_aldori_an_abi_amr', // الدوري عن أبي عمرو
-          'muftah_alsaltany_aldorai', // الدوري (عن الكسائي)
-          'waleed_alnaehi', // قالون عن نافع (طريق أبي نشيط)
-          'yasser_almazroyee', // يعقوب الحضرمي (رويس وروح)
-        };
-        return list
-            .where((s) => qiraatUrls.any((p) => s.url.contains(p)))
-            .toList();
-      case 'tafsir':
-        return list.where((s) => s.name.contains('تفسير')).toList();
-      case 'translations':
-        return list
-            .where((s) => s.name.contains('ترجمة معاني القرآن'))
-            .toList();
-      case 'seerah':
-        return list
-            .where(
-              (s) => s.name.contains('السيرة') || s.name.contains('الصحابة'),
-            )
-            .toList();
-      case 'seasons':
-        return list.where((s) {
-          final n = s.name;
-          final u = s.url;
-          return n.contains('رمضان') ||
-              n.contains('ستة من شوال') ||
-              n.contains('عشر ذي الحجة') ||
-              n.contains('عاشوراء') ||
-              u.contains('ramadan');
-        }).toList();
-      case 'featured':
-        return list
-            .where(
-              (s) =>
-                  s.name.contains('تراتيل') ||
-                  s.name.contains('الإذاعة العامة') ||
-                  s.name.contains('تلاوات') ||
-                  s.name.contains('سورة'),
-            )
-            .toList();
-      case 'all':
-      default:
-        return list;
-    }
+
+    // If "All Radios" is selected, return all stations
+    if (_category == 'all') return list;
+
+    // Map category keys to their Arabic names for filtering
+    final Map<String, String> categoryMap = {
+      'reciters': 'القراء',
+      'tafsir': 'التفسير وعلوم القرآن',
+      'translations': 'ترجمة معاني القرآن الكريم',
+      'biography': 'السيرة والقصص',
+      'distinguished': 'تلاوات متميزة',
+      'ruqyah': 'الرقية الشرعية',
+      'fatwa': 'الفتاوى',
+      'adhkar': 'الأدعية والأذكار',
+      'readings': 'القراءات العشر',
+      'seasons': 'مواسم الخير',
+      'sunnah': 'السنة النبوية',
+    };
+
+    final categoryName = categoryMap[_category];
+    if (categoryName == null) return list;
+
+    // Filter stations by category field
+    return list.where((station) {
+      final stationCategory = station.category;
+      return stationCategory == categoryName;
+    }).toList();
   }
 }
 

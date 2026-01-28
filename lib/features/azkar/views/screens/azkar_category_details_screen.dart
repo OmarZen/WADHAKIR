@@ -30,14 +30,28 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
 
   IconData get _categoryIcon {
     final title = widget.category.title;
-    if (title.contains('الصباح')) return Icons.wb_sunny_outlined;
-    if (title.contains('المساء')) return Icons.nights_stay_outlined;
-    if (title.contains('النوم')) return Icons.bedtime_outlined;
-    if (title.contains('الاستيقاظ')) return Icons.light_mode_outlined;
-    if (title.contains('المسجد') || title.contains('الصلاة')) {
+    final titleEn = widget.category.titleEn;
+    if (title.contains('الصباح') || titleEn.contains('Morning')) {
+      return Icons.wb_sunny_outlined;
+    }
+    if (title.contains('المساء') || titleEn.contains('Evening')) {
+      return Icons.nights_stay_outlined;
+    }
+    if (title.contains('النوم') || titleEn.contains('Sleep')) {
+      return Icons.bedtime_outlined;
+    }
+    if (title.contains('الاستيقاظ') || titleEn.contains('Waking')) {
+      return Icons.light_mode_outlined;
+    }
+    if (title.contains('المسجد') ||
+        title.contains('الصلاة') ||
+        titleEn.contains('Mosque') ||
+        titleEn.contains('Prayer')) {
       return Icons.mosque_outlined;
     }
-    if (title.contains('أدعية')) return Icons.auto_awesome_outlined;
+    if (title.contains('أدعية') || titleEn.contains('Dua')) {
+      return Icons.auto_awesome_outlined;
+    }
     if (title.contains('قرآنية')) return Icons.menu_book_outlined;
     return Icons.auto_awesome_outlined;
   }
@@ -220,7 +234,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.category.title,
+                                widget.category.getLocalizedTitle(
+                                  Localizations.localeOf(context).languageCode,
+                                ),
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -658,7 +674,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
 
   void _shareText(BuildContext context, AzkarCategorySelected state) async {
     final text = state.category.items[_currentPage].text;
-    final category = state.category.title;
+    final category = state.category.getLocalizedTitle(
+      Localizations.localeOf(context).languageCode,
+    );
 
     await SharePlus.instance.share(
       ShareParams(

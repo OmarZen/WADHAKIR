@@ -75,6 +75,7 @@ class AllahNamesGridItem extends StatelessWidget {
 
   Future<void> _showAllahNamesSheet(BuildContext context) async {
     final theme = Theme.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
     final data = await rootBundle.loadString(
       'assets/json_data/Names_Of_Allah.json',
     );
@@ -84,7 +85,9 @@ class AllahNamesGridItem extends StatelessWidget {
           (e) => (
             id: e['id'] as int,
             name: e['name'] as String,
+            nameEn: e['name_en'] as String? ?? e['name'] as String,
             text: e['text'] as String,
+            textEn: e['text_en'] as String? ?? e['text'] as String,
           ),
         )
         .toList(growable: false);
@@ -101,88 +104,98 @@ class AllahNamesGridItem extends StatelessWidget {
       ),
       builder: (context) {
         final l10n = context.l10n;
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.8,
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              Container(
-                width: 44,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(20),
+        return Directionality(
+          textDirection: languageCode == 'en'
+              ? TextDirection.ltr
+              : TextDirection.rtl,
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.8,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.menu_book_rounded,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
-                      style: theme.textTheme.titleLarge,
-                    ),
-                  ],
-                ),
-              ),
-              _IslamicDivider(),
-              Expanded(
-                child: ListView.separated(
-                  physics: const BouncingScrollPhysics(),
+                Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 16,
+                    vertical: 12,
                   ),
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: theme.colorScheme.surface,
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.18,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.menu_book_rounded,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        languageCode == 'en'
+                            ? 'The 99 Names of Allah'
+                            : (l10n?.translate('home.asmallah') ??
+                                  'أسماء الله الحسنى'),
+                        style: theme.textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                ),
+                _IslamicDivider(),
+                Expanded(
+                  child: ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: theme.colorScheme.surface,
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.18,
+                            ),
                           ),
                         ),
-                      ),
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            item.name,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontFamily: 'ScheherazadeNew',
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              languageCode == 'en' ? item.nameEn : item.name,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontFamily: languageCode == 'en'
+                                    ? null
+                                    : 'ScheherazadeNew',
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            item.text,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              height: 1.6,
+                            const SizedBox(height: 8),
+                            Text(
+                              languageCode == 'en' ? item.textEn : item.text,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                height: 1.6,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       },

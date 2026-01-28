@@ -13,7 +13,8 @@ class HadithCardWidget extends StatefulWidget {
 }
 
 class _HadithCardWidgetState extends State<HadithCardWidget> {
-  List<String> _hadithTexts = const [];
+  Map<String, dynamic>? _metadata;
+  List<Map<String, dynamic>> _hadiths = const [];
   int _currentIndex = 0;
   bool _loading = true;
 
@@ -28,25 +29,27 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
       final jsonString = await rootBundle.loadString(
         'assets/json_data/40-hadith-nawawi.json',
       );
-      final List<dynamic> data = json.decode(jsonString) as List<dynamic>;
-      final texts = data
-          .map((e) => (e as Map<String, dynamic>)['hadith'])
-          .whereType<String>()
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
+      final Map<String, dynamic> data =
+          json.decode(jsonString) as Map<String, dynamic>;
+      final metadata = data['metadata'] as Map<String, dynamic>?;
+      final hadithsList = (data['hadiths'] as List<dynamic>)
+          .map((e) => e as Map<String, dynamic>)
+          .where((h) => h['arabic'] != null || h['english'] != null)
           .toList(growable: false);
 
       if (mounted) {
         setState(() {
-          _hadithTexts = texts;
-          _currentIndex = _randomIndex(texts.length);
+          _metadata = metadata;
+          _hadiths = hadithsList;
+          _currentIndex = _randomIndex(hadithsList.length);
           _loading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _hadithTexts = const [];
+          _metadata = null;
+          _hadiths = const [];
           _loading = false;
         });
       }
@@ -60,11 +63,11 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
   }
 
   void _shuffle() {
-    if (_hadithTexts.isEmpty) return;
+    if (_hadiths.isEmpty) return;
     setState(() {
-      var next = _randomIndex(_hadithTexts.length);
-      if (next == _currentIndex && _hadithTexts.length > 1) {
-        next = (next + 1) % _hadithTexts.length;
+      var next = _randomIndex(_hadiths.length);
+      if (next == _currentIndex && _hadiths.length > 1) {
+        next = (next + 1) % _hadiths.length;
       }
       _currentIndex = next;
     });
@@ -73,33 +76,36 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: languageCode == 'en'
+          ? TextDirection.ltr
+          : TextDirection.rtl,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: _loading
-            ? _buildSkeleton(theme)
-            : _hadithTexts.isEmpty
-            ? _buildError(theme)
-            : _buildGlassCard(theme, _hadithTexts[_currentIndex]),
+            ? _buildSkeleton(theme, languageCode)
+            : _hadiths.isEmpty
+            ? _buildError(theme, languageCode)
+            : _buildGlassCard(theme, languageCode, _hadiths[_currentIndex]),
       ),
     );
   }
 
-  Widget _buildSkeleton(ThemeData theme) {
+  Widget _buildSkeleton(ThemeData theme, String languageCode) {
     final l10n = context.l10n;
     final isDark = theme.brightness == Brightness.dark;
+    final title = languageCode == 'en'
+        ? 'Forty Hadith of an-Nawawi'
+        : (l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية');
     return Container(
       decoration: _glassDecoration(theme, isDark),
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _headerRow(
-            theme,
-            l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية',
-          ),
+          _headerRow(theme, languageCode, title, null),
           const SizedBox(height: 12),
           _shimmerBar(theme, 18, 0.85),
           const SizedBox(height: 8),
@@ -111,19 +117,19 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     );
   }
 
-  Widget _buildError(ThemeData theme) {
+  Widget _buildError(ThemeData theme, String languageCode) {
     final l10n = context.l10n;
     final isDark = theme.brightness == Brightness.dark;
+    final title = languageCode == 'en'
+        ? 'Forty Hadith of an-Nawawi'
+        : (l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية');
     return Container(
       decoration: _glassDecoration(theme, isDark),
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _headerRow(
-            theme,
-            l10n?.translate('home.hadith_nawawi') ?? 'من الأربعين النووية',
-          ),
+          _headerRow(theme, languageCode, title, null),
           const SizedBox(height: 12),
           Text(
             l10n?.translate('home.hadith_error') ??
@@ -136,43 +142,52 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     );
   }
 
-  Widget _buildGlassCard(ThemeData theme, String fullText) {
-    final title = _extractTitle(fullText);
-    final body = _extractBody(fullText);
+  Widget _buildGlassCard(
+    ThemeData theme,
+    String languageCode,
+    Map<String, dynamic> hadith,
+  ) {
     final l10n = context.l10n;
     final isDark = theme.brightness == Brightness.dark;
-
     final borderRadius = BorderRadius.circular(16);
+
+    final hadithNumber =
+        hadith['idInBook'] as int? ?? hadith['id'] as int? ?? 0;
+    final title = _getCollectionTitle(languageCode);
+    final hadithText = _getHadithText(hadith, languageCode);
+    final author = _getAuthor(languageCode);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showHadithSheet(context, title, body),
+        onTap: () => _showHadithSheet(context, languageCode, hadith),
         borderRadius: borderRadius,
         child: ClipRRect(
           borderRadius: borderRadius,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 140, maxHeight: 220),
+            constraints: const BoxConstraints(minHeight: 100, maxHeight: 240),
             child: Container(
               decoration: _glassDecoration(theme, isDark),
               padding: const EdgeInsets.all(14.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _headerRow(theme, title),
+                  _headerRow(theme, languageCode, title, author),
                   const SizedBox(height: 10),
                   Expanded(
                     child: Text(
-                      body,
-                      maxLines: 3,
+                      hadithText,
+                      maxLines: 5,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        fontFamily: 'ScheherazadeNew',
+                        fontFamily: languageCode == 'en'
+                            ? null
+                            : 'ScheherazadeNew',
                         height: 1.4,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  // const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -181,11 +196,13 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                         icon: Icons.autorenew_rounded,
                         label:
                             l10n?.translate('home.hadith_shuffle') ??
-                            'حديث آخر',
+                            (languageCode == 'en' ? 'Another' : 'حديث آخر'),
                         onTap: _shuffle,
                       ),
                       Text(
-                        '${_currentIndex + 1} / ${_hadithTexts.length}',
+                        languageCode == 'en'
+                            ? 'Hadith $hadithNumber / ${_hadiths.length}'
+                            : 'الحديث $hadithNumber / ${_hadiths.length}',
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: _accent(theme),
                         ),
@@ -194,16 +211,9 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                         context,
                         icon: Icons.share_rounded,
                         tooltip:
-                            l10n?.translate('home.hadith_share') ?? 'مشاركة',
-                        onTap: () {
-                          SharePlus.instance.share(
-                            ShareParams(
-                              text:
-                                  'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
-                              subject: 'من الأربعين النووية',
-                            ),
-                          );
-                        },
+                            l10n?.translate('home.hadith_share') ??
+                            (languageCode == 'en' ? 'Share' : 'مشاركة'),
+                        onTap: () => _shareHadith(hadith, languageCode),
                       ),
                     ],
                   ),
@@ -218,10 +228,16 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
 
   Future<void> _showHadithSheet(
     BuildContext context,
-    String title,
-    String body,
+    String languageCode,
+    Map<String, dynamic> hadith,
   ) async {
     final theme = Theme.of(context);
+    final hadithText = _getHadithText(hadith, languageCode);
+    _getCollectionTitle(languageCode);
+    final hadithNumber =
+        hadith['idInBook'] as int? ?? hadith['id'] as int? ?? 0;
+    final author = _getAuthor(languageCode);
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -232,9 +248,11 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
       builder: (context) {
         final l10n = context.l10n;
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: languageCode == 'en'
+              ? TextDirection.ltr
+              : TextDirection.rtl,
           child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6,
+            height: MediaQuery.of(context).size.height * 0.7,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -255,34 +273,46 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                     horizontal: 16,
                     vertical: 12,
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.menu_book_rounded,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge,
-                        ),
-                      ),
-                      IconButton(
-                        tooltip:
-                            l10n?.translate('home.hadith_share') ?? 'مشاركة',
-                        onPressed: () {
-                          SharePlus.instance.share(
-                            ShareParams(
-                              text:
-                                  'من الأربعين النووية\n\n$title\n\n$body\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
-                              subject: 'من الأربعين النووية',
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.menu_book_rounded,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  languageCode == 'en'
+                                      ? 'Hadith $hadithNumber'
+                                      : 'الحديث $hadithNumber',
+                                  style: theme.textTheme.titleLarge,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  author,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.8,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.share_rounded),
+                          ),
+                          IconButton(
+                            tooltip:
+                                l10n?.translate('home.hadith_share') ??
+                                (languageCode == 'en' ? 'Share' : 'مشاركة'),
+                            onPressed: () => _shareHadith(hadith, languageCode),
+                            icon: const Icon(Icons.share_rounded),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -293,10 +323,12 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      body,
+                      hadithText,
                       textAlign: TextAlign.start,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontFamily: 'ScheherazadeNew',
+                        fontFamily: languageCode == 'en'
+                            ? null
+                            : 'ScheherazadeNew',
                         height: 1.6,
                       ),
                     ),
@@ -311,53 +343,71 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     );
   }
 
-  Widget _headerRow(ThemeData theme, String title) {
+  Widget _headerRow(
+    ThemeData theme,
+    String languageCode,
+    String title,
+    String? author,
+  ) {
     final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _badge(
-              theme,
-              l10n?.translate('home.hadith_nawawi') ?? 'الأربعون النووية',
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _badge(theme, title),
+                  if (author != null) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      author,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: _accent(theme).withValues(alpha: 0.7),
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
             ),
-            const Spacer(),
             _iconCircle(
               context,
-              icon: Icons.arrow_back_ios_new_rounded,
-              tooltip: l10n?.translate('home.hadith_previous') ?? 'السابق',
+              icon: languageCode == 'en'
+                  ? Icons.arrow_back_ios_new_rounded
+                  : Icons.arrow_forward_ios_rounded,
+              tooltip:
+                  l10n?.translate('home.hadith_previous') ??
+                  (languageCode == 'en' ? 'Previous' : 'السابق'),
               onTap: () {
-                if (_hadithTexts.isEmpty) return;
+                if (_hadiths.isEmpty) return;
                 setState(() {
-                  _currentIndex = (_currentIndex - 1) % _hadithTexts.length;
-                  if (_currentIndex < 0) _currentIndex += _hadithTexts.length;
+                  _currentIndex = (_currentIndex - 1) % _hadiths.length;
+                  if (_currentIndex < 0) _currentIndex += _hadiths.length;
                 });
               },
             ),
             const SizedBox(width: 6),
             _iconCircle(
               context,
-              icon: Icons.arrow_forward_ios_rounded,
-              tooltip: l10n?.translate('home.hadith_next') ?? 'التالي',
+              icon: languageCode == 'en'
+                  ? Icons.arrow_forward_ios_rounded
+                  : Icons.arrow_back_ios_new_rounded,
+              tooltip:
+                  l10n?.translate('home.hadith_next') ??
+                  (languageCode == 'en' ? 'Next' : 'التالي'),
               onTap: () {
-                if (_hadithTexts.isEmpty) return;
+                if (_hadiths.isEmpty) return;
                 setState(() {
-                  _currentIndex = (_currentIndex + 1) % _hadithTexts.length;
+                  _currentIndex = (_currentIndex + 1) % _hadiths.length;
                 });
               },
             ),
           ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontFamily: 'ScheherazadeNew',
-            color: theme.colorScheme.onSurface,
-          ),
         ),
       ],
     );
@@ -490,26 +540,53 @@ class _HadithCardWidgetState extends State<HadithCardWidget> {
     );
   }
 
-  String _extractTitle(String text) {
-    final lines = text.split('\n');
-    // Expect pattern: "الحديث الأول" on first line
-    final firstNonEmpty = lines.firstWhere(
-      (l) => l.trim().isNotEmpty,
-      orElse: () => '',
-    );
-    if (firstNonEmpty.contains('الحديث')) {
-      return 'من الأربعين النووية • ${firstNonEmpty.trim()}';
+  String _getCollectionTitle(String languageCode) {
+    if (_metadata == null) {
+      return languageCode == 'en'
+          ? 'Forty Hadith of an-Nawawi'
+          : 'الأربعون النووية';
     }
-    return 'من الأربعين النووية';
+    final lang = languageCode == 'en' ? 'english' : 'arabic';
+    final metadataLang = _metadata![lang] as Map<String, dynamic>?;
+    return metadataLang?['title'] as String? ??
+        (languageCode == 'en'
+            ? 'Forty Hadith of an-Nawawi'
+            : 'الأربعون النووية');
   }
 
-  String _extractBody(String text) {
-    // Remove the title line and any empty lines around
-    final parts = text.split('\n').where((l) => l.trim().isNotEmpty).toList();
-    if (parts.isEmpty) return text.trim();
-    if (parts.first.contains('الحديث')) {
-      parts.removeAt(0);
+  String _getAuthor(String languageCode) {
+    if (_metadata == null) {
+      return languageCode == 'en' ? 'Imam Nawawi' : 'الإمام النووي';
     }
-    return parts.join('\n').trim();
+    final lang = languageCode == 'en' ? 'english' : 'arabic';
+    final metadataLang = _metadata![lang] as Map<String, dynamic>?;
+    return metadataLang?['author'] as String? ??
+        (languageCode == 'en' ? 'Imam Nawawi' : 'الإمام النووي');
+  }
+
+  String _getHadithText(Map<String, dynamic> hadith, String languageCode) {
+    if (languageCode == 'en') {
+      final english = hadith['english'] as Map<String, dynamic>?;
+      if (english != null) {
+        final narrator = english['narrator'] as String? ?? '';
+        final text = english['text'] as String? ?? '';
+        return narrator.isNotEmpty ? '$narrator\n\n$text' : text;
+      }
+    }
+    return hadith['arabic'] as String? ?? '';
+  }
+
+  void _shareHadith(Map<String, dynamic> hadith, String languageCode) {
+    final hadithText = _getHadithText(hadith, languageCode);
+    final title = _getCollectionTitle(languageCode);
+    final hadithNumber =
+        hadith['idInBook'] as int? ?? hadith['id'] as int? ?? 0;
+    final author = _getAuthor(languageCode);
+
+    final shareText = languageCode == 'en'
+        ? '$title\nHadith $hadithNumber\nBy: $author\n\n$hadithText\n\nDownload Wadhakir App: https://play.google.com/store/apps/details?id=com.bloom.wadhakir'
+        : '$title\nالحديث $hadithNumber\nجمع: $author\n\n$hadithText\n\nتطبيق وذكر حمله الان: https://play.google.com/store/apps/details?id=com.bloom.wadhakir';
+
+    SharePlus.instance.share(ShareParams(text: shareText, subject: title));
   }
 }

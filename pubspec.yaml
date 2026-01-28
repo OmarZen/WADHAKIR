@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.3.4+11
+version: 2.3.5+12
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
@@ -63,9 +63,8 @@ dependencies:
   syncfusion_localizations: ^32.1.23
   intl: ^0.20.2
   
-  # Quran Library (local package)
-  quran_library:
-    path: packages/quran_library-2.2.3+1
+  # Quran Library (pub.dev package)
+  quran_library: ^2.3.5
   
   # Notifications
   awesome_notifications: ^0.10.1
@@ -169,7 +168,10 @@ flutter:
     - assets/json_data/hadiths_json/darimi_books/arabic/
     - assets/adhan_sounds/
     - assets/icons/icon.png
+    - assets/icons/custom_menu.svg
+    - assets/icons/custom_audio.svg
     - assets/logo.png
+    - lib/features/radio/api_response.json
     - .env
     - shorebird.yaml
 
@@ -207,7 +209,7 @@ msix_config:
   publisher_display_name: Omar Waleed
   publisher: CN=DF776E6F-2B42-431A-B1DB-7378360B1BC1
   identity_name: OmarWaleed.Wadhakir
-  msix_version: 2.3.4.0
+  msix_version: 2.3.5.0
   capabilities: "internetClient,location"
   
   # Store submission settings

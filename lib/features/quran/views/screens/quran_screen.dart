@@ -25,6 +25,10 @@ class QuranScreen extends StatelessWidget {
       // ),
       backgroundColor: theme.colorScheme.surface,
       downloadFontsDialogStyle: DownloadFontsDialogStyle(
+        iconWidget: Icon(
+          Icons.font_download_outlined,
+          color: theme.colorScheme.primary,
+        ),
         backgroundColor: theme.colorScheme.surface,
         dividerColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
@@ -49,7 +53,7 @@ class QuranScreen extends StatelessWidget {
               : theme.colorScheme.onSurface.withValues(alpha: 0.98),
         ),
       ),
-      languageCode: l10n?.locale.languageCode ?? 'en',
+      appLanguageCode: l10n?.locale.languageCode ?? 'en',
       surahInfoStyle: SurahInfoStyle(
         closeIconColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
@@ -70,7 +74,7 @@ class QuranScreen extends StatelessWidget {
         firstTabText: l10n?.translate('quran.surah_names') ?? 'Surah Names',
         secondTabText: l10n?.translate('quran.surah_info') ?? 'Surah Info',
       ),
-      sajdaName: l10n?.translate('quran.sajda') ?? 'Sajda',
+      // sajdaName: l10n?.translate('quran.sajda') ?? 'Sajda',
       topBarStyle: QuranTopBarStyle(
         backgroundColor: theme.colorScheme.surface,
         textColor: isDarkMode
@@ -80,9 +84,8 @@ class QuranScreen extends StatelessWidget {
         accentColor: theme.colorScheme.primary,
         shadowColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
         handleColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
-        // Use Material Icons instead of SVG
-        menuIcon: Icons.menu,
-        audioIcon: Icons.headphones,
+        menuIconPath: 'assets/icons/custom_menu.svg',
+        audioIconPath: 'assets/icons/custom_audio.svg',
         // Translations
         fontsDialogTitle:
             l10n?.translate('quran.fonts_dialog_title') ?? 'Fonts',
@@ -99,6 +102,9 @@ class QuranScreen extends StatelessWidget {
         tabJozzLabel: l10n?.translate('quran.tab_juzz') ?? 'Juzz',
         // surahStyle: SurahStyle(),
         // ayahStyle: AyahStyle(),
+      ),
+      topBottomQuranStyle: TopBottomQuranStyle(
+        sajdaName: l10n?.translate('quran.sajda') ?? 'Sajda',
       ),
     );
   }

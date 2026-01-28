@@ -1,8 +1,8 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:country_flags/country_flags.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 
 class PalestineSupportCardWidget extends StatelessWidget {
   const PalestineSupportCardWidget({super.key});
@@ -11,255 +11,97 @@ class PalestineSupportCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final isDesktop = PlatformUtils.isDesktop;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: languageCode == 'en'
+          ? TextDirection.ltr
+          : TextDirection.rtl,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              Container(decoration: _neonGlow(theme)),
-              BackdropFilter(
-                filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: _glassDecoration(theme),
-                  padding: const EdgeInsets.all(14.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          _flagPill(theme, context),
-                          const SizedBox(width: 8),
-                          Text(
-                            l10n?.translate('home.free_palestine') ??
-                                'فلسطين حرة',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleLarge,
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            // tree leaf
-                            FontAwesomeIcons.leaf,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n?.translate('home.palestine_support') ??
-                            'اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين.',
-                        style: theme.textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.center,
-                        child: _ctaButton(theme, context),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  BoxDecoration _glassDecoration(ThemeData theme) {
-    return BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      color: theme.colorScheme.surface.withValues(alpha: 0.06),
-      border: Border.all(
-        color: theme.colorScheme.primary.withValues(alpha: 0.16),
-      ),
-      gradient: LinearGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.12),
-          theme.colorScheme.primary.withValues(alpha: 0.06),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    );
-  }
-
-  BoxDecoration _neonGlow(ThemeData theme) {
-    final neon = theme.colorScheme.primary;
-    return BoxDecoration(
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: neon.withValues(alpha: 0.24),
-          blurRadius: 24,
-          spreadRadius: 1,
-          offset: const Offset(0, 0),
-        ),
-        BoxShadow(
-          color: neon.withValues(alpha: 0.12),
-          blurRadius: 48,
-          spreadRadius: 6,
-          offset: const Offset(0, 0),
-        ),
-      ],
-    );
-  }
-
-  Widget _flagPill(ThemeData theme, BuildContext context) {
-    final l10n = context.l10n;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CountryFlag.fromCountryCode(
-            'PS',
-            theme: ImageTheme(width: 20, height: 14),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            l10n?.translate('home.palestine_support_call_to_action') ??
-                'دعاء ونصرة',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _ctaButton(ThemeData theme, BuildContext context) {
-    final l10n = context.l10n;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 420),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary,
-              theme.colorScheme.primary.withValues(alpha: 0.85),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+        padding: EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: isDesktop ? 6.0 : 8.0,
         ),
         child: Material(
           color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
             onTap: () => _showPalestineDuaDialog(context),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              child: Text(
-                l10n?.translate('home.palestine_duah') ?? 'لا تنسوهم من دعائكم',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: EdgeInsets.all(isDesktop ? 14.0 : 12.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [
+                          theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.3,
+                          ),
+                          theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.15,
+                          ),
+                        ]
+                      : [
+                          theme.colorScheme.primary.withValues(alpha: 0.08),
+                          theme.colorScheme.primary.withValues(alpha: 0.04),
+                        ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1.5,
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showPalestineDuaDialog(BuildContext context) async {
-    final theme = Theme.of(context);
-    final l10n = context.l10n;
-
-    await showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: Dialog(
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 24,
-          ),
-          backgroundColor: theme.colorScheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(Icons.close),
-                      ),
-                      const Spacer(),
-                      Text(
-                        l10n?.translate('home.palestine_duah') ??
-                            'دعاء لفلسطين',
-                        style: theme.textTheme.titleLarge,
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        FontAwesomeIcons.handsPraying,
-                        size: 20,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDuaCard(
-                    theme,
-                    'اللَّهُمَّ أَصْلِحْ أُمَّةَ مُحَمَّدٍ، اللَّهُمَّ فَرِّجْ عَنْ أُمَّةِ مُحَمَّدٍ، اللَّهُمَّ ارْحَمْ أُمَّةَ مُحَمَّدٍ',
-                    'اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين.',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDuaCard(
-                    theme,
-                    'دعاء للمظلومين',
-                    'اللهم كن لإخواننا في فلسطين وأنت خير الناصرين، اللهم انصرهم على من ظلمهم، اللهم أنزل عليهم الصبر والسكينة، وثبت أقدامهم، وانصرهم على القوم الظالمين.',
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDuaCard(
-                    theme,
-                    'دعاء للشهداء',
-                    'اللهم تقبل شهداء فلسطين في الشهداء، وارفع درجاتهم في عليين، واجعل قبورهم روضة من رياض الجنة، واجمعنا بهم في مستقر رحمتك.',
-                  ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.center,
-                    child: TextButton.icon(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(
-                        Icons.check_circle_outline,
-                        color: theme.colorScheme.primary,
-                      ),
-                      label: Text(
-                        l10n?.translate('home.close') ?? 'إغلاق',
-                        style: TextStyle(color: theme.colorScheme.primary),
-                      ),
+                  _buildFlagIcon(theme, isDesktop),
+                  SizedBox(width: isDesktop ? 14 : 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                languageCode == 'en'
+                                    ? 'Pray for Palestine\n'
+                                    : (l10n?.translate('home.free_palestine') ??
+                                          '\u0641\u0644\u0633\u0637\u064a\u0646 \u062d\u0631\u0629'),
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isDesktop ? 16 : null,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(
+                              FontAwesomeIcons.personPraying,
+                              size: isDesktop ? 24 : 20,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: isDesktop ? 4 : 3),
+                        Text(
+                          languageCode == 'en'
+                              ? 'Keep them in your prayers'
+                              : (l10n?.translate('home.palestine_duah') ??
+                                    'دعاء لفلسطين'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.7,
+                            ),
+                            fontSize: isDesktop ? 14 : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -271,39 +113,139 @@ class PalestineSupportCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDuaCard(ThemeData theme, String title, String content) {
+  Widget _buildFlagIcon(ThemeData theme, bool isDesktop) {
     return Container(
+      padding: EdgeInsets.all(isDesktop ? 10.0 : 8.0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: theme.colorScheme.primary.withValues(alpha: 0.05),
+        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title.isNotEmpty) ...[
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 16,
-              height: 1.5,
-              color: theme.colorScheme.onSurface,
+      child: CountryFlag.fromCountryCode(
+        'PS',
+        theme: ImageTheme(
+          width: isDesktop ? 24 : 20,
+          height: isDesktop ? 18 : 15,
+        ),
+      ),
+    );
+  }
+
+  void _showPalestineDuaDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final languageCode = Localizations.localeOf(context).languageCode;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Directionality(
+        textDirection: languageCode == 'en'
+            ? TextDirection.ltr
+            : TextDirection.rtl,
+        child: Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        FontAwesomeIcons.personPraying,
+                        size: 24,
+                        color: theme.colorScheme.onPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            languageCode == 'en'
+                                ? 'Prayer for Palestine'
+                                : (l10n?.translate('home.free_palestine') ??
+                                      'فلسطين حرية'),
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            languageCode == 'en'
+                                ? 'Keep them in your prayers'
+                                : (l10n?.translate('home.palestine_duah') ??
+                                      'لا تنسوهم من دعائكم'),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withValues(
+                      alpha: 0.3,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Text(
+                    languageCode == 'en'
+                        ? 'O Allah, grant victory to our brothers and sisters in Palestine, protect them from harm, relieve their hardships, make their difficulties easy, and grant them patience and steadfastness. Feed the hungry, secure the fearful, and grant them a clear victory.'
+                        : (l10n?.translate('home.palestine_support') ??
+                              'دعم فلسطين'),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      height: 1.8,
+                      fontSize: languageCode == 'en' ? 15 : 16,
+                      fontFamily: languageCode == 'en'
+                          ? null
+                          : 'ScheherazadeNew',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: Text(
+                      languageCode == 'en' ? 'Ameen' : 'آمين',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

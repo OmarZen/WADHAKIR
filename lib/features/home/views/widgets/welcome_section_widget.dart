@@ -332,6 +332,12 @@ class WelcomeSectionWidget extends StatelessWidget {
         Builder(
           builder: (context) {
             final quote = IslamicQuotes.getRandomQuote();
+            final languageCode = Localizations.localeOf(context).languageCode;
+            final quoteText = languageCode == 'en' ? quote.textEn : quote.text;
+            final quoteSource = languageCode == 'en'
+                ? quote.sourceEn
+                : quote.source;
+
             return Container(
               constraints: BoxConstraints(
                 maxWidth: isDesktop ? 800 : double.infinity,
@@ -340,7 +346,7 @@ class WelcomeSectionWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    quote.text,
+                    quoteText,
                     maxLines: isDesktop ? 3 : 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -348,6 +354,9 @@ class WelcomeSectionWidget extends StatelessWidget {
                       color: Colors.white.withValues(alpha: 0.92),
                       fontWeight: FontWeight.w400,
                       height: 1.4,
+                      fontFamily: languageCode == 'en'
+                          ? null
+                          : 'ScheherazadeNew',
                     ),
                   ),
                   SizedBox(height: isDesktop ? 8 : 6),
@@ -361,13 +370,14 @@ class WelcomeSectionWidget extends StatelessWidget {
                       SizedBox(width: isDesktop ? 8 : 6),
                       Flexible(
                         child: Text(
-                          quote.source,
+                          quoteSource,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.75),
                             fontSize: sourceFontSize,
                             fontWeight: FontWeight.w500,
+                            fontFamily: languageCode == 'en' ? null : 'Almarai',
                           ),
                         ),
                       ),

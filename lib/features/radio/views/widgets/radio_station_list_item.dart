@@ -20,6 +20,8 @@ class RadioStationListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final stationName = station.getLocalizedName(languageCode);
     final iconData = _selectIconForStation(station);
 
     return InkWell(
@@ -82,7 +84,7 @@ class RadioStationListItem extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  station.name,
+                  stationName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -91,6 +93,7 @@ class RadioStationListItem extends StatelessWidget {
                         ? 14.0
                         : size.width * 0.038,
                     color: isLoading ? Colors.grey : null,
+                    fontFamily: languageCode == 'en' ? null : 'Almarai',
                   ),
                 ),
               ),

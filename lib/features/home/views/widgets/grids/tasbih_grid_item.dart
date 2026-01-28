@@ -39,6 +39,8 @@ class TasbihGridItem extends StatelessWidget {
             ),
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Container(
                 padding: EdgeInsets.all(iconPadding),
@@ -63,7 +65,6 @@ class TasbihGridItem extends StatelessWidget {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
                 ),
               ),
             ],

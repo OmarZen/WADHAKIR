@@ -7,6 +7,108 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.5+12] - 2026-01-28
+
+### Added - Radio Station Bilingual Categories
+- **Complete Radio Categorization System**:
+  - Organized all 174 radio stations into 12 thematic categories
+  - Full bilingual support for category names (Arabic and English)
+  - Categories include: القراء (Reciters), القراءات العشر (Ten Readings), ترجمة معاني القرآن الكريم (Quran Translations), التفسير وعلوم القرآن (Tafsir & Quran Sciences), السيرة والقصص (Biography & Stories), تلاوات متميزة (Distinguished Recitations), الرقية الشرعية (Ruqyah), الفتاوى (Fatwas), الأدعية والأذكار (Supplications), مواسم الخير (Blessed Seasons), السنة النبوية (Prophetic Sunnah)
+  - Added "كل الإذاعات (All Radios)" option to show all stations
+
+- **Enhanced Radio Data Model**:
+  - Added `category` field (Arabic name) to RadioStationModel
+  - Added `category_en` field (English name) to RadioStationModel
+  - Added `getLocalizedCategory()` method for language-aware category display
+  - Updated JSON structure to include category fields for all 174 stations
+
+- **Category Filtering System**:
+  - Interactive category filter chips with icons in radio screen
+  - Category names automatically switch between Arabic and English based on app language
+  - Smooth category filtering using actual JSON category fields
+  - Category-specific icons for better visual recognition
+
+### Changed - Radio Feature Improvements
+- **UI/UX Enhancements**:
+  - Redesigned category selection with horizontal scrollable chips
+  - Added dedicated icons for each category (reciters, translations, tafsir, etc.)
+  - Category filter now uses actual data fields instead of hardcoded name matching
+  - Improved category chip styling with selected state visualization
+
+- **Data Management**:
+  - Migrated from hardcoded category logic to JSON-based categorization
+  - Simplified filtering algorithm using category field lookups
+  - Better maintainability with centralized category definitions
+
+- **Category Distribution**:
+  - القراء (Reciters): 107 stations
+  - القراءات العشر (Ten Readings): 23 stations
+  - ترجمة معاني القرآن الكريم (Quran Translations): 22 stations
+  - تلاوات متميزة (Distinguished Recitations): 5 stations
+  - التفسير وعلوم القرآن (Tafsir & Quran Sciences): 4 stations
+  - السيرة والقصص (Biography & Stories): 4 stations
+  - الأدعية والأذكار (Supplications): 3 stations
+  - السنة النبوية (Prophetic Sunnah): 2 stations
+  - الرقية الشرعية (Ruqyah): 2 stations
+  - الفتاوى (Fatwas): 2 stations
+
+### Improved - Radio Code Quality
+- **Architecture Improvements**:
+  - Refactored `_applyCategory()` method for cleaner filtering logic
+  - Removed 500+ lines of hardcoded station name lists
+  - Implemented data-driven category system
+  - Better separation of concerns between UI and data layers
+
+- **Maintainability**:
+  - Category management now centralized in JSON data file
+  - Easy to add/modify categories without code changes
+  - Reduced code complexity in radio_screen.dart
+  - Better scalability for future category additions
+
+### Fixed - Radio Feature Issues
+- **Category Assignment**:
+  - Properly categorized all "القراءات العشر (Ten Readings)" stations
+  - Fixed station name matching with leading/trailing spaces
+  - Ensured accurate categorization for all 174 stations
+  - Validated category distribution totals
+
+### Technical Details
+- **Version Code**: 12 (was 11)
+- **MSIX Version**: 2.3.5.0 (was 2.3.4.0)
+- **Files Modified**: 3 (radio_screen.dart, RadioStationModel, api_response.json)
+- **JSON Updates**: Added category and category_en fields to all 174 stations
+- **Code Reduction**: ~500 lines of hardcoded logic replaced with data-driven approach
+- **Quality Assurance**: All categories tested and validated
+- **Backward Compatibility**: Full - existing functionality preserved with enhanced categorization
+
+### User-Facing Changes
+- **New Features**:
+  - Browse radio stations by 12 thematic categories
+  - Category names appear in user's preferred language (Arabic/English)
+  - Visual category chips with icons for easy navigation
+  - "All Radios" option to see complete station list
+
+- **UI Improvements**:
+  - Cleaner, more organized radio station browsing
+  - Better discovery of specific types of Islamic radio content
+  - Consistent bilingual experience throughout radio feature
+  - Intuitive category filtering with visual feedback
+
+- **Content Organization**:
+  - Reciters grouped separately from special recitations (Ten Readings)
+  - Quran translations easily accessible in dedicated category
+  - Educational content (Tafsir, Biography) properly categorized
+  - Seasonal and special content (Supplications, Ruqyah) organized
+
+### Migration Notes
+- Update from 2.3.4+11 by installing 2.3.5+12
+- All existing radio stations remain available with enhanced categorization
+- Previous favorites and playback history preserved
+- Category filter automatically appears in radio screen
+- No user action required - categories work immediately
+
+---
+
 ## [2.3.4+11] - 2026-01-25
 
 ### Changed - Asset Updates for Shorebird Compatibility

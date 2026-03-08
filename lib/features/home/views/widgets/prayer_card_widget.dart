@@ -309,82 +309,82 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                 ];
 
                 // Compute live remaining time
-                final remaining = nextPrayerTime.difference(now);
-                final rh = remaining.isNegative ? 0 : remaining.inHours;
-                final rm = remaining.isNegative ? 0 : remaining.inMinutes % 60;
-                final rs = remaining.isNegative ? 0 : remaining.inSeconds % 60;
+                // final remaining = nextPrayerTime.difference(now);
+                // final rh = remaining.isNegative ? 0 : remaining.inHours;
+                // final rm = remaining.isNegative ? 0 : remaining.inMinutes % 60;
+                // final rs = remaining.isNegative ? 0 : remaining.inSeconds % 60;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Location and Countdown Timer in same row - simplified
-                    Row(
-                      children: [
-                        // Location
-                        Expanded(
-                          child: _LocationNameWidget(
-                            theme: theme,
-                            size: size,
-                            isDark: theme.brightness == Brightness.dark,
-                          ),
-                        ),
-                        SizedBox(width: size.width * 0.02),
-                        // Countdown Timer - simplified
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: size.width * 0.025,
-                            vertical: size.height * 0.008,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? theme.colorScheme.primaryContainer.withValues(
-                                    alpha: 0.1,
-                                  )
-                                : theme.colorScheme.primary.withValues(
-                                    alpha: 0.1,
-                                  ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.2,
-                              ),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.timer_outlined,
-                                size: 16,
-                                color: isDark
-                                    ? theme.colorScheme.onSurface.withValues(
-                                        alpha: 0.65,
-                                      )
-                                    : theme.colorScheme.primary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${rh.toString().padLeft(2, '0')}:${rm.toString().padLeft(2, '0')}:${rs.toString().padLeft(2, '0')}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? theme.colorScheme.onSurface.withValues(
-                                          alpha: 0.65,
-                                        )
-                                      : theme.colorScheme.primary,
-                                  letterSpacing: 0.5,
-                                  fontFamily: 'Courier',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Row(
+                    //   children: [
+                    //     // Location
+                    //     Expanded(
+                    //       child: _LocationNameWidget(
+                    //         theme: theme,
+                    //         size: size,
+                    //         isDark: theme.brightness == Brightness.dark,
+                    //       ),
+                    //     ),
+                    //     SizedBox(width: size.width * 0.02),
+                    //     // Countdown Timer - simplified
+                    //     Container(
+                    //       padding: EdgeInsets.symmetric(
+                    //         horizontal: size.width * 0.025,
+                    //         vertical: size.height * 0.008,
+                    //       ),
+                    //       decoration: BoxDecoration(
+                    //         color: isDark
+                    //             ? theme.colorScheme.primaryContainer.withValues(
+                    //                 alpha: 0.1,
+                    //               )
+                    //             : theme.colorScheme.primary.withValues(
+                    //                 alpha: 0.1,
+                    //               ),
+                    //         borderRadius: BorderRadius.circular(12),
+                    //         border: Border.all(
+                    //           color: theme.colorScheme.primary.withValues(
+                    //             alpha: 0.2,
+                    //           ),
+                    //           width: 1,
+                    //         ),
+                    //       ),
+                    //       child: Row(
+                    //         mainAxisSize: MainAxisSize.min,
+                    //         children: [
+                    //           Icon(
+                    //             Icons.timer_outlined,
+                    //             size: 16,
+                    //             color: isDark
+                    //                 ? theme.colorScheme.onSurface.withValues(
+                    //                     alpha: 0.65,
+                    //                   )
+                    //                 : theme.colorScheme.primary,
+                    //           ),
+                    //           const SizedBox(width: 6),
+                    //           Text(
+                    //             '${rh.toString().padLeft(2, '0')}:${rm.toString().padLeft(2, '0')}:${rs.toString().padLeft(2, '0')}',
+                    //             style: TextStyle(
+                    //               fontSize: 13,
+                    //               fontWeight: FontWeight.bold,
+                    //               color: isDark
+                    //                   ? theme.colorScheme.onSurface.withValues(
+                    //                       alpha: 0.65,
+                    //                     )
+                    //                   : theme.colorScheme.primary,
+                    //               letterSpacing: 0.5,
+                    //               fontFamily: 'Courier',
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
 
-                    SizedBox(height: size.height * 0.015),
+                    // SizedBox(height: size.height * 0.015),
 
                     // Main prayer times row
                     Row(
@@ -803,90 +803,90 @@ class _QiyamPrayerTile extends StatelessWidget {
   }
 }
 
-// Location Name Widget - listens to BlocBuilder for location updates
-class _LocationNameWidget extends StatelessWidget {
-  final ThemeData theme;
-  final Size size;
-  final bool isDark;
+// // Location Name Widget - listens to BlocBuilder for location updates
+// class _LocationNameWidget extends StatelessWidget {
+//   final ThemeData theme;
+//   final Size size;
+//   final bool isDark;
 
-  const _LocationNameWidget({
-    required this.theme,
-    required this.size,
-    required this.isDark,
-  });
+//   const _LocationNameWidget({
+//     required this.theme,
+//     required this.size,
+//     required this.isDark,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<PrayerTimesCubit, PrayerTimesState>(
-      builder: (context, state) {
-        // Only show location when prayer times are loaded
-        if (state is! PrayerTimesLoaded) {
-          return const SizedBox.shrink();
-        }
+//   @override
+//   Widget build(BuildContext context) {
+//     return BlocBuilder<PrayerTimesCubit, PrayerTimesState>(
+//       builder: (context, state) {
+//         // Only show location when prayer times are loaded
+//         if (state is! PrayerTimesLoaded) {
+//           return const SizedBox.shrink();
+//         }
 
-        return FutureBuilder<String>(
-          future: context.read<PrayerTimesCubit>().getCurrentLocationName(),
-          builder: (context, snapshot) {
-            // Don't show if loading or no data
-            if (!snapshot.hasData || snapshot.data == null) {
-              return const SizedBox.shrink();
-            }
+//         return FutureBuilder<String>(
+//           future: context.read<PrayerTimesCubit>().getCurrentLocationName(),
+//           builder: (context, snapshot) {
+//             // Don't show if loading or no data
+//             if (!snapshot.hasData || snapshot.data == null) {
+//               return const SizedBox.shrink();
+//             }
 
-            final locationName = snapshot.data!;
+//             final locationName = snapshot.data!;
 
-            // Don't show if it's the default "location not specified" message
-            if (locationName == 'موقع غير محدد') {
-              return const SizedBox.shrink();
-            }
+//             // Don't show if it's the default "location not specified" message
+//             if (locationName == 'موقع غير محدد') {
+//               return const SizedBox.shrink();
+//             }
 
-            return Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.025,
-                vertical: size.height * 0.008,
-              ),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(
-                  alpha: 0.1,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.location_on_rounded,
-                    size: 16,
-                    color: isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.65)
-                        : theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      locationName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? theme.colorScheme.onSurface.withValues(
-                                alpha: 0.65,
-                              )
-                            : theme.colorScheme.primary,
-                        fontWeight: isDark ? FontWeight.w600 : FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
+//             return Container(
+//               padding: EdgeInsets.symmetric(
+//                 horizontal: size.width * 0.025,
+//                 vertical: size.height * 0.008,
+//               ),
+//               decoration: BoxDecoration(
+//                 color: theme.colorScheme.primaryContainer.withValues(
+//                   alpha: 0.1,
+//                 ),
+//                 borderRadius: BorderRadius.circular(12),
+//                 border: Border.all(
+//                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
+//                   width: 1,
+//                 ),
+//               ),
+//               child: Row(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   Icon(
+//                     Icons.location_on_rounded,
+//                     size: 16,
+//                     color: isDark
+//                         ? theme.colorScheme.onSurface.withValues(alpha: 0.65)
+//                         : theme.colorScheme.primary,
+//                   ),
+//                   const SizedBox(width: 6),
+//                   Flexible(
+//                     child: Text(
+//                       locationName,
+//                       maxLines: 1,
+//                       overflow: TextOverflow.ellipsis,
+//                       style: theme.textTheme.bodySmall?.copyWith(
+//                         color: isDark
+//                             ? theme.colorScheme.onSurface.withValues(
+//                                 alpha: 0.65,
+//                               )
+//                             : theme.colorScheme.primary,
+//                         fontWeight: isDark ? FontWeight.w600 : FontWeight.w600,
+//                         fontSize: 13,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+// }

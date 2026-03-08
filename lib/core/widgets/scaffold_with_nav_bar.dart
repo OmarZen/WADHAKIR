@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
@@ -94,6 +95,10 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
         ? primaryColor.withValues(alpha: 0.95)
         : const Color(0xFF2C2C2C).withValues(alpha: 0.95);
 
+    // Colors for nav icons
+    final inactiveColor = theme.colorScheme.onPrimary.withValues(alpha: 0.75);
+    final activeColor = theme.colorScheme.onPrimary;
+
     // Navigation items
     // (kept for reference if switching packages later)
 
@@ -170,8 +175,8 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
                   tabBorderRadius: 16,
                   curve: Curves.easeOutCubic,
                   duration: const Duration(milliseconds: 350),
-                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.75),
-                  activeColor: theme.colorScheme.onPrimary,
+                  color: inactiveColor,
+                  activeColor: activeColor,
                   iconSize: 22,
                   tabBackgroundColor: Colors.white.withValues(alpha: 0.12),
                   padding: EdgeInsets.symmetric(
@@ -187,6 +192,12 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
                     ),
                     GButton(
                       icon: Icons.menu_book_rounded,
+                      leading: HugeIcon(
+                        icon: HugeIcons.strokeRoundedQuran01,
+                        color:
+                            _selectedIndex == 1 ? activeColor : inactiveColor,
+                        size: 22,
+                      ),
                       text: l10n?.translate('nav_bar.quran') ?? 'المصحف',
                     ),
                     GButton(

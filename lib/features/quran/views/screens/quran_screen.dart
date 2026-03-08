@@ -14,16 +14,17 @@ class QuranScreen extends StatelessWidget {
     return QuranLibraryScreen(
       parentContext: context,
       isDark: isDarkMode,
+      isShowTabBar: true,
+      isShowAudioSlider: true,
+      showAyahBookmarkedIcon: true,
+      enableWordSelection: true,
+      appLanguageCode: l10n?.locale.languageCode ?? 'en',
       ayahIconColor: theme.colorScheme.primary,
+      ayahSelectedFontColor: theme.colorScheme.onSurface,
+      backgroundColor: theme.colorScheme.surface,
       ayahSelectedBackgroundColor: theme.colorScheme.primary.withValues(
         alpha: 0.25,
       ),
-      ayahSelectedFontColor: theme.colorScheme.onSurface,
-      // bannerStyle: BannerStyle(),
-      // basmalaStyle: BasmalaStyle(
-      //   basmalaColor: theme.colorScheme.primary,
-      // ),
-      backgroundColor: theme.colorScheme.surface,
       downloadFontsDialogStyle: DownloadFontsDialogStyle(
         iconWidget: Icon(
           Icons.font_download_outlined,
@@ -52,29 +53,30 @@ class QuranScreen extends StatelessWidget {
               ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
               : theme.colorScheme.onSurface.withValues(alpha: 0.98),
         ),
+        tajweedOptionNames:
+            l10n?.translate('quran.tajweed_options') ?? 'Tajweed Options',
       ),
-      appLanguageCode: l10n?.locale.languageCode ?? 'en',
       surahInfoStyle: SurahInfoStyle(
         closeIconColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
             : theme.colorScheme.onSurface.withValues(alpha: 0.98),
         surahNameColor: theme.colorScheme.onSurface,
-        surahNumberColor: theme.colorScheme.onSurface,
+        surahNumberColor: theme.colorScheme.surface,
+        surahNumberDecorationColor: theme.colorScheme.primary,
         backgroundColor: theme.colorScheme.surface,
         primaryColor: theme.colorScheme.primary,
         titleColor: isDarkMode
             ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
-            : theme.colorScheme.onSurface.withValues(alpha: 0.98),
+            : theme.colorScheme.surface.withValues(alpha: 0.98),
         indicatorColor: theme.colorScheme.primary,
         // Text color for ayah count and tab labels - white in light mode to show over primary color
         textColor: isDarkMode
-            ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
-            : Colors.white,
+            ? Colors.white
+            : theme.colorScheme.onSurface.withValues(alpha: 0.87),
         ayahCount: l10n?.translate('quran.ayah_count') ?? ' Ayah Count',
         firstTabText: l10n?.translate('quran.surah_names') ?? 'Surah Names',
         secondTabText: l10n?.translate('quran.surah_info') ?? 'Surah Info',
       ),
-      // sajdaName: l10n?.translate('quran.sajda') ?? 'Sajda',
       topBarStyle: QuranTopBarStyle(
         backgroundColor: theme.colorScheme.surface,
         textColor: isDarkMode
@@ -99,8 +101,18 @@ class QuranScreen extends StatelessWidget {
             l10n?.translate('quran.tab_bookmarks') ?? 'Bookmarks',
         tabSurahsLabel: l10n?.translate('quran.tab_surahs') ?? 'Surahs',
         tabJozzLabel: l10n?.translate('quran.tab_juzz') ?? 'Juzz',
-        // surahStyle: SurahStyle(),
-        // ayahStyle: AyahStyle(),
+        tabLabelStyle: theme.textTheme.bodyMedium?.copyWith(
+          color: isDarkMode
+              ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
+              : theme.colorScheme.onSurface.withValues(alpha: 0.98),
+        ),
+        showTajweedButton: true,
+        quranTabText: l10n?.translate('quran.quran') ?? 'Quran',
+        tenRecitationsTabText:
+            l10n?.translate('quran.ten_recitations') ?? 'Ten Recitations',
+        showAudioButton: true,
+        showFontsButton: true,
+        showMenuButton: true,
       ),
       topBottomQuranStyle: TopBottomQuranStyle(
         sajdaName: l10n?.translate('quran.sajda') ?? 'Sajda',

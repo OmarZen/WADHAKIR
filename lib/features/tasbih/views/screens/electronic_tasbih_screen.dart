@@ -332,6 +332,9 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
 
                         // Statistics card
                         _buildStatisticsCard(theme, l10n, isDark),
+
+                        // Extra spacing to prevent overlap with bottom buttons
+                        const SizedBox(height: 8),
                       ],
                     ),
                   ),
@@ -637,7 +640,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
     bool isDark,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
         color: theme.cardColor,
         boxShadow: [
@@ -649,6 +652,8 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
         ],
       ),
       child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 12),
         child: Row(
           children: [
             Expanded(
@@ -657,7 +662,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(l10n?.translate('tasbih.reset') ?? 'إعادة ضبط'),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   side: BorderSide(
                     color: theme.colorScheme.primary.withValues(alpha: 0.5),
                   ),
@@ -673,7 +678,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                   l10n?.translate('tasbih.change_target') ?? 'تغيير الهدف',
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),

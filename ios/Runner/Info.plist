@@ -49,11 +49,12 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
-		<!-- Notification permissions -->
+		<!-- Notification and Audio permissions -->
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>fetch</string>
 			<string>remote-notification</string>
+			<string>audio</string>
 		</array>
 	</dict>
 </plist>

@@ -97,19 +97,19 @@ class FastingReminderSettings extends Equatable {
   /// Factory constructor for default settings
   factory FastingReminderSettings.defaultSettings() {
     return const FastingReminderSettings(
-      // Hijri calendar defaults
-      monthlyFastingRemindersEnabled: true,
-      ayyamAlBidEnabled: true,
+      // Hijri calendar defaults - ALL OFF by default
+      monthlyFastingRemindersEnabled: false,
+      ayyamAlBidEnabled: false,
       ninthTenthEnabled: false,
-      specialDaysEmphasis: true,
+      specialDaysEmphasis: false,
       // Weekly fasting defaults
       mondayFastingEnabled: false,
       thursdayFastingEnabled: false,
       // Notification preferences defaults
       daysBeforeNotification: 1,
-      eveReminder: true,
-      morningReminder: true,
-      advanceReminder: true,
+      eveReminder: false,
+      morningReminder: false,
+      advanceReminder: false,
       vibration: true,
       weeklyNotificationTime: '21:00', // 9 PM the night before
       eveReminderTime: '18:00', // 6 PM - after Maghrib

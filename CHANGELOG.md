@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0+13] - 2026-03-09
+
+### Added - Fasting Reminders System
+- **Comprehensive Islamic Fasting Reminders**:
+  - Interactive Hijri calendar showing all Islamic fasting days
+  - Complete fasting reminder system with notification integration
+  - Dual date display (Gregorian + Hijri) throughout calendar
+  - Coverage: Ayyam al-Bid (13-15), 9th-10th, Monday/Thursday, special days (Ashura, Tasu'a, Arafah)
+  - 12-month calendar navigation limit for optimal UX
+  - Shows ALL fasting days without settings-based filtering
+
+- **Enhanced Prayer Notifications**:
+  - Real-time countdown with 1-second precision updates
+  - Improved persistent notification UI showing hours:minutes:seconds
+  - Better system notification panel integration
+
+- **Settings UI Improvements**:
+  - Redesigned appearance settings (theme/language) into compact side-by-side layout
+  - Reorganized adhan sounds for Fajr and other prayers into single row
+  - Fixed render overflow issues with proper Expanded wrappers
+  - Integrated HugeIcons package throughout fasting features
+
+- **Architecture & Code Quality**:
+  - Clean architecture with FastingRemindersCubit for state management
+  - Repository pattern with FastingRemindersRepository
+  - Domain use cases for fasting reminder settings
+  - Dedicated services: HijriDateCalculatorService, FastingNotificationService
+  - Modern compact UI design following Material Design 3
+
+- **Localization**:
+  - Added 30+ new translation keys for fasting features
+  - Fixed Quran screen tab translations
+  - Full bilingual support (Arabic/English)
+
+### Changed
+- Fasting settings moved from general notifications to dedicated section
+- Unified all fasting-related colors to theme.colorScheme.primary
+
+### Technical Details
+- **Version Code**: 13 (was 12)
+- **MSIX Version**: 2.4.0.0 (was 2.3.5.0)
+- **Files Modified**: 48 files changed (+7,657 insertions, -2,240 deletions)
+- **Breaking Changes**: Old fasting_notification_settings_widget.dart removed
+
+### Migration Notes
+- Update from 2.3.5+12 by installing 2.4.0+13
+- Fasting reminders now in dedicated section under Settings
+- All existing settings and data preserved
+
 ## [2.3.5+12] - 2026-01-28
 
 ### Added - Radio Station Bilingual Categories

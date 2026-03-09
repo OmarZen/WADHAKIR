@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/utils/alarm_permission_helper.dart';
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_cubit.dart';
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_state.dart';
 import 'package:wadhakir/features/fasting_reminders/views/screens/fasting_calendar_screen.dart';
@@ -168,7 +169,44 @@ class FastingReminderSettingsWidget extends StatelessWidget {
             scale: 0.85,
             child: Switch(
               value: isEnabled,
-              onChanged: (value) => cubit.toggleMonthlyReminders(value),
+              onChanged: (value) async {
+                if (value) {
+                  // Request permissions before enabling
+                  final permissions =
+                      await AlarmPermissionHelper.requestAllPermissions(
+                          context);
+
+                  // Only enable if we got notification permission at minimum
+                  if (permissions['notifications'] == true) {
+                    cubit.toggleMonthlyReminders(value);
+
+                    // Show warning if exact alarm permission was denied
+                    if (permissions['exactAlarms'] != true && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            l10n?.translate(
+                                  'settings.exact_alarm_permission_warning',
+                                ) ??
+                                'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
+                          ),
+                          action: SnackBarAction(
+                            label: l10n?.translate('settings.settings') ??
+                                'الإعدادات',
+                            onPressed: () => AlarmPermissionHelper
+                                .showPermissionDeniedDialog(
+                              context,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                } else {
+                  // Disable fasting reminders
+                  cubit.toggleMonthlyReminders(value);
+                }
+              },
               activeThumbColor: theme.colorScheme.primary,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -511,7 +549,7 @@ class FastingReminderSettingsWidget extends StatelessWidget {
               child: Switch(
                 value: value,
                 onChanged: onChanged,
-                activeColor: theme.colorScheme.primary,
+                activeThumbColor: theme.colorScheme.primary,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),

@@ -358,7 +358,7 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
             color: isSelected
                 ? isDark
                     ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onPrimary
+                    : theme.colorScheme.primary
                 : isDark
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
                     : theme.colorScheme.onSurface,
@@ -436,107 +436,123 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: widget.enabled
-            ? (isDark
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-                : theme.colorScheme.surface)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: widget.enabled
-              ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
-              : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: ListTile(
-        enabled: widget.enabled,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
+    return Material(
+      color: widget.enabled
+          ? (isDark
+              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+              : theme.colorScheme.surface)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: widget.enabled ? _showSoundPickerDialog : null,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.enabled
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.enabled
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.15)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              width: 1,
+            ),
           ),
-          child: Icon(
-            Icons.music_note,
-            color: widget.enabled
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-            size: 18,
-          ),
-        ),
-        title: Text(
-          widget.title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: widget.enabled
-                ? theme.colorScheme.onSurface
-                : theme.colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.subtitle != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  widget.subtitle!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.colorScheme.primary, width: 1),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon and Arrow
+              Row(
                 children: [
-                  Icon(
-                    Icons.volume_up,
-                    size: 14,
-                    color: theme.colorScheme.primary,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: widget.enabled
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(
+                      Icons.music_note,
+                      color: widget.enabled
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      size: 14,
+                    ),
                   ),
-                  const SizedBox(width: 6),
-                  Flexible(
+                  const SizedBox(width: 10),
+                  // Title
+                  Expanded(
                     child: Text(
-                      _getCurrentSoundName(),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
+                      widget.title,
+                      style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 12,
+                        fontSize: 14,
+                        color: widget.enabled
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurface
+                                .withValues(alpha: 0.4),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: widget.enabled
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              // Current Sound Name
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.volume_up,
+                      size: 14,
+                      color: isDark
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                          : theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        _getCurrentSoundName(),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.8,
+                                )
+                              : theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: widget.enabled
-              ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
-              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
-        ),
-        onTap: widget.enabled ? _showSoundPickerDialog : null,
       ),
     );
   }

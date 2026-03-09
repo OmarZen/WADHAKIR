@@ -21,10 +21,6 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
   static const String _ishaId = 'isha_104';
   static const String _persistentId = 'persistent_999';
 
-  // Fasting notification IDs
-  static const String _mondayFastingId = 'monday_200';
-  static const String _thursdayFastingId = 'thursday_201';
-
   @override
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -265,22 +261,42 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
     final now = DateTime.now();
     final difference = nextPrayerTime.difference(now);
 
+    // Format time remaining with seconds for better accuracy
     String timeRemaining = '';
-    if (difference.inHours > 0) {
-      timeRemaining =
-          '${difference.inHours} ساعة و ${difference.inMinutes.remainder(60)} دقيقة';
+    if (difference.inDays > 0) {
+      // More than a day (Fajr tomorrow case)
+      final hours = difference.inHours.remainder(24);
+      final minutes = difference.inMinutes.remainder(60);
+      timeRemaining = '${difference.inDays} يوم و $hours ساعة و $minutes دقيقة';
+    } else if (difference.inHours > 0) {
+      final hours = difference.inHours;
+      final minutes = difference.inMinutes.remainder(60);
+      final seconds = difference.inSeconds.remainder(60);
+      timeRemaining = '$hours ساعة، $minutes دقيقة، $seconds ثانية';
     } else if (difference.inMinutes > 0) {
-      timeRemaining = '${difference.inMinutes} دقيقة';
+      final minutes = difference.inMinutes;
+      final seconds = difference.inSeconds.remainder(60);
+      timeRemaining = '$minutes دقيقة و $seconds ثانية';
+    } else if (difference.inSeconds > 0) {
+      final seconds = difference.inSeconds;
+      timeRemaining = '$seconds ثانية';
     } else {
       timeRemaining = 'الآن';
     }
 
     final formattedTime = _formatTime(nextPrayerTime);
+    final locationText = locationName != null && locationName.isNotEmpty
+        ? '\n📍 $locationName'
+        : '';
+
+    // Enhanced notification body with better formatting
+    final String notificationBody = '''⏰ الموعد: $formattedTime
+⏳ الوقت المتبقي: $timeRemaining$locationText''';
 
     await _showWindowsNotification(
       id: _persistentId,
       title: '🕌 الصلاة القادمة: $nextPrayerNameArabic',
-      body: '⏰ الوقت: $formattedTime\n⏳ متبقي: $timeRemaining',
+      body: notificationBody,
       group: 'persistent_prayer',
     );
 
@@ -298,164 +314,6 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
     } catch (e) {
       debugPrint('⚠️  Error removing persistent notification: $e');
     }
-  }
-
-  @override
-  Future<void> scheduleFastingNotification({
-    required String dayName,
-    required String dayNameArabic,
-    required String notificationTime,
-    required bool enabled,
-    required bool vibration,
-  }) async {
-    final String notificationId = dayName.toLowerCase() == 'monday'
-        ? _mondayFastingId
-        : _thursdayFastingId;
-
-    if (!enabled) {
-      await cancelFastingNotification(dayName);
-      return;
-    }
-
-    // Parse time
-    final timeParts = notificationTime.split(':');
-    final hour = int.parse(timeParts[0]);
-    final minute = int.parse(timeParts[1]);
-
-    // Calculate next occurrence
-    final now = DateTime.now();
-    final targetWeekday =
-        dayName.toLowerCase() == 'monday' ? DateTime.monday : DateTime.thursday;
-
-    int daysUntilTarget = targetWeekday - now.weekday;
-    if (daysUntilTarget <= 0) {
-      daysUntilTarget += 7;
-    }
-
-    // Check if today is target and time hasn't passed
-    if (daysUntilTarget == 7) {
-      final todayAtTime = DateTime(now.year, now.month, now.day, hour, minute);
-      if (todayAtTime.isAfter(now)) {
-        daysUntilTarget = 0;
-      }
-    }
-
-    final nextNotificationDate = DateTime(
-      now.year,
-      now.month,
-      now.day + daysUntilTarget,
-      hour,
-      minute,
-    );
-
-    debugPrint(
-      '🍽️  Scheduling fasting notification for $dayName at $nextNotificationDate',
-    );
-
-    // Schedule using Future.delayed and repeat weekly
-    _scheduleFastingNotificationRecurring(
-      notificationId: notificationId,
-      dayName: dayName,
-      dayNameArabic: dayNameArabic,
-      hour: hour,
-      minute: minute,
-      targetWeekday: targetWeekday,
-    );
-  }
-
-  void _scheduleFastingNotificationRecurring({
-    required String notificationId,
-    required String dayName,
-    required String dayNameArabic,
-    required int hour,
-    required int minute,
-    required int targetWeekday,
-  }) {
-    final now = DateTime.now();
-    int daysUntilTarget = targetWeekday - now.weekday;
-    if (daysUntilTarget <= 0) {
-      daysUntilTarget += 7;
-    }
-
-    final todayAtTime = DateTime(now.year, now.month, now.day, hour, minute);
-    if (daysUntilTarget == 7 && todayAtTime.isAfter(now)) {
-      daysUntilTarget = 0;
-    }
-
-    final nextNotificationDate = DateTime(
-      now.year,
-      now.month,
-      now.day + daysUntilTarget,
-      hour,
-      minute,
-    );
-
-    final delay = nextNotificationDate.difference(DateTime.now());
-
-    Future.delayed(delay, () {
-      _showWindowsNotification(
-        id: notificationId,
-        title: '🌙 تذكير بصيام $dayNameArabic',
-        body: 'غدًا يوم $dayNameArabic، لا تنسى نية الصيام 🤲',
-        group: 'fasting_reminders',
-      );
-
-      // Schedule next occurrence (7 days later)
-      _scheduleFastingNotificationRecurring(
-        notificationId: notificationId,
-        dayName: dayName,
-        dayNameArabic: dayNameArabic,
-        hour: hour,
-        minute: minute,
-        targetWeekday: targetWeekday,
-      );
-    });
-  }
-
-  @override
-  Future<void> cancelFastingNotification(String dayName) async {
-    final String notificationId = dayName.toLowerCase() == 'monday'
-        ? _mondayFastingId
-        : _thursdayFastingId;
-
-    try {
-      await _winNotifyPlugin.removeNotificationId(
-        notificationId,
-        'fasting_reminders',
-      );
-      debugPrint('🗑️  Cancelled fasting notification for $dayName');
-    } catch (e) {
-      debugPrint('⚠️  Error cancelling fasting notification: $e');
-    }
-  }
-
-  @override
-  Future<void> scheduleAllFastingNotifications({
-    required bool mondayEnabled,
-    required bool thursdayEnabled,
-    required String notificationTime,
-    required bool vibration,
-  }) async {
-    debugPrint('🍽️  Scheduling all fasting notifications');
-    debugPrint('🍽️  Monday: $mondayEnabled, Thursday: $thursdayEnabled');
-
-    await scheduleFastingNotification(
-      dayName: 'Monday',
-      dayNameArabic: 'الإثنين',
-      notificationTime: notificationTime,
-      enabled: mondayEnabled,
-      vibration: vibration,
-    );
-
-    await scheduleFastingNotification(
-      dayName: 'Thursday',
-      dayNameArabic: 'الخميس',
-      notificationTime: notificationTime,
-      enabled: thursdayEnabled,
-      vibration: vibration,
-    );
-
-    debugPrint('✅ All fasting notifications scheduled successfully');
   }
 
   // Helper: Show Windows notification

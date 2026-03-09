@@ -5,12 +5,11 @@ import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/features/settings/view/widgets/settings_section.dart';
-import 'package:wadhakir/features/settings/view/widgets/theme_selector_widget.dart';
+import 'package:wadhakir/features/settings/view/widgets/appearance_settings_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/about_section_widgets.dart';
-import 'package:wadhakir/features/settings/view/widgets/language_selector_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/adhan_sounds_section_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/notification_settings_widgets.dart';
-import 'package:wadhakir/features/settings/view/widgets/fasting_notification_settings_widget.dart';
+import 'package:wadhakir/features/fasting_reminders/views/widgets/fasting_reminder_settings_widget.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -135,29 +134,18 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildAnimatedSection(
                 delay: 0,
                 child: SettingsSection(
-                  title: l10n?.translate('settings.theme') ?? 'السمة',
+                  title:
+                      l10n?.translate('settings.appearance') ?? 'المظهر واللغة',
                   icon: Icons.palette_outlined,
-                  subtitle: l10n?.translate('settings.theme_subtitle') ??
-                      'تخصيص مظهر التطبيق',
+                  subtitle: l10n?.translate('settings.appearance_subtitle') ??
+                      'تخصيص السمة واللغة',
                   children: [
-                    ThemeSelectorWidget(settings: settings, cubit: cubit),
+                    AppearanceSettingsWidget(settings: settings, cubit: cubit),
                   ],
                 ),
               ),
               _buildAnimatedSection(
                 delay: 100,
-                child: SettingsSection(
-                  title: l10n?.translate('settings.language') ?? 'اللغة',
-                  icon: Icons.language_outlined,
-                  subtitle: l10n?.translate('settings.language_subtitle') ??
-                      'تغيير لغة التطبيق',
-                  children: [
-                    LanguageSelectorWidget(settings: settings, cubit: cubit),
-                  ],
-                ),
-              ),
-              _buildAnimatedSection(
-                delay: 200,
                 child: SettingsSection(
                   title:
                       l10n?.translate('settings.notifications') ?? 'التنبيهات',
@@ -200,43 +188,22 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               _buildAnimatedSection(
-                delay: 250,
+                delay: 150,
                 child: SettingsSection(
-                  title: l10n?.translate('settings.fasting_notifications') ??
-                      'تنبيهات الصيام',
+                  title: l10n?.translate('fasting.fasting_reminders') ??
+                      'تذكيرات الصيام',
                   icon: Icons.restaurant_menu_outlined,
                   subtitle: l10n?.translate(
-                        'settings.fasting_notifications_subtitle',
+                        'fasting.fasting_reminders_subtitle',
                       ) ??
-                      'تذكير بصيام الإثنين والخميس',
+                      'الصيام الأسبوعي والشهري والأيام المميزة',
                   children: [
-                    FastingNotificationSettingsWidget.buildMondayFastingToggle(
-                      context,
-                      settings,
-                      cubit,
-                    ),
-                    _buildDivider(theme),
-                    FastingNotificationSettingsWidget
-                        .buildThursdayFastingToggle(
-                      context,
-                      settings,
-                      cubit,
-                    ),
-                    if (settings.notificationSettings.mondayFastingEnabled ||
-                        settings
-                            .notificationSettings.thursdayFastingEnabled) ...[
-                      _buildDivider(theme),
-                      FastingNotificationSettingsWidget.buildFastingTimePicker(
-                        context,
-                        settings,
-                        cubit,
-                      ),
-                    ],
+                    const FastingReminderSettingsWidget(),
                   ],
                 ),
               ),
               _buildAnimatedSection(
-                delay: 300,
+                delay: 200,
                 child: SettingsSection(
                   title: l10n?.translate('settings.about_app') ?? 'حول التطبيق',
                   icon: Icons.info_outline,

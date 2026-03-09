@@ -1,3 +1,7 @@
+import 'package:wadhakir/data/repositories/fasting_reminders_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_stream_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -55,6 +59,16 @@ void main() {
           prayerTimesRepository,
         ),
         prayerTimesRepository: prayerTimesRepository,
+        getFastingReminderSettingsUseCase: GetFastingReminderSettingsUseCase(
+          FastingRemindersRepositoryImpl(sharedPreferences),
+        ),
+        setFastingReminderSettingsUseCase: SetFastingReminderSettingsUseCase(
+          FastingRemindersRepositoryImpl(sharedPreferences),
+        ),
+        getFastingReminderSettingsStreamUseCase:
+            GetFastingReminderSettingsStreamUseCase(
+          FastingRemindersRepositoryImpl(sharedPreferences),
+        ),
       ),
     );
 

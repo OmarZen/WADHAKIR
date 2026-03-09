@@ -26,7 +26,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final isEnabled = settings.notificationSettings.masterEnabled;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
@@ -136,7 +136,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
         Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: isEnabled
             ? (isDark
@@ -240,7 +240,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: isDark
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
@@ -521,7 +521,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
         color: isDark
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)

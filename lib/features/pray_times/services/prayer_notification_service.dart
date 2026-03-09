@@ -219,24 +219,4 @@ class PrayerNotificationService {
       rethrow;
     }
   }
-
-  /// Schedule all fasting notifications
-  Future<void> scheduleAllFastingNotifications({
-    required bool mondayEnabled,
-    required bool thursdayEnabled,
-    required String notificationTime,
-    required bool vibration,
-  }) async {
-    await _repository.scheduleAllFastingNotifications(
-      mondayEnabled: mondayEnabled,
-      thursdayEnabled: thursdayEnabled,
-      notificationTime: notificationTime,
-      vibration: vibration,
-    );
-  }
-
-  /// Cancel fasting notification for specific day
-  Future<void> cancelFastingNotification(String dayName) async {
-    await _repository.cancelFastingNotification(dayName);
-  }
 }

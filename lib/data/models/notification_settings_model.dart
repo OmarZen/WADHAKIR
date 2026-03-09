@@ -94,12 +94,6 @@ class NotificationSettingsModel extends Equatable {
   final PrayerNotificationSettings maghribSettings;
   final PrayerNotificationSettings ishaSettings;
 
-  // Fasting notifications
-  final bool mondayFastingEnabled;
-  final bool thursdayFastingEnabled;
-  final String fastingNotificationTime; // Format: "HH:mm" (24-hour format)
-  final bool fastingVibration;
-
   const NotificationSettingsModel({
     required this.masterEnabled,
     this.persistentNotificationEnabled = false,
@@ -108,10 +102,6 @@ class NotificationSettingsModel extends Equatable {
     required this.asrSettings,
     required this.maghribSettings,
     required this.ishaSettings,
-    required this.mondayFastingEnabled,
-    required this.thursdayFastingEnabled,
-    required this.fastingNotificationTime,
-    required this.fastingVibration,
   });
 
   factory NotificationSettingsModel.defaultSettings() {
@@ -126,10 +116,6 @@ class NotificationSettingsModel extends Equatable {
       asrSettings: PrayerNotificationSettings.defaultSettings(),
       maghribSettings: PrayerNotificationSettings.defaultSettings(),
       ishaSettings: PrayerNotificationSettings.defaultSettings(),
-      mondayFastingEnabled: false,
-      thursdayFastingEnabled: false,
-      fastingNotificationTime: '21:00', // 9 PM night before
-      fastingVibration: true,
     );
   }
 
@@ -141,10 +127,6 @@ class NotificationSettingsModel extends Equatable {
     PrayerNotificationSettings? asrSettings,
     PrayerNotificationSettings? maghribSettings,
     PrayerNotificationSettings? ishaSettings,
-    bool? mondayFastingEnabled,
-    bool? thursdayFastingEnabled,
-    String? fastingNotificationTime,
-    bool? fastingVibration,
   }) {
     return NotificationSettingsModel(
       masterEnabled: masterEnabled ?? this.masterEnabled,
@@ -155,12 +137,6 @@ class NotificationSettingsModel extends Equatable {
       asrSettings: asrSettings ?? this.asrSettings,
       maghribSettings: maghribSettings ?? this.maghribSettings,
       ishaSettings: ishaSettings ?? this.ishaSettings,
-      mondayFastingEnabled: mondayFastingEnabled ?? this.mondayFastingEnabled,
-      thursdayFastingEnabled:
-          thursdayFastingEnabled ?? this.thursdayFastingEnabled,
-      fastingNotificationTime:
-          fastingNotificationTime ?? this.fastingNotificationTime,
-      fastingVibration: fastingVibration ?? this.fastingVibration,
     );
   }
 
@@ -173,10 +149,6 @@ class NotificationSettingsModel extends Equatable {
       'asrSettings': asrSettings.toJson(),
       'maghribSettings': maghribSettings.toJson(),
       'ishaSettings': ishaSettings.toJson(),
-      'mondayFastingEnabled': mondayFastingEnabled,
-      'thursdayFastingEnabled': thursdayFastingEnabled,
-      'fastingNotificationTime': fastingNotificationTime,
-      'fastingVibration': fastingVibration,
     };
   }
 
@@ -210,11 +182,6 @@ class NotificationSettingsModel extends Equatable {
               json['ishaSettings'] as Map<String, dynamic>,
             )
           : PrayerNotificationSettings.defaultSettings(),
-      mondayFastingEnabled: json['mondayFastingEnabled'] as bool? ?? false,
-      thursdayFastingEnabled: json['thursdayFastingEnabled'] as bool? ?? false,
-      fastingNotificationTime:
-          json['fastingNotificationTime'] as String? ?? '21:00',
-      fastingVibration: json['fastingVibration'] as bool? ?? true,
     );
   }
 
@@ -250,9 +217,5 @@ class NotificationSettingsModel extends Equatable {
         asrSettings,
         maghribSettings,
         ishaSettings,
-        mondayFastingEnabled,
-        thursdayFastingEnabled,
-        fastingNotificationTime,
-        fastingVibration,
       ];
 }

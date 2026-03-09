@@ -57,32 +57,4 @@ abstract class NotificationRepository {
 
   /// Hide/remove the persistent notification
   Future<void> hidePersistentNotification();
-
-  /// Schedule weekly fasting reminder notification for Monday or Thursday
-  /// [dayName] - 'Monday' or 'Thursday'
-  /// [notificationTime] - Time in "HH:mm" format (24-hour)
-  /// [enabled] - Whether the notification is enabled
-  /// [vibration] - Whether to vibrate on notification
-  Future<void> scheduleFastingNotification({
-    required String dayName,
-    required String dayNameArabic,
-    required String notificationTime,
-    required bool enabled,
-    required bool vibration,
-  });
-
-  /// Cancel fasting notification for specific day
-  Future<void> cancelFastingNotification(String dayName);
-
-  /// Schedule all fasting notifications based on settings
-  /// [mondayEnabled] - Whether Monday fasting notification is enabled
-  /// [thursdayEnabled] - Whether Thursday fasting notification is enabled
-  /// [notificationTime] - Time in "HH:mm" format for both notifications
-  /// [vibration] - Whether to vibrate on notification
-  Future<void> scheduleAllFastingNotifications({
-    required bool mondayEnabled,
-    required bool thursdayEnabled,
-    required String notificationTime,
-    required bool vibration,
-  });
 }

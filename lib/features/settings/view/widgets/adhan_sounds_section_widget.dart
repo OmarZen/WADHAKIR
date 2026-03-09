@@ -44,84 +44,99 @@ class AdhanSoundsSectionWidget extends StatelessWidget {
           ),
         ),
 
-        // Fajr Adhan Sound Selector
-        BlocBuilder<SettingsCubit, SettingsState>(
-          builder: (builderContext, state) {
-            if (state is! SettingsLoaded) {
-              return const SizedBox.shrink();
-            }
+        // Adhan Sound Selectors in Row
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: BlocBuilder<SettingsCubit, SettingsState>(
+            builder: (builderContext, state) {
+              if (state is! SettingsLoaded) {
+                return const SizedBox.shrink();
+              }
 
-            // Get cubit from builder context
-            final settingsCubit = builderContext.read<SettingsCubit>();
+              // Get cubit from builder context
+              final settingsCubit = builderContext.read<SettingsCubit>();
 
-            return AdhanSoundSelector(
-              title: l10n?.translate('settings.fajr_adhan') ?? 'أذان الفجر',
-              subtitle: l10n?.translate('settings.fajr_adhan_subtitle') ??
-                  'اختر صوت أذان الفجر',
-              currentSoundPath: state
-                  .settings.notificationSettings.fajrSettings.customSoundPath,
-              soundOptions: AdhanSounds.fajrSounds,
-              onSoundSelected: (path) {
-                debugPrint('🔔 Fajr sound selected: $path');
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Fajr Adhan Sound Selector
+                  Expanded(
+                    child: AdhanSoundSelector(
+                      title: l10n?.translate('settings.fajr_adhan') ??
+                          'أذان الفجر',
+                      subtitle:
+                          l10n?.translate('settings.fajr_adhan_subtitle') ??
+                              'اختر صوت أذان الفجر',
+                      currentSoundPath: state.settings.notificationSettings
+                          .fajrSettings.customSoundPath,
+                      soundOptions: AdhanSounds.fajrSounds,
+                      onSoundSelected: (path) {
+                        debugPrint('🔔 Fajr sound selected: $path');
 
-                final newSettings = state
-                    .settings.notificationSettings.fajrSettings
-                    .copyWith(customSoundPath: path);
+                        final newSettings = state
+                            .settings.notificationSettings.fajrSettings
+                            .copyWith(customSoundPath: path);
 
-                debugPrint(
-                  '🔔 Updating Fajr settings with customSoundPath: $path',
-                );
-                settingsCubit.updatePrayerNotificationSettings(
-                  prayerName: 'Fajr',
-                  prayerSettings: newSettings,
-                );
-              },
-              enabled: state.settings.notificationSettings.fajrSettings.enabled,
-            );
-          },
-        ),
+                        debugPrint(
+                          '🔔 Updating Fajr settings with customSoundPath: $path',
+                        );
+                        settingsCubit.updatePrayerNotificationSettings(
+                          prayerName: 'Fajr',
+                          prayerSettings: newSettings,
+                        );
+                      },
+                      enabled: state
+                          .settings.notificationSettings.fajrSettings.enabled,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Regular Prayers Adhan Sound Selector
+                  Expanded(
+                    child: AdhanSoundSelector(
+                      title: l10n?.translate('settings.regular_adhan') ??
+                          'أذان الصلوات الأخرى',
+                      subtitle:
+                          l10n?.translate('settings.regular_adhan_subtitle') ??
+                              'اختر صوت أذان الظهر، العصر، المغرب والعشاء',
+                      currentSoundPath: state.settings.notificationSettings
+                          .dhuhrSettings.customSoundPath,
+                      soundOptions: AdhanSounds.regularSounds,
+                      onSoundSelected: (path) async {
+                        debugPrint(
+                          '🔔 ════════════════════════════════════════',
+                        );
+                        debugPrint('🔔 Regular prayers sound selected: $path');
+                        debugPrint(
+                          '🔔 Current Dhuhr customSoundPath: ${state.settings.notificationSettings.dhuhrSettings.customSoundPath}',
+                        );
 
-        const Divider(height: 1, indent: 20, endIndent: 20),
+                        // Update all regular prayers with a single batch update
+                        debugPrint(
+                          '🔔 Calling updateAllRegularPrayersSounds...',
+                        );
+                        await settingsCubit.updateAllRegularPrayersSounds(path);
 
-        // Regular Prayers Adhan Sound Selector
-        BlocBuilder<SettingsCubit, SettingsState>(
-          builder: (builderContext, state) {
-            if (state is! SettingsLoaded) {
-              return const SizedBox.shrink();
-            }
-
-            // Get cubit from builder context to ensure correct scope
-            final settingsCubit = builderContext.read<SettingsCubit>();
-
-            return AdhanSoundSelector(
-              title: l10n?.translate('settings.regular_adhan') ??
-                  'أذان الصلوات الأخرى',
-              subtitle: l10n?.translate('settings.regular_adhan_subtitle') ??
-                  'اختر صوت أذان الظهر، العصر، المغرب والعشاء',
-              currentSoundPath: state
-                  .settings.notificationSettings.dhuhrSettings.customSoundPath,
-              soundOptions: AdhanSounds.regularSounds,
-              onSoundSelected: (path) async {
-                debugPrint('🔔 ════════════════════════════════════════');
-                debugPrint('🔔 Regular prayers sound selected: $path');
-                debugPrint(
-                  '🔔 Current Dhuhr customSoundPath: ${state.settings.notificationSettings.dhuhrSettings.customSoundPath}',
-                );
-
-                // Update all regular prayers with a single batch update
-                debugPrint('🔔 Calling updateAllRegularPrayersSounds...');
-                await settingsCubit.updateAllRegularPrayersSounds(path);
-
-                debugPrint('🔔 All regular prayers updated with sound: $path');
-                debugPrint('🔔 ════════════════════════════════════════');
-              },
-              enabled: state
-                      .settings.notificationSettings.dhuhrSettings.enabled ||
-                  state.settings.notificationSettings.asrSettings.enabled ||
-                  state.settings.notificationSettings.maghribSettings.enabled ||
-                  state.settings.notificationSettings.ishaSettings.enabled,
-            );
-          },
+                        debugPrint(
+                          '🔔 All regular prayers updated with sound: $path',
+                        );
+                        debugPrint(
+                          '🔔 ════════════════════════════════════════',
+                        );
+                      },
+                      enabled: state.settings.notificationSettings.dhuhrSettings
+                              .enabled ||
+                          state.settings.notificationSettings.asrSettings
+                              .enabled ||
+                          state.settings.notificationSettings.maghribSettings
+                              .enabled ||
+                          state.settings.notificationSettings.ishaSettings
+                              .enabled,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ],
     );

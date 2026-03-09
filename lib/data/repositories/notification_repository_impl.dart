@@ -102,40 +102,6 @@ class NotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<void> hidePersistentNotification() =>
       _platformRepository.hidePersistentNotification();
-
-  @override
-  Future<void> scheduleFastingNotification({
-    required String dayName,
-    required String dayNameArabic,
-    required String notificationTime,
-    required bool enabled,
-    required bool vibration,
-  }) =>
-      _platformRepository.scheduleFastingNotification(
-        dayName: dayName,
-        dayNameArabic: dayNameArabic,
-        notificationTime: notificationTime,
-        enabled: enabled,
-        vibration: vibration,
-      );
-
-  @override
-  Future<void> cancelFastingNotification(String dayName) =>
-      _platformRepository.cancelFastingNotification(dayName);
-
-  @override
-  Future<void> scheduleAllFastingNotifications({
-    required bool mondayEnabled,
-    required bool thursdayEnabled,
-    required String notificationTime,
-    required bool vibration,
-  }) =>
-      _platformRepository.scheduleAllFastingNotifications(
-        mondayEnabled: mondayEnabled,
-        thursdayEnabled: thursdayEnabled,
-        notificationTime: notificationTime,
-        vibration: vibration,
-      );
 }
 
 /// Mobile implementation using awesome_notifications
@@ -157,10 +123,6 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   static const int _maghribId = 103;
   static const int _ishaId = 104;
   static const int _persistentId = 999; // ID for persistent notification
-
-  // Notification IDs for fasting reminders
-  static const int _mondayFastingId = 200;
-  static const int _thursdayFastingId = 201;
 
   @override
   Future<void> initialize() async {
@@ -243,7 +205,8 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
         NotificationChannel(
           channelKey: _channelKeyPersistent,
           channelName: 'تنبيه دائم لأوقات الصلاة',
-          channelDescription: 'إشعار دائم يعرض موعد الصلاة القادمة',
+          channelDescription:
+              'إشعار دائم يعرض موعد الصلاة القادمة مع عداد تنازلي مباشر',
           importance: NotificationImportance.Default,
           defaultColor: const Color(0xFF20497D),
           playSound: false,
@@ -252,6 +215,8 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
           locked: true, // Prevent user from dismissing
           onlyAlertOnce: true,
           icon: 'resource://drawable/ic_notification',
+          enableLights: true,
+          ledColor: const Color(0xFF20497D),
         ),
         // Fasting reminders channel - High importance with default sound
         NotificationChannel(
@@ -547,25 +512,48 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     final now = DateTime.now();
     final difference = nextPrayerTime.difference(now);
 
+    // Format time remaining with seconds for better accuracy
     String timeRemaining = '';
-    if (difference.inHours > 0) {
-      timeRemaining =
-          '${difference.inHours} ساعة و ${difference.inMinutes.remainder(60)} دقيقة';
+    if (difference.inDays > 0) {
+      // More than a day (Fajr tomorrow case)
+      final hours = difference.inHours.remainder(24);
+      final minutes = difference.inMinutes.remainder(60);
+      timeRemaining = '${difference.inDays} يوم و $hours ساعة و $minutes دقيقة';
+    } else if (difference.inHours > 0) {
+      final hours = difference.inHours;
+      final minutes = difference.inMinutes.remainder(60);
+      final seconds = difference.inSeconds.remainder(60);
+      timeRemaining = '$hours ساعة، $minutes دقيقة، $seconds ثانية';
     } else if (difference.inMinutes > 0) {
-      timeRemaining = '${difference.inMinutes} دقيقة';
+      final minutes = difference.inMinutes;
+      final seconds = difference.inSeconds.remainder(60);
+      timeRemaining = '$minutes دقيقة و $seconds ثانية';
+    } else if (difference.inSeconds > 0) {
+      final seconds = difference.inSeconds;
+      timeRemaining = '$seconds ثانية';
     } else {
       timeRemaining = 'الآن';
     }
 
     final formattedTime = _formatTime(nextPrayerTime);
+    final locationText = locationName != null && locationName.isNotEmpty
+        ? '\n📍 $locationName'
+        : '';
+
+    // Enhanced notification body with emoji-enhanced formatting
+    final String notificationBody = '''⏰ الموعد
+$formattedTime
+
+⏳ الوقت المتبقي
+$timeRemaining$locationText''';
 
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: _persistentId,
         channelKey: _channelKeyPersistent,
         title: '🕌 الصلاة القادمة: $nextPrayerNameArabic',
-        body: '⏰ الوقت: $formattedTime\n⏳ متبقي: $timeRemaining',
-        notificationLayout: NotificationLayout.Default,
+        body: notificationBody,
+        notificationLayout: NotificationLayout.BigText,
         category: NotificationCategory.Reminder,
         autoDismissible: false,
         locked: true,
@@ -575,6 +563,11 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
         color: Colors.white,
         icon: 'resource://mipmap/launcher_icon',
         largeIcon: 'resource://mipmap/launcher_icon',
+        summary: timeRemaining,
+        ticker: 'الصلاة القادمة: $nextPrayerNameArabic - $timeRemaining',
+        showWhen: true,
+        customSound: null,
+        criticalAlert: false,
       ),
     );
   }
@@ -582,140 +575,5 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<void> hidePersistentNotification() async {
     await AwesomeNotifications().cancel(_persistentId);
-  }
-
-  @override
-  Future<void> scheduleFastingNotification({
-    required String dayName,
-    required String dayNameArabic,
-    required String notificationTime,
-    required bool enabled,
-    required bool vibration,
-  }) async {
-    final notificationId = dayName.toLowerCase() == 'monday'
-        ? _mondayFastingId
-        : _thursdayFastingId;
-
-    if (!enabled) {
-      await AwesomeNotifications().cancel(notificationId);
-      debugPrint('🍽️ Cancelled fasting notification for $dayName');
-      return;
-    }
-
-    // Parse the time string (format: "HH:mm")
-    final timeParts = notificationTime.split(':');
-    final hour = int.parse(timeParts[0]);
-    final minute = int.parse(timeParts[1]);
-
-    // Calculate next occurrence of the day
-    final now = DateTime.now();
-    final targetWeekday =
-        dayName.toLowerCase() == 'monday' ? DateTime.monday : DateTime.thursday;
-
-    // Find next occurrence of the target day
-    int daysUntilTarget = targetWeekday - now.weekday;
-    if (daysUntilTarget <= 0) {
-      // If today is the target day but time has passed, schedule for next week
-      daysUntilTarget += 7;
-    }
-
-    // Check if today is the target day and time hasn't passed yet
-    if (daysUntilTarget == 7) {
-      final todayAtTime = DateTime(now.year, now.month, now.day, hour, minute);
-      if (todayAtTime.isAfter(now)) {
-        daysUntilTarget = 0; // Schedule for today
-      }
-    }
-
-    final nextNotificationDate = DateTime(
-      now.year,
-      now.month,
-      now.day + daysUntilTarget,
-      hour,
-      minute,
-    );
-
-    debugPrint('🍽️ ═══════════════════════════════════════════════════');
-    debugPrint('🍽️ Scheduling fasting notification for $dayName');
-    debugPrint('🍽️ Notification time: $notificationTime');
-    debugPrint('🍽️ Next occurrence: $nextNotificationDate');
-    debugPrint('🍽️ Vibration: $vibration');
-
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: notificationId,
-        channelKey: _channelKeyFasting,
-        title: '🌙 تذكير بصيام $dayNameArabic',
-        body: 'غدًا يوم $dayNameArabic، لا تنسى نية الصيام 🤲',
-        notificationLayout: NotificationLayout.Default,
-        category: NotificationCategory.Reminder,
-        wakeUpScreen: true,
-        autoDismissible: true,
-        displayOnForeground: true,
-        displayOnBackground: true,
-        backgroundColor: const Color(0xFF20497D),
-        color: Colors.white,
-        icon: 'resource://drawable/ic_notification',
-        largeIcon: 'resource://mipmap/launcher_icon',
-      ),
-      schedule: NotificationCalendar(
-        weekday: targetWeekday,
-        hour: hour,
-        minute: minute,
-        second: 0,
-        millisecond: 0,
-        repeats: true, // Repeat weekly
-        preciseAlarm: true,
-        allowWhileIdle: true,
-      ),
-    );
-
-    debugPrint('✅ Fasting notification scheduled successfully for $dayName');
-    debugPrint('🍽️ ═══════════════════════════════════════════════════\n');
-  }
-
-  @override
-  Future<void> cancelFastingNotification(String dayName) async {
-    final notificationId = dayName.toLowerCase() == 'monday'
-        ? _mondayFastingId
-        : _thursdayFastingId;
-
-    await AwesomeNotifications().cancel(notificationId);
-    debugPrint('🍽️ Cancelled fasting notification for $dayName');
-  }
-
-  @override
-  Future<void> scheduleAllFastingNotifications({
-    required bool mondayEnabled,
-    required bool thursdayEnabled,
-    required String notificationTime,
-    required bool vibration,
-  }) async {
-    debugPrint('🍽️ ═══════════════════════════════════════════════════');
-    debugPrint('🍽️ Scheduling all fasting notifications');
-    debugPrint('🍽️ Monday enabled: $mondayEnabled');
-    debugPrint('🍽️ Thursday enabled: $thursdayEnabled');
-    debugPrint('🍽️ Notification time: $notificationTime');
-
-    // Schedule Monday fasting notification
-    await scheduleFastingNotification(
-      dayName: 'Monday',
-      dayNameArabic: 'الإثنين',
-      notificationTime: notificationTime,
-      enabled: mondayEnabled,
-      vibration: vibration,
-    );
-
-    // Schedule Thursday fasting notification
-    await scheduleFastingNotification(
-      dayName: 'Thursday',
-      dayNameArabic: 'الخميس',
-      notificationTime: notificationTime,
-      enabled: thursdayEnabled,
-      vibration: vibration,
-    );
-
-    debugPrint('✅ All fasting notifications scheduled successfully');
-    debugPrint('🍽️ ═══════════════════════════════════════════════════\n');
   }
 }

@@ -35,12 +35,12 @@ class PersistentNotificationManager {
     // Show initial notification
     await _updateNotification();
 
-    // Update every minute
-    _updateTimer = Timer.periodic(const Duration(minutes: 1), (_) async {
+    // Update every second for real-time countdown
+    _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
       await _updateNotification();
     });
 
-    debugPrint('✅ Persistent notification started');
+    debugPrint('✅ Persistent notification started with 1-second updates');
   }
 
   /// Stop the persistent notification

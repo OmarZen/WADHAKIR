@@ -36,6 +36,12 @@ import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart'
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/hijri_calendar_home_widget.dart';
+import 'package:wadhakir/data/repositories/fasting_reminders_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_fasting_reminder_settings_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_stream_usecase.dart';
+import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_cubit.dart';
+import 'package:wadhakir/features/fasting_reminders/services/fasting_notification_service.dart';
 
 void main() async {
   // Initialize widgets binding and preserve splash screen
@@ -89,6 +95,8 @@ void main() async {
   // Create repositories
   final appSettingsRepository = AppSettingsRepositoryImpl(sharedPreferences);
   final prayerTimesRepository = PrayerTimesRepositoryImpl();
+  final fastingRemindersRepository =
+      FastingRemindersRepositoryImpl(sharedPreferences);
 
   // Create settings use cases
   final getSettingsUseCase = GetSettingsUseCase(appSettingsRepository);
@@ -114,6 +122,23 @@ void main() async {
     prayerTimesRepository,
   );
 
+  // Create fasting reminders use cases
+  final getFastingReminderSettingsUseCase = GetFastingReminderSettingsUseCase(
+    fastingRemindersRepository,
+  );
+  final setFastingReminderSettingsUseCase = SetFastingReminderSettingsUseCase(
+    fastingRemindersRepository,
+  );
+  final getFastingReminderSettingsStreamUseCase =
+      GetFastingReminderSettingsStreamUseCase(fastingRemindersRepository);
+
+  // Initialize fasting notification service
+  final fastingNotificationService = FastingNotificationService();
+  await fastingNotificationService.initialize();
+
+  // Inject prayer times repository for prayer-based reminder times
+  fastingNotificationService.setPrayerTimesRepository(prayerTimesRepository);
+
   runApp(
     MyApp(
       // Settings
@@ -130,6 +155,11 @@ void main() async {
       getCalculationMethodUseCase: getCalculationMethodUseCase,
       setCalculationMethodUseCase: setCalculationMethodUseCase,
       prayerTimesRepository: prayerTimesRepository,
+      // Fasting Reminders
+      getFastingReminderSettingsUseCase: getFastingReminderSettingsUseCase,
+      setFastingReminderSettingsUseCase: setFastingReminderSettingsUseCase,
+      getFastingReminderSettingsStreamUseCase:
+          getFastingReminderSettingsStreamUseCase,
     ),
   );
 
@@ -154,6 +184,12 @@ class MyApp extends StatelessWidget {
   final SetCalculationMethodUseCase setCalculationMethodUseCase;
   final PrayerTimesRepositoryImpl prayerTimesRepository;
 
+  // Fasting Reminders
+  final GetFastingReminderSettingsUseCase getFastingReminderSettingsUseCase;
+  final SetFastingReminderSettingsUseCase setFastingReminderSettingsUseCase;
+  final GetFastingReminderSettingsStreamUseCase
+      getFastingReminderSettingsStreamUseCase;
+
   const MyApp({
     super.key,
     // Settings
@@ -170,6 +206,10 @@ class MyApp extends StatelessWidget {
     required this.getCalculationMethodUseCase,
     required this.setCalculationMethodUseCase,
     required this.prayerTimesRepository,
+    // Fasting Reminders
+    required this.getFastingReminderSettingsUseCase,
+    required this.setFastingReminderSettingsUseCase,
+    required this.getFastingReminderSettingsStreamUseCase,
   });
 
   @override
@@ -199,6 +239,14 @@ class MyApp extends StatelessWidget {
             setCalculationMethodUseCase,
             repository: prayerTimesRepository,
           )..loadPrayerTimes(),
+          lazy: false,
+        ),
+        BlocProvider<FastingRemindersCubit>(
+          create: (_) => FastingRemindersCubit(
+            getSettingsUseCase: getFastingReminderSettingsUseCase,
+            setSettingsUseCase: setFastingReminderSettingsUseCase,
+            getSettingsStreamUseCase: getFastingReminderSettingsStreamUseCase,
+          ),
           lazy: false,
         ),
       ],

@@ -50,6 +50,7 @@ jobs:
     name: 🤖 Build Android APK
     needs: analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -73,14 +74,22 @@ jobs:
       - name: �📦 Get Dependencies
         run: flutter pub get
 
-      - name: �🔨 Build APK
-        run: flutter build apk --release
+      - name: 🔑 Setup Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/upload-keystore.jks
+          echo "storePassword=${{ secrets.KEYSTORE_STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEYSTORE_KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=../upload-keystore.jks" >> android/key.properties
 
-      - name: 📤 Upload APK Artifact
+      - name: 🔨 Build APK (Split ABIs)
+        run: flutter build apk --release --split-per-abi
+
+      - name: 📤 Upload APK Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/*.apk
           retention-days: 30
 
   # Build Android App Bundle
@@ -88,6 +97,7 @@ jobs:
     name: 🤖 Build Android Bundle
     needs: analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
@@ -111,7 +121,15 @@ jobs:
       - name: �📦 Get Dependencies
         run: flutter pub get
 
-      - name: �🔨 Build App Bundle
+      - name: 🔑 Setup Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/upload-keystore.jks
+          echo "storePassword=${{ secrets.KEYSTORE_STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEYSTORE_KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=../upload-keystore.jks" >> android/key.properties
+
+      - name: 🔨 Build App Bundle
         run: flutter build appbundle --release
 
       - name: 📤 Upload AAB Artifact
@@ -303,7 +321,7 @@ jobs:
           name: Wadhakir ${{ steps.version.outputs.VERSION }}
           body_path: release_notes.md
           files: |
-            artifacts/app-release.apk
+            artifacts/*.apk
             artifacts/app-release.aab
             artifacts/wadhakir-windows.zip
           draft: false

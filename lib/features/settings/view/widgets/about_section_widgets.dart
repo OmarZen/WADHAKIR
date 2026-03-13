@@ -155,7 +155,7 @@ class AboutSectionWidgets extends StatelessWidget {
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      l10n?.translate('settings.version') ?? 'الإصدار 2.4.0+13',
+                      l10n?.translate('settings.version') ?? 'الإصدار 2.4.1+14',
                       style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
                     ),
                   ),

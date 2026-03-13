@@ -18,6 +18,7 @@ class QuranScreen extends StatelessWidget {
       isShowAudioSlider: true,
       showAyahBookmarkedIcon: true,
       enableWordSelection: true,
+      withPageView: true,
       appLanguageCode: l10n?.locale.languageCode ?? 'en',
       ayahIconColor: theme.colorScheme.primary,
       ayahSelectedFontColor: theme.colorScheme.onSurface,

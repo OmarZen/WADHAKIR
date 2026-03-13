@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1+14] - 2026-03-13
+
+### Added
+- **Home Shortcut for Fasting Calendar**:
+  - Added a new card in "مقتطفات إسلامية" on the home screen
+  - Opens the same interactive fasting calendar dialog used in Settings
+- **Update the Quran Library**:
+  - Updated Quran verses and translations
+  - Improved search functionality
+  - Fix Tafsir issue of disappearing
+
+### Changed
+- **Version Updates**:
+  - App version bumped from `2.4.0+13` to `2.4.1+14`
+  - MSIX version bumped from `2.4.0.0` to `2.4.1.0`
+  - Updated displayed app version text in Arabic and English settings resources
+- **Quran Screen**:
+  - Explicitly enabled `withPageView: true` to keep default horizontal PageView reading mode
+
+### Technical Details
+- **Version Code**: 14 (was 13)
+- **MSIX Version**: 2.4.1.0 (was 2.4.0.0)
+
+### Migration Notes
+- Update from 2.4.0+13 by installing 2.4.1+14
+
 ## [2.4.0+13] - 2026-03-09
 
 ### Added - Fasting Reminders System

@@ -3,6 +3,7 @@ import 'grids/tasbih_grid_item.dart';
 import 'package:flutter/material.dart';
 import 'grids/pray_azkar_grid_item.dart';
 import 'grids/allah_names_grid_item.dart';
+import 'grids/fasting_calendar_grid_item.dart';
 import 'grids/nearest_mosque_grid_item.dart';
 import 'grids/hadith_library_grid_item.dart';
 import 'grids/islamic_history_grid_item.dart';
@@ -85,6 +86,7 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
               children: [
                 AllahNamesGridItem(),
                 HadithLibraryGridItem(),
+                FastingCalendarGridItem(),
                 PrayAzkarGridItem(),
                 RaqiaGridItem(),
                 TasbihGridItem(),

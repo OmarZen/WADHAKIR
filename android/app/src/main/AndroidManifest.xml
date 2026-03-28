@@ -89,7 +89,19 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/prayer_times_widget_info" />
         </receiver>
-
+           <!-- Prayer Times List Widget New-->
+        <receiver
+            android:name=".PrayerTimesListWidgetProviderNew"
+            android:label="Prayer Times Refined"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/prayer_times_list_widget_new_info" />
+        </receiver>
         <!-- Prayer Times List Widget -->
         <receiver
             android:name=".PrayerTimesListWidgetProvider"

@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetBackgroundIntent
 import es.antonborri.home_widget.HomeWidgetProvider
+import androidx.core.net.toUri
 
 class HijriCalendarWidgetProvider : HomeWidgetProvider() {
     
@@ -212,7 +213,7 @@ class HijriCalendarWidgetProvider : HomeWidgetProvider() {
             // Trigger background callback to update date display
             val backgroundIntent = HomeWidgetBackgroundIntent.getBroadcast(
                 context,
-                Uri.parse("hijriCalendar://dayClick?day=$dayNumber&offset=$monthOffset")
+                "hijriCalendar://dayClick?day=$dayNumber&offset=$monthOffset".toUri()
             )
             backgroundIntent.send()
         } catch (e: Exception) {
@@ -234,7 +235,7 @@ class HijriCalendarWidgetProvider : HomeWidgetProvider() {
             // Trigger background work using BackgroundIntent
             val backgroundIntent = HomeWidgetBackgroundIntent.getBroadcast(
                 context,
-                Uri.parse("hijriCalendar://navigate?offset=$newOffset")
+                "hijriCalendar://navigate?offset=$newOffset".toUri()
             )
             backgroundIntent.send()
             

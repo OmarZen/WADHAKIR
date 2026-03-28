@@ -9,11 +9,13 @@ import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 class PrayerTimesHomeWidget {
   static const String compactWidgetProvider = 'PrayerTimesWidgetProvider';
   static const String listWidgetProvider = 'PrayerTimesListWidgetProvider';
+  static const String newListWidgetProvider =
+      'PrayerTimesListWidgetProviderNew';
 
   static Future<void> updatePrayerTimes(PrayerTimesModel prayerTimes) async {
     // Skip on Windows/Desktop - home_widget not supported
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      debugPrint('⏭️  Skipping home widget update (not supported on desktop)');
+      debugPrint('⏭️ Skipping home widget update (not supported on desktop)');
       return;
     }
 
@@ -21,47 +23,43 @@ class PrayerTimesHomeWidget {
       final jsonData = jsonEncode(prayerTimes.toJson());
       debugPrint('Saving prayer times data to widget: $jsonData');
 
-      // Save raw prayer times data
+      // 1. Save Raw and Individual Prayer Times
       await HomeWidget.saveWidgetData('prayer_times', jsonData);
+      await HomeWidget.saveWidgetData(
+          'fajr', prayerTimes.formatTime(prayerTimes.fajr));
+      await HomeWidget.saveWidgetData(
+          'dhuhr', prayerTimes.formatTime(prayerTimes.dhuhr));
+      await HomeWidget.saveWidgetData(
+          'asr', prayerTimes.formatTime(prayerTimes.asr));
+      await HomeWidget.saveWidgetData(
+          'maghrib', prayerTimes.formatTime(prayerTimes.maghrib));
+      await HomeWidget.saveWidgetData(
+          'isha', prayerTimes.formatTime(prayerTimes.isha));
 
-      // Save formatted prayer times
+      // Save epoch timestamps for all prayers so the widget can compute the
+      // next prayer live (without relying on pre-computed nextPrayerName)
       await HomeWidget.saveWidgetData(
-        'fajr',
-        prayerTimes.formatTime(prayerTimes.fajr),
-      );
+          'fajrTimestamp', prayerTimes.fajr.millisecondsSinceEpoch);
       await HomeWidget.saveWidgetData(
-        'dhuhr',
-        prayerTimes.formatTime(prayerTimes.dhuhr),
-      );
+          'dhuhrTimestamp', prayerTimes.dhuhr.millisecondsSinceEpoch);
       await HomeWidget.saveWidgetData(
-        'asr',
-        prayerTimes.formatTime(prayerTimes.asr),
-      );
+          'asrTimestamp', prayerTimes.asr.millisecondsSinceEpoch);
       await HomeWidget.saveWidgetData(
-        'maghrib',
-        prayerTimes.formatTime(prayerTimes.maghrib),
-      );
+          'maghribTimestamp', prayerTimes.maghrib.millisecondsSinceEpoch);
       await HomeWidget.saveWidgetData(
-        'isha',
-        prayerTimes.formatTime(prayerTimes.isha),
-      );
+          'ishaTimestamp', prayerTimes.isha.millisecondsSinceEpoch);
 
-      // Save current location
+      // 2. Save current location
       try {
         final repository = PrayerTimesRepositoryImpl();
         final location = await repository.getCurrentLocationName();
         await HomeWidget.saveWidgetData('location', location);
       } catch (e) {
-        debugPrint('Error getting location: $e');
         await HomeWidget.saveWidgetData('location', 'Location unavailable');
       }
 
-      // Save current date (both Gregorian and Hijri)
+      // 3. Save current date (both Gregorian and Hijri)
       final now = DateTime.now();
-      final gregorianDate = '${now.day}/${now.month}/${now.year}';
-      await HomeWidget.saveWidgetData('date', gregorianDate);
-
-      // Save formatted dates for list widget
       final arabicMonths = [
         'يناير',
         'فبراير',
@@ -74,7 +72,7 @@ class PrayerTimesHomeWidget {
         'سبتمبر',
         'أكتوبر',
         'نوفمبر',
-        'ديسمبر',
+        'ديسمبر'
       ];
       final arabicDays = [
         'الاثنين',
@@ -83,7 +81,7 @@ class PrayerTimesHomeWidget {
         'الخميس',
         'الجمعة',
         'السبت',
-        'الأحد',
+        'الأحد'
       ];
 
       final gregorianDateFormatted =
@@ -93,20 +91,17 @@ class PrayerTimesHomeWidget {
       await HomeWidget.saveWidgetData('gregorian_date', gregorianDateFormatted);
       await HomeWidget.saveWidgetData('day_name', dayName);
 
-      // Calculate and save Hijri date
       try {
         final hijriDate = _calculateHijriDate(now);
         await HomeWidget.saveWidgetData('hijri_date', hijriDate);
       } catch (e) {
-        debugPrint('Error calculating Hijri date: $e');
         await HomeWidget.saveWidgetData('hijri_date', '');
       }
 
-      // Calculate current and next prayer
+      // 4. Calculate Current and Next Prayer
       DateTime? nextPrayerTime;
       String? nextPrayerName;
       String? currentPrayerName;
-      String? currentPrayerTime;
 
       final prayers = [
         {'name': 'Fajr', 'time': prayerTimes.fajr},
@@ -116,76 +111,60 @@ class PrayerTimesHomeWidget {
         {'name': 'Isha', 'time': prayerTimes.isha},
       ];
 
-      // Find current and next prayer
       for (int i = 0; i < prayers.length; i++) {
         if (now.isBefore(prayers[i]['time'] as DateTime)) {
           nextPrayerTime = prayers[i]['time'] as DateTime;
           nextPrayerName = prayers[i]['name'] as String;
-
           if (i > 0) {
             currentPrayerName = prayers[i - 1]['name'] as String;
-            currentPrayerTime = prayerTimes.formatTime(
-              prayers[i - 1]['time'] as DateTime,
-            );
+          } else {
+            // If before Fajr, current is Isha of yesterday
+            currentPrayerName = 'Isha';
           }
           break;
         }
       }
 
-      // If no next prayer found, it means we're after Isha
+      // After Isha case
       if (nextPrayerTime == null) {
         nextPrayerTime = prayerTimes.fajr.add(const Duration(days: 1));
         nextPrayerName = 'Fajr';
         currentPrayerName = 'Isha';
-        currentPrayerTime = prayerTimes.formatTime(prayerTimes.isha);
+      }
+      // 5. Save Logic for the "Pill" and "Chronometer"
+      // currentPrayer is saved in uppercase (e.g., 'ASR') for the Kotlin Map
+      await HomeWidget.saveWidgetData(
+          'currentPrayer', currentPrayerName?.toUpperCase() ?? '');
+
+      // nextPrayerName is used for the "Asr in %s" format
+      await HomeWidget.saveWidgetData('nextPrayerName', nextPrayerName);
+
+      // nextPrayerTimestamp is used for the ticking Chronometer
+      await HomeWidget.saveWidgetData(
+          'nextPrayerTimestamp', nextPrayerTime.millisecondsSinceEpoch);
+
+      // 6. Update all Widget Providers
+      final providers = [
+        compactWidgetProvider,
+        listWidgetProvider,
+        newListWidgetProvider
+      ];
+
+      for (var provider in providers) {
+        await HomeWidget.updateWidget(
+          androidName: provider,
+          qualifiedAndroidName: 'com.bloom.wadhakir.$provider',
+        );
       }
 
-      // Save current and next prayer info
-      await HomeWidget.saveWidgetData(
-        'currentPrayer',
-        currentPrayerName?.toUpperCase() ?? '',
-      );
-      await HomeWidget.saveWidgetData(
-        'currentPrayerTime',
-        currentPrayerTime ?? '',
-      );
-      await HomeWidget.saveWidgetData(
-        'nextPrayer',
-        nextPrayerName?.toUpperCase() ?? '',
-      );
-
-      // Calculate and save time until next prayer
-      final remaining = nextPrayerTime.difference(now);
-      final timeUntilNext =
-          '${remaining.inHours}h ${remaining.inMinutes % 60}m';
-      await HomeWidget.saveWidgetData('timeUntilNext', timeUntilNext);
-
-      // Update compact widget
-      await HomeWidget.updateWidget(
-        androidName: compactWidgetProvider,
-        iOSName: 'PrayerTimesWidget',
-        qualifiedAndroidName: 'com.bloom.wadhakir.$compactWidgetProvider',
-      );
-
-      // Update list widget
-      await HomeWidget.updateWidget(
-        androidName: listWidgetProvider,
-        iOSName: 'PrayerTimesListWidget',
-        qualifiedAndroidName: 'com.bloom.wadhakir.$listWidgetProvider',
-      );
-      debugPrint('Widget update completed successfully');
+      debugPrint('✅ All widgets updated successfully');
     } catch (e) {
-      debugPrint('Error updating widget: $e');
+      debugPrint('❌ Error updating widget: $e');
     }
   }
 
   static Future<void> setupBackgroundCallback() async {
-    // Skip on Windows/Desktop - home_widget not supported
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      debugPrint('⏭️  Skipping home widget setup (not supported on desktop)');
-      return;
-    }
-
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) return;
     try {
       await HomeWidget.setAppGroupId('group.com.bloom.wadhakir');
       await HomeWidget.registerInteractivityCallback(backgroundCallback);
@@ -197,20 +176,13 @@ class PrayerTimesHomeWidget {
   static Future<void> backgroundCallback(Uri? uri) async {
     try {
       if (uri?.host == 'updatewidget') {
-        // Retrieve the saved prayer times
-        final prayerTimesJson = await HomeWidget.getWidgetData<String>(
-          'prayer_times',
-        );
+        final prayerTimesJson =
+            await HomeWidget.getWidgetData<String>('prayer_times');
         if (prayerTimesJson != null) {
-          // Update both widgets with the saved data
-          await HomeWidget.updateWidget(
-            androidName: compactWidgetProvider,
-            iOSName: 'PrayerTimesWidget',
-          );
-          await HomeWidget.updateWidget(
-            androidName: listWidgetProvider,
-            iOSName: 'PrayerTimesListWidget',
-          );
+          // Re-trigger the update logic with existing data if needed
+          await HomeWidget.updateWidget(androidName: compactWidgetProvider);
+          await HomeWidget.updateWidget(androidName: listWidgetProvider);
+          await HomeWidget.updateWidget(androidName: newListWidgetProvider);
         }
       }
     } catch (e) {

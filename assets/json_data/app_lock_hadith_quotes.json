@@ -1,0 +1,64 @@
+{
+  "quotes": [
+    {
+      "id": "five_before_five",
+      "englishText": "Take advantage of five before five: your youth before your old age, your health before your illness, your riches before your poverty, your free time before your work, and your life before your death.",
+      "arabicText": "اغتنم خمسا قبل خمس: شبابك قبل هرمك، وصحتك قبل سقمك، وغناك قبل فقرك، وفراغك قبل شغلك، وحياتك قبل موتك.",
+      "narratorEnglish": "Ibn Abbas",
+      "narratorArabic": "ابن عباس رضي الله عنهما",
+      "sourceEnglish": "Shu'ab al-Iman by Al-Bayhaqi (10250)",
+      "sourceArabic": "شعب الإيمان للبيهقي (10250)",
+      "gradeEnglish": "Sahih according to Al-Albani (Sahih al-Jami' 1077)",
+      "gradeArabic": "صححه الألباني في صحيح الجامع (1077)",
+      "referenceLink": ""
+    },
+    {
+      "id": "two_blessings",
+      "englishText": "There are two blessings in which many people incur loss: health and free time.",
+      "arabicText": "نعمتان مغبون فيهما كثير من الناس: الصحة والفراغ.",
+      "narratorEnglish": "Ibn Abbas",
+      "narratorArabic": "ابن عباس رضي الله عنهما",
+      "sourceEnglish": "Sahih al-Bukhari; Riyad as-Salihin 97",
+      "sourceArabic": "رواه البخاري؛ رياض الصالحين 97",
+      "gradeEnglish": "Sahih",
+      "gradeArabic": "صحيح",
+      "referenceLink": "https://sunnah.com/riyadussalihin:97"
+    },
+    {
+      "id": "hasten_good_deeds",
+      "englishText": "Hasten to do good deeds before you are overtaken by one of seven afflictions.",
+      "arabicText": "بادروا بالأعمال سبعا.",
+      "narratorEnglish": "Abu Hurairah",
+      "narratorArabic": "أبو هريرة رضي الله عنه",
+      "sourceEnglish": "Jami' at-Tirmidhi; Riyad as-Salihin (Chapter: Hastening to do good deeds)",
+      "sourceArabic": "رواه الترمذي؛ رياض الصالحين (باب المبادرة إلى الخيرات)",
+      "gradeEnglish": "Hasan",
+      "gradeArabic": "حسن",
+      "referenceLink": ""
+    },
+    {
+      "id": "consistent_deeds",
+      "englishText": "The most beloved deeds to Allah are those done regularly, even if they are few.",
+      "arabicText": "أحب الأعمال إلى الله أدومها وإن قل.",
+      "narratorEnglish": "Aishah",
+      "narratorArabic": "عائشة رضي الله عنها",
+      "sourceEnglish": "Sahih al-Bukhari and Sahih Muslim",
+      "sourceArabic": "متفق عليه (البخاري ومسلم)",
+      "gradeEnglish": "Sahih",
+      "gradeArabic": "صحيح",
+      "referenceLink": ""
+    },
+    {
+      "id": "life_accountability",
+      "englishText": "A servant's feet will not move on the Day of Resurrection until he is asked about his life: how he spent it.",
+      "arabicText": "لا تزول قدما عبد يوم القيامة حتى يسأل عن عمره فيم أفناه.",
+      "narratorEnglish": "Abu Barzah",
+      "narratorArabic": "أبو برزة رضي الله عنه",
+      "sourceEnglish": "Jami' at-Tirmidhi",
+      "sourceArabic": "رواه الترمذي",
+      "gradeEnglish": "Hasan Sahih",
+      "gradeArabic": "حسن صحيح",
+      "referenceLink": ""
+    }
+  ]
+}

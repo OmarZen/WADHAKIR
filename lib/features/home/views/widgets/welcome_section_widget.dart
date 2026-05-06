@@ -6,7 +6,6 @@ import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/core/utils/date_utils.dart';
 import '../../../../core/constants/islamic_quotes.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
@@ -102,11 +101,12 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
+                      const Color(0xFF0C2F3A).withValues(alpha: 0.25),
                       Colors.transparent,
-                      Colors.black.withValues(alpha: isDesktop ? 0.2 : 0.3),
-                      Colors.black.withValues(alpha: isDesktop ? 0.5 : 0.7),
+                      Colors.black.withValues(alpha: isDesktop ? 0.25 : 0.35),
+                      Colors.black.withValues(alpha: isDesktop ? 0.55 : 0.75),
                     ],
-                    stops: const [0.0, 0.4, 1.0],
+                    stops: const [0.0, 0.2, 0.55, 1.0],
                   ),
                 ),
               ),
@@ -679,60 +679,28 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
     BuildContext context,
     UnsplashPhoto mosqueImage,
   ) {
-    // Check if it's a network image or local asset
-    if (mosqueImage.imageUrl.startsWith('http')) {
-      return CachedNetworkImage(
-        key: ValueKey(mosqueImage.id),
-        imageUrl: mosqueImage.imageUrl,
-        fit: BoxFit.cover,
-        color: Colors.black.withValues(alpha: 0.1),
-        colorBlendMode: BlendMode.darken,
-        maxHeightDiskCache: 1500,
-        memCacheWidth: 1000,
-        cacheKey: "mosque_${mosqueImage.id}",
-        placeholder: (context, url) => Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor.withValues(alpha: 0.8),
-              ],
-            ),
-          ),
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: Colors.white70,
-              strokeWidth: 2,
-            ),
-          ),
-        ),
-        errorWidget: (context, url, error) {
-          log('Error loading image: $error for URL: $url');
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
-                ],
-              ),
-            ),
-            child: const Icon(Icons.error, color: Colors.white),
-          );
-        },
-      );
-    } else {
-      // Local asset image
-      return Image.asset(
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 1200),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (currentChild, previousChildren) => Stack(
+        fit: StackFit.expand,
+        children: [...previousChildren, if (currentChild != null) currentChild],
+      ),
+      transitionBuilder: (child, animation) {
+        final scale = Tween<double>(begin: 1.03, end: 1.0).animate(animation);
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(scale: scale, child: child),
+        );
+      },
+      child: Image.asset(
         mosqueImage.imageUrl,
         key: ValueKey(mosqueImage.id),
         fit: BoxFit.cover,
         color: Colors.black.withValues(alpha: 0.1),
         colorBlendMode: BlendMode.darken,
+        gaplessPlayback: true,
         errorBuilder: (context, error, stackTrace) {
           log(
             'Error loading asset image: $error for path: ${mosqueImage.imageUrl}',
@@ -751,8 +719,8 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
             child: const Icon(Icons.error, color: Colors.white),
           );
         },
-      );
-    }
+      ),
+    );
   }
 }
 

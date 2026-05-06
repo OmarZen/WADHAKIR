@@ -80,7 +80,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Icon(
+                            FaIcon(
                               FontAwesomeIcons.personPraying,
                               size: isDesktop ? 24 : 20,
                               color: theme.colorScheme.primary,
@@ -166,7 +166,7 @@ class PalestineSupportCardWidget extends StatelessWidget {
                         color: theme.colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
+                      child: FaIcon(
                         FontAwesomeIcons.personPraying,
                         size: 24,
                         color: theme.colorScheme.onPrimary,

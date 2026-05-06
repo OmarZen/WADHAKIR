@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- App Lock (prayer-aware) improvements:
+  - New Android `AppLockMonitorService` and platform bridge updates to drive a secure overlay during prayer windows.
+  - Hadith/quote payload support for overlay messages (local JSON asset and platform transfer).
+  - `AppLock` settings UI: selection of locked apps, emergency bypass, lock duration options, and accessibility fallback.
+  - `_AppLockPrayerSync` in `main.dart` to keep the native monitor in sync with prayer windows (auto updates when prayer window changes).
+- Quran reader improvements (package-driven):
+  - Auto-scrolling support with configurable speed control and stop points (page-level control and user-accessible speed/stop settings).
+
+### Changed
+- Overlay behavior and visuals:
+  - Removed RenderEffect / view-level blur from overlay card (Android S+). Overlay content is now sharp and readable.
+  - Removed Flutter `BackdropFilter` blur from bottom navigation bar and switched to a solid, accessible surface style.
+  - Test/developer overlay APIs and buttons removed from production (no more manual "Test overlay" action in settings or method channel).
+- App structure & docs:
+  - Updated `README.md`, `CONTRIBUTING.md`, and PR template to match open-source workflows and branch strategy.
+  - Added MIT `LICENSE` file.
+
+### Fixed
+- Fixed unreadable overlay issue caused by blur being applied to child views.
+- Ensured overlay only activates during configured prayer windows and remains until the user confirms completion or the next prayer window starts.
+
+### Dependencies
+- Updated multiple dependencies in `pubspec.yaml` to newer compatible versions (bug fixes, performance and API improvements). Notable upgrades include runtime, UI and platform packages used by the app (examples): `quran_library`, `flutter_bloc`, `google_nav_bar`, `hugeicons`, `just_audio`, `hive` & `hive_flutter`, `flutter_native_splash`, `flutter_dotenv`, `permission_handler`, `adhan_dart`, `syncfusion_*` packages, and others. These upgrades enabled the new Quran auto-scrolling feature, improved audio/player stability, and ensured compatibility with the latest Flutter SDK.
+
+### Removed
+- Removed the `showTestOverlay` method channel and the test overlay UI from settings (was a temporary developer tool).
+
+### Migration Notes
+- If you previously relied on the `showTestOverlay` testing API, remove any calls and use the prayer-window flow to validate overlays.
+- App Lock now requires overlay & usage access permissions (same as before); if overlay permission is missing the service will fall back to sending the user to Home.
+
+
 ## [2.4.1+14] - 2026-03-13
 
 ### Added

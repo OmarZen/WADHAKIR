@@ -2,6 +2,10 @@
 
 <!-- Provide a clear and concise summary of your changes -->
 
+## 🎯 Why this change is needed
+
+<!-- Explain the problem, feature request, or improvement this PR addresses -->
+
 ## 🔄 Type of Change
 
 - [ ] `feat` - New feature
@@ -20,6 +24,16 @@
 1. 
 2. 
 3. 
+
+## ✅ Contribution Checklist
+
+- [ ] Branch was created from `develop` unless this is a critical production fix
+- [ ] `dart format .` passed
+- [ ] `flutter analyze` passed
+- [ ] `flutter test` passed
+- [ ] Documentation updated if needed
+- [ ] Screenshots or video attached for UI changes
+- [ ] No secrets, local config files, or build artifacts were committed
 
 ## 📱 Screenshots/Videos (if applicable)
 

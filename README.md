@@ -1,15 +1,33 @@
 # Wadhakir 🕌
 
-**Wadhakir** is a comprehensive Islamic Flutter app designed to help Muslims in their daily spiritual practices and worship.
+Wadhakir is a Flutter-based Islamic companion app that brings together daily worship tools, Quran and hadith reading, prayer-time helpers, reminders, and a clean Arabic-first user experience.
 
-![Flutter](https://img.shields.io/badge/Flutter-3.38.6-blue.svg)
-![Dart](https://img.shields.io/badge/Dart-3.10.7-blue.svg)
+![Flutter](https://img.shields.io/badge/Flutter-3.24%2B-blue.svg)
+![Dart](https://img.shields.io/badge/Dart-3.0%2B-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 [![CI](https://github.com/OmarZen/WADHAKIR/actions/workflows/ci.yml/badge.svg)](https://github.com/OmarZen/WADHAKIR/actions/workflows/ci.yml)
 [![Release](https://github.com/OmarZen/WADHAKIR/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/OmarZen/WADHAKIR/actions/workflows/build-and-release.yml)
-[![Latest Release](https://img.shields.io/github/v/release/OmarZen/WADHAKIR)](https://github.com/OmarZen/WADHAKIR/releases/latest)
 
-## ✨ Features
+## What Wadhakir includes
+
+### Worship and daily guidance
+- Prayer times with notification scheduling
+- Qibla compass and direction tools
+- Fasting reminder support
+- Hijri calendar and home widgets
+- App lock controls for protecting selected apps around prayer windows
+
+### Quran and Islamic knowledge
+- Quran reading experience powered by `quran_library`
+- Hadith library browsing
+- Islamic history content
+- Azkar and remembrance screens
+
+### Daily utility features
+- Tasbih / dhikr counter
+- Islamic radio with a floating player bar
+- Theme and language settings
+- Localized Arabic and English UI support
 
 - 🕐 **Prayer Times** - Accurate prayer times based on location
 - 🧭 **Qibla Direction** - Find the direction to Mecca
@@ -18,167 +36,105 @@
 - 📖 **Islamic Content** - Quran, Hadith, and supplications
 - 🌙 **Beautiful UI** - Modern Islamic-themed interface
 
-## 🚀 Getting Started
+## Project layout
+```text
+lib/
+├── core/              # Shared utilities, theme, localization, routing, widgets
+├── data/              # Repository implementations and local storage models
+├── domain/            # Use cases and business rules
+├── features/          # Feature modules and presentation layers
+│   ├── app_lock/
+│   ├── azkar/
+│   ├── campus/        # Qibla compass screens and logic
+│   ├── fasting_reminders/
+│   ├── hadith_library/
+│   ├── home/
+│   ├── home_screen_widgets/
+│   ├── islamic_history/
+│   ├── pray_times/
+│   ├── quran/
+│   ├── radio/
+│   ├── settings/
+│   ├── splash_screen/
+│   └── tasbih/
+└── main.dart          # App bootstrap and dependency wiring
 
-### Prerequisites
+assets/
+├── adhan_sounds/
+├── fonts/
+├── icons/
+├── images/
+├── json_data/
+└── lang/
+```
 
-- Flutter SDK (3.38.6 or higher)
-- Dart SDK (3.10.7 or higher)
-- Android Studio / VS Code
+## Getting started
+
+### Requirements
+- Flutter 3.24 or later
+- Dart 3.0 or later
 - Git
+- Android Studio, VS Code, or another Flutter-compatible IDE
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/OmarZen/WADHAKIR.git
-   cd WADHAKIR
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run the app**
-   ```bash
-   flutter run
-   ```
-
-## 🌲 Development Workflow
-
-We use a **Git Flow** inspired workflow. Please read our [Contributing Guidelines](CONTRIBUTING.md) for detailed information.
-
-### Quick Start for Contributors
-
-1. **Fork & Clone** the repository
-2. **Create a feature branch** from `develop`:
-   ```bash
-   git checkout develop
-   git checkout -b feature/your-feature-name
-   ```
-3. **Make your changes** following our coding standards
-4. **Commit using conventional commits**:
-   ```bash
-   git commit -m "feat(prayers): add prayer reminder notifications"
-   ```
-5. **Push and create a Pull Request** to `develop` branch
-
-### Branch Structure
-
-- `main` - Production-ready code (protected)
-- `develop` - Integration branch (default)
-- `feature/*` - New features
-- `fix/*` - Bug fixes
-- `release/*` - Release preparation
-
-### Commit Convention
-
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+### Setup
 
 ```bash
-feat(scope): add new feature
-fix(scope): fix bug
-chore(scope): update dependencies
-docs(scope): update documentation
+git clone https://github.com/OmarZen/WADHAKIR.git
+cd WADHAKIR
+flutter pub get
+flutter run
 ```
 
-## 🧪 Testing & Code Quality
-
-Run the following commands before submitting a PR:
+## Build and verify
 
 ```bash
-# Format code
 dart format .
-
-# Analyze code
 flutter analyze
-
-# Run tests
 flutter test
-
-# Or run all checks at once
-npm run check  # (requires package.json setup)
 ```
 
-## 🏗️ Build & Release
+### Release builds
 
-### Development Build
-```bash
-flutter build apk --debug
-```
-
-### Production Build
 ```bash
 flutter build apk --release
 flutter build appbundle --release
 ```
 
-### Release Process
-1. Create release branch: `release/v1.x.x`
-2. Update version in `pubspec.yaml`
-3. Update `CHANGELOG.md`
-4. Create PR to `main`
-5. Tag release: `git tag v1.x.x`
-6. GitHub Actions will automatically build and create release
+## Configuration notes
 
-## 📂 Project Structure
+- The app loads optional values from a `.env` file when present.
+- Android permissions are used for features such as location, notifications, and app-lock support.
+- Assets and localized text live under `assets/` and should be updated together when adding new UI copy.
 
-```
-lib/
-├── main.dart           # App entry point
-├── core/              # Core utilities and constants
-├── data/              # Data layer (repositories, APIs)
-├── domain/            # Business logic (entities, use cases)
-└── features/          # Feature modules (UI, controllers)
-    ├── prayers/
-    ├── qibla/
-    ├── dhikr/
-    └── radio/
+## Contributing
 
-assets/
-├── images/            # App images
-├── icons/             # App icons
-├── fonts/             # Custom fonts
-├── json_data/         # Static JSON data
-└── lang/              # Localization files
-```
+We welcome contributions and kindly ask everyone to follow a few simple rules:
 
-## 🤝 Contributing
+1. Branch from `develop` for new work.
+2. Use conventional commits, for example `feat(quran): add bookmark screen`.
+3. Run `dart format .`, `flutter analyze`, and `flutter test` before opening a pull request.
+4. Keep each pull request focused on one change.
+5. Add or update tests when behavior changes.
+6. Include screenshots or a short video for UI updates.
+7. Avoid committing secrets, local environment files, or generated build artifacts.
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+For full contribution details, see [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`WORKFLOW.md`](WORKFLOW.md).
 
-### Ways to Contribute
+### Good PR habits
+- Write a clear summary of what changed and why.
+- Mention any breaking changes or follow-up work.
+- Target `develop` unless the change is a critical production fix.
 
-- 🐛 Report bugs
-- ✨ Suggest new features
-- 📝 Improve documentation
-- 🧪 Write tests
-- 💻 Submit code changes
+## Support and feedback
 
-## 📋 Requirements
+- Report bugs through GitHub Issues
+- Use pull requests for code changes
+- Share feature ideas in GitHub Discussions if you want community feedback first
 
-- **Flutter**: 3.38.6+
-- **Dart**: 3.10.7+
-- **Android**: API 21+ (Android 5.0)
-- **iOS**: 12.0+
+## License
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Islamic content sources
-- Flutter community
-- Contributors and maintainers
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/OmarZen/WADHAKIR/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/OmarZen/WADHAKIR/discussions)
-- **Email**: [omarwaleedzenhom2002@gmail.com](mailto:omarwaleedzenhom2002@gmail.com)
+Wadhakir is released under the MIT License. See the `LICENSE` file for the full terms.
 
 ---
 
-**Made with ❤️ for the Muslim Ummah**
+Made with care for the Muslim community.

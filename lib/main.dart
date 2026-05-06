@@ -15,6 +15,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:wadhakir/core/localization/language_manager.dart';
 import 'package:wadhakir/domain/usecases/get_radios_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_app_lock_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/features/splash_screen/splash_screen.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
@@ -42,6 +43,8 @@ import 'package:wadhakir/domain/usecases/set_fasting_reminder_settings_usecase.d
 import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_stream_usecase.dart';
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_cubit.dart';
 import 'package:wadhakir/features/fasting_reminders/services/fasting_notification_service.dart';
+import 'package:wadhakir/features/app_lock/services/app_lock_platform_service.dart';
+import 'package:wadhakir/features/app_lock/services/app_lock_prayer_window.dart';
 
 void main() async {
   // Initialize widgets binding and preserve splash screen
@@ -109,6 +112,9 @@ void main() async {
   final setNotificationSettingsUseCase = SetNotificationSettingsUseCase(
     appSettingsRepository,
   );
+  final setAppLockSettingsUseCase = SetAppLockSettingsUseCase(
+    appSettingsRepository,
+  );
 
   // Create prayer times use cases
   final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
@@ -147,6 +153,7 @@ void main() async {
       setThemeModeUseCase: setThemeModeUseCase,
       setLanguageUseCase: setLanguageUseCase,
       setNotificationSettingsUseCase: setNotificationSettingsUseCase,
+      setAppLockSettingsUseCase: setAppLockSettingsUseCase,
       // Quran
 
       // Prayer Times
@@ -174,6 +181,7 @@ class MyApp extends StatelessWidget {
   final SetThemeModeUseCase setThemeModeUseCase;
   final SetLanguageUseCase setLanguageUseCase;
   final SetNotificationSettingsUseCase setNotificationSettingsUseCase;
+  final SetAppLockSettingsUseCase setAppLockSettingsUseCase;
 
   // Quran
 
@@ -190,7 +198,11 @@ class MyApp extends StatelessWidget {
   final GetFastingReminderSettingsStreamUseCase
       getFastingReminderSettingsStreamUseCase;
 
-  const MyApp({
+  final _appLockPrayerSync = _AppLockPrayerSync(
+    const AppLockPlatformService(),
+  );
+
+  MyApp({
     super.key,
     // Settings
     required this.getSettingsUseCase,
@@ -198,6 +210,7 @@ class MyApp extends StatelessWidget {
     required this.setThemeModeUseCase,
     required this.setLanguageUseCase,
     required this.setNotificationSettingsUseCase,
+    required this.setAppLockSettingsUseCase,
     // Quran
 
     // Prayer Times
@@ -223,6 +236,7 @@ class MyApp extends StatelessWidget {
             setThemeModeUseCase: setThemeModeUseCase,
             setLanguageUseCase: setLanguageUseCase,
             setNotificationSettingsUseCase: setNotificationSettingsUseCase,
+            setAppLockSettingsUseCase: setAppLockSettingsUseCase,
           ),
           lazy: false,
         ),
@@ -260,6 +274,8 @@ class MyApp extends StatelessWidget {
                 final notificationSettings =
                     state.settings.notificationSettings;
 
+                _appLockPrayerSync.sync(context);
+
                 // Only schedule if prayer times are already loaded
                 if (prayerTimesCubit.state is PrayerTimesLoaded) {
                   prayerTimesCubit.scheduleNotificationsWithSettings(
@@ -284,6 +300,8 @@ class MyApp extends StatelessWidget {
                     settingsState.settings.notificationSettings,
                   );
                 }
+
+                _appLockPrayerSync.sync(context);
               }
             },
           ),
@@ -323,6 +341,57 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class _AppLockPrayerSync {
+  final AppLockPlatformService _platformService;
+  int? _lastWindowStartMs;
+  int? _lastNextPrayerMs;
+  bool _lastEnabled = false;
+
+  _AppLockPrayerSync(this._platformService);
+
+  Future<void> sync(BuildContext context) async {
+    final settingsState = context.read<SettingsCubit>().state;
+    final prayerState = context.read<PrayerTimesCubit>().state;
+
+    if (settingsState is! SettingsLoaded || prayerState is! PrayerTimesLoaded) {
+      return;
+    }
+
+    final appLockSettings = settingsState.settings.appLockSettings;
+    if (!appLockSettings.enabled ||
+        appLockSettings.lockedAppPackageNames.isEmpty) {
+      _lastEnabled = false;
+      return;
+    }
+
+    final now = DateTime.now();
+    final dateKey = DateTime(now.year, now.month, now.day);
+    final todayTimes = prayerState.prayerTimes[dateKey];
+    if (todayTimes == null) return;
+
+    final window = AppLockPrayerWindow.fromPrayerTimes(todayTimes, now);
+    if (window == null) return;
+
+    final windowStartMs = window.windowStart.millisecondsSinceEpoch;
+    final nextPrayerMs = window.nextPrayerStart.millisecondsSinceEpoch;
+
+    if (_lastEnabled &&
+        _lastWindowStartMs == windowStartMs &&
+        _lastNextPrayerMs == nextPrayerMs) {
+      return;
+    }
+
+    _lastEnabled = true;
+    _lastWindowStartMs = windowStartMs;
+    _lastNextPrayerMs = nextPrayerMs;
+
+    await _platformService.updatePrayerWindow(
+      prayerWindowStartMs: windowStartMs,
+      nextPrayerStartMs: nextPrayerMs,
     );
   }
 }

@@ -4,8 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
+import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
+import 'package:wadhakir/domain/usecases/set_app_lock_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
@@ -16,6 +18,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SetThemeModeUseCase _setThemeModeUseCase;
   final SetLanguageUseCase _setLanguageUseCase;
   final SetNotificationSettingsUseCase _setNotificationSettingsUseCase;
+  final SetAppLockSettingsUseCase _setAppLockSettingsUseCase;
   final PrayerNotificationService _notificationService;
 
   StreamSubscription? _settingsSubscription;
@@ -26,12 +29,14 @@ class SettingsCubit extends Cubit<SettingsState> {
     required SetThemeModeUseCase setThemeModeUseCase,
     required SetLanguageUseCase setLanguageUseCase,
     required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
+    required SetAppLockSettingsUseCase setAppLockSettingsUseCase,
     PrayerNotificationService? notificationService,
   })  : _getSettingsUseCase = getSettingsUseCase,
         _getSettingsStreamUseCase = getSettingsStreamUseCase,
         _setThemeModeUseCase = setThemeModeUseCase,
         _setLanguageUseCase = setLanguageUseCase,
         _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
+        _setAppLockSettingsUseCase = setAppLockSettingsUseCase,
         _notificationService =
             notificationService ?? PrayerNotificationService(),
         super(const SettingsInitial()) {
@@ -226,6 +231,64 @@ class SettingsCubit extends Cubit<SettingsState> {
       // Note: The actual start/stop of persistent notification is handled
       // by PrayerTimesCubit.scheduleNotificationsWithSettings() which gets
       // called automatically when settings change
+    }
+  }
+
+  Future<void> setAppLockSettings(AppLockSettingsModel settings) async {
+    try {
+      await _setAppLockSettingsUseCase(settings);
+    } catch (e) {
+      emit(SettingsError(e.toString()));
+    }
+  }
+
+  Future<void> toggleAppLock(bool enabled) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final updated =
+          currentSettings.appLockSettings.copyWith(enabled: enabled);
+      await setAppLockSettings(updated);
+    }
+  }
+
+  Future<void> toggleAccessibilityFallback(bool enabled) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final updated = currentSettings.appLockSettings.copyWith(
+        useAccessibilityFallback: enabled,
+      );
+      await setAppLockSettings(updated);
+    }
+  }
+
+  Future<void> setLockedAppPackageNames(List<String> packageNames) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final updated = currentSettings.appLockSettings.copyWith(
+        lockedAppPackageNames: packageNames,
+      );
+      await setAppLockSettings(updated);
+    }
+  }
+
+  Future<void> setLockDurationMinutes(int? lockDurationMinutes) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final updated = currentSettings.appLockSettings.copyWith(
+        lockDurationMinutes: lockDurationMinutes,
+        clearLockDurationMinutes: lockDurationMinutes == null,
+      );
+      await setAppLockSettings(updated);
+    }
+  }
+
+  Future<void> toggleEmergencyBypass(bool enabled) async {
+    if (state is SettingsLoaded) {
+      final currentSettings = (state as SettingsLoaded).settings;
+      final updated = currentSettings.appLockSettings.copyWith(
+        emergencyBypassEnabled: enabled,
+      );
+      await setAppLockSettings(updated);
     }
   }
 

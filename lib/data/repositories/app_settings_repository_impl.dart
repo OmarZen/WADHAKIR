@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
+import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
 import 'package:wadhakir/domain/repositories/app_settings_repository.dart';
@@ -51,11 +52,29 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       notificationSettings = NotificationSettingsModel.defaultSettings();
     }
 
+    // Get app lock settings
+    final appLockSettingsJson = _sharedPreferences.getString(
+      AppConstants.appLockSettingsKey,
+    );
+    AppLockSettingsModel appLockSettings;
+    if (appLockSettingsJson != null) {
+      try {
+        appLockSettings = AppLockSettingsModel.fromJson(
+          jsonDecode(appLockSettingsJson) as Map<String, dynamic>,
+        );
+      } catch (e) {
+        appLockSettings = AppLockSettingsModel.defaultSettings();
+      }
+    } else {
+      appLockSettings = AppLockSettingsModel.defaultSettings();
+    }
+
     _cachedSettings = AppSettingsModel(
       themeMode: themeMode,
       languageCode: languageCode,
       showBasmala: showBasmala,
       notificationSettings: notificationSettings,
+      appLockSettings: appLockSettings,
     );
 
     _settingsController.add(_cachedSettings!);
@@ -102,6 +121,18 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     _cachedSettings = settings.copyWith(
       notificationSettings: notificationSettings,
     );
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setAppLockSettings(AppLockSettingsModel appLockSettings) async {
+    await _sharedPreferences.setString(
+      AppConstants.appLockSettingsKey,
+      jsonEncode(appLockSettings.toJson()),
+    );
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(appLockSettings: appLockSettings);
     _settingsController.add(_cachedSettings!);
   }
 

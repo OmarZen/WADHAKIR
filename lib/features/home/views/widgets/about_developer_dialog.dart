@@ -221,7 +221,7 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
 
 Widget _circleIconButton(
   BuildContext context, {
-  required IconData icon,
+  required FaIconData icon,
   required String tooltip,
   required Uri url,
 }) {
@@ -261,7 +261,7 @@ Widget _circleIconButton(
           }
         }
       },
-      icon: Icon(
+      icon: FaIcon(
         icon,
         color: isDark
             ? theme.colorScheme.onSurface.withValues(alpha: 0.8)

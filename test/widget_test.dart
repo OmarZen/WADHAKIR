@@ -3,6 +3,7 @@ import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_stream_us
 import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/main.dart';
+import 'package:wadhakir/domain/usecases/set_app_lock_settings_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -68,6 +69,9 @@ void main() {
         getFastingReminderSettingsStreamUseCase:
             GetFastingReminderSettingsStreamUseCase(
           FastingRemindersRepositoryImpl(sharedPreferences),
+        ),
+        setAppLockSettingsUseCase: SetAppLockSettingsUseCase(
+          AppSettingsRepositoryImpl(sharedPreferences),
         ),
       ),
     );

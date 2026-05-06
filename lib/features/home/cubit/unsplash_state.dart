@@ -16,31 +16,6 @@ class UnsplashPhoto {
     required this.description,
     required this.photographerUsername,
   });
-
-  factory UnsplashPhoto.fromJson(Map<String, dynamic> json) {
-    // Choose the best quality image while maintaining reasonable size
-    // Regular size has good balance of quality and size
-    String imageUrl = json['urls']?['regular'] ?? '';
-
-    // Fallback options if regular is not available or empty
-    if (imageUrl.isEmpty) {
-      imageUrl = json['urls']?['small'] ?? '';
-    }
-
-    // Last resort fallback
-    if (imageUrl.isEmpty) {
-      imageUrl = json['urls']?['thumb'] ?? '';
-    }
-
-    return UnsplashPhoto(
-      id: json['id'] ?? '',
-      imageUrl: imageUrl,
-      photographerName: json['user']?['name'] ?? 'Unknown',
-      description:
-          json['description'] ?? json['alt_description'] ?? 'Beautiful Mosque',
-      photographerUsername: json['user']?['username'] ?? '',
-    );
-  }
 }
 
 class UnsplashState extends Equatable {

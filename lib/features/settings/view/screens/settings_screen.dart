@@ -5,6 +5,7 @@ import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/features/settings/view/widgets/settings_section.dart';
+import 'package:wadhakir/features/settings/view/widgets/app_lock_settings_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/appearance_settings_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/about_section_widgets.dart';
 import 'package:wadhakir/features/settings/view/widgets/adhan_sounds_section_widget.dart';
@@ -189,6 +190,19 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
               _buildAnimatedSection(
                 delay: 150,
+                child: SettingsSection(
+                  title: l10n?.translate('settings.app_lock') ??
+                      'قفل التطبيقات وقت الصلاة',
+                  icon: Icons.lock_outline,
+                  subtitle: l10n?.translate('settings.app_lock_subtitle') ??
+                      'قفل التطبيقات المختارة حتى إنهاء الصلاة',
+                  children: [
+                    AppLockSettingsWidget(settings: settings, cubit: cubit),
+                  ],
+                ),
+              ),
+              _buildAnimatedSection(
+                delay: 175,
                 child: SettingsSection(
                   title: l10n?.translate('fasting.fasting_reminders') ??
                       'تذكيرات الصيام',

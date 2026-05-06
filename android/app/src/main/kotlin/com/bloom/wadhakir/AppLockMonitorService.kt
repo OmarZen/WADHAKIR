@@ -309,16 +309,6 @@ class AppLockMonitorService : Service() {
                 applyPrayerWindowConfig(intent)
             }
 
-            ACTION_SHOW_TEST -> {
-                overlayMessage = intent.getStringExtra(EXTRA_OVERLAY_MESSAGE)
-                    ?: overlayMessage
-                applyOverlayTextConfig(intent)
-                applyOverlayTheme(intent)
-                testOverlayActive = true
-                overlayPinned = true
-                showOverlay("test")
-            }
-
             ACTION_STOP -> {
                 stopMonitoringLoop()
                 hideOverlayIfNeeded()
@@ -755,7 +745,6 @@ class AppLockMonitorService : Service() {
             overlayVisible = false
             currentBlockedPackage = null
             overlayPinned = false
-            testOverlayActive = false
             bypassConfirmButton = null
             bypassCancelButton = null
             bypassHintText = null

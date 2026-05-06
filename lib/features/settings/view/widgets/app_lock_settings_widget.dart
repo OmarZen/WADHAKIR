@@ -62,6 +62,7 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = context.l10n;
     final appLockSettings = widget.settings.appLockSettings;
     final selectedAppsCount = appLockSettings.lockedAppPackageNames.length;
@@ -85,6 +86,7 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
+          activeThumbColor: theme.colorScheme.primary,
         ),
         _divider(theme),
         ListTile(
@@ -103,6 +105,11 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
             onPressed: () => _showAppPicker(context),
             child: Text(
               l10n?.translate('settings.app_lock_manage_apps') ?? 'Manage',
+            ),
+            style: ButtonStyle(
+              foregroundColor: isDark
+                  ? MaterialStateProperty.all(theme.colorScheme.onPrimary)
+                  : null,
             ),
           ),
         ),
@@ -836,7 +843,6 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
       window.nextPrayerStart.millisecondsSinceEpoch,
     );
   }
-
 
   Future<_OverlayQuotePayload> _buildOverlayQuotePayload({
     required bool useArabic,

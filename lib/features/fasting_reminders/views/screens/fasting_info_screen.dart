@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/models/fasting/islamic_fasting_day_model.dart';
 import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
 
 /// Detailed information screen for a specific fasting day
 class FastingInfoScreen extends StatefulWidget {
@@ -595,6 +596,10 @@ class _FastingInfoScreenState extends State<FastingInfoScreen>
     }
   }
 
+  /// Route to the branded share screen with this fasting day. Previously
+  /// this called `SharePlus.instance.share(shareText as ShareParams)` —
+  /// the cast is invalid (String → ShareParams) and would throw at
+  /// runtime; the new flow renders a card instead.
   void _shareInfo(String languageCode) {
     final fastingName = languageCode == 'ar'
         ? widget.fastingDay.nameAr
@@ -603,7 +608,12 @@ class _FastingInfoScreenState extends State<FastingInfoScreen>
         ? widget.fastingDay.descriptionAr
         : widget.fastingDay.descriptionEn;
 
-    final shareText = '$fastingName\n\n$fastingDescription';
-    SharePlus.instance.share(shareText as ShareParams);
+    Navigator.of(context).pushNamed(
+      AppConstants.shareRoute,
+      arguments: SharePayload(
+        headline: fastingDescription,
+        categoryLabel: fastingName,
+      ),
+    );
   }
 }

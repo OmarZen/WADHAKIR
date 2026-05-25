@@ -39,7 +39,6 @@ class FastingNotificationService {
       'Notifications for voluntary fasting days';
 
   // Notification ID ranges (to avoid conflicts with prayer notifications)
-  static const int _baseNotificationId = 5000;
   static const int _ayyamAlBidId = 5001;
   static const int _ninthTenthId = 5002;
   static const int _ashuraId = 5003;
@@ -52,30 +51,109 @@ class FastingNotificationService {
   // static const int _eveReminderId = 5200;
   // static const int _morningReminderId = 5300;
 
-  /// Initialize the notification channel
+  // Cached local timezone — see notification_repository_impl.dart for the
+  // rationale. Some OEM Android builds NPE when the plugin tries to read
+  // TimeZone.getDefault() on the Java side, so we resolve it once and pass
+  // it explicitly to every NotificationCalendar.
+  String _localTimeZone = 'UTC';
+
+  // Once initialize() succeeds (or fails in a recoverable way) we don't
+  // run it again. Re-running setChannel on every toggle hit a known
+  // awesome_notifications 0.11.0 bug (see initialize() for details).
+  bool _initialized = false;
+
+  Future<String> _resolveTimeZone() async {
+    try {
+      final tz = await AwesomeNotifications().getLocalTimeZoneIdentifier();
+      if (tz.isNotEmpty) return tz;
+    } catch (_) {}
+    final offset = DateTime.now().timeZoneOffset;
+    final hours = offset.inHours;
+    return hours == 0
+        ? 'UTC'
+        : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
+  }
+
+  /// Initialize the notification channel.
+  ///
+  /// Idempotent — guarded by `_initialized` so we don't re-run on every
+  /// `scheduleAllFastingNotifications` call. Re-running matters because:
+  ///
+  /// 1. `setChannel(forceUpdate: true)` hits a known
+  ///    awesome_notifications 0.11.0 bug: when the Android-side channel
+  ///    already exists, `ChannelManager.androidChannelNeedsForceUpdate`
+  ///    throws `ArrayIndexOutOfBoundsException: length=3; index=-1000`
+  ///    while trying to read the existing channel's visibility/importance
+  ///    metadata. The throw bubbles up as a PlatformException on every
+  ///    toggle.
+  ///
+  /// 2. We MUST NOT fall back to `AwesomeNotifications().initialize(...)`
+  ///    here — `initialize` REPLACES the full channel set, which would
+  ///    wipe out the prayer notification channels registered by
+  ///    `notification_repository_impl.dart`. The prayer service's
+  ///    `initialize()` includes a matching `fasting_reminders_channel`
+  ///    entry, so as long as either service has run once the channel
+  ///    exists.
+  ///
+  /// 3. If `setChannel` fails because the channel already exists, that's
+  ///    fine — the channel is there. We swallow the error, mark the
+  ///    service initialized, and move on. Subsequent calls are no-ops.
   Future<void> initialize() async {
-    await AwesomeNotifications().initialize(
-      null,
-      [
+    if (_initialized) {
+      log('🟢 FastingNotificationService.initialize: already initialized, skipping');
+      return;
+    }
+    final sw = Stopwatch()..start();
+    log('🟢 FastingNotificationService.initialize: START');
+
+    _localTimeZone = await _resolveTimeZone();
+    log('🟢 FastingNotificationService.initialize: timezone resolved = $_localTimeZone (${sw.elapsedMilliseconds}ms)');
+
+    try {
+      // `forceUpdate: false` so we don't trigger the buggy needs-update
+      // path when the channel already exists. setChannel still creates
+      // the channel on first run.
+      log('🟢 FastingNotificationService.initialize: calling setChannel(channel=$_channelKey)');
+      await AwesomeNotifications().setChannel(
         NotificationChannel(
           channelKey: _channelKey,
           channelName: _channelName,
           channelDescription: _channelDescription,
-          defaultColor: const Color(0xFF26A69A), // Teal color
-          ledColor: const Color(0xFFFFB74D), // Amber color
+          defaultColor: const Color(0xFF26A69A),
+          ledColor: const Color(0xFFFFB74D),
           importance: NotificationImportance.High,
           channelShowBadge: true,
           playSound: true,
           enableVibration: true,
         ),
-      ],
-    );
+      );
+      log('🟢 FastingNotificationService.initialize: setChannel OK');
+    } catch (e) {
+      // The error only fires when the channel already exists (the failing
+      // codepath is `androidChannelNeedsForceUpdate` — it has to read an
+      // existing channel to compare). Treat it as "already registered"
+      // and continue. Do NOT call initialize() — see the docstring above.
+      log('🟡 FastingNotificationService.initialize: setChannel failed '
+          '(channel likely already registered): $e');
+    } finally {
+      _initialized = true;
+      sw.stop();
+      log('🟢 FastingNotificationService.initialize: DONE in ${sw.elapsedMilliseconds}ms');
+    }
   }
 
   /// Schedule all fasting notifications based on settings
   Future<void> scheduleAllFastingNotifications(
     FastingReminderSettings settings,
   ) async {
+    // Ensure the notification channel exists before we try to create any
+    // notification against it. The cubit calls this method eagerly at app
+    // start (lazy:false in main.dart) and the prayer service that ALSO
+    // registers `fasting_reminders_channel` may not have run yet, so we
+    // can't rely on it. `initialize()` uses `setChannel(forceUpdate:true)`
+    // and is idempotent.
+    await initialize();
+
     log('📅 ═══════════════════════════════════════════════════');
     log('📅 SCHEDULING ALL FASTING NOTIFICATIONS');
     log('📅 ═══════════════════════════════════════════════════');
@@ -231,6 +309,12 @@ class FastingNotificationService {
             'dayOfWeek': dayOfWeek.toString(),
           },
         ),
+        // MUST pass `timeZone` explicitly. Some OEM Android builds NPE in
+        // `TimeZone.getDefault().getOffset(long)` on the Java side when
+        // the plugin tries to resolve the device timezone itself
+        // ("Attempt to invoke virtual method 'int java.util.TimeZone
+        // .getOffset(long)' on a null object reference"). `_localTimeZone`
+        // is the pre-resolved IANA id from initialize().
         schedule: NotificationCalendar(
           weekday: weekdayForNotification,
           hour: hour,
@@ -238,6 +322,7 @@ class FastingNotificationService {
           second: 0,
           millisecond: 0,
           repeats: true,
+          timeZone: _localTimeZone,
         ),
       );
       log('   ✅ Successfully scheduled $dayName recurring notification');
@@ -657,7 +742,17 @@ class FastingNotificationService {
             'hijriDay': fastingDay.hijriDay.toString(),
           },
         ),
-        schedule: NotificationCalendar.fromDate(date: scheduledDate),
+        // Use the explicit constructor so we can pass our cached timezone
+        // (fromDate doesn't expose timeZone, see notification_repository_impl).
+        schedule: NotificationCalendar(
+          year: scheduledDate.year,
+          month: scheduledDate.month,
+          day: scheduledDate.day,
+          hour: scheduledDate.hour,
+          minute: scheduledDate.minute,
+          second: scheduledDate.second,
+          timeZone: _localTimeZone,
+        ),
       );
 
       log('         ✅ Created notification #$id: "$title" @ ${scheduledDate.day}/${scheduledDate.month}/${scheduledDate.year} ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}');
@@ -705,29 +800,33 @@ class FastingNotificationService {
     return 'بعد $daysCount أيام: ${day.nameAr}';
   }
 
-  /// Cancel all fasting notifications
+  /// Cancel all fasting notifications.
+  ///
+  /// Uses the plugin's channel-scoped cancel APIs
+  /// (`cancelNotificationsByChannelKey` + `cancelSchedulesByChannelKey`)
+  /// — a single MethodChannel hop each, rather than the previous
+  /// 1002-id-by-id loop which hit the MethodChannel 1002 times and could
+  /// block the UI for several seconds on cold start (the cubit awaited
+  /// this before emitting Loaded). Channel-scoped APIs only touch
+  /// notifications/schedules tagged with our fasting channel, so prayer
+  /// notifications are unaffected.
   Future<void> cancelAllFastingNotifications() async {
-    log('\n🗑️  ========================================');
-    log('   CANCELLING ALL FASTING NOTIFICATIONS');
-    log('   ========================================');
-
-    // Cancel weekly fasting notifications
-    log('\n   📅 Cancelling weekly fasting...');
-    await AwesomeNotifications().cancel(_mondayFastingId);
-    log('      ❌ Monday notification #$_mondayFastingId');
-    await AwesomeNotifications().cancel(_thursdayFastingId);
-    log('      ❌ Thursday notification #$_thursdayFastingId');
-
-    // Cancel all Hijri calendar notifications with IDs in our range
-    log('\n   💻 Cancelling Hijri calendar notifications (ID range $_baseNotificationId to ${_baseNotificationId + 999})...');
-    int cancelCount = 0;
-    for (int i = _baseNotificationId; i < _baseNotificationId + 1000; i++) {
-      await AwesomeNotifications().cancel(i);
-      cancelCount++;
+    final sw = Stopwatch()..start();
+    log('🗑️  cancelAllFastingNotifications: start (channel=$_channelKey)');
+    try {
+      await AwesomeNotifications().cancelNotificationsByChannelKey(_channelKey);
+      log('🗑️  cancelAllFastingNotifications: displayed notifications cleared');
+    } catch (e) {
+      log('🗑️  cancelNotificationsByChannelKey error (continuing): $e');
     }
-    log('      ❌ Cancelled $cancelCount Hijri notification IDs');
-
-    log('\n   ✅ All fasting notifications cancelled successfully\n');
+    try {
+      await AwesomeNotifications().cancelSchedulesByChannelKey(_channelKey);
+      log('🗑️  cancelAllFastingNotifications: scheduled notifications cleared');
+    } catch (e) {
+      log('🗑️  cancelSchedulesByChannelKey error (continuing): $e');
+    }
+    sw.stop();
+    log('🗑️  cancelAllFastingNotifications: done in ${sw.elapsedMilliseconds}ms');
   }
 
   /// Cancel weekly fasting notification for specific day
@@ -768,5 +867,41 @@ class FastingNotificationService {
       await AwesomeNotifications().cancel(baseId + i);
     }
     log('   ✅ Cancelled 100 notification IDs for $typeName');
+  }
+
+  /// Fire a single test fasting reminder right now so the user can confirm
+  /// the channel + permission flow without waiting for a real fast day.
+  /// Uses notification id 5999 (outside the real fasting id range so it
+  /// never collides with scheduled reminders).
+  Future<bool> sendTestNotification() async {
+    try {
+      // Make sure the channel exists; calling initialize() is idempotent.
+      await initialize();
+
+      final hasPermission =
+          await AwesomeNotifications().isNotificationAllowed();
+      if (!hasPermission) {
+        final granted =
+            await AwesomeNotifications().requestPermissionToSendNotifications();
+        if (!granted) return false;
+      }
+
+      await AwesomeNotifications().createNotification(
+        content: NotificationContent(
+          id: 5999,
+          channelKey: _channelKey,
+          title: '🌙 اختبار تذكير الصيام',
+          body:
+              'هذا تنبيه تجريبي للتأكد من أن تذكيرات الصيام تعمل بشكل صحيح.',
+          notificationLayout: NotificationLayout.Default,
+          category: NotificationCategory.Reminder,
+          wakeUpScreen: true,
+        ),
+      );
+      return true;
+    } catch (e) {
+      log('sendTestNotification (fasting) error: $e');
+      return false;
+    }
   }
 }

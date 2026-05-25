@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/data/models/fasting/fasting_reminder_settings_model.dart';
 import 'package:wadhakir/data/models/fasting/islamic_fasting_day_model.dart';
@@ -86,36 +87,82 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
     ));
   }
 
-  /// Load settings and calculate upcoming fasting days
+  /// Load settings and calculate upcoming fasting days.
+  ///
+  /// Emits Loaded as soon as we have the settings (so the UI shows the
+  /// toggles right away). Notification scheduling is fired off as a
+  /// background task — it can take 100–1500ms on Android (channel reg +
+  /// cancel + schedule). Previously this was awaited inline, which left
+  /// the section stuck on the loading spinner the entire time.
   Future<void> loadSettings() async {
+    log('🟦 FastingRemindersCubit.loadSettings: START, emitting Loading');
     emit(const FastingRemindersLoading());
 
     try {
-      // Load settings from repository
+      log('🟦 FastingRemindersCubit.loadSettings: reading settings from repo…');
+      final sw = Stopwatch()..start();
       final settings = await _getSettingsUseCase();
+      log('🟦 FastingRemindersCubit.loadSettings: settings loaded in ${sw.elapsedMilliseconds}ms '
+          '(monthly=${settings.monthlyFastingRemindersEnabled} '
+          'mon=${settings.mondayFastingEnabled} '
+          'thu=${settings.thursdayFastingEnabled})');
 
-      // Schedule initial notifications
-      await _notificationService.scheduleAllFastingNotifications(settings);
-
-      // Update state with loaded settings
+      // Emit Loaded FIRST so the UI shows immediately. The user can
+      // already interact with the settings even before notification
+      // scheduling finishes.
       _updateStateWithSettings(settings);
-    } catch (e) {
+      log('🟦 FastingRemindersCubit.loadSettings: Loaded state emitted, '
+          'kicking off background notification scheduling');
+
+      // Fire-and-forget. Errors here are logged but never bubble up to
+      // the UI — scheduling failing isn't a reason to hide the settings.
+      unawaited(_scheduleSafely(settings, source: 'loadSettings'));
+    } catch (e, st) {
+      log('🟥 FastingRemindersCubit.loadSettings: ERROR $e\n$st');
       emit(FastingRemindersError(e.toString()));
     }
   }
 
-  /// Update fasting reminder settings
+  /// Update fasting reminder settings.
+  ///
+  /// Same pattern as loadSettings: persist + emit synchronously, schedule
+  /// in the background. The user sees the toggle flip immediately instead
+  /// of waiting for the platform-side notification work.
   Future<void> updateSettings(FastingReminderSettings settings) async {
+    log('🟦 FastingRemindersCubit.updateSettings: START '
+        '(monthly=${settings.monthlyFastingRemindersEnabled} '
+        'mon=${settings.mondayFastingEnabled} '
+        'thu=${settings.thursdayFastingEnabled})');
     try {
-      // Save to repository via use case
+      final sw = Stopwatch()..start();
       await _setSettingsUseCase(settings);
+      log('🟦 FastingRemindersCubit.updateSettings: persisted in ${sw.elapsedMilliseconds}ms');
 
-      // Schedule notifications based on new settings
-      await _notificationService.scheduleAllFastingNotifications(settings);
-
-      // State will be updated automatically via settings stream
-    } catch (e) {
+      // State updates automatically via settings stream; no need to wait
+      // for scheduling.
+      unawaited(_scheduleSafely(settings, source: 'updateSettings'));
+    } catch (e, st) {
+      log('🟥 FastingRemindersCubit.updateSettings: ERROR $e\n$st');
       emit(FastingRemindersError(e.toString()));
+    }
+  }
+
+  /// Run notification scheduling and absorb any failure. The UI has
+  /// already been updated by the time this runs, so a scheduling failure
+  /// (e.g. permission revoked, plugin crash) should not destroy the
+  /// section's visible state.
+  Future<void> _scheduleSafely(
+    FastingReminderSettings settings, {
+    required String source,
+  }) async {
+    final sw = Stopwatch()..start();
+    log('🟪 _scheduleSafely[$source]: START');
+    try {
+      await _notificationService.scheduleAllFastingNotifications(settings);
+      log('🟪 _scheduleSafely[$source]: DONE in ${sw.elapsedMilliseconds}ms');
+    } catch (e, st) {
+      log('🟥 _scheduleSafely[$source]: scheduling failed after '
+          '${sw.elapsedMilliseconds}ms: $e\n$st');
     }
   }
 

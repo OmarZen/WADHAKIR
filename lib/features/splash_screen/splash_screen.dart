@@ -2,6 +2,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/localization/app_localizations.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/features/onboarding/view/screens/onboarding_screen.dart';
+import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
+import 'package:wadhakir/features/settings/cubit/settings_state.dart';
+
+const bool _forceShowOnboardingForTesting = true;
 
 /// Wadhakir animated splash screen
 class WadhakirSplashScreen extends StatefulWidget {
@@ -94,6 +100,58 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
 
         // Uncomment this when ready to enable navigation
         Future.delayed(const Duration(milliseconds: 1000), () {
+          if (!mounted) return;
+
+          if (_forceShowOnboardingForTesting) {
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const OnboardingScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(
+                    opacity: CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeIn,
+                    ),
+                    child: child,
+                  );
+                },
+                transitionDuration: const Duration(milliseconds: 600),
+              ),
+            );
+            return;
+          }
+
+          try {
+            final settingsState = context.read<SettingsCubit>().state;
+
+            // If settings are loaded and onboarding not completed, go to onboarding
+            if (settingsState is SettingsLoaded &&
+                !settingsState.settings.onboardingCompleted) {
+              Navigator.of(context).pushReplacement(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const OnboardingScreen(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    return FadeTransition(
+                      opacity: CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeIn,
+                      ),
+                      child: child,
+                    );
+                  },
+                  transitionDuration: const Duration(milliseconds: 600),
+                ),
+              );
+              return;
+            }
+          } catch (_) {
+            // Ignore and fallthrough to main screen
+          }
+
           if (mounted) {
             Navigator.of(context).pushReplacement(
               PageRouteBuilder(
@@ -180,17 +238,24 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
           // Animated waves in background
           CustomPaint(size: size, painter: _WavesPainter(_controller.value)),
 
-          // Expanding circle effect
+          // Expanding radial bloom for a softer effect
           if (_backgroundExpand.value > 0)
             Center(
               child: Transform.scale(
-                scale: _backgroundExpand.value * 15,
+                scale: 0.6 + (_backgroundExpand.value * 14),
                 child: Container(
-                  width: 100,
-                  height: 100,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.1),
+                    gradient: RadialGradient(
+                      colors: [
+                        Colors.white
+                            .withValues(alpha: 0.12 * _backgroundExpand.value),
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 1.0],
+                    ),
                   ),
                 ),
               ),
@@ -207,19 +272,31 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
   }
 
   Widget _buildAnimatedLogo() {
-    return Transform.scale(
-      scale: _logoScale.value,
-      child: Opacity(
-        opacity: _logoOpacity.value,
-        child: Container(
-          width: 180,
-          height: 180,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.transparent,
+    // Subtle wobble and scale for a lively logo
+    final wobble = math.sin(_controller.value * math.pi * 2) * 0.03;
+    return Transform.rotate(
+      angle: wobble,
+      child: Transform.scale(
+        scale: _logoScale.value,
+        child: Opacity(
+          opacity: _logoOpacity.value,
+          child: Container(
+            width: 180,
+            height: 180,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.transparent,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Image.asset('assets/logo.png', fit: BoxFit.contain),
           ),
-          child: Image.asset('assets/logo.png', fit: BoxFit.contain),
         ),
       ),
     );
@@ -228,13 +305,20 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
   Widget _buildTagline(ThemeData theme, AppLocalizations l10n) {
     return Opacity(
       opacity: _textOpacity.value * 0.8,
-      child: Text(
-        l10n.translate("splash.tag_line"),
-        style: TextStyle(
-          fontSize: 24,
-          color: theme.colorScheme.onPrimary,
-          fontFamily: 'Cairo',
-          fontWeight: FontWeight.w900,
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 0.98, end: 1.0).animate(
+          CurvedAnimation(
+              parent: _controller,
+              curve: const Interval(0.24, 0.56, curve: Curves.easeOut)),
+        ),
+        child: Text(
+          l10n.translate("splash.tag_line"),
+          style: TextStyle(
+            fontSize: 24,
+            color: theme.colorScheme.onPrimary,
+            fontFamily: 'Cairo',
+            fontWeight: FontWeight.w900,
+          ),
         ),
       ),
     );

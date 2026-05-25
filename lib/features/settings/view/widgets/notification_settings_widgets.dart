@@ -5,6 +5,7 @@ import 'package:wadhakir/core/utils/alarm_permission_helper.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 
 class NotificationSettingsWidgets extends StatelessWidget {
   const NotificationSettingsWidgets({super.key});
@@ -25,23 +26,59 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final isEnabled = settings.notificationSettings.masterEnabled;
 
+    // Material ancestor is required so the SwitchListTile renders its
+    // ink splash + background correctly. Without it Flutter raises the
+    // "ListTile background color or ink splashes may be invisible" warning
+    // every time the SettingsScreen rebuilds during scrolling.
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      decoration: BoxDecoration(
+      child: Material(
         color: isEnabled
             ? (isDark
                 ? theme.colorScheme.primary.withValues(alpha: 0.15)
                 : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isEnabled
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: SwitchListTile(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isEnabled
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              // Test button — sends a single notification right away so the
+              // user can verify channel + permission + sound work before
+              // committing to the full schedule.
+              if (isEnabled)
+                _NotificationTestRow(
+                  label: l10n?.translate('settings.test_notification') ??
+                      'إرسال تنبيه تجريبي',
+                  onTap: () async {
+                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                    final ok =
+                        await PrayerNotificationService().sendQuickTest();
+                    if (!context.mounted) return;
+                    scaffoldMessenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          ok
+                              ? (l10n?.translate('settings.test_sent') ??
+                                  'تم إرسال التنبيه التجريبي')
+                              : (l10n?.translate('settings.test_failed') ??
+                                  'تعذّر الإرسال — تأكد من منح صلاحية الإشعارات'),
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+              SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         title: Text(
           l10n?.translate('settings.enable_notifications') ?? 'تفعيل التنبيهات',
@@ -117,6 +154,10 @@ class NotificationSettingsWidgets extends StatelessWidget {
           ),
         ),
       ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -135,23 +176,31 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final bool isDesktop =
         Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 
+    // Same Material wrapper pattern as the master toggle above — provides
+    // a Material ancestor for the SwitchListTile's ink splashes and
+    // suppresses the "ListTile background color or ink splashes may be
+    // invisible" warning that fires on scroll.
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      decoration: BoxDecoration(
+      child: Material(
         color: isEnabled
             ? (isDark
                 ? theme.colorScheme.primary.withValues(alpha: 0.15)
                 : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isEnabled
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: SwitchListTile(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isEnabled
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         title: Text(
           l10n?.translate('settings.persistent_notification') ??
@@ -227,6 +276,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
           ),
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -239,19 +290,25 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Material ancestor for the inner ListTile (avoids the framework's
+    // "ListTile background color or ink splashes may be invisible" warning).
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      decoration: BoxDecoration(
+      child: Material(
         color: isDark
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: ListTile(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         title: Text(
           l10n?.translate('settings.notification_timing') ?? 'وقت التنبيه',
@@ -289,6 +346,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () => _showNotificationTimingDialog(context, settings, cubit),
+      ),
+        ),
       ),
     );
   }
@@ -520,19 +579,25 @@ class NotificationSettingsWidgets extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Material ancestor for the inner ListTile (fixes "ListTile background
+    // color or ink splashes may be invisible" warning that fires on scroll).
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      decoration: BoxDecoration(
+      child: Material(
         color: isDark
             ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: ListTile(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         title: Text(
           l10n?.translate('settings.customize_prayers') ?? 'تخصيص كل صلاة',
@@ -572,6 +637,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () => _showPrayerCustomizationDialog(context, settings, cubit),
+      ),
+        ),
       ),
     );
   }
@@ -735,23 +802,28 @@ class NotificationSettingsWidgets extends StatelessWidget {
 
     final isEnabled = prayerSettings.enabled;
 
+    // Per-prayer row — Material ancestor for the inner SwitchListTile.
     return Container(
       margin: const EdgeInsets.all(0),
-      decoration: BoxDecoration(
+      child: Material(
         color: isEnabled
             ? (isDark
                 ? theme.colorScheme.primary.withValues(alpha: 0.15)
                 : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isEnabled
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: SwitchListTile(
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isEnabled
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         title: Row(
           children: [
@@ -790,6 +862,62 @@ class NotificationSettingsWidgets extends StatelessWidget {
           );
         },
         activeThumbColor: theme.colorScheme.primary,
+      ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A compact "Send test notification" row used inside the notification
+/// settings sections. Wrapped in Material so the InkWell renders correctly
+/// even when the parent is a plain Container.
+class _NotificationTestRow extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _NotificationTestRow({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Material(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.play_arrow_rounded,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

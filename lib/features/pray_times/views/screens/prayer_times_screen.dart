@@ -32,6 +32,7 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   bool _hasCheckedLocation = false;
+  bool _hasTriggeredLoad = false;
 
   @override
   void initState() {
@@ -42,10 +43,23 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
     );
     _animationController.forward();
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerLoadIfNeeded();
+    });
+
     // Check location services after a short delay to let the screen load
     Future.delayed(const Duration(milliseconds: 500), () {
       _checkLocationServices();
     });
+  }
+
+  void _triggerLoadIfNeeded() {
+    if (!mounted || _hasTriggeredLoad) return;
+    final cubit = context.read<PrayerTimesCubit>();
+    if (cubit.state is PrayerTimesInitial) {
+      _hasTriggeredLoad = true;
+      cubit.loadPrayerTimes();
+    }
   }
 
   Future<void> _checkLocationServices() async {
@@ -54,7 +68,10 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
 
     final cubit = context.read<PrayerTimesCubit>();
 
-    // For existing users, check if they're using fallback
+    // Only show the dialog when we have NO saved coordinates and are truly
+    // falling back to Mecca. If a saved location exists, the user already
+    // sees the city pill in the welcome section — interrupting them with
+    // a "location disabled" dialog is misleading.
     final isUsingFallback = await cubit.isUsingFallbackLocation();
 
     if (isUsingFallback && mounted) {

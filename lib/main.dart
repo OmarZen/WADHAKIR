@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:quran_library/quran_library.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:quran_library/quran_library.dart';
 import 'package:wadhakir/core/routes/app_router.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/data/models/hive_adapters.dart';
@@ -19,6 +20,7 @@ import 'package:wadhakir/domain/usecases/set_app_lock_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/features/splash_screen/splash_screen.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/repositories/radio_repository_impl.dart';
@@ -34,22 +36,54 @@ import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
-import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
-import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
-import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/hijri_calendar_home_widget.dart';
 import 'package:wadhakir/data/repositories/fasting_reminders_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_stream_usecase.dart';
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_cubit.dart';
-import 'package:wadhakir/features/fasting_reminders/services/fasting_notification_service.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_platform_service.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_prayer_window.dart';
+import 'package:wadhakir/features/floating_dhikr/service/floating_dhikr_overlay_entry.dart';
+import 'package:wadhakir/features/floating_dhikr/service/floating_dhikr_service.dart';
+
+/// Entry point used by `flutter_overlay_window` for the secondary engine
+/// that renders the floating adhkar pill bar over other apps. Delegates to
+/// the feature-local entry function so all overlay UI stays in
+/// `lib/features/floating_dhikr/`.
+@pragma('vm:entry-point')
+void overlayMain() => floatingDhikrOverlayEntry();
 
 void main() async {
   // Initialize widgets binding and preserve splash screen
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Diagnostic hook for the framework warning
+  //   "ListTile background color or ink splashes may be invisible."
+  // The default presenter prints the message but not enough context to find
+  // the offending widget. This wrapper logs the intermediate widget that
+  // is hiding the splash (the one named in Flutter's error description)
+  // before delegating to the normal presenter. Debug-only — release builds
+  // keep the default behavior.
+  if (!kReleaseMode) {
+    final previousOnError = FlutterError.onError;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      final summary = details.exceptionAsString();
+      if (summary.contains('may be invisible')) {
+        // Walk the diagnostics tree for the "intermediate" widget Flutter
+        // attaches as a DiagnosticsProperty so we can see exactly which
+        // class is hiding the splash and where in the tree it sits.
+        final buf = StringBuffer()
+          ..writeln('⚠️  ListTile-invisible-splash warning fired')
+          ..writeln('   message: ${summary.split('\n').first}');
+        details.informationCollector?.call().forEach((node) {
+          buf.writeln('   • ${node.toStringDeep().trim()}');
+        });
+        debugPrint(buf.toString());
+      }
+      (previousOnError ?? FlutterError.presentError)(details);
+    };
+  }
 
   // Set system UI overlay style for edge-to-edge experience
   // Note: In Android 15+, color settings are deprecated for edge-to-edge.
@@ -62,17 +96,8 @@ void main() async {
     ),
   );
 
-  // Initialize home widgets
-  await PrayerTimesHomeWidget.setupBackgroundCallback();
-  await HijriCalendarHomeWidget.setupBackgroundCallback();
-  await HijriCalendarHomeWidget.updateCalendar();
-
-  // Initialize Hijri calendar widget with current date
-  await HijriCalendarHomeWidget.updateCalendar();
-
-  // Initialize notification service
-  final notificationService = PrayerNotificationService();
-  await notificationService.initialize();
+  // Defer home widgets and notification initialization for faster cold start
+  // These will be initialized lazily when features are first accessed
 
   // Load environment variables
   try {
@@ -92,7 +117,8 @@ void main() async {
   // Initialize SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
 
-  // Initialize Quran Library
+  // Defer Quran Library initialization for faster cold start
+  // The Quran package requires its init to be completed before its screen builds.
   await QuranLibrary.init();
 
   // Create repositories
@@ -115,6 +141,8 @@ void main() async {
   final setAppLockSettingsUseCase = SetAppLockSettingsUseCase(
     appSettingsRepository,
   );
+  final setOnboardingCompletedUseCase =
+      SetOnboardingCompletedUseCase(appSettingsRepository);
 
   // Create prayer times use cases
   final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
@@ -138,12 +166,8 @@ void main() async {
   final getFastingReminderSettingsStreamUseCase =
       GetFastingReminderSettingsStreamUseCase(fastingRemindersRepository);
 
-  // Initialize fasting notification service
-  final fastingNotificationService = FastingNotificationService();
-  await fastingNotificationService.initialize();
-
-  // Inject prayer times repository for prayer-based reminder times
-  fastingNotificationService.setPrayerTimesRepository(prayerTimesRepository);
+  // Defer fasting notification service initialization
+  // It will be lazily initialized when fasting reminders are accessed
 
   runApp(
     MyApp(
@@ -154,6 +178,7 @@ void main() async {
       setLanguageUseCase: setLanguageUseCase,
       setNotificationSettingsUseCase: setNotificationSettingsUseCase,
       setAppLockSettingsUseCase: setAppLockSettingsUseCase,
+      setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
       // Quran
 
       // Prayer Times
@@ -170,6 +195,12 @@ void main() async {
     ),
   );
 
+  // Fire-and-forget: if the user previously enabled the floating adhkar
+  // overlay, resume its ticker. No await — overlay-permission checks happen
+  // inside bootstrap and a failure is silent.
+  // ignore: unawaited_futures
+  FloatingDhikrService.instance.bootstrap();
+
   // Remove splash screen once app is ready
   FlutterNativeSplash.remove();
 }
@@ -182,6 +213,7 @@ class MyApp extends StatelessWidget {
   final SetLanguageUseCase setLanguageUseCase;
   final SetNotificationSettingsUseCase setNotificationSettingsUseCase;
   final SetAppLockSettingsUseCase setAppLockSettingsUseCase;
+  final SetOnboardingCompletedUseCase setOnboardingCompletedUseCase;
 
   // Quran
 
@@ -211,6 +243,7 @@ class MyApp extends StatelessWidget {
     required this.setLanguageUseCase,
     required this.setNotificationSettingsUseCase,
     required this.setAppLockSettingsUseCase,
+    required this.setOnboardingCompletedUseCase,
     // Quran
 
     // Prayer Times
@@ -237,13 +270,13 @@ class MyApp extends StatelessWidget {
             setLanguageUseCase: setLanguageUseCase,
             setNotificationSettingsUseCase: setNotificationSettingsUseCase,
             setAppLockSettingsUseCase: setAppLockSettingsUseCase,
+            setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
           ),
           lazy: false,
         ),
         BlocProvider<RadioCubit>(
-          create: (_) => RadioCubit(GetRadiosUseCase(RadioRepositoryImpl()))
-            ..loadStations(),
-          lazy: false,
+          create: (_) => RadioCubit(GetRadiosUseCase(RadioRepositoryImpl())),
+          lazy: true,
         ),
         BlocProvider<PrayerTimesCubit>(
           create: (_) => PrayerTimesCubit(
@@ -252,8 +285,8 @@ class MyApp extends StatelessWidget {
             getCalculationMethodUseCase,
             setCalculationMethodUseCase,
             repository: prayerTimesRepository,
-          )..loadPrayerTimes(),
-          lazy: false,
+          ),
+          lazy: true,
         ),
         BlocProvider<FastingRemindersCubit>(
           create: (_) => FastingRemindersCubit(
@@ -261,6 +294,12 @@ class MyApp extends StatelessWidget {
             setSettingsUseCase: setFastingReminderSettingsUseCase,
             getSettingsStreamUseCase: getFastingReminderSettingsStreamUseCase,
           ),
+          // Eager creation so the cubit's loadSettings() kicks off at
+          // app start and the section is Loaded by the time the user
+          // navigates to Settings. With lazy: true, the cubit only
+          // instantiated when BlocBuilder accessed it, and the widget
+          // showed SizedBox.shrink() during the async load — making the
+          // whole "تذكيرات الصيام" section invisible.
           lazy: false,
         ),
       ],

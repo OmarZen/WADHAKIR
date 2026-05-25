@@ -28,7 +28,13 @@ class AboutSectionWidgets extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: ListTile(
+      // Material(transparency) wrapper so the ListTile finds a Material
+      // ancestor before walking up to the colored outer Container — avoids
+      // the framework warning "ListTile background color or ink splashes
+      // may be invisible." every time this section repaints.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         title: Text(
           l10n?.translate('settings.about_app') ?? 'حول التطبيق',
@@ -66,6 +72,7 @@ class AboutSectionWidgets extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () => _showAboutDialog(context),
+      ),
       ),
     );
   }
@@ -155,7 +162,7 @@ class AboutSectionWidgets extends StatelessWidget {
                   const SizedBox(height: 4),
                   Center(
                     child: Text(
-                      l10n?.translate('settings.version') ?? 'الإصدار 2.4.1+14',
+                      l10n?.translate('settings.version') ?? 'الإصدار 3.0.0+15',
                       style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
                     ),
                   ),
@@ -218,7 +225,13 @@ class AboutSectionWidgets extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: ListTile(
+      // Material(transparency) wrapper so the ListTile finds a Material
+      // ancestor before walking up to the colored outer Container — avoids
+      // the framework warning "ListTile background color or ink splashes
+      // may be invisible." every time this section repaints.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         title: Text(
           l10n?.translate('settings.feedback') ?? 'إرسال تعليق',
@@ -256,6 +269,7 @@ class AboutSectionWidgets extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () => _openFeedbackForm(context),
+      ),
       ),
     );
   }
@@ -302,7 +316,13 @@ class AboutSectionWidgets extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: ListTile(
+      // Material(transparency) wrapper so the ListTile finds a Material
+      // ancestor before walking up to the colored outer Container — avoids
+      // the framework warning "ListTile background color or ink splashes
+      // may be invisible." every time this section repaints.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         title: Text(
           l10n?.translate('settings.website') ?? 'موقع التطبيق',
@@ -340,6 +360,7 @@ class AboutSectionWidgets extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () => _openWebsite(context),
+      ),
       ),
     );
   }
@@ -386,7 +407,13 @@ class AboutSectionWidgets extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: ListTile(
+      // Material(transparency) wrapper so the ListTile finds a Material
+      // ancestor before walking up to the colored outer Container — avoids
+      // the framework warning "ListTile background color or ink splashes
+      // may be invisible." every time this section repaints.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         title: Text(
           l10n?.translate('settings.privacy') ?? 'سياسة الخصوصية',
@@ -424,6 +451,7 @@ class AboutSectionWidgets extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () => _openPrivacyPolicy(context),
+      ),
       ),
     );
   }
@@ -470,7 +498,13 @@ class AboutSectionWidgets extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: ListTile(
+      // Material(transparency) wrapper so the ListTile finds a Material
+      // ancestor before walking up to the colored outer Container — avoids
+      // the framework warning "ListTile background color or ink splashes
+      // may be invisible." every time this section repaints.
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         title: Text(
           l10n?.translate('settings.rate_app') ?? 'قيّم التطبيق',
@@ -508,6 +542,7 @@ class AboutSectionWidgets extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () => _openPlayStore(context),
+      ),
       ),
     );
   }

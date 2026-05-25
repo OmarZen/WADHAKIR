@@ -16,6 +16,8 @@ class AppConstants {
   static const String prayerTimesRoute = '/prayer-times';
   static const String campusRoute = '/campus';
   static const String radioRoute = '/radio';
+  static const String floatingDhikrSettingsRoute = '/floating-dhikr-settings';
+  static const String moonPhasesRoute = '/moon-phases';
 
   // SharedPreferences Keys
   static const String themeKey = 'theme_mode';
@@ -23,6 +25,7 @@ class AppConstants {
   static const String showBasmalaKey = 'show_basmala';
   static const String notificationSettingsKey = 'notification_settings';
   static const String appLockSettingsKey = 'app_lock_settings';
+  static const String onboardingCompletedKey = 'onboarding_completed';
 
   // Assets Paths
   static const String langPath = 'assets/lang/';

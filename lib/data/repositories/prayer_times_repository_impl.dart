@@ -14,6 +14,8 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   static const String _lastLatitudeKey = 'prayer_times_last_latitude';
   static const String _lastLongitudeKey = 'prayer_times_last_longitude';
   static const String _lastLocationNameKey = 'prayer_times_last_location_name';
+  static const String _calcMethodAutoDetectedKey =
+      'prayer_times_calc_method_auto_detected';
 
   Coordinates? _coordinates;
 
@@ -33,10 +35,16 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
     // Set madhab on parameters
     params.madhab = madhabValue;
 
+    // adhan_dart expects a UTC date representing the intended calendar day at the
+    // user's location. Passing a local DateTime causes the library's internal
+    // toUtc() to shift the date by the local offset, producing prayer times for
+    // the wrong solar day (the ~1h drift reported by users east of UTC).
+    final dateUtc = DateTime.utc(date.year, date.month, date.day);
+
     // Calculate prayer times using adhan_dart
     final prayerTimes = PrayerTimes(
       coordinates: coordinates,
-      date: date,
+      date: dateUtc,
       calculationParameters: params,
       precision: true, // Use second-level precision
     );
@@ -89,6 +97,18 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
 
     if (permission == LocationPermission.deniedForever) {
       throw Exception('Location permissions permanently denied');
+    }
+  }
+
+  @override
+  Future<bool> hasLocationPermission() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      return permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+    } catch (e) {
+      debugPrint('Error checking location permission: $e');
+      return false;
     }
   }
 
@@ -230,6 +250,12 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
               debugPrint('No valid location name found in placemark data');
               await prefs.remove(_lastLocationNameKey);
             }
+
+            // First-run only: set a country-appropriate calculation method
+            // so users don't get stuck on Muslim World League defaults that
+            // are wrong for their region (e.g. Egypt should default to the
+            // Egyptian General Authority method).
+            await _autoDetectCalculationMethod(prefs, placemark.isoCountryCode);
           }
         } catch (e) {
           debugPrint('Error getting location name: $e');
@@ -246,6 +272,32 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
     } catch (e) {
       debugPrint('Error saving location: $e');
     }
+  }
+
+  /// Set a country-appropriate calculation method the first time we resolve
+  /// the user's country. Subsequent location changes do not overwrite the
+  /// stored method — once the user has a method (auto-detected or manually
+  /// chosen), respect it.
+  Future<void> _autoDetectCalculationMethod(
+    SharedPreferences prefs,
+    String? isoCountryCode,
+  ) async {
+    if (isoCountryCode == null || isoCountryCode.isEmpty) return;
+    if (prefs.getBool(_calcMethodAutoDetectedKey) == true) return;
+    // If the user explicitly picked a method before we ever saw a country,
+    // honour their choice and just mark autodetect as done.
+    final hasExplicitMethod = prefs.containsKey(_calculationMethodKey);
+    if (hasExplicitMethod) {
+      await prefs.setBool(_calcMethodAutoDetectedKey, true);
+      return;
+    }
+    final method =
+        CalculationMethodMapper.defaultMethodForCountry(isoCountryCode);
+    await prefs.setString(_calculationMethodKey, method);
+    await prefs.setBool(_calcMethodAutoDetectedKey, true);
+    debugPrint(
+      'Auto-detected calculation method "$method" for country $isoCountryCode',
+    );
   }
 
   /// Load the last saved location from SharedPreferences

@@ -17,6 +17,8 @@ abstract class PrayerTimesRepository {
 
   Future<void> requestLocationPermission();
 
+  Future<bool> hasLocationPermission();
+
   Future<CalculationParameters> getCalculationParameters();
 
   Future<void> setCalculationParameters(CalculationParameters parameters);

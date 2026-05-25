@@ -6,6 +6,7 @@ import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
+import 'package:wadhakir/features/pray_times/views/widgets/prayer_settings_dialog.dart';
 
 class CompactPrayerCardWidget extends StatefulWidget {
   const CompactPrayerCardWidget({super.key});
@@ -18,6 +19,7 @@ class CompactPrayerCardWidget extends StatefulWidget {
 class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
   Timer? _timer;
   DateTime _now = DateTime.now();
+  bool _hasTriggeredLoad = false;
 
   @override
   void initState() {
@@ -26,6 +28,20 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
       if (!mounted) return;
       setState(() => _now = DateTime.now());
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPrayerTimesIfNeeded();
+    });
+  }
+
+  void _loadPrayerTimesIfNeeded() {
+    if (!mounted || _hasTriggeredLoad) return;
+
+    final cubit = context.read<PrayerTimesCubit>();
+    if (cubit.state is PrayerTimesInitial) {
+      _hasTriggeredLoad = true;
+      cubit.loadPrayerTimes();
+    }
   }
 
   @override
@@ -125,62 +141,118 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     ),
                   ],
                 ),
-                // Modern View All Button
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppConstants.prayerTimesRoute,
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: size.width * 0.03,
-                        vertical: size.height * 0.008,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary.withValues(alpha: 0.15),
-                            theme.colorScheme.primary.withValues(alpha: 0.1),
-                          ],
-                        ),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppConstants.prayerTimesRoute,
+                          );
+                        },
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.2,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: size.width * 0.03,
+                            vertical: size.height * 0.008,
                           ),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n?.translate('home.view_all') ?? 'عرض الكل',
-                            style: TextStyle(
-                              color: isDark
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary
+                                    .withValues(alpha: 0.15),
+                                theme.colorScheme.primary
+                                    .withValues(alpha: 0.1),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.2,
+                              ),
+                              width: 1,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 12,
-                            color: isDark
-                                ? theme.colorScheme.onSurface
-                                : theme.colorScheme.primary,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                l10n?.translate('home.view_all') ?? 'عرض الكل',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? theme.colorScheme.onSurface
+                                      : theme.colorScheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 12,
+                                color: isDark
+                                    ? theme.colorScheme.onSurface
+                                    : theme.colorScheme.primary,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          final cubit = context.read<PrayerTimesCubit>();
+                          PrayerSettingsDialog.show(context, cubit);
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: size.width * 0.025,
+                            vertical: size.height * 0.01,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.12,
+                                  )
+                                : theme.colorScheme.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark
+                                  ? theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.18,
+                                    )
+                                  : theme.colorScheme.primary.withValues(
+                                      alpha: 0.18,
+                                    ),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.settings_outlined,
+                                size: 16,
+                                color: isDark
+                                    ? theme.colorScheme.onSurface
+                                    : theme.colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

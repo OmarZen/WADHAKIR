@@ -120,11 +120,17 @@ class PrayerTimesModel extends Equatable {
     if (now.isBefore(middleOfTheNight)) return middleOfTheNight;
     if (now.isBefore(lastThirdOfTheNight)) return lastThirdOfTheNight;
 
-    // If all times for today have passed, return tomorrow's Fajr
+    // If all times for today have passed, return tomorrow's Fajr.
+    // Pass UTC midnight so adhan_dart computes the correct solar day.
     final tomorrowDate = date.add(const Duration(days: 1));
+    final tomorrowDateUtc = DateTime.utc(
+      tomorrowDate.year,
+      tomorrowDate.month,
+      tomorrowDate.day,
+    );
     final tomorrowPrayerTimes = PrayerTimes(
       coordinates: coordinates,
-      date: tomorrowDate,
+      date: tomorrowDateUtc,
       calculationParameters: calculationParameters,
       precision: true,
     );
@@ -155,11 +161,17 @@ class PrayerTimesModel extends Equatable {
 
     // Find current prayer time (the last prayer that occurred)
     if (now.isBefore(fajr)) {
-      // Before Fajr, use last third of night from yesterday
+      // Before Fajr, use last third of night from yesterday.
+      // Pass UTC midnight so adhan_dart computes the correct solar day.
       final yesterdayDate = date.subtract(const Duration(days: 1));
+      final yesterdayDateUtc = DateTime.utc(
+        yesterdayDate.year,
+        yesterdayDate.month,
+        yesterdayDate.day,
+      );
       final yesterdayPrayers = PrayerTimes(
         coordinates: coordinates,
-        date: yesterdayDate,
+        date: yesterdayDateUtc,
         calculationParameters: calculationParameters,
         precision: true,
       );

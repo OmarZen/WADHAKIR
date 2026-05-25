@@ -40,16 +40,23 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
   }
 
   Future<void> _fetchMosques() async {
+    // Capture the locale synchronously before any await; we can't safely
+    // touch BuildContext after the async gap.
+    final preferredLanguage = Localizations.localeOf(context).languageCode;
+
     setState(() {
       _isLoading = true;
       _isOffline = false;
     });
 
     try {
-      final mosques = await _service.searchByCoordinates(
+      // Use the OSM-backed search so Arabic mosque names surface correctly
+      // for Arabic-speaking users. Falls back to the legacy API internally.
+      final mosques = await _service.searchNearby(
         lat: widget.userPosition.latitude,
         lng: widget.userPosition.longitude,
         radius: 10000, // 10km radius
+        preferredLanguage: preferredLanguage,
       );
 
       if (mounted) {

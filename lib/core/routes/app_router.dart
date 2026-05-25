@@ -6,6 +6,8 @@ import 'package:wadhakir/features/radio/views/screens/radio_screen.dart';
 import 'package:wadhakir/features/campus/views/screens/qibla_screen.dart';
 import 'package:wadhakir/features/settings/view/screens/settings_screen.dart';
 import 'package:wadhakir/features/pray_times/views/screens/prayer_times_screen.dart';
+import 'package:wadhakir/features/floating_dhikr/views/screens/floating_dhikr_settings_screen.dart';
+import 'package:wadhakir/features/moon_phases/views/screens/moon_phases_calendar_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -27,6 +29,16 @@ class AppRouter {
 
       case AppConstants.radioRoute:
         return MaterialPageRoute(builder: (_) => const RadioScreen());
+
+      case AppConstants.floatingDhikrSettingsRoute:
+        return MaterialPageRoute(
+          builder: (_) => const FloatingDhikrSettingsScreen(),
+        );
+
+      case AppConstants.moonPhasesRoute:
+        return MaterialPageRoute(
+          builder: (_) => const MoonPhasesCalendarScreen(),
+        );
 
       // Add other routes as they are implemented
 

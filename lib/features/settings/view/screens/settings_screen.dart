@@ -11,6 +11,7 @@ import 'package:wadhakir/features/settings/view/widgets/about_section_widgets.da
 import 'package:wadhakir/features/settings/view/widgets/adhan_sounds_section_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/notification_settings_widgets.dart';
 import 'package:wadhakir/features/fasting_reminders/views/widgets/fasting_reminder_settings_widget.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -213,6 +214,46 @@ class _SettingsScreenState extends State<SettingsScreen>
                       'الصيام الأسبوعي والشهري والأيام المميزة',
                   children: [
                     const FastingReminderSettingsWidget(),
+                  ],
+                ),
+              ),
+              _buildAnimatedSection(
+                delay: 188,
+                child: SettingsSection(
+                  title: l10n?.translate('floating_dhikr.settings_tile') ??
+                      'تذكير الأذكار العائم',
+                  icon: Icons.bubble_chart_outlined,
+                  subtitle:
+                      l10n?.translate('floating_dhikr.settings_tile_subtitle') ??
+                          'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
+                  children: [
+                    // Material(transparency) guards against the "ListTile
+                    // background color or ink splashes may be invisible"
+                    // warning if any ancestor between the SettingsSection's
+                    // Material and this ListTile ever picks up a non-
+                    // transparent color.
+                    Material(
+                      type: MaterialType.transparency,
+                      child: ListTile(
+                        leading: const Icon(
+                          Icons.notifications_active_outlined,
+                        ),
+                        title: Text(
+                          l10n?.translate('floating_dhikr.title') ??
+                              'تذكير الأذكار العائم',
+                        ),
+                        subtitle: Text(
+                          l10n?.translate(
+                                'floating_dhikr.settings_tile_subtitle',
+                              ) ??
+                              'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => Navigator.of(context).pushNamed(
+                          AppConstants.floatingDhikrSettingsRoute,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

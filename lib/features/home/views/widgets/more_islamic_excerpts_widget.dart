@@ -1,11 +1,12 @@
 import 'grids/raqia_grid_item.dart';
 import 'grids/tasbih_grid_item.dart';
 import 'package:flutter/material.dart';
+import 'grids/moon_phases_grid_item.dart';
 import 'grids/pray_azkar_grid_item.dart';
 import 'grids/allah_names_grid_item.dart';
 import 'grids/fasting_calendar_grid_item.dart';
 import 'grids/nearest_mosque_grid_item.dart';
-import 'grids/hadith_library_grid_item.dart';
+// Hadith library grid removed (hadith feature pruned)
 import 'grids/islamic_history_grid_item.dart';
 import 'grids/electronic_tasbih_grid_item.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
@@ -84,8 +85,9 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
               children: [
+                MoonPhasesGridItem(),
                 AllahNamesGridItem(),
-                HadithLibraryGridItem(),
+                // HadithLibraryGridItem removed
                 FastingCalendarGridItem(),
                 PrayAzkarGridItem(),
                 RaqiaGridItem(),

@@ -141,6 +141,31 @@ class PrayerNotificationService {
     await _repository.cancelAllNotifications();
   }
 
+  /// Convenience wrapper for the UI: trigger a default-sound test notification
+  /// using a neutral "test" prayer name so the user can confirm the channel +
+  /// permission flow without committing to a particular prayer's settings.
+  /// Returns false if permission is denied.
+  Future<bool> sendQuickTest() async {
+    try {
+      if (!_isInitialized) {
+        await initialize();
+      }
+      final hasPerm = await hasPermissions();
+      if (!hasPerm) {
+        final granted = await requestPermissions();
+        if (!granted) return false;
+      }
+      await sendTestNotification(
+        prayerName: 'TestPrayer',
+        prayerNameArabic: 'تنبيه تجريبي',
+      );
+      return true;
+    } catch (e) {
+      log('sendQuickTest error: $e');
+      return false;
+    }
+  }
+
   /// Cancel a specific prayer notification
   Future<void> cancelPrayerNotification(String prayerName) async {
     await _repository.cancelPrayerNotification(prayerName);

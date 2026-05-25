@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_core/core.dart';
+import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/utils/date_utils.dart';
 import '../../../../core/constants/islamic_quotes.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
@@ -492,33 +493,44 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
           scale: 0.6,
         );
 
-        return Container(
-          padding: EdgeInsets.all(isDesktop ? 12 : 10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withValues(alpha: 0.18),
-                Colors.white.withValues(alpha: 0.10),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.3),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+        // Glass surface using the shared design tokens — keeps the next
+        // prayer card consistent with the bottom nav's glass and any future
+        // floating surfaces (overlay pill bar etc.).
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(Radii.lg),
+          child: BackdropFilter(
+            filter: GlassTokens.filterFor(GlassIntensity.medium),
+            child: Container(
+              padding: EdgeInsets.all(
+                isDesktop ? Spacing.md : Spacing.sm + 2,
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.20),
+                    Colors.white.withValues(alpha: 0.10),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(Radii.lg),
+                border: Border.all(
+                  color: Colors.white.withValues(
+                    alpha: GlassTokens.borderOpacity(GlassIntensity.medium),
+                  ),
+                  width: GlassTokens.borderWidth,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
               // Compact Header with Prayer Name
               Column(
                 children: [
@@ -627,6 +639,8 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                 ),
               ),
             ],
+          ),
+            ),
           ),
         );
       },

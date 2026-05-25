@@ -113,7 +113,12 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   static const String _channelKeyPrayersDefault =
       'prayers_channel_default_sound';
   static const String _channelKeyPersistent = 'persistent_prayer_channel';
-  static const String _channelKeyFasting = 'fasting_channel';
+  // Must match `FastingNotificationService._channelKey`. Both services
+  // initialize awesome_notifications independently — calling `initialize()`
+  // REPLACES all channels — so each one must register the FULL set the
+  // app uses or the other service's channels disappear. Keeping the key in
+  // sync makes that safe.
+  static const String _channelKeyFasting = 'fasting_reminders_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
   // Notification IDs for each prayer
@@ -124,8 +129,35 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   static const int _ishaId = 104;
   static const int _persistentId = 999; // ID for persistent notification
 
+  // Cached local timezone identifier. awesome_notifications reads
+  // `TimeZone.getDefault().getID()` on Android, which on some OEM builds
+  // returns null and crashes with
+  //   "Attempt to invoke virtual method 'int java.util.TimeZone.getOffset(long)' on a null object reference"
+  // We resolve and cache it once at init, with a sensible fallback.
+  String _localTimeZone = 'UTC';
+
+  Future<String> _resolveTimeZone() async {
+    try {
+      final tz = await AwesomeNotifications().getLocalTimeZoneIdentifier();
+      if (tz.isNotEmpty) return tz;
+    } catch (_) {}
+    // Fallback: derive an IANA-ish zone label from DateTime.now() offset.
+    // The plugin accepts "Etc/GMT+X" style identifiers as a last resort.
+    final offset = DateTime.now().timeZoneOffset;
+    final hours = offset.inHours;
+    // POSIX-style "Etc/GMT" inverts the sign: UTC+3 -> Etc/GMT-3.
+    final etc = hours == 0 ? 'UTC' : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
+    debugPrint('NotificationRepository: timezone fallback to $etc');
+    return etc;
+  }
+
   @override
   Future<void> initialize() async {
+    // Resolve and cache the local timezone before doing anything else with
+    // the plugin so subsequent schedule calls have a valid value to pass.
+    _localTimeZone = await _resolveTimeZone();
+    debugPrint('NotificationRepository: timezone resolved to $_localTimeZone');
+
     // First, remove old channels if they exist to force recreation
     try {
       await AwesomeNotifications().removeChannel(_channelKeyFajr);
@@ -337,8 +369,17 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
           actionType: ActionType.DismissAction,
         ),
       ],
-      schedule: NotificationCalendar.fromDate(
-        date: notificationTime,
+      // Explicit-constructor form (fromDate doesn't expose timeZone) so we
+      // can pass our pre-resolved IANA zone string and avoid the
+      // TimeZone.getDefault() NPE on certain OEM Android builds.
+      schedule: NotificationCalendar(
+        year: notificationTime.year,
+        month: notificationTime.month,
+        day: notificationTime.day,
+        hour: notificationTime.hour,
+        minute: notificationTime.minute,
+        second: notificationTime.second,
+        timeZone: _localTimeZone,
         allowWhileIdle: true,
         preciseAlarm: true,
       ),

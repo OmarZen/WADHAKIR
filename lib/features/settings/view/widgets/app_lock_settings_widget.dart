@@ -67,7 +67,15 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     final appLockSettings = widget.settings.appLockSettings;
     final selectedAppsCount = appLockSettings.lockedAppPackageNames.length;
 
-    return Column(
+    // Wrap the whole stack in a transparent Material so every ListTile /
+    // SwitchListTile inside has an unambiguous Material ancestor. Without
+    // this the framework prints "ListTile background color or ink splashes
+    // may be invisible" repeatedly as items rebuild during scroll — the
+    // parent SettingsSection's Material is clipped via clipBehavior and
+    // Flutter's heuristic in older Material 2 mode flags that as unsafe.
+    return Material(
+      type: MaterialType.transparency,
+      child: Column(
       children: [
         SwitchListTile.adaptive(
           value: appLockSettings.enabled,
@@ -103,13 +111,13 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
           ),
           trailing: TextButton(
             onPressed: () => _showAppPicker(context),
-            child: Text(
-              l10n?.translate('settings.app_lock_manage_apps') ?? 'Manage',
-            ),
             style: ButtonStyle(
               foregroundColor: isDark
-                  ? MaterialStateProperty.all(theme.colorScheme.onPrimary)
+                  ? WidgetStateProperty.all(theme.colorScheme.onPrimary)
                   : null,
+            ),
+            child: Text(
+              l10n?.translate('settings.app_lock_manage_apps') ?? 'Manage',
             ),
           ),
         ),
@@ -243,6 +251,7 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
           ),
         ],
       ],
+      ),
     );
   }
 

@@ -70,7 +70,6 @@ class QuranScreen extends StatelessWidget {
             ? theme.colorScheme.onSurface.withValues(alpha: 0.87)
             : theme.colorScheme.surface.withValues(alpha: 0.98),
         indicatorColor: theme.colorScheme.primary,
-        // Text color for ayah count and tab labels - white in light mode to show over primary color
         textColor: isDarkMode
             ? Colors.white
             : theme.colorScheme.onSurface.withValues(alpha: 0.87),
@@ -89,7 +88,6 @@ class QuranScreen extends StatelessWidget {
         handleColor: theme.colorScheme.onSurface.withValues(alpha: 0.38),
         menuIconPath: 'assets/icons/custom_menu.svg',
         audioIconPath: 'assets/icons/custom_audio.svg',
-        // Translations
         fontsDialogTitle:
             l10n?.translate('quran.fonts_dialog_title') ?? 'Fonts',
         fontsDialogNotes: l10n?.translate('quran.fonts_dialog_notes') ??

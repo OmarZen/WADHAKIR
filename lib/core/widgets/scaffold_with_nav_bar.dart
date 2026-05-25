@@ -26,13 +26,6 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
   late AnimationController _animationController;
   bool _showRadioPlayer = true;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    QuranScreen(),
-    AzkarScreen(),
-    SettingsScreen(),
-  ];
-
   bool _hasSetupRadioListener = false;
   StreamSubscription? _radioSubscription;
 
@@ -84,6 +77,20 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     _animationController.forward();
   }
 
+  Widget _buildCurrentScreen() {
+    switch (_selectedIndex) {
+      case 0:
+        return const HomeScreen();
+      case 1:
+        return const QuranScreen();
+      case 2:
+        return const AzkarScreen();
+      case 3:
+      default:
+        return const SettingsScreen();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -105,7 +112,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     return Scaffold(
       body: FadeTransition(
         opacity: _animationController,
-        child: IndexedStack(index: _selectedIndex, children: _screens),
+        child: _buildCurrentScreen(),
       ),
       extendBody: true,
       bottomSheet: BlocBuilder<RadioCubit, RadioState>(

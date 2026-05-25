@@ -31,6 +31,74 @@ class MosqueModel {
     );
   }
 
+  /// Build a MosqueModel from an OpenStreetMap Overpass API element.
+  /// Overpass tags are bilingual (`name:ar`, `name:en`) so we can surface the
+  /// localised name based on the user's UI language. The element is either a
+  /// `node` (with `lat`/`lon` directly) or a `way`/`relation` (with `center`).
+  /// Returns `null` if the element has no usable coordinates.
+  static MosqueModel? fromOverpassElement(
+    Map<String, dynamic> element, {
+    String preferredLanguage = 'ar',
+  }) {
+    final tags = (element['tags'] as Map?)?.cast<String, dynamic>() ?? {};
+
+    double? lat;
+    double? lon;
+    if (element['lat'] != null && element['lon'] != null) {
+      lat = (element['lat'] as num?)?.toDouble();
+      lon = (element['lon'] as num?)?.toDouble();
+    } else if (element['center'] is Map) {
+      final center = element['center'] as Map;
+      lat = (center['lat'] as num?)?.toDouble();
+      lon = (center['lon'] as num?)?.toDouble();
+    }
+    if (lat == null || lon == null) return null;
+
+    String? pickLocalisedName() {
+      final key = 'name:$preferredLanguage';
+      final localised = tags[key];
+      if (localised is String && localised.isNotEmpty) return localised;
+      // Fall back to Arabic, then English, then the unqualified `name`.
+      for (final k in ['name:ar', 'name:en', 'name']) {
+        final v = tags[k];
+        if (v is String && v.isNotEmpty) return v;
+      }
+      return null;
+    }
+
+    final name = pickLocalisedName() ?? 'مسجد';
+    final id = '${element['type'] ?? 'node'}/${element['id'] ?? ''}';
+
+    final address = MosqueAddress(
+      description: '',
+      street: (tags['addr:street'] as String?) ?? '',
+      zipcode: (tags['addr:postcode'] as String?) ?? '',
+      country: (tags['addr:country'] as String?) ?? '',
+      state: (tags['addr:state'] as String?) ?? '',
+      city: (tags['addr:city'] as String?) ?? '',
+      locality: (tags['addr:suburb'] as String?) ?? '',
+      phone: (tags['contact:phone'] as String?) ??
+          (tags['phone'] as String?) ??
+          '',
+      googlePlaceId: '',
+    );
+
+    return MosqueModel(
+      id: id,
+      name: name,
+      address: address,
+      location: MosqueLocation(type: 'Point', latitude: lat, longitude: lon),
+      timings: MosqueTimings(
+        fajr: '',
+        zuhr: '',
+        asr: '',
+        maghrib: '',
+        isha: '',
+        jumah: '',
+      ),
+    );
+  }
+
   /// Calculate distance from a given point in kilometers
   double distanceFromPoint(double lat, double lng) {
     return _calculateDistance(lat, lng, location.latitude, location.longitude);

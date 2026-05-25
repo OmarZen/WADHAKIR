@@ -506,6 +506,15 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     }
   }
 
+  Future<bool> hasLocationPermission() async {
+    try {
+      return await _repository.hasLocationPermission();
+    } catch (e) {
+      debugPrint('Error checking location permission: $e');
+      return false;
+    }
+  }
+
   Future<bool> isFirstTimeUser() async {
     try {
       return await _repository.isFirstTimeUser();

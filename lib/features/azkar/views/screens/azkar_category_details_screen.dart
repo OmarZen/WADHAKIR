@@ -297,53 +297,68 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Auto-advance toggle
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _autoAdvance = !_autoAdvance;
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _autoAdvance
-                                  ? theme.colorScheme.primary.withValues(
-                                      alpha: 0.1,
-                                    )
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.3,
-                                ),
+                        // Auto-advance toggle — controls whether finishing a
+                        // dhikr's count jumps to the next one. Icon previously
+                        // used play/pause which was confusing; "skip_next"
+                        // matches the actual behaviour.
+                        Tooltip(
+                          message: context.l10n?.translate(
+                                'azkar.auto_advance_tooltip',
+                              ) ??
+                              'ينتقل تلقائياً للذكر التالي عند الانتهاء من العدد',
+                          waitDuration: const Duration(milliseconds: 250),
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _autoAdvance = !_autoAdvance;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _autoAdvance
-                                      ? Icons.play_arrow_rounded
-                                      : Icons.pause_rounded,
-                                  size: 16,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  context.l10n?.translate('azkar.auto_move') ??
-                                      'تلقائي',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.w600,
+                              decoration: BoxDecoration(
+                                color: _autoAdvance
+                                    ? theme.colorScheme.primary.withValues(
+                                        alpha: 0.1,
+                                      )
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.3,
                                   ),
                                 ),
-                              ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _autoAdvance
+                                        ? Icons.skip_next_rounded
+                                        : Icons.last_page_rounded,
+                                    size: 16,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.l10n?.translate(
+                                          'azkar.auto_advance_label',
+                                        ) ??
+                                        context.l10n?.translate(
+                                          'azkar.auto_move',
+                                        ) ??
+                                        (_autoAdvance ? 'تلقائي' : 'يدوي'),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -473,6 +488,12 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                     ),
                   ),
                 ],
+
+                // Source / hadith reference (only when the data provides it)
+                if (item.reference != null && item.reference!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _AdhkarSourceRow(reference: item.reference!),
+                ],
               ],
             ),
           ),
@@ -507,73 +528,80 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Counter circle
+          // Counter circle — the primary tap target. The whole screen above
+          // is also tappable for convenience, but new users need to see this
+          // ring so the tap interaction is discoverable.
           Padding(
             padding: const EdgeInsets.only(top: 20, bottom: 16),
-            child: GestureDetector(
-              onTap: () => _incrementCounter(currentItem),
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.cardColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Progress indicator
-                    SizedBox(
-                      width: 120,
-                      height: 120,
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween<double>(begin: 0, end: progress),
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeOutCubic,
-                        builder: (context, value, child) {
-                          return CircularProgressIndicator(
-                            value: value,
-                            strokeWidth: 8,
-                            backgroundColor: theme.colorScheme.primary
-                                .withValues(alpha: 0.1),
-                            color: theme.colorScheme.primary,
-                          );
-                        },
+            child: Tooltip(
+              message: context.l10n?.translate('azkar.tap_to_count_tooltip') ??
+                  'اضغط للعدّ — يمكنك أيضاً الضغط على أي مكان من الشاشة',
+              waitDuration: const Duration(milliseconds: 250),
+              child: GestureDetector(
+                onTap: () => _incrementCounter(currentItem),
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.cardColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        spreadRadius: 2,
                       ),
-                    ),
-
-                    // Counter text
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$_repeatCount',
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Progress indicator
+                      SizedBox(
+                        width: 120,
+                        height: 120,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0, end: progress),
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return CircularProgressIndicator(
+                              value: value,
+                              strokeWidth: 8,
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary,
+                            );
+                          },
                         ),
-                        if (maxCount > 1)
+                      ),
+
+                      // Counter text
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Text(
-                            '${context.l10n?.translate('azkar.from') ?? 'من'} $maxCount',
+                            '$_repeatCount',
                             style: TextStyle(
-                              fontSize: 14,
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
                             ),
                           ),
-                      ],
-                    ),
-                  ],
+                          if (maxCount > 1)
+                            Text(
+                              '${context.l10n?.translate('azkar.from') ?? 'من'} $maxCount',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -680,6 +708,87 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
         text:
             '$text\n\n${context.l10n?.translate('azkar.from') ?? 'من'} $category\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
         subject: category,
+      ),
+    );
+  }
+}
+
+/// Collapsible "Source" row shown under each dhikr that has a hadith / Quran
+/// reference. Defaults to collapsed (just a chevron + label) so the dhikr
+/// text remains the focus.
+class _AdhkarSourceRow extends StatefulWidget {
+  final String reference;
+
+  const _AdhkarSourceRow({required this.reference});
+
+  @override
+  State<_AdhkarSourceRow> createState() => _AdhkarSourceRowState();
+}
+
+class _AdhkarSourceRowState extends State<_AdhkarSourceRow> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final muted = theme.textTheme.bodySmall?.color?.withValues(alpha: 0.75) ??
+        Colors.grey;
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: InkWell(
+        onTap: () => setState(() => _expanded = !_expanded),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.menu_book_rounded, size: 16, color: muted),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n?.translate('azkar.source_label') ?? 'المصدر',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: muted,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: muted,
+                  ),
+                ],
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                child: _expanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 22),
+                        child: Text(
+                          widget.reference,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: muted,
+                            height: 1.55,
+                          ),
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.right,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

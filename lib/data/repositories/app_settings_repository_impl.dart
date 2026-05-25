@@ -69,12 +69,18 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       appLockSettings = AppLockSettingsModel.defaultSettings();
     }
 
+    // Get onboarding completed flag
+    final onboardingCompleted =
+        _sharedPreferences.getBool(AppConstants.onboardingCompletedKey) ??
+            false;
+
     _cachedSettings = AppSettingsModel(
       themeMode: themeMode,
       languageCode: languageCode,
       showBasmala: showBasmala,
       notificationSettings: notificationSettings,
       appLockSettings: appLockSettings,
+      onboardingCompleted: onboardingCompleted,
     );
 
     _settingsController.add(_cachedSettings!);
@@ -133,6 +139,18 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     final settings = await getSettings();
     _cachedSettings = settings.copyWith(appLockSettings: appLockSettings);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setOnboardingCompleted(bool completed) async {
+    await _sharedPreferences.setBool(
+      AppConstants.onboardingCompletedKey,
+      completed,
+    );
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(onboardingCompleted: completed);
     _settingsController.add(_cachedSettings!);
   }
 

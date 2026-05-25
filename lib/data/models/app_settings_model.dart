@@ -9,6 +9,7 @@ class AppSettingsModel extends Equatable {
   final bool showBasmala;
   final NotificationSettingsModel notificationSettings;
   final AppLockSettingsModel appLockSettings;
+  final bool onboardingCompleted;
 
   const AppSettingsModel({
     required this.themeMode,
@@ -16,6 +17,7 @@ class AppSettingsModel extends Equatable {
     required this.showBasmala,
     required this.notificationSettings,
     required this.appLockSettings,
+    this.onboardingCompleted = false,
   });
 
   factory AppSettingsModel.defaultSettings() {
@@ -25,6 +27,7 @@ class AppSettingsModel extends Equatable {
       showBasmala: true,
       notificationSettings: NotificationSettingsModel.defaultSettings(),
       appLockSettings: AppLockSettingsModel.defaultSettings(),
+      onboardingCompleted: false,
     );
   }
 
@@ -34,6 +37,7 @@ class AppSettingsModel extends Equatable {
     bool? showBasmala,
     NotificationSettingsModel? notificationSettings,
     AppLockSettingsModel? appLockSettings,
+    bool? onboardingCompleted,
   }) {
     return AppSettingsModel(
       themeMode: themeMode ?? this.themeMode,
@@ -41,6 +45,7 @@ class AppSettingsModel extends Equatable {
       showBasmala: showBasmala ?? this.showBasmala,
       notificationSettings: notificationSettings ?? this.notificationSettings,
       appLockSettings: appLockSettings ?? this.appLockSettings,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }
 
@@ -51,5 +56,6 @@ class AppSettingsModel extends Equatable {
         showBasmala,
         notificationSettings,
         appLockSettings,
+        onboardingCompleted,
       ];
 }

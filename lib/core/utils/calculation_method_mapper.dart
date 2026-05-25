@@ -86,6 +86,62 @@ class CalculationMethodMapper {
     return 'muslim_world_league';
   }
 
+  /// Return a sensible default calculation method for an ISO 3166-1 alpha-2
+  /// country code. Falls back to Muslim World League when the country isn't
+  /// recognised or null.
+  static String defaultMethodForCountry(String? countryCode) {
+    if (countryCode == null || countryCode.isEmpty) {
+      return 'muslim_world_league';
+    }
+    switch (countryCode.toUpperCase()) {
+      case 'EG':
+      case 'SD': // Sudan historically follows the Egyptian standard
+      case 'SY':
+      case 'IQ':
+      case 'LB':
+      case 'JO':
+      case 'PS':
+        return 'egyptian';
+      case 'SA':
+        return 'umm_al_qura';
+      case 'AE':
+        return 'dubai';
+      case 'QA':
+        return 'qatar';
+      case 'KW':
+        return 'kuwait';
+      case 'BH':
+      case 'OM':
+      case 'YE':
+        return 'umm_al_qura';
+      case 'DZ':
+      case 'MA':
+      case 'TN':
+      case 'LY':
+        return 'muslim_world_league';
+      case 'TR':
+        return 'turkiye';
+      case 'PK':
+      case 'IN':
+      case 'BD':
+      case 'AF':
+        return 'karachi';
+      case 'IR':
+        return 'tehran';
+      case 'SG':
+      case 'MY':
+      case 'ID':
+      case 'BN':
+        return 'singapore';
+      case 'US':
+      case 'CA':
+      case 'MX':
+        return 'north_america';
+      default:
+        return 'muslim_world_league';
+    }
+  }
+
   /// Get Arabic display name for method
   ///
   /// [methodName] - The method name string

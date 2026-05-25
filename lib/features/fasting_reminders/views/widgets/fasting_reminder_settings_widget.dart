@@ -6,6 +6,7 @@ import 'package:wadhakir/core/utils/alarm_permission_helper.dart';
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_cubit.dart';
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_state.dart';
 import 'package:wadhakir/features/fasting_reminders/views/screens/fasting_calendar_screen.dart';
+import 'package:wadhakir/features/fasting_reminders/services/fasting_notification_service.dart';
 
 /// Settings widget for fasting reminders configuration
 /// To be integrated into the settings screen
@@ -21,6 +22,78 @@ class FastingReminderSettingsWidget extends StatelessWidget {
 
     return BlocBuilder<FastingRemindersCubit, FastingRemindersState>(
       builder: (context, state) {
+        // Previously this returned SizedBox.shrink() for any non-Loaded
+        // state, which hid the entire fasting section while the cubit's
+        // async loadSettings() was running. If loadSettings ever errored
+        // (downstream dependencies on the hijri service / notification
+        // service / repository), the section stayed invisible forever and
+        // the user couldn't access fasting settings at all. Show a small
+        // visible placeholder for Initial/Loading/Error so the section is
+        // always discoverable.
+        if (state is FastingRemindersInitial ||
+            state is FastingRemindersLoading) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              ),
+            ),
+          );
+        }
+        if (state is FastingRemindersError) {
+          final cubit = context.read<FastingRemindersCubit>();
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: theme.colorScheme.error,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n?.translate('fasting.load_failed') ??
+                            'تعذّر تحميل إعدادات الصيام',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  state.message,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: OutlinedButton.icon(
+                    onPressed: () => cubit.loadSettings(),
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: Text(
+                      l10n?.translate('common.retry') ?? 'إعادة المحاولة',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        // Defensive: any unexpected state — still render nothing here, but
+        // the Loaded branch below covers the normal path.
         if (state is! FastingRemindersLoaded) {
           return const SizedBox.shrink();
         }
@@ -45,6 +118,12 @@ class FastingReminderSettingsWidget extends StatelessWidget {
               ),
 
               if (settings.monthlyFastingRemindersEnabled) ...[
+                const SizedBox(height: 8),
+
+                // Test button — fires a single sample fasting reminder so
+                // the user can verify the notification channel + sound +
+                // permission flow without waiting for a real fast day.
+                _FastingTestButton(theme: theme, l10n: l10n),
                 const SizedBox(height: 12),
 
                 // Weekly Fasting Section (Monday/Thursday)
@@ -861,6 +940,75 @@ class _AdvanceReminderDialogState extends State<_AdvanceReminderDialog> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Fires a single test fasting notification so the user can confirm the
+/// notification channel + sound + permission flow are working.
+class _FastingTestButton extends StatelessWidget {
+  final ThemeData theme;
+  final AppLocalizations? l10n;
+
+  const _FastingTestButton({required this.theme, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Material(
+        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () async {
+            final scaffoldMessenger = ScaffoldMessenger.of(context);
+            final ok =
+                await FastingNotificationService().sendTestNotification();
+            if (!context.mounted) return;
+            scaffoldMessenger.showSnackBar(
+              SnackBar(
+                content: Text(
+                  ok
+                      ? (l10n?.translate('fasting.test_sent') ??
+                          'تم إرسال تذكير تجريبي للصيام')
+                      : (l10n?.translate('fasting.test_failed') ??
+                          'تعذّر الإرسال — تأكد من منح صلاحية الإشعارات'),
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.play_arrow_rounded,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n?.translate('fasting.send_test_notification') ??
+                        'إرسال تذكير تجريبي للصيام',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

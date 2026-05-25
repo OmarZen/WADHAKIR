@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import '../shared/azkar_shared_widgets.dart';
 
 class TasbihGridItem extends StatelessWidget {
   const TasbihGridItem({super.key});
@@ -67,6 +68,11 @@ class TasbihGridItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              SizedBox(width: spacing),
+              GridProgressBadge(
+                assetPath: 'assets/json_data/tassbih.json',
+                prefsPrefix: 'tasbih_',
+              ),
             ],
           ),
         ),
@@ -123,7 +129,7 @@ class TasbihGridItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const _IslamicDivider(),
+              const IslamicDividerShared(),
               Expanded(
                 child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
@@ -264,7 +270,7 @@ class _AzkarCardState extends State<_AzkarCard> {
                     tooltip: l10n?.translate('home.reset') ?? 'إعادة تعيين',
                   ),
                   const SizedBox(width: 4),
-                  _ProgressButton(
+                  ProgressButtonShared(
                     progress: progress,
                     label: '$completed/${widget.repeat}',
                     onTap: _increment,
@@ -308,89 +314,4 @@ class _AzkarCardState extends State<_AzkarCard> {
   }
 }
 
-class _ProgressButton extends StatelessWidget {
-  final double progress;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ProgressButton({
-    required this.progress,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.24),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                value: progress,
-                strokeWidth: 3,
-                backgroundColor: theme.colorScheme.primary.withValues(
-                  alpha: 0.15,
-                ),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  theme.colorScheme.primary,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(label, style: theme.textTheme.labelMedium),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _IslamicDivider extends StatelessWidget {
-  const _IslamicDivider();
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Divider(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Icon(Icons.star, size: 12, color: theme.colorScheme.primary),
-          ),
-          Expanded(
-            child: Divider(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// Shared divider and progress button moved to shared/azkar_shared_widgets.dart

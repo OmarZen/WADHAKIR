@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_cubit.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
-import 'package:wadhakir/features/home/views/widgets/hadith_card_widget.dart';
+// Hadith card removed: feature and assets pruned
 import 'package:wadhakir/features/home/views/widgets/prayer_card_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/welcome_section_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/more_islamic_excerpts_widget.dart';
@@ -50,8 +50,7 @@ class HomeScreenContent extends StatelessWidget {
               ),
               // Compact Prayer Times Card
               SliverToBoxAdapter(child: CompactPrayerCardWidget()),
-              // Hadith Card (Nawawi 40) - appears after the compact prayer card
-              const SliverToBoxAdapter(child: HadithCardWidget()),
+              // Hadith Card removed (pruned to reduce bundle size)
               // More Islamic Excerpts
               const SliverToBoxAdapter(child: MoreIslamicExcerptsWidget()),
               // Tight spacing between sections

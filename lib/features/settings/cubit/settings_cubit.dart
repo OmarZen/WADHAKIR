@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
 import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
@@ -19,6 +20,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SetLanguageUseCase _setLanguageUseCase;
   final SetNotificationSettingsUseCase _setNotificationSettingsUseCase;
   final SetAppLockSettingsUseCase _setAppLockSettingsUseCase;
+  final SetOnboardingCompletedUseCase? _setOnboardingCompletedUseCase;
   final PrayerNotificationService _notificationService;
 
   StreamSubscription? _settingsSubscription;
@@ -30,6 +32,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     required SetLanguageUseCase setLanguageUseCase,
     required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
     required SetAppLockSettingsUseCase setAppLockSettingsUseCase,
+    SetOnboardingCompletedUseCase? setOnboardingCompletedUseCase,
     PrayerNotificationService? notificationService,
   })  : _getSettingsUseCase = getSettingsUseCase,
         _getSettingsStreamUseCase = getSettingsStreamUseCase,
@@ -37,11 +40,21 @@ class SettingsCubit extends Cubit<SettingsState> {
         _setLanguageUseCase = setLanguageUseCase,
         _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
         _setAppLockSettingsUseCase = setAppLockSettingsUseCase,
+        _setOnboardingCompletedUseCase = setOnboardingCompletedUseCase,
         _notificationService =
             notificationService ?? PrayerNotificationService(),
         super(const SettingsInitial()) {
     loadSettings();
     _listenToSettingsChanges();
+  }
+
+  Future<void> setOnboardingCompleted(bool completed) async {
+    if (_setOnboardingCompletedUseCase == null) return;
+    try {
+      await _setOnboardingCompletedUseCase?.call(completed);
+    } catch (e) {
+      emit(SettingsError(e.toString()));
+    }
   }
 
   void _listenToSettingsChanges() {

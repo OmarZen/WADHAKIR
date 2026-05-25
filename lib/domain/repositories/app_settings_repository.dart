@@ -15,6 +15,7 @@ abstract class AppSettingsRepository {
   Future<void> setNotificationSettings(NotificationSettingsModel settings);
 
   Future<void> setAppLockSettings(AppLockSettingsModel settings);
+  Future<void> setOnboardingCompleted(bool completed);
 
   Stream<AppSettingsModel> get settingsStream;
 }

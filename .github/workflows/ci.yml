@@ -41,13 +41,30 @@ jobs:
           
       - name: 📦 Get Dependencies
         run: flutter pub get
-        
+
       - name: 🔍 Verify Flutter Installation
         run: flutter doctor -v
-        
+
       - name: 🎨 Check Code Formatting
         run: dart format --output=none --set-exit-if-changed .
-        
+
+      # quran_library 4.2.0 (latest on pub.dev) ships an android/build.gradle
+      # that calls `getDefaultProguardFile('proguard-android.txt')`. AGP 9.x
+      # removed that file (it forced `-dontoptimize`) and now throws at
+      # script-evaluation time. Until the package ships a fix, swap the
+      # reference to `proguard-android-optimize.txt` in the pub-cache copy
+      # before Gradle reads it. No-op if the file ever stops existing.
+      - name: 🩹 Patch quran_library for AGP 9.x
+        run: |
+          PKG="$PUB_CACHE/hosted/pub.dev/quran_library-4.2.0/android/build.gradle"
+          if [ -f "$PKG" ]; then
+            sed -i "s/'proguard-android\.txt'/'proguard-android-optimize.txt'/g" "$PKG"
+            echo "Patched $PKG"
+            grep -n "proguard" "$PKG" || true
+          else
+            echo "Skipping patch — $PKG not found"
+          fi
+
       - name: 🏗️ Build APK (Debug)
         run: flutter build apk --debug
         

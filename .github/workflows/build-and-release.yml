@@ -68,6 +68,18 @@ jobs:
       - run: flutter config --no-analytics
       - run: flutter pub get
 
+      # quran_library 4.2.0 (latest on pub.dev) ships an android/build.gradle
+      # that calls `getDefaultProguardFile('proguard-android.txt')` — a file
+      # AGP 9.x removed. Patch the pub-cache copy in-place so Gradle can
+      # evaluate the script. Drop this step once the package ships a fix.
+      - name: Patch quran_library for AGP 9.x
+        run: |
+          PKG="$PUB_CACHE/hosted/pub.dev/quran_library-4.2.0/android/build.gradle"
+          if [ -f "$PKG" ]; then
+            sed -i "s/'proguard-android\.txt'/'proguard-android-optimize.txt'/g" "$PKG"
+            echo "Patched $PKG"
+          fi
+
       # Tagged builds are signed release builds. Manual `workflow_dispatch`
       # runs produce a debug build that nobody ships, so the keystore step
       # is skipped on that path.

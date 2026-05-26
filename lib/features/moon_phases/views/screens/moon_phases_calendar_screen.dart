@@ -4,6 +4,7 @@ import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
 import '../../data/moon_phase.dart';
+import '../widgets/moon_islamic_context.dart';
 import '../widgets/moon_painter.dart';
 import '../widgets/moon_phase_labels.dart';
 import 'moon_phase_detail_screen.dart';
@@ -126,10 +127,34 @@ class _MoonPhasesCalendarScreenState extends State<MoonPhasesCalendarScreen>
               Spacing.sm,
               Spacing.sm,
               Spacing.sm,
-              Spacing.xxl,
+              Spacing.lg,
             ),
             sliver: _calendarGrid(phases),
           ),
+          // Decorative ornamental divider between the calendar and the
+          // Islamic context. Reads as a section break without adding a
+          // heavy header — keeps the page feeling like one continuous
+          // surface rather than two stacked screens.
+          const SliverToBoxAdapter(child: _SectionOrnament()),
+          // Crescent sighting tips — only when today is new/waxing
+          // crescent. Otherwise this whole block is skipped so the
+          // verses come right after the ornament.
+          if (shouldShowCrescentSighting(today.phase))
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: Spacing.lg),
+                child: CrescentSightingCard(info: today, l10n: l10n),
+              ),
+            ),
+          // Quranic verses + lunar calendar importance card — the same
+          // widget the detail screen uses, so the design stays consistent.
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: Spacing.lg),
+              child: MoonIslamicContext(l10n: l10n),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: Spacing.xxl)),
         ],
       ),
     );
@@ -610,6 +635,69 @@ class _MoonCell extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quiet visual break between the calendar grid and the Islamic-content
+/// block underneath. Two soft glowing dashes flanking a small crescent
+/// glyph — reads as an ornament, not as a UI control.
+class _SectionOrnament extends StatelessWidget {
+  const _SectionOrnament();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        Spacing.xxl,
+        Spacing.lg,
+        Spacing.xxl,
+        Spacing.xs,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(child: _gradientLine(toLeft: true)),
+          const SizedBox(width: Spacing.md),
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF3A6BA8).withValues(alpha: 0.18),
+              border: Border.all(
+                color: const Color(0xFF7BA7D9).withValues(alpha: 0.45),
+                width: 1,
+              ),
+            ),
+            child: const Icon(
+              Icons.nightlight_round,
+              size: 14,
+              color: Color(0xFF7BA7D9),
+            ),
+          ),
+          const SizedBox(width: Spacing.md),
+          Expanded(child: _gradientLine(toLeft: false)),
+        ],
+      ),
+    );
+  }
+
+  Widget _gradientLine({required bool toLeft}) {
+    final colors = [
+      Colors.white.withValues(alpha: 0),
+      const Color(0xFF7BA7D9).withValues(alpha: 0.45),
+    ];
+    return Container(
+      height: 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: toLeft ? Alignment.centerRight : Alignment.centerLeft,
+          end: toLeft ? Alignment.centerLeft : Alignment.centerRight,
+          colors: colors,
         ),
       ),
     );

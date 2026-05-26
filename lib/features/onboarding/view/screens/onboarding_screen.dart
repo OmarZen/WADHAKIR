@@ -27,9 +27,6 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   static const int _pageCount = 5;
-  // Keep onboarding visible across rebuilds during dev. Production path will
-  // persist via SettingsCubit when finishing.
-  bool get _forceShowOnboardingForTesting => true;
 
   late final PageController _controller;
   // Continuous page offset (e.g. 1.32 while mid-swipe). Drives every smooth
@@ -73,21 +70,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _next() => _animateTo(_currentPage + 1);
   void _back() => _animateTo(_currentPage - 1);
 
+  /// Persist the "user has seen onboarding" flag in SharedPreferences and
+  /// route to the main app. The splash screen reads this flag on next
+  /// launch and skips straight to home — so onboarding only ever shows
+  /// once per install (or until the user clears app data).
   Future<void> _finishOnboarding(BuildContext context) async {
-    if (_forceShowOnboardingForTesting) {
-      if (!mounted) return;
-      _goToHome(context);
-      return;
-    }
     final settingsCubit = context.read<SettingsCubit>();
     final navigator = Navigator.of(context);
     await settingsCubit.setOnboardingCompleted(true);
     if (!mounted) return;
     navigator.pushReplacement(_homeRoute());
-  }
-
-  void _goToHome(BuildContext context) {
-    Navigator.of(context).pushReplacement(_homeRoute());
   }
 
   PageRouteBuilder _homeRoute() {

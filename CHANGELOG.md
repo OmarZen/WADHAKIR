@@ -5,6 +5,43 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0+16] - 2026-05-26
+
+### Added
+
+- **Onboarding redesign** — 5-page flow with `PageView` swipe + parallax background. Single brand-blue palette across every page (no off-brand accents). Animated hero icon, polished progress bar, always-visible Skip in the header. EN + AR translations refreshed.
+- **Floating dhikr overlay feature** — pill-bar reminder that floats over other apps at a chosen interval. Settings screen, position picker (top/bottom only), permission flow, live pill preview.
+- **Moon phases feature**:
+  - Calendar with animated moon hero and tappable monthly grid.
+  - Detail screen with phase info, 30-day illumination sparkline, and live moon disc.
+  - **Islamic context section** with three Quranic verse cards: Surah Yunus 10:5 (the moon as one of Allah's signs), Surah Al-Qamar 54:1 (انشقاق القمر, with Bukhari/Muslim citation), Surah Al-Baqarah 2:189 (new crescents as timings for Hajj). Importance bullets covering the Hijri month, Ramadan/Eid, Hajj, and the White Days.
+  - **Crescent sighting card** for new-moon and waxing-crescent days, with moon age + when/where/how to look + a Yallop-style visibility verdict.
+  - Same Islamic content also surfaced under the calendar grid.
+- **Branded share-as-image flow** — new share screen with a 4:5 brand card (logo, gradient, ScheherazadeNew Arabic body). Captures via `RepaintBoundary.toImage` + `share_plus`. Wired into Azkar and Fasting Info.
+- **Core design tokens** — new `lib/core/design/` module (spacing, radii, motion, glass, breakpoints) + shared `glass_card` widget.
+- **Per-screen brand palette** — onboarding, share card, floating dhikr settings, and moon phases all derive from the same primary `#20497D` / accent `#3A6BA8` / glow `#7BA7D9` family.
+
+### Changed
+
+- **Default prayer calculation method** for first-install users is now `egyptian` (الهيئة المصرية العامة للمساحة). Existing users with a saved preference are unaffected.
+- **Floating dhikr settings** — minimalist redesign. Removed the heavy gradient header (which used `colorScheme.secondary` ≈ near-black). One grouped settings surface with subtle dividers replaces five separate cards. Custom brand-tinted chips and slider theme.
+- **Settings ListTile warnings** — fixed the framework `"ListTile background color or ink splashes may be invisible"` warning. Diagnostic hook in `main.dart` logs the intermediate widget for future occurrences.
+- **Moon UI polish** — calendar + detail screens now use the brand-derived `#0F1A2A` night-sky surface (same family as floating dhikr dark mode + onboarding dark surface).
+
+### Removed
+
+- **Zodiac / astrology** entirely from the moon phases feature — enum, computation, UI rows, and 13 translation keys (label + 12 sign names) in both EN and AR. `eclipticLongitude` is kept since it's a real astronomical quantity, not a horoscope.
+- **Hadith library** feature retired (cubits, screens, widgets, repository, home grid item).
+
+### Fixed
+
+- **Fasting reminders**: channel registration is now idempotent and no longer wipes the prayer channels on every toggle. Cancellation uses `cancelNotificationsByChannelKey` (single hop) instead of the previous 1002-iteration loop, so the section loads instantly. Weekly schedule now passes an explicit timezone (avoids the OEM `TimeZone.getDefault` NPE). UI emits Loaded before scheduling so the section never gets stuck on a spinner.
+- **Fasting info share** previously had a broken `String as ShareParams` cast that would throw at runtime — fixed by routing through the new share screen.
+
+### Tooling
+
+- `.gitignore` now excludes local Claude/agent tooling directories.
+
 ## [3.0.0+15] - 2026-05-06
 
 ### Added

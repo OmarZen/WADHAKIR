@@ -3,6 +3,13 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
+    // Apply the Kotlin Android plugin so the `kotlin { compilerOptions { ... } }`
+    // block at the bottom of this file resolves. Version is declared in
+    // `android/settings.gradle.kts` with `apply false` so it propagates here.
+    // Without this, CI fails with:
+    //   "Unresolved reference 'compilerOptions'"
+    //   "fun DependencyHandler.kotlin / PluginDependenciesSpec.kotlin"
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }

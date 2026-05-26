@@ -38,10 +38,11 @@ class MoonPhaseInfo {
   final double distanceKm;
 
   /// Approximate ecliptic longitude in degrees (0..360).
+  ///
+  /// Kept because it's a real astronomical quantity used to compute the
+  /// moon's position along the celestial sphere. **Not** used to derive a
+  /// zodiac sign — astrology is intentionally absent from this feature.
   final double eclipticLongitude;
-
-  /// Zodiac sign the moon currently sits in (Aries..Pisces).
-  final MoonZodiac zodiac;
 
   const MoonPhaseInfo({
     required this.date,
@@ -51,26 +52,10 @@ class MoonPhaseInfo {
     required this.ageDays,
     required this.distanceKm,
     required this.eclipticLongitude,
-    required this.zodiac,
   });
 
   bool get isWaxing => phaseFraction < 0.5;
   bool get isWaning => phaseFraction >= 0.5;
-}
-
-enum MoonZodiac {
-  aries,
-  taurus,
-  gemini,
-  cancer,
-  leo,
-  virgo,
-  libra,
-  scorpio,
-  sagittarius,
-  capricorn,
-  aquarius,
-  pisces,
 }
 
 /// Pure-Dart moon phase calculator. Accuracy is good enough for a calendar
@@ -121,7 +106,6 @@ class MoonPhaseCalculator {
         218.32 + meanMotionDegPerDay * (jd - 2451550.26);
     final longitude = longitudeRaw % 360.0;
     final eclipticLongitude = longitude < 0 ? longitude + 360 : longitude;
-    final zodiac = _zodiacForLongitude(eclipticLongitude);
 
     return MoonPhaseInfo(
       date: DateTime(date.year, date.month, date.day),
@@ -131,7 +115,6 @@ class MoonPhaseCalculator {
       ageDays: ageDays,
       distanceKm: distanceKm,
       eclipticLongitude: eclipticLongitude,
-      zodiac: zodiac,
     );
   }
 
@@ -159,12 +142,6 @@ class MoonPhaseCalculator {
     if (f < 0.72) return MoonPhase.waningGibbous;
     if (f < 0.78) return MoonPhase.lastQuarter;
     return MoonPhase.waningCrescent;
-  }
-
-  static MoonZodiac _zodiacForLongitude(double lon) {
-    // 30° per sign, starting at Aries 0°.
-    final idx = (lon / 30).floor() % 12;
-    return MoonZodiac.values[idx];
   }
 
   /// Standard Julian Day for a UTC DateTime. Uses the Meeus algorithm.

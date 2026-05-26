@@ -6,6 +6,7 @@ import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
 import '../../data/moon_phase.dart';
+import '../widgets/moon_islamic_context.dart';
 import '../widgets/moon_painter.dart';
 import '../widgets/moon_phase_labels.dart';
 
@@ -37,7 +38,10 @@ class _MoonPhaseDetailScreenState extends State<MoonPhaseDetailScreen> {
     final info = MoonPhaseCalculator.forDate(_selected);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E1A),
+      // Brand-derived night-sky surface (same value used by the floating
+      // dhikr settings + onboarding for dark mode) so all "dark"
+      // surfaces in the app feel like one family.
+      backgroundColor: const Color(0xFF0F1A2A),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -110,6 +114,16 @@ class _MoonPhaseDetailScreenState extends State<MoonPhaseDetailScreen> {
           _MoreInfo(info: info, l10n: l10n),
           const SizedBox(height: Spacing.xl),
           _NextCycleChart(info: info, l10n: l10n),
+          // Hilāl sighting tips — only rendered for new-moon and waxing-
+          // crescent phases, where the user might actually be trying to
+          // sight the crescent. For other phases the section is skipped
+          // entirely so the screen stays focused.
+          if (shouldShowCrescentSighting(info.phase)) ...[
+            const SizedBox(height: Spacing.xl),
+            CrescentSightingCard(info: info, l10n: l10n),
+          ],
+          const SizedBox(height: Spacing.xl),
+          MoonIslamicContext(l10n: l10n),
           const SizedBox(height: Spacing.xxl),
         ],
       ),
@@ -325,10 +339,6 @@ class _MoreInfo extends StatelessWidget {
             label: l10n?.translate('moon_phases.ecliptic_longitude') ??
                 'Ecliptic longitude',
             value: '${info.eclipticLongitude.toStringAsFixed(2)}°',
-          ),
-          _InfoRow(
-            label: l10n?.translate('moon_phases.zodiac') ?? 'Zodiac',
-            value: MoonPhaseLabels.zodiacName(info.zodiac, l10n),
           ),
         ],
       ),

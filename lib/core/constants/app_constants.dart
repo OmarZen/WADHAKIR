@@ -18,6 +18,14 @@ class AppConstants {
   static const String radioRoute = '/radio';
   static const String floatingDhikrSettingsRoute = '/floating-dhikr-settings';
   static const String moonPhasesRoute = '/moon-phases';
+  static const String shareRoute = '/share';
+
+  // External links — used by the branded share-image flow so the caption
+  // and the on-card wordmark stay in sync no matter which screen invokes
+  // share. Single source of truth for the Play Store URL.
+  static const String playStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.bloom.wadhakir';
+  static const String websiteLabel = 'wadhakir.app';
 
   // SharedPreferences Keys
   static const String themeKey = 'theme_mode';

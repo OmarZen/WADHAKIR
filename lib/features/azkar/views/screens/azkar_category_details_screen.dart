@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/data/models/azkar_item.dart';
 import 'package:wadhakir/data/models/azkar_category.dart';
 import 'package:wadhakir/features/azkar/cubit/azkar_cubit.dart';
@@ -9,6 +9,7 @@ import 'package:wadhakir/features/azkar/cubit/azkar_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/repositories/azkar_repository_impl.dart';
 import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
 
 class AzkarCategoryDetailsScreen extends StatefulWidget {
   final AzkarCategory category;
@@ -697,17 +698,22 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
     }
   }
 
-  void _shareText(BuildContext context, AzkarCategorySelected state) async {
-    final text = state.category.items[_currentPage].text;
+  /// Open the branded share screen for the current dhikr. The screen
+  /// renders a 4:5 card, lets the user share it as a PNG (or fall back to
+  /// text), and handles the share-plus call itself. We just hand it a
+  /// `SharePayload` and let it own the flow.
+  void _shareText(BuildContext context, AzkarCategorySelected state) {
+    final item = state.category.items[_currentPage];
     final category = state.category.getLocalizedTitle(
       Localizations.localeOf(context).languageCode,
     );
-
-    await SharePlus.instance.share(
-      ShareParams(
-        text:
-            '$text\n\n${context.l10n?.translate('azkar.from') ?? 'من'} $category\n تطبيق وذكر حمله الان: \nhttps://play.google.com/store/apps/details?id=com.bloom.wadhakir',
-        subject: category,
+    Navigator.of(context).pushNamed(
+      AppConstants.shareRoute,
+      arguments: SharePayload(
+        headline: item.text,
+        categoryLabel: category,
+        repetitions: item.count > 1 ? item.count : null,
+        reference: item.reference,
       ),
     );
   }

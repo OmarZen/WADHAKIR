@@ -8,6 +8,8 @@ import 'package:wadhakir/features/settings/view/screens/settings_screen.dart';
 import 'package:wadhakir/features/pray_times/views/screens/prayer_times_screen.dart';
 import 'package:wadhakir/features/floating_dhikr/views/screens/floating_dhikr_settings_screen.dart';
 import 'package:wadhakir/features/moon_phases/views/screens/moon_phases_calendar_screen.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/screens/share_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -38,6 +40,29 @@ class AppRouter {
       case AppConstants.moonPhasesRoute:
         return MaterialPageRoute(
           builder: (_) => const MoonPhasesCalendarScreen(),
+        );
+
+      case AppConstants.shareRoute:
+        // The share screen always receives a SharePayload via arguments;
+        // a missing/wrong type is a programmer error so we fail loud.
+        final args = settings.arguments;
+        if (args is! SharePayload) {
+          return MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(child: Text('Share payload missing')),
+            ),
+          );
+        }
+        return PageRouteBuilder(
+          pageBuilder: (_, __, ___) => ShareScreen(payload: args),
+          transitionsBuilder: (_, animation, __, child) => FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            ),
+            child: child,
+          ),
+          transitionDuration: const Duration(milliseconds: 320),
         );
 
       // Add other routes as they are implemented

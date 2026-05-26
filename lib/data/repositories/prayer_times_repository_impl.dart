@@ -117,9 +117,14 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
     final prefs = await SharedPreferences.getInstance();
     final methodName = prefs.getString(_calculationMethodKey);
 
-    // Default to Muslim World League if not set
+    // Default to the Egyptian General Authority of Survey method
+    // ("الهيئة المصرية العامة للمساحة") for first-time installs. This is the
+    // most widely-trusted method across the Middle East and matches the
+    // primary audience for the app. Users in other regions can still pick
+    // a different method from settings; once they do, `methodName` will
+    // be non-null on the next launch and this branch is skipped.
     if (methodName == null) {
-      return CalculationMethodMapper.getParameters('muslim_world_league');
+      return CalculationMethodMapper.getParameters('egyptian');
     }
 
     return CalculationMethodMapper.getParameters(methodName);

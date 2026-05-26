@@ -32,25 +32,6 @@ class MoonPhaseLabels {
     return l10n?.translate(key) ?? fallback;
   }
 
-  static String zodiacName(MoonZodiac z, AppLocalizations? l10n) {
-    final key = 'moon_phases.zodiac_${z.name}';
-    final fallback = switch (z) {
-      MoonZodiac.aries => 'Aries',
-      MoonZodiac.taurus => 'Taurus',
-      MoonZodiac.gemini => 'Gemini',
-      MoonZodiac.cancer => 'Cancer',
-      MoonZodiac.leo => 'Leo',
-      MoonZodiac.virgo => 'Virgo',
-      MoonZodiac.libra => 'Libra',
-      MoonZodiac.scorpio => 'Scorpio',
-      MoonZodiac.sagittarius => 'Sagittarius',
-      MoonZodiac.capricorn => 'Capricorn',
-      MoonZodiac.aquarius => 'Aquarius',
-      MoonZodiac.pisces => 'Pisces',
-    };
-    return l10n?.translate(key) ?? fallback;
-  }
-
   static IconData phaseIcon(MoonPhase phase) {
     switch (phase) {
       case MoonPhase.newMoon:

@@ -58,7 +58,9 @@ class _MoonPhasesCalendarScreenState extends State<MoonPhasesCalendarScreen>
     final today = MoonPhaseCalculator.forDate(DateTime.now());
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B1024),
+      // Brand-derived night-sky surface — matches the detail screen, the
+      // floating dhikr settings and the onboarding dark surface.
+      backgroundColor: const Color(0xFF0F1A2A),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -310,13 +312,6 @@ class _TodayHero extends StatelessWidget {
                       label: l10n?.translate('moon_phases.moon_distance') ??
                           'Distance',
                       value: formatKm(info.distanceKm),
-                    ),
-                    const SizedBox(height: 6),
-                    _HeroStat(
-                      icon: Icons.star_outline_rounded,
-                      label:
-                          l10n?.translate('moon_phases.zodiac') ?? 'Zodiac',
-                      value: MoonPhaseLabels.zodiacName(info.zodiac, l10n),
                     ),
                   ],
                 ),

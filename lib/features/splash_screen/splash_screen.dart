@@ -7,8 +7,6 @@ import 'package:wadhakir/features/onboarding/view/screens/onboarding_screen.dart
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 
-const bool _forceShowOnboardingForTesting = true;
-
 /// Wadhakir animated splash screen
 class WadhakirSplashScreen extends StatefulWidget {
   const WadhakirSplashScreen({super.key});
@@ -101,27 +99,6 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
         // Uncomment this when ready to enable navigation
         Future.delayed(const Duration(milliseconds: 1000), () {
           if (!mounted) return;
-
-          if (_forceShowOnboardingForTesting) {
-            Navigator.of(context).pushReplacement(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    const OnboardingScreen(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity: CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeIn,
-                    ),
-                    child: child,
-                  );
-                },
-                transitionDuration: const Duration(milliseconds: 600),
-              ),
-            );
-            return;
-          }
 
           try {
             final settingsState = context.read<SettingsCubit>().state;

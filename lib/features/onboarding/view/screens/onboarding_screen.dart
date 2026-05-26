@@ -286,9 +286,7 @@ class _AnimatedBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseTop = isDark
-        ? const Color(0xFF0F1A2A)
-        : palette.surfaceTint;
+    final baseTop = isDark ? const Color(0xFF0F1A2A) : palette.surfaceTint;
     final baseBottom = isDark ? const Color(0xFF080C14) : Colors.white;
 
     return DecoratedBox(
@@ -1114,7 +1112,8 @@ class _PrayerPage extends StatelessWidget {
             _InfoRow(
               palette: palette,
               icon: Icons.location_on_rounded,
-              title: _t(l10n, 'onboarding.prayer_loc', 'Location-based timings'),
+              title:
+                  _t(l10n, 'onboarding.prayer_loc', 'Location-based timings'),
               subtitle: _t(
                 l10n,
                 'onboarding.prayer_loc_subtitle',

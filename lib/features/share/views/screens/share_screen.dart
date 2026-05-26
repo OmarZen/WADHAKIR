@@ -191,9 +191,8 @@ class _ShareScreenState extends State<ShareScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0F1A2A)
-          : const Color(0xFFEEF3FB),
+      backgroundColor:
+          isDark ? const Color(0xFF0F1A2A) : const Color(0xFFEEF3FB),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -238,10 +237,8 @@ class _ShareScreenState extends State<ShareScreen> {
             ),
             _ActionBar(
               isSharing: _isSharing,
-              shareImageLabel:
-                  _tr('azkar.share_as_image', 'Share as image'),
-              shareTextLabel:
-                  _tr('azkar.share_text_only', 'Share text only'),
+              shareImageLabel: _tr('azkar.share_as_image', 'Share as image'),
+              shareTextLabel: _tr('azkar.share_text_only', 'Share text only'),
               copyLabel: _tr('azkar.share_copy', 'Copy text'),
               onShareImage: _shareImage,
               onShareText: () => _shareTextOnly(),

@@ -67,8 +67,8 @@ class GlassTokens {
     Color? customTint,
   }) {
     final opacity = fillOpacity(intensity, isDark: isDark);
-    final base = customTint ??
-        (isDark ? const Color(0xFF0D1122) : Colors.white);
+    final base =
+        customTint ?? (isDark ? const Color(0xFF0D1122) : Colors.white);
     return base.withValues(alpha: opacity);
   }
 }

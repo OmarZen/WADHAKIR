@@ -223,9 +223,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                   title: l10n?.translate('floating_dhikr.settings_tile') ??
                       'تذكير الأذكار العائم',
                   icon: Icons.bubble_chart_outlined,
-                  subtitle:
-                      l10n?.translate('floating_dhikr.settings_tile_subtitle') ??
-                          'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
+                  subtitle: l10n?.translate(
+                          'floating_dhikr.settings_tile_subtitle') ??
+                      'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
                   children: [
                     // Material(transparency) guards against the "ListTile
                     // background color or ink splashes may be invisible"

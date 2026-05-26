@@ -35,44 +35,45 @@ class AboutSectionWidgets extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        title: Text(
-          l10n?.translate('settings.about_app') ?? 'حول التطبيق',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            l10n?.translate('settings.app_description') ??
-                'تطبيق وذكّر لمساعدتك في شعائر الإسلام',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 12,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          title: Text(
+            l10n?.translate('settings.about_app') ?? 'حول التطبيق',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(10),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n?.translate('settings.app_description') ??
+                  'تطبيق وذكّر لمساعدتك في شعائر الإسلام',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
           ),
-          child: Icon(
-            Icons.info_outline,
-            color: theme.colorScheme.onPrimary,
-            size: 18,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.info_outline,
+              color: theme.colorScheme.onPrimary,
+              size: 18,
+            ),
           ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+          onTap: () => _showAboutDialog(context),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-        ),
-        onTap: () => _showAboutDialog(context),
-      ),
       ),
     );
   }
@@ -232,44 +233,45 @@ class AboutSectionWidgets extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        title: Text(
-          l10n?.translate('settings.feedback') ?? 'إرسال تعليق',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            l10n?.translate('settings.feedback_description') ??
-                'شاركنا رأيك لتحسين التطبيق',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 12,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          title: Text(
+            l10n?.translate('settings.feedback') ?? 'إرسال تعليق',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(10),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n?.translate('settings.feedback_description') ??
+                  'شاركنا رأيك لتحسين التطبيق',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
           ),
-          child: Icon(
-            Icons.feedback_outlined,
-            color: theme.colorScheme.onPrimary,
-            size: 18,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.feedback_outlined,
+              color: theme.colorScheme.onPrimary,
+              size: 18,
+            ),
           ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+          onTap: () => _openFeedbackForm(context),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-        ),
-        onTap: () => _openFeedbackForm(context),
-      ),
       ),
     );
   }
@@ -323,44 +325,45 @@ class AboutSectionWidgets extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        title: Text(
-          l10n?.translate('settings.website') ?? 'موقع التطبيق',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            l10n?.translate('settings.website_description') ??
-                'زيارة موقع التطبيق الرسمي',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 12,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          title: Text(
+            l10n?.translate('settings.website') ?? 'موقع التطبيق',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(10),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n?.translate('settings.website_description') ??
+                  'زيارة موقع التطبيق الرسمي',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
           ),
-          child: Icon(
-            Icons.language,
-            color: theme.colorScheme.onPrimary,
-            size: 18,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.language,
+              color: theme.colorScheme.onPrimary,
+              size: 18,
+            ),
           ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+          onTap: () => _openWebsite(context),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-        ),
-        onTap: () => _openWebsite(context),
-      ),
       ),
     );
   }
@@ -414,44 +417,45 @@ class AboutSectionWidgets extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        title: Text(
-          l10n?.translate('settings.privacy') ?? 'سياسة الخصوصية',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            l10n?.translate('settings.privacy_description') ??
-                'اطلع على سياسة الخصوصية',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 12,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          title: Text(
+            l10n?.translate('settings.privacy') ?? 'سياسة الخصوصية',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(10),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n?.translate('settings.privacy_description') ??
+                  'اطلع على سياسة الخصوصية',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
           ),
-          child: Icon(
-            Icons.privacy_tip_outlined,
-            color: theme.colorScheme.onPrimary,
-            size: 18,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.privacy_tip_outlined,
+              color: theme.colorScheme.onPrimary,
+              size: 18,
+            ),
           ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+          onTap: () => _openPrivacyPolicy(context),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-        ),
-        onTap: () => _openPrivacyPolicy(context),
-      ),
       ),
     );
   }
@@ -505,44 +509,45 @@ class AboutSectionWidgets extends StatelessWidget {
       child: Material(
         type: MaterialType.transparency,
         child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        title: Text(
-          l10n?.translate('settings.rate_app') ?? 'قيّم التطبيق',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            l10n?.translate('settings.rate_app_description') ??
-                'قيّم التطبيق في متجر التطبيقات',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 12,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          title: Text(
+            l10n?.translate('settings.rate_app') ?? 'قيّم التطبيق',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary,
-            borderRadius: BorderRadius.circular(10),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              l10n?.translate('settings.rate_app_description') ??
+                  'قيّم التطبيق في متجر التطبيقات',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 12,
+              ),
+            ),
           ),
-          child: Icon(
-            Icons.star_rate,
-            color: theme.colorScheme.onPrimary,
-            size: 18,
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.star_rate,
+              color: theme.colorScheme.onPrimary,
+              size: 18,
+            ),
           ),
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+          onTap: () => _openPlayStore(context),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 14,
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-        ),
-        onTap: () => _openPlayStore(context),
-      ),
       ),
     );
   }

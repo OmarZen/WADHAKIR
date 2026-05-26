@@ -250,8 +250,7 @@ class _FloatingDhikrSettingsScreenState
                             ) ??
                             'منح الصلاحية',
                         onAction: () async {
-                          final granted =
-                              await _service.requestPermission();
+                          final granted = await _service.requestPermission();
                           if (!mounted) return;
                           setState(() => _hasPermission = granted);
                         },
@@ -313,8 +312,7 @@ class _FloatingDhikrSettingsScreenState
                           child: _OpacityControl(
                             value: _settings.opacity,
                             onPreview: (v) => setState(
-                              () => _settings =
-                                  _settings.copyWith(opacity: v),
+                              () => _settings = _settings.copyWith(opacity: v),
                             ),
                             onCommit: (v) =>
                                 _persist(_settings.copyWith(opacity: v)),
@@ -1070,6 +1068,7 @@ class _SecondaryCta extends StatelessWidget {
 
   final String label;
   final IconData icon;
+
   /// When `true`, paints with `colorScheme.error`. Otherwise the brand
   /// primary blue. Used here only for the "stop now" button — that
   /// destructive action should look slightly different from the brand.

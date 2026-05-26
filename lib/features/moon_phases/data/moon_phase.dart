@@ -93,8 +93,7 @@ class MoonPhaseCalculator {
     // anomaly drifts ~1/27.55 day. Reference perigee 2000-01-04.
     const double anomalisticMonth = 27.55454989;
     const double refPerigeeJd = 2451548.65;
-    final anomalyFraction =
-        ((jd - refPerigeeJd) / anomalisticMonth) % 1.0;
+    final anomalyFraction = ((jd - refPerigeeJd) / anomalisticMonth) % 1.0;
     final anomalyAngle = 2 * math.pi * anomalyFraction;
     // 385,000 km mean ± 20,000 km swing is a good first-order approximation.
     final distanceKm = 385000.6 - 20905.355 * math.cos(anomalyAngle);
@@ -102,8 +101,7 @@ class MoonPhaseCalculator {
     // Approximate ecliptic longitude. The moon advances ~13.176° per day
     // along the ecliptic. Reference longitude at JD 2451550.26 ≈ 218.32°.
     const double meanMotionDegPerDay = 13.176358;
-    final longitudeRaw =
-        218.32 + meanMotionDegPerDay * (jd - 2451550.26);
+    final longitudeRaw = 218.32 + meanMotionDegPerDay * (jd - 2451550.26);
     final longitude = longitudeRaw % 360.0;
     final eclipticLongitude = longitude < 0 ? longitude + 360 : longitude;
 
@@ -148,8 +146,8 @@ class MoonPhaseCalculator {
   static double _julianDay(DateTime utc) {
     int y = utc.year;
     int m = utc.month;
-    final d = utc.day +
-        (utc.hour + utc.minute / 60.0 + utc.second / 3600.0) / 24.0;
+    final d =
+        utc.day + (utc.hour + utc.minute / 60.0 + utc.second / 3600.0) / 24.0;
     if (m <= 2) {
       y -= 1;
       m += 12;

@@ -146,7 +146,8 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     final offset = DateTime.now().timeZoneOffset;
     final hours = offset.inHours;
     // POSIX-style "Etc/GMT" inverts the sign: UTC+3 -> Etc/GMT-3.
-    final etc = hours == 0 ? 'UTC' : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
+    final etc =
+        hours == 0 ? 'UTC' : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
     debugPrint('NotificationRepository: timezone fallback to $etc');
     return etc;
   }

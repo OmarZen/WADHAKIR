@@ -104,4 +104,3 @@ class _BarSlot extends StatelessWidget {
     );
   }
 }
-

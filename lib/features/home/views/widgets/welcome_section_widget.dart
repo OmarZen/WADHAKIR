@@ -531,115 +531,115 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-              // Compact Header with Prayer Name
-              Column(
-                children: [
-                  Text(
-                    l10n?.translate('home.next_prayer') ?? 'الصلاة القادمة',
-                    style: TextStyle(
-                      fontSize: labelSize,
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Almarai',
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  // Compact Header with Prayer Name
+                  Column(
                     children: [
-                      Icon(
-                        Icons.mosque_rounded,
-                        color: Colors.white,
-                        size: prayerNameSize * 0.9,
-                      ),
-                      SizedBox(width: 6),
                       Text(
-                        nextPrayerName,
+                        l10n?.translate('home.next_prayer') ?? 'الصلاة القادمة',
                         style: TextStyle(
-                          fontSize: prayerNameSize,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                          fontSize: labelSize,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w500,
                           fontFamily: 'Almarai',
+                          letterSpacing: 0.5,
                         ),
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.mosque_rounded,
+                            color: Colors.white,
+                            size: prayerNameSize * 0.9,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            nextPrayerName,
+                            style: TextStyle(
+                              fontSize: prayerNameSize,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Almarai',
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
 
-              SizedBox(height: isDesktop ? 10 : 8),
+                  SizedBox(height: isDesktop ? 10 : 8),
 
-              // Compact Circular Progress Indicator
-              SizedBox(
-                width: circleSize,
-                height: circleSize,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Background Circle
-                    SizedBox(
-                      width: circleSize,
-                      height: circleSize,
-                      child: CircularProgressIndicator(
-                        value: 1.0,
-                        strokeWidth: strokeWidth,
-                        backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white.withValues(alpha: 0.2),
-                        ),
-                      ),
-                    ),
-                    // Progress Circle with gradient effect
-                    SizedBox(
-                      width: circleSize,
-                      height: circleSize,
-                      child: CircularProgressIndicator(
-                        value: progress.clamp(0.0, 1.0),
-                        strokeWidth: strokeWidth,
-                        backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
-                        strokeCap: StrokeCap.round,
-                      ),
-                    ),
-                    // Center Content - Minimalist Time Display
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
+                  // Compact Circular Progress Indicator
+                  SizedBox(
+                    width: circleSize,
+                    height: circleSize,
+                    child: Stack(
+                      alignment: Alignment.center,
                       children: [
-                        // Remaining Time - Always show H:MM:SS format
-                        Text(
-                          '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            fontSize: timeSize,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Courier',
-                            height: 1.1,
-                            letterSpacing: 0.5,
+                        // Background Circle
+                        SizedBox(
+                          width: circleSize,
+                          height: circleSize,
+                          child: CircularProgressIndicator(
+                            value: 1.0,
+                            strokeWidth: strokeWidth,
+                            backgroundColor: Colors.transparent,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white.withValues(alpha: 0.2),
+                            ),
                           ),
                         ),
-                        SizedBox(height: 2),
-                        // Time Unit Label - Very compact
-                        Text(
-                          l10n?.translate('home.remaining') ?? 'متبقي',
-                          style: TextStyle(
-                            fontSize: labelSize,
-                            color: Colors.white.withValues(alpha: 0.85),
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Almarai',
-                            letterSpacing: 0.3,
+                        // Progress Circle with gradient effect
+                        SizedBox(
+                          width: circleSize,
+                          height: circleSize,
+                          child: CircularProgressIndicator(
+                            value: progress.clamp(0.0, 1.0),
+                            strokeWidth: strokeWidth,
+                            backgroundColor: Colors.transparent,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                            strokeCap: StrokeCap.round,
                           ),
+                        ),
+                        // Center Content - Minimalist Time Display
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Remaining Time - Always show H:MM:SS format
+                            Text(
+                              '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: timeSize,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Courier',
+                                height: 1.1,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            // Time Unit Label - Very compact
+                            Text(
+                              l10n?.translate('home.remaining') ?? 'متبقي',
+                              style: TextStyle(
+                                fontSize: labelSize,
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Almarai',
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
             ),
           ),
         );

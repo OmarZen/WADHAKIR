@@ -76,181 +76,185 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     return Material(
       type: MaterialType.transparency,
       child: Column(
-      children: [
-        SwitchListTile.adaptive(
-          value: appLockSettings.enabled,
-          onChanged: (enabled) => _handleAppLockToggle(context, enabled),
-          title: Text(
-            l10n?.translate('settings.app_lock_enable') ??
-                'Enable app lock during prayer',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+        children: [
+          SwitchListTile.adaptive(
+            value: appLockSettings.enabled,
+            onChanged: (enabled) => _handleAppLockToggle(context, enabled),
+            title: Text(
+              l10n?.translate('settings.app_lock_enable') ??
+                  'Enable app lock during prayer',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          subtitle: Text(
-            l10n?.translate('settings.app_lock_enable_subtitle') ??
-                'Lock selected apps during prayer windows',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            subtitle: Text(
+              l10n?.translate('settings.app_lock_enable_subtitle') ??
+                  'Lock selected apps during prayer windows',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
             ),
+            activeThumbColor: theme.colorScheme.primary,
           ),
-          activeThumbColor: theme.colorScheme.primary,
-        ),
-        _divider(theme),
-        ListTile(
-          leading: const Icon(Icons.apps_outlined),
-          title: Text(
-            l10n?.translate('settings.app_lock_selected_apps') ??
-                'Selected apps to lock',
-          ),
-          subtitle: Text(
-            selectedAppsCount == 0
-                ? (l10n?.translate('settings.app_lock_no_apps_selected') ??
-                    'No apps selected yet')
-                : '$selectedAppsCount ${l10n?.translate('settings.app_lock_apps_count_suffix') ?? 'apps selected'}',
-          ),
-          trailing: TextButton(
-            onPressed: () => _showAppPicker(context),
-            style: ButtonStyle(
-              foregroundColor: isDark
-                  ? WidgetStateProperty.all(theme.colorScheme.onPrimary)
-                  : null,
-            ),
-            child: Text(
-              l10n?.translate('settings.app_lock_manage_apps') ?? 'Manage',
-            ),
-          ),
-        ),
-        _divider(theme),
-        ListTile(
-          leading: const Icon(Icons.security_outlined),
-          title: Text(
-            l10n?.translate('settings.app_lock_permissions_title') ??
-                'Permissions setup',
-          ),
-          subtitle: FutureBuilder<AppLockPermissionStatus>(
-            future: _permissionStatusFuture,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return Text(
-                  l10n?.translate('settings.app_lock_permissions_loading') ??
-                      'Checking permissions...',
-                );
-              }
-
-              final status = snapshot.data!;
-              final usage = status.usageAccessGranted
-                  ? (l10n?.translate('settings.app_lock_permission_granted') ??
-                      'Granted')
-                  : (l10n?.translate('settings.app_lock_permission_missing') ??
-                      'Missing');
-              final overlay = status.overlayGranted
-                  ? (l10n?.translate('settings.app_lock_permission_granted') ??
-                      'Granted')
-                  : (l10n?.translate('settings.app_lock_permission_missing') ??
-                      'Missing');
-
-              return Text('Usage: $usage • Overlay: $overlay');
-            },
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => _showPermissionsActions(context),
-        ),
-        if (appLockSettings.enabled) ...[
           _divider(theme),
           ListTile(
-            leading: const Icon(Icons.timer_outlined),
+            leading: const Icon(Icons.apps_outlined),
             title: Text(
-              l10n?.translate('settings.app_lock_duration_title') ??
-                  'Lock duration',
+              l10n?.translate('settings.app_lock_selected_apps') ??
+                  'Selected apps to lock',
             ),
             subtitle: Text(
-              _durationLabelForSettings(
-                appLockSettings.lockDurationMinutes,
-                l10n,
+              selectedAppsCount == 0
+                  ? (l10n?.translate('settings.app_lock_no_apps_selected') ??
+                      'No apps selected yet')
+                  : '$selectedAppsCount ${l10n?.translate('settings.app_lock_apps_count_suffix') ?? 'apps selected'}',
+            ),
+            trailing: TextButton(
+              onPressed: () => _showAppPicker(context),
+              style: ButtonStyle(
+                foregroundColor: isDark
+                    ? WidgetStateProperty.all(theme.colorScheme.onPrimary)
+                    : null,
+              ),
+              child: Text(
+                l10n?.translate('settings.app_lock_manage_apps') ?? 'Manage',
               ),
             ),
-            trailing: DropdownButton<String>(
-              value: _durationValueFromMinutes(
-                appLockSettings.lockDurationMinutes,
-              ),
-              underline: const SizedBox.shrink(),
-              items: [
-                DropdownMenuItem(
-                  value: '10',
-                  child: Text(
-                    l10n?.translate('settings.app_lock_duration_10_min') ??
-                        '10 min',
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: '15',
-                  child: Text(
-                    l10n?.translate('settings.app_lock_duration_15_min') ??
-                        '15 min',
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: '20',
-                  child: Text(
-                    l10n?.translate('settings.app_lock_duration_20_min') ??
-                        '20 min',
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: _durationUntilConfirm,
-                  child: Text(
-                    l10n?.translate(
-                          'settings.app_lock_duration_until_confirm',
-                        ) ??
-                        'Until confirm',
-                  ),
-                ),
-              ],
-              onChanged: (value) async {
-                if (value == null) return;
-                final duration = _minutesFromDurationValue(value);
-                await widget.cubit.setLockDurationMinutes(duration);
-                await _syncMonitorConfigIfEnabled(
-                  lockDurationMinutes: duration,
-                );
+          ),
+          _divider(theme),
+          ListTile(
+            leading: const Icon(Icons.security_outlined),
+            title: Text(
+              l10n?.translate('settings.app_lock_permissions_title') ??
+                  'Permissions setup',
+            ),
+            subtitle: FutureBuilder<AppLockPermissionStatus>(
+              future: _permissionStatusFuture,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Text(
+                    l10n?.translate('settings.app_lock_permissions_loading') ??
+                        'Checking permissions...',
+                  );
+                }
+
+                final status = snapshot.data!;
+                final usage = status.usageAccessGranted
+                    ? (l10n?.translate(
+                            'settings.app_lock_permission_granted') ??
+                        'Granted')
+                    : (l10n?.translate(
+                            'settings.app_lock_permission_missing') ??
+                        'Missing');
+                final overlay = status.overlayGranted
+                    ? (l10n?.translate(
+                            'settings.app_lock_permission_granted') ??
+                        'Granted')
+                    : (l10n?.translate(
+                            'settings.app_lock_permission_missing') ??
+                        'Missing');
+
+                return Text('Usage: $usage • Overlay: $overlay');
               },
             ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showPermissionsActions(context),
           ),
-          _divider(theme),
-          SwitchListTile.adaptive(
-            value: appLockSettings.emergencyBypassEnabled,
-            onChanged: (enabled) async {
-              await widget.cubit.toggleEmergencyBypass(enabled);
-              await _syncMonitorConfigIfEnabled(
-                emergencyBypassEnabled: enabled,
-              );
-            },
-            title: Text(
-              l10n?.translate('settings.app_lock_bypass_title') ??
-                  'Emergency bypass',
+          if (appLockSettings.enabled) ...[
+            _divider(theme),
+            ListTile(
+              leading: const Icon(Icons.timer_outlined),
+              title: Text(
+                l10n?.translate('settings.app_lock_duration_title') ??
+                    'Lock duration',
+              ),
+              subtitle: Text(
+                _durationLabelForSettings(
+                  appLockSettings.lockDurationMinutes,
+                  l10n,
+                ),
+              ),
+              trailing: DropdownButton<String>(
+                value: _durationValueFromMinutes(
+                  appLockSettings.lockDurationMinutes,
+                ),
+                underline: const SizedBox.shrink(),
+                items: [
+                  DropdownMenuItem(
+                    value: '10',
+                    child: Text(
+                      l10n?.translate('settings.app_lock_duration_10_min') ??
+                          '10 min',
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: '15',
+                    child: Text(
+                      l10n?.translate('settings.app_lock_duration_15_min') ??
+                          '15 min',
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: '20',
+                    child: Text(
+                      l10n?.translate('settings.app_lock_duration_20_min') ??
+                          '20 min',
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: _durationUntilConfirm,
+                    child: Text(
+                      l10n?.translate(
+                            'settings.app_lock_duration_until_confirm',
+                          ) ??
+                          'Until confirm',
+                    ),
+                  ),
+                ],
+                onChanged: (value) async {
+                  if (value == null) return;
+                  final duration = _minutesFromDurationValue(value);
+                  await widget.cubit.setLockDurationMinutes(duration);
+                  await _syncMonitorConfigIfEnabled(
+                    lockDurationMinutes: duration,
+                  );
+                },
+              ),
             ),
-            subtitle: Text(
-              l10n?.translate('settings.app_lock_bypass_subtitle') ??
-                  'Hold 3 seconds, then confirm to unlock temporarily',
+            _divider(theme),
+            SwitchListTile.adaptive(
+              value: appLockSettings.emergencyBypassEnabled,
+              onChanged: (enabled) async {
+                await widget.cubit.toggleEmergencyBypass(enabled);
+                await _syncMonitorConfigIfEnabled(
+                  emergencyBypassEnabled: enabled,
+                );
+              },
+              title: Text(
+                l10n?.translate('settings.app_lock_bypass_title') ??
+                    'Emergency bypass',
+              ),
+              subtitle: Text(
+                l10n?.translate('settings.app_lock_bypass_subtitle') ??
+                    'Hold 3 seconds, then confirm to unlock temporarily',
+              ),
             ),
-          ),
-          _divider(theme),
-          SwitchListTile.adaptive(
-            value: appLockSettings.useAccessibilityFallback,
-            onChanged: widget.cubit.toggleAccessibilityFallback,
-            title: Text(
-              l10n?.translate('settings.app_lock_accessibility_fallback') ??
-                  'Enable accessibility fallback',
+            _divider(theme),
+            SwitchListTile.adaptive(
+              value: appLockSettings.useAccessibilityFallback,
+              onChanged: widget.cubit.toggleAccessibilityFallback,
+              title: Text(
+                l10n?.translate('settings.app_lock_accessibility_fallback') ??
+                    'Enable accessibility fallback',
+              ),
+              subtitle: Text(
+                l10n?.translate(
+                        'settings.app_lock_accessibility_fallback_subtitle') ??
+                    'Use accessibility only when usage access is not enough',
+              ),
             ),
-            subtitle: Text(
-              l10n?.translate(
-                      'settings.app_lock_accessibility_fallback_subtitle') ??
-                  'Use accessibility only when usage access is not enough',
-            ),
-          ),
+          ],
         ],
-      ],
       ),
     );
   }

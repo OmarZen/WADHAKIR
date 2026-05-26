@@ -28,8 +28,8 @@ class _MoonPhaseDetailScreenState extends State<MoonPhaseDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _selected =
-        DateTime(widget.initialDate.year, widget.initialDate.month, widget.initialDate.day);
+    _selected = DateTime(widget.initialDate.year, widget.initialDate.month,
+        widget.initialDate.day);
   }
 
   @override
@@ -181,9 +181,8 @@ class _DateChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final weekday = DateFormat.E().format(date).toUpperCase();
     final day = DateFormat.MMMd().format(date);
-    final color = selected
-        ? Colors.white
-        : Colors.white.withValues(alpha: 0.55);
+    final color =
+        selected ? Colors.white : Colors.white.withValues(alpha: 0.55);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -323,8 +322,8 @@ class _MoreInfo extends StatelessWidget {
           ),
           const SizedBox(height: Spacing.md),
           _InfoRow(
-            label: l10n?.translate('moon_phases.moon_distance') ??
-                'Moon distance',
+            label:
+                l10n?.translate('moon_phases.moon_distance') ?? 'Moon distance',
             value: formatKm(info.distanceKm),
           ),
           _InfoRow(
@@ -332,7 +331,8 @@ class _MoreInfo extends StatelessWidget {
             value: formatDays(info.ageDays),
           ),
           _InfoRow(
-            label: l10n?.translate('moon_phases.illumination') ?? 'Illumination',
+            label:
+                l10n?.translate('moon_phases.illumination') ?? 'Illumination',
             value: formatPercent(info.illumination),
           ),
           _InfoRow(
@@ -501,8 +501,7 @@ class _SparklinePainter extends CustomPainter {
         .map((t) => TextPainter(
               text: TextSpan(text: t, style: textStyle),
               textDirection: ui.TextDirection.ltr,
-            )
-              ..layout())
+            )..layout())
         .toList();
     for (int i = 0; i < tps.length; i++) {
       final y = size.height * (i / 2);
@@ -590,7 +589,5 @@ class _SparklinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SparklinePainter old) =>
-      old.points != points ||
-      old.progress != progress ||
-      old.accent != accent;
+      old.points != points || old.progress != progress || old.accent != accent;
 }

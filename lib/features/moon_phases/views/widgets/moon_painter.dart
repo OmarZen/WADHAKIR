@@ -38,8 +38,7 @@ class MoonDisc extends StatefulWidget {
   State<MoonDisc> createState() => _MoonDiscState();
 }
 
-class _MoonDiscState extends State<MoonDisc>
-    with TickerProviderStateMixin {
+class _MoonDiscState extends State<MoonDisc> with TickerProviderStateMixin {
   late final AnimationController _breathController;
   late final AnimationController _rotateController;
 
@@ -189,7 +188,8 @@ class _MoonPainter extends CustomPainter {
       ).createShader(Rect.fromCircle(center: center, radius: radius));
 
     canvas.save();
-    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
+    canvas.clipPath(
+        Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
 
     if (p < 0.5) {
       // Waxing: lit area is on the right.
@@ -288,7 +288,8 @@ class _MoonPainter extends CustomPainter {
       [-0.45, -0.15, 0.05],
     ];
     canvas.save();
-    canvas.clipPath(Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
+    canvas.clipPath(
+        Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
     for (final c in craters) {
       canvas.drawCircle(
         Offset(center.dx + c[0] * radius, center.dy + c[1] * radius),

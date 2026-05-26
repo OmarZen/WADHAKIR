@@ -45,8 +45,7 @@ class _MoonPhasesCalendarScreenState extends State<MoonPhasesCalendarScreen>
 
   void _stepMonth(int delta) {
     setState(() {
-      _viewedMonth =
-          DateTime(_viewedMonth.year, _viewedMonth.month + delta, 1);
+      _viewedMonth = DateTime(_viewedMonth.year, _viewedMonth.month + delta, 1);
       _phases = MoonPhaseCalculator.forMonth(_viewedMonth);
     });
   }
@@ -188,8 +187,7 @@ class _MoonPhasesCalendarScreenState extends State<MoonPhasesCalendarScreen>
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) =>
-                      MoonPhaseDetailScreen(initialDate: info.date),
+                  builder: (_) => MoonPhaseDetailScreen(initialDate: info.date),
                 ),
               );
             },
@@ -441,7 +439,8 @@ class _CalendarMonthHeader extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: const Color(0xFF0B1024),
       padding: const EdgeInsets.symmetric(

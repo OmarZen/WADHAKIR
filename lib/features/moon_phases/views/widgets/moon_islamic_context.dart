@@ -43,9 +43,8 @@ class MoonIslamicContext extends StatelessWidget {
                 'هُوَ ٱلَّذِى جَعَلَ ٱلشَّمْسَ ضِيَآءًۭ وَٱلْقَمَرَ نُورًۭا '
                 'وَقَدَّرَهُۥ مَنَازِلَ لِتَعْلَمُوا۟ عَدَدَ ٱلسِّنِينَ '
                 'وَٱلْحِسَابَ',
-            reference:
-                l10n?.translate('moon_phases.verse_yunus_ref') ??
-                    'سورة يونس · الآية 5',
+            reference: l10n?.translate('moon_phases.verse_yunus_ref') ??
+                'سورة يونس · الآية 5',
             commentary: l10n?.translate('moon_phases.verse_yunus_explain') ??
                 'القمر آية من آيات الله، جعله نوراً وقدّر له منازل '
                     'يستدلّ بها الناس على عدد السنين وحساب الأوقات.',
@@ -68,12 +67,10 @@ class MoonIslamicContext extends StatelessWidget {
             arabicVerse:
                 'يَسْـَٔلُونَكَ عَنِ ٱلْأَهِلَّةِ ۖ قُلْ هِىَ مَوَٰقِيتُ '
                 'لِلنَّاسِ وَٱلْحَجِّ',
-            reference:
-                l10n?.translate('moon_phases.verse_baqarah_ref') ??
-                    'سورة البقرة · الآية 189',
-            commentary:
-                l10n?.translate('moon_phases.verse_baqarah_explain') ??
-                    'بالأهلّة تُعرف الشهور القمرية: شهر رمضان للصيام، شهور '
+            reference: l10n?.translate('moon_phases.verse_baqarah_ref') ??
+                'سورة البقرة · الآية 189',
+            commentary: l10n?.translate('moon_phases.verse_baqarah_explain') ??
+                'بالأهلّة تُعرف الشهور القمرية: شهر رمضان للصيام، شهور '
                     'الحج، وبه تضبط مواقيت العبادات والمعاملات في حياة '
                     'المسلم.',
           ),
@@ -168,12 +165,10 @@ class _VerseCard extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color:
-                    MoonIslamicContext._brandGlow.withValues(alpha: 0.18),
+                color: MoonIslamicContext._brandGlow.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(Radii.pill),
                 border: Border.all(
-                  color:
-                      MoonIslamicContext._brandGlow.withValues(alpha: 0.55),
+                  color: MoonIslamicContext._brandGlow.withValues(alpha: 0.55),
                 ),
               ),
               child: Text(
@@ -389,20 +384,20 @@ class CrescentSightingCard extends StatelessWidget {
     final verdict = _verdictFor(info.ageDays);
     final (verdictLabel, verdictColor) = switch (verdict) {
       _CrescentVerdict.tooYoung => (
-        l10n?.translate('moon_phases.sighting_verdict_too_young') ??
-            'صغير جداً للرؤية',
-        const Color(0xFFE0A458),
-      ),
+          l10n?.translate('moon_phases.sighting_verdict_too_young') ??
+              'صغير جداً للرؤية',
+          const Color(0xFFE0A458),
+        ),
       _CrescentVerdict.difficult => (
-        l10n?.translate('moon_phases.sighting_verdict_difficult') ??
-            'يحتاج سماء صافية',
-        const Color(0xFFE3C766),
-      ),
+          l10n?.translate('moon_phases.sighting_verdict_difficult') ??
+              'يحتاج سماء صافية',
+          const Color(0xFFE3C766),
+        ),
       _CrescentVerdict.easy => (
-        l10n?.translate('moon_phases.sighting_verdict_easy') ??
-            'الرؤية ممكنة بالعين المجردة',
-        const Color(0xFF7CD49C),
-      ),
+          l10n?.translate('moon_phases.sighting_verdict_easy') ??
+              'الرؤية ممكنة بالعين المجردة',
+          const Color(0xFF7CD49C),
+        ),
     };
 
     return Padding(
@@ -467,24 +462,22 @@ class CrescentSightingCard extends StatelessWidget {
             const SizedBox(height: Spacing.sm),
             _SightingFact(
               icon: Icons.wb_sunny_outlined,
-              label: l10n?.translate('moon_phases.sighting_when') ??
-                  'متى تنظر',
+              label: l10n?.translate('moon_phases.sighting_when') ?? 'متى تنظر',
               value: l10n?.translate('moon_phases.sighting_when_value') ??
                   'بعد غروب الشمس مباشرة (وقت المغرب).',
             ),
             const SizedBox(height: Spacing.sm),
             _SightingFact(
               icon: Icons.explore_outlined,
-              label: l10n?.translate('moon_phases.sighting_where') ??
-                  'أين تنظر',
+              label:
+                  l10n?.translate('moon_phases.sighting_where') ?? 'أين تنظر',
               value: l10n?.translate('moon_phases.sighting_where_value') ??
                   'منخفض في الأفق الغربي حيث غربت الشمس.',
             ),
             const SizedBox(height: Spacing.sm),
             _SightingFact(
               icon: Icons.visibility_outlined,
-              label: l10n?.translate('moon_phases.sighting_how') ??
-                  'كيف تنظر',
+              label: l10n?.translate('moon_phases.sighting_how') ?? 'كيف تنظر',
               value: l10n?.translate('moon_phases.sighting_how_value') ??
                   'بالعين المجردة في سماء صافية بعيداً عن أضواء المدينة.',
             ),
@@ -496,10 +489,8 @@ class CrescentSightingCard extends StatelessWidget {
 
   String _formatMoonAgeHours(double ageDays, AppLocalizations? l10n) {
     final hours = (ageDays * 24).round();
-    final hoursLabel =
-        l10n?.translate('moon_phases.hours') ?? 'ساعة';
-    final daysLabel =
-        l10n?.translate('moon_phases.days_label') ?? 'يوم';
+    final hoursLabel = l10n?.translate('moon_phases.hours') ?? 'ساعة';
+    final daysLabel = l10n?.translate('moon_phases.days_label') ?? 'يوم';
     if (hours < 48) return '$hours $hoursLabel';
     final days = (hours / 24).floor();
     final restHours = hours - days * 24;

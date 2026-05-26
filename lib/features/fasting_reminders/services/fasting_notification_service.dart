@@ -69,9 +69,7 @@ class FastingNotificationService {
     } catch (_) {}
     final offset = DateTime.now().timeZoneOffset;
     final hours = offset.inHours;
-    return hours == 0
-        ? 'UTC'
-        : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
+    return hours == 0 ? 'UTC' : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
   }
 
   /// Initialize the notification channel.
@@ -891,8 +889,7 @@ class FastingNotificationService {
           id: 5999,
           channelKey: _channelKey,
           title: '🌙 اختبار تذكير الصيام',
-          body:
-              'هذا تنبيه تجريبي للتأكد من أن تذكيرات الصيام تعمل بشكل صحيح.',
+          body: 'هذا تنبيه تجريبي للتأكد من أن تذكيرات الصيام تعمل بشكل صحيح.',
           notificationLayout: NotificationLayout.Default,
           category: NotificationCategory.Reminder,
           wakeUpScreen: true,

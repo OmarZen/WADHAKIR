@@ -370,7 +370,7 @@ class AboutSectionWidgets extends StatelessWidget {
 
   static void _openWebsite(BuildContext context) async {
     final l10n = context.l10n;
-    final url = Uri.parse('https://wadhakir.vercel.app/');
+    final url = Uri.parse('https://wadhakir-app.netlify.app/');
 
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -462,7 +462,7 @@ class AboutSectionWidgets extends StatelessWidget {
 
   static void _openPrivacyPolicy(BuildContext context) async {
     final l10n = context.l10n;
-    final url = Uri.parse('https://wadhakir.vercel.app/privacy');
+    final url = Uri.parse('https://wadhakir-app.netlify.app/privacy');
 
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);

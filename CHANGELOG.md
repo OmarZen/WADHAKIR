@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Daily Quran Reading Plan (Wird)** — set a daily reading goal (pages, rubʿ, ḥizb, or juzʾ) and a start page, get a generated schedule with the expected khatma (completion) date, a daily reminder at your chosen time, and day-by-day progress tracking. Reachable from the home grid and the new daily-progress strip.
+- **40 Hadith of Imam an-Nawawi** — browse the full collection with Arabic text + English translation; copy or share any hadith as a branded card.
+- **After-Prayer Adhkar** — post-prayer remembrances with per-dhikr counters, an overall progress indicator, and reset; progress persists between sessions.
+- **Home-screen sections** — a **daily-progress strip** (Wird + after-prayer Adhkar at a glance) and a **religious-occasions strip** (upcoming notable Islamic days) above a reorganized, labelled feature grid with new Wird and 40-Hadith tiles.
+- **Background reliability** — the app now requests a one-time **battery-optimization exemption** and adds a boot receiver + a native foreground service, so prayer notifications, fasting reminders, and the floating-dhikr overlay keep working in the background and survive a device reboot.
 - **Two new glassmorphism prayer widgets** — "Prayer Detail" (English) and "Prayer Next" (Arabic). Rendered as Flutter images via `home_widget`'s `renderFlutterWidget`, with a real frosted-glass effect (blurred coloured light-orbs + frost veil + specular edge), the five daily prayers with a progress bar, and ornate **Aref Ruqaa** Arabic calligraphy for the next-prayer name. Both open the app on tap; the content is `FittedBox`-scaled so it never overflows at any widget size.
 - **Live "Prayer Clock" widget** — a glassy native widget with a self-ticking `TextClock` (current time) and a live `Chronometer` countdown to the next prayer, plus the Hijri/Gregorian date and next-prayer name.
 - **Live clock** added to the compact prayer-times widget header.
@@ -16,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Settings redesigned** — sections (App Lock, Fasting, Notifications) now open as their own standalone pages with a branded header instead of expanding inline, keeping the main Settings screen clean.
+- **Share-as-image is now single-language** (no longer bilingual). A new passage layout supports long content (e.g. the 40 Hadith) at full height, with an optional translation block below a divider.
+- **forui theming** now derives its colours from the active Material `ColorScheme`, so forui and Material components stay visually in sync across light/dark.
 - **Native widgets restyled to glass** — the Hijri calendar, compact prayer, and prayer-times list widgets now share a frosted dark-glass background, translucent inner sections, the Almarai font, and a unified blue accent palette.
 - **Hijri calendar month scrolling is now instant** — arrow navigation is computed natively in Kotlin from a pre-computed month cache instead of round-tripping through a Flutter background isolate, eliminating the lag/flashing. Day taps update the date card instantly too.
 - **Widget default sizes tuned** — the Hijri calendar defaults to a usable 4×5 size with tighter day cells (numbers are no longer squashed on placement); the compact prayer widget defaults to 3×2; the list widget is taller and vertically resizable.
@@ -27,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Fasting advance reminders** — fixed bugs in the "remind me before a fasting day" notifications; the advance-reminder settings dialog was reworked (migrated to a forui dialog with a constrained stepper that no longer overflows).
 - **"Prayer Clock" widget failing to load** — a plain `<View>` divider (not permitted in RemoteViews) was replaced with a `FrameLayout`.
 - Compact prayer widget no longer clips its content at constrained heights.
 

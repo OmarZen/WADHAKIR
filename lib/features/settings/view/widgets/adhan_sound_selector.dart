@@ -244,7 +244,14 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           // Sound options list
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              // Pad the bottom by the system gesture/nav inset so the last
+              // sound option clears the navigation bar under edge-to-edge.
+              padding: EdgeInsets.fromLTRB(
+                12,
+                12,
+                12,
+                12 + MediaQuery.of(context).viewPadding.bottom,
+              ),
               itemCount:
                   widget.soundOptions.length +
                   1, // +1 for default option at top

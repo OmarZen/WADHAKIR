@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fasting advance reminders** — fixed bugs in the "remind me before a fasting day" notifications; the advance-reminder settings dialog was reworked (migrated to a forui dialog with a constrained stepper that no longer overflows).
 - **"Prayer Clock" widget failing to load** — a plain `<View>` divider (not permitted in RemoteViews) was replaced with a `FrameLayout`.
 - Compact prayer widget no longer clips its content at constrained heights.
+- **Android 15/16 edge-to-edge compliance** — addressed the Play Console "edge-to-edge" advisories. The splash theme's display-cutout mode was changed from the deprecated `shortEdges` to `always` and the legacy `windowFullscreen` flag was removed; the app no longer triggers the deprecated `Window.setNavigationBarColor` (the `SystemUiOverlayStyle.light/.dark` presets carry a black nav-bar colour) — replaced with icon-brightness-only overlay styles that leave the system bars transparent, which is the correct edge-to-edge behaviour.
+- **Bottom-sheet insets** — the tall modal sheets (tasbih / raqia / after-prayer azkar, Allah's names, adhan-sound picker, Islamic-history detail, radio now-playing, nearest-mosque) now pad their content by the system navigation-bar inset so the last item is no longer hidden behind the gesture bar under edge-to-edge.
 
 ### Version
 

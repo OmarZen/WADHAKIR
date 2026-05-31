@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
+import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 
 /// Builds a forui [FThemeData] from the app's live Material [ThemeData].
@@ -19,8 +19,8 @@ FThemeData buildForuiTheme(ThemeData theme) {
   final colors = FColors(
     brightness: cs.brightness,
     systemOverlayStyle: isDark
-        ? SystemUiOverlayStyle.light
-        : SystemUiOverlayStyle.dark,
+        ? kOverlayStyleLightIcons
+        : kOverlayStyleDarkIcons,
     barrier: Colors.black54,
     background: theme.scaffoldBackgroundColor,
     foreground: cs.onSurface,

@@ -55,6 +55,34 @@ const Color darkLastThirdPrayerColor = Color(
 const String _primaryFont = 'Almarai';
 const String _religiousFont = 'Jomhuria';
 
+// Edge-to-edge safe system UI overlay styles.
+//
+// These deliberately leave `statusBarColor` and `systemNavigationBarColor`
+// null so the Flutter engine does NOT call the deprecated
+// `Window.setStatusBarColor` / `Window.setNavigationBarColor` APIs that
+// Android 15 flags. (The built-in `SystemUiOverlayStyle.light`/`.dark` presets
+// carry a non-null black `systemNavigationBarColor`, which triggers the call.)
+// Leaving the bars transparent is also the correct edge-to-edge behavior:
+// content draws behind them. Only icon brightness is controlled.
+
+/// For surfaces on a dark/brand-blue background that want WHITE system-bar icons.
+const SystemUiOverlayStyle kOverlayStyleLightIcons = SystemUiOverlayStyle(
+  statusBarColor: null,
+  systemNavigationBarColor: null,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark, // iOS counterpart of light icons
+  systemNavigationBarIconBrightness: Brightness.light,
+);
+
+/// For surfaces on a light background that want DARK system-bar icons.
+const SystemUiOverlayStyle kOverlayStyleDarkIcons = SystemUiOverlayStyle(
+  statusBarColor: null,
+  systemNavigationBarColor: null,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light, // iOS counterpart of dark icons
+  systemNavigationBarIconBrightness: Brightness.dark,
+);
+
 final ThemeData lightTheme = ThemeData(
   useMaterial3: false, // Required by quran_library package
   brightness: Brightness.light,
@@ -126,7 +154,7 @@ final ThemeData lightTheme = ThemeData(
       fontWeight: FontWeight.w600,
       color: Colors.white,
     ),
-    systemOverlayStyle: SystemUiOverlayStyle.light,
+    systemOverlayStyle: kOverlayStyleLightIcons,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
@@ -239,7 +267,7 @@ final ThemeData darkTheme = ThemeData(
       fontWeight: FontWeight.w600,
       color: Colors.white,
     ),
-    systemOverlayStyle: SystemUiOverlayStyle.light,
+    systemOverlayStyle: kOverlayStyleLightIcons,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(

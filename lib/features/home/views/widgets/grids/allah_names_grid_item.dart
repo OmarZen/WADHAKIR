@@ -92,9 +92,13 @@ class AllahNamesGridItem extends StatelessWidget {
                 Expanded(
                   child: ListView.separated(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
+                    // Pad the bottom by the system gesture/nav inset so the
+                    // last card clears the navigation bar under edge-to-edge.
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      16 + MediaQuery.of(context).viewPadding.bottom,
                     ),
                     itemCount: items.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),

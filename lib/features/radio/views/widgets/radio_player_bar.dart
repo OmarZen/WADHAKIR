@@ -252,6 +252,10 @@ class _NowPlayingSheet extends StatelessWidget {
 
                     return ListView(
                       controller: controller,
+                      // Bottom inset so controls clear the nav bar (edge-to-edge).
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewPadding.bottom,
+                      ),
                       children: [
                         Center(
                           child: Container(

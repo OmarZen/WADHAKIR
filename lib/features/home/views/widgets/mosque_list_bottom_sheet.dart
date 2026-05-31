@@ -291,8 +291,11 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
                           ),
                         ),
                       ),
-                      // add some space under the button
-                      const SizedBox(height: 16),
+                      // Space under the button + the system nav-bar inset so
+                      // it clears the navigation bar under edge-to-edge.
+                      SizedBox(
+                        height: 16 + MediaQuery.of(context).viewPadding.bottom,
+                      ),
                     ],
                   ),
           ),

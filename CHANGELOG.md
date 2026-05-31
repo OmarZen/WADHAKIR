@@ -5,6 +5,37 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0+18] - 2026-05-31
+
+### Added
+
+- **Two new glassmorphism prayer widgets** — "Prayer Detail" (English) and "Prayer Next" (Arabic). Rendered as Flutter images via `home_widget`'s `renderFlutterWidget`, with a real frosted-glass effect (blurred coloured light-orbs + frost veil + specular edge), the five daily prayers with a progress bar, and ornate **Aref Ruqaa** Arabic calligraphy for the next-prayer name. Both open the app on tap; the content is `FittedBox`-scaled so it never overflows at any widget size.
+- **Live "Prayer Clock" widget** — a glassy native widget with a self-ticking `TextClock` (current time) and a live `Chronometer` countdown to the next prayer, plus the Hijri/Gregorian date and next-prayer name.
+- **Live clock** added to the compact prayer-times widget header.
+- **Aref Ruqaa** font registered in `pubspec.yaml`; **Almarai** bundled as an Android font resource (`res/font/almarai`) so the native widgets share the app's typography.
+
+### Changed
+
+- **Native widgets restyled to glass** — the Hijri calendar, compact prayer, and prayer-times list widgets now share a frosted dark-glass background, translucent inner sections, the Almarai font, and a unified blue accent palette.
+- **Hijri calendar month scrolling is now instant** — arrow navigation is computed natively in Kotlin from a pre-computed month cache instead of round-tripping through a Flutter background isolate, eliminating the lag/flashing. Day taps update the date card instantly too.
+- **Widget default sizes tuned** — the Hijri calendar defaults to a usable 4×5 size with tighter day cells (numbers are no longer squashed on placement); the compact prayer widget defaults to 3×2; the list widget is taller and vertically resizable.
+- **Glass widgets spacing/polish** — larger render size, more generous internal spacing, slightly larger fonts, and a glowing current-prayer dot.
+- **Prayer-times list widget** now highlights the **next** upcoming prayer instead of the one that already passed.
+- **Compact prayer widget** opens the app on the **first** tap (previously required a double tap) and was rebuilt to stay compact so it fits without clipping at smaller heights.
+- **Quran daily-wird settings** — the bare pages-per-day and start-page text fields were replaced with a polished stepper input (− / + buttons that is also directly typeable).
+- Widget picker thumbnails refreshed for every widget.
+
+### Fixed
+
+- **"Prayer Clock" widget failing to load** — a plain `<View>` divider (not permitted in RemoteViews) was replaced with a `FrameLayout`.
+- Compact prayer widget no longer clips its content at constrained heights.
+
+### Version
+
+- App version bumped from `3.1.1+17` to `3.2.0+18`.
+- MSIX version bumped from `3.0.0.0` to `3.2.0.0`.
+- Updated the displayed app version in the Arabic and English settings strings.
+
 ## [3.1.1+17] - 2026-05-27
 
 ### Fixed
@@ -51,6 +82,7 @@ Change the privacy link in app about
 ## [3.0.0+15] - 2026-05-06
 
 ### Added
+
 - App Lock (prayer-aware) improvements:
   - New Android `AppLockMonitorService` and platform bridge updates to drive a secure overlay during prayer windows.
   - Hadith/quote payload support for overlay messages (local JSON asset and platform transfer).
@@ -60,6 +92,7 @@ Change the privacy link in app about
   - Auto-scrolling support with configurable speed control and stop points (page-level control and user-accessible speed/stop settings).
 
 ### Changed
+
 - Overlay behavior and visuals:
   - Removed RenderEffect / view-level blur from overlay card (Android S+). Overlay content is now sharp and readable.
   - Removed Flutter `BackdropFilter` blur from bottom navigation bar and switched to a solid, accessible surface style.
@@ -69,23 +102,27 @@ Change the privacy link in app about
   - Added MIT `LICENSE` file.
 
 ### Fixed
+
 - Fixed unreadable overlay issue caused by blur being applied to child views.
 - Ensured overlay only activates during configured prayer windows and remains until the user confirms completion or the next prayer window starts.
 
 ### Dependencies
+
 - Updated multiple dependencies in `pubspec.yaml` to newer compatible versions (bug fixes, performance and API improvements). Notable upgrades include runtime, UI and platform packages used by the app (examples): `quran_library`, `flutter_bloc`, `google_nav_bar`, `hugeicons`, `just_audio`, `hive` & `hive_flutter`, `flutter_native_splash`, `flutter_dotenv`, `permission_handler`, `adhan_dart`, `syncfusion_*` packages, and others. These upgrades enabled the new Quran auto-scrolling feature, improved audio/player stability, and ensured compatibility with the latest Flutter SDK.
 
 ### Removed
+
 - Removed the `showTestOverlay` method channel and the test overlay UI from settings (was a temporary developer tool).
 
 ### Migration Notes
+
 - If you previously relied on the `showTestOverlay` testing API, remove any calls and use the prayer-window flow to validate overlays.
 - App Lock now requires overlay & usage access permissions (same as before); if overlay permission is missing the service will fall back to sending the user to Home.
-
 
 ## [2.4.1+14] - 2026-03-13
 
 ### Added
+
 - **Home Shortcut for Fasting Calendar**:
   - Added a new card in "مقتطفات إسلامية" on the home screen
   - Opens the same interactive fasting calendar dialog used in Settings
@@ -95,6 +132,7 @@ Change the privacy link in app about
   - Fix Tafsir issue of disappearing
 
 ### Changed
+
 - **Version Updates**:
   - App version bumped from `2.4.0+13` to `2.4.1+14`
   - MSIX version bumped from `2.4.0.0` to `2.4.1.0`
@@ -103,15 +141,18 @@ Change the privacy link in app about
   - Explicitly enabled `withPageView: true` to keep default horizontal PageView reading mode
 
 ### Technical Details
+
 - **Version Code**: 14 (was 13)
 - **MSIX Version**: 2.4.1.0 (was 2.4.0.0)
 
 ### Migration Notes
+
 - Update from 2.4.0+13 by installing 2.4.1+14
 
 ## [2.4.0+13] - 2026-03-09
 
 ### Added - Fasting Reminders System
+
 - **Comprehensive Islamic Fasting Reminders**:
   - Interactive Hijri calendar showing all Islamic fasting days
   - Complete fasting reminder system with notification integration
@@ -144,16 +185,19 @@ Change the privacy link in app about
   - Full bilingual support (Arabic/English)
 
 ### Changed
+
 - Fasting settings moved from general notifications to dedicated section
 - Unified all fasting-related colors to theme.colorScheme.primary
 
 ### Technical Details
+
 - **Version Code**: 13 (was 12)
 - **MSIX Version**: 2.4.0.0 (was 2.3.5.0)
 - **Files Modified**: 48 files changed (+7,657 insertions, -2,240 deletions)
 - **Breaking Changes**: Old fasting_notification_settings_widget.dart removed
 
 ### Migration Notes
+
 - Update from 2.3.5+12 by installing 2.4.0+13
 - Fasting reminders now in dedicated section under Settings
 - All existing settings and data preserved
@@ -161,6 +205,7 @@ Change the privacy link in app about
 ## [2.3.5+12] - 2026-01-28
 
 ### Added - Radio Station Bilingual Categories
+
 - **Complete Radio Categorization System**:
   - Organized all 174 radio stations into 12 thematic categories
   - Full bilingual support for category names (Arabic and English)
@@ -180,6 +225,7 @@ Change the privacy link in app about
   - Category-specific icons for better visual recognition
 
 ### Changed - Radio Feature Improvements
+
 - **UI/UX Enhancements**:
   - Redesigned category selection with horizontal scrollable chips
   - Added dedicated icons for each category (reciters, translations, tafsir, etc.)
@@ -204,6 +250,7 @@ Change the privacy link in app about
   - الفتاوى (Fatwas): 2 stations
 
 ### Improved - Radio Code Quality
+
 - **Architecture Improvements**:
   - Refactored `_applyCategory()` method for cleaner filtering logic
   - Removed 500+ lines of hardcoded station name lists
@@ -217,6 +264,7 @@ Change the privacy link in app about
   - Better scalability for future category additions
 
 ### Fixed - Radio Feature Issues
+
 - **Category Assignment**:
   - Properly categorized all "القراءات العشر (Ten Readings)" stations
   - Fixed station name matching with leading/trailing spaces
@@ -224,6 +272,7 @@ Change the privacy link in app about
   - Validated category distribution totals
 
 ### Technical Details
+
 - **Version Code**: 12 (was 11)
 - **MSIX Version**: 2.3.5.0 (was 2.3.4.0)
 - **Files Modified**: 3 (radio_screen.dart, RadioStationModel, api_response.json)
@@ -233,6 +282,7 @@ Change the privacy link in app about
 - **Backward Compatibility**: Full - existing functionality preserved with enhanced categorization
 
 ### User-Facing Changes
+
 - **New Features**:
   - Browse radio stations by 12 thematic categories
   - Category names appear in user's preferred language (Arabic/English)
@@ -252,6 +302,7 @@ Change the privacy link in app about
   - Seasonal and special content (Supplications, Ruqyah) organized
 
 ### Migration Notes
+
 - Update from 2.3.4+11 by installing 2.3.5+12
 - All existing radio stations remain available with enhanced categorization
 - Previous favorites and playback history preserved
@@ -263,6 +314,7 @@ Change the privacy link in app about
 ## [2.3.4+11] - 2026-01-25
 
 ### Changed - Asset Updates for Shorebird Compatibility
+
 - **Version Bump**:
   - Updated app version to 2.3.4+11 for new Shorebird release
   - Updated all localization files (ar.json, en.json)
@@ -275,12 +327,14 @@ Change the privacy link in app about
   - Enables future over-the-air patches for bug fixes without store updates
 
 ### Technical Details
+
 - **Version Code**: 11 (was 10)
 - **MSIX Version**: 2.3.4.0 (was 2.3.3.0)
 - **Shorebird**: Release created to enable code push capabilities
 - **Backward Compatibility**: Full - seamless update from 2.3.3+10
 
 ### Migration Notes
+
 - Update from 2.3.3+10 by installing 2.3.4+11
 - All previous features and data preserved
 - Shorebird code push now enabled for future quick updates
@@ -291,6 +345,7 @@ Change the privacy link in app about
 ## [2.3.3+10] - 2026-01-13
 
 ### Added - Electronic Tasbih Feature
+
 - **Electronic Tasbih (Prayer Beads Counter)**:
   - Interactive prayer beads counter with circular visualization of 33 beads
   - Animated beads that rotate and highlight as you count
@@ -327,6 +382,7 @@ Change the privacy link in app about
   - Step-by-step submission instructions for both stores
 
 ### Fixed - Google Play & Microsoft Store Submission
+
 - **Proguard Configuration**:
   - Added comprehensive proguard rules to prevent release build crashes
   - Protected Flutter framework and all plugin classes from obfuscation
@@ -353,6 +409,7 @@ Change the privacy link in app about
   - Set correct version format (2.3.3.0)
 
 ### Improved - UI/UX Enhancements
+
 - **Prayer Times Screen**:
   - Added back button to header for better navigation
   - Improved desktop responsiveness with proper spacing
@@ -370,6 +427,7 @@ Change the privacy link in app about
   - Consistent styling across all grid items
 
 ### Changed - Code Quality & Architecture
+
 - **Architecture Improvements**:
   - Implemented Clean Architecture for Islamic History feature
   - Added proper data, domain, and presentation layers
@@ -383,6 +441,7 @@ Change the privacy link in app about
   - Updated msix package to 3.16.12
 
 ### Technical Details
+
 - **Version Code**: 10 (was 9)
 - **MSIX Version**: 2.3.3.0
 - **Build Type**: Release with full optimization and obfuscation
@@ -392,6 +451,7 @@ Change the privacy link in app about
 - **Backward Compatibility**: Full - no breaking changes
 
 ### User-Facing Changes
+
 - **New Features**:
   - Electronic Tasbih (prayer beads counter) with beautiful animations
   - Improved Islamic History browsing with pagination and search
@@ -409,6 +469,7 @@ Change the privacy link in app about
   - Persistent storage for all user progress
 
 ### Migration Notes
+
 - Update from 2.3.2+9 by installing 2.3.3+10
 - All existing user data preserved
 - New electronic tasbih feature available in home grid
@@ -420,6 +481,7 @@ Change the privacy link in app about
 ## [2.3.2+9] - 2026-01-13
 
 ### Added
+
 - **Flutter 3.38.6 Compatibility**: Full support for latest Flutter stable version
 - **Enhanced Home Screen Widgets**:
   - Hijri Calendar Widget with interactive month navigation
@@ -427,24 +489,28 @@ Change the privacy link in app about
   - Better widget data persistence and updates
 
 ### Changed
+
 - **SDK Requirements**: Updated minimum SDK to 3.10.0 and Flutter to 3.24.0+
 - **Code Quality**: Applied comprehensive code formatting across entire codebase
 - **Dependencies**: Updated all packages to ensure compatibility with Flutter 3.38.6
 - **Build System**: Updated Gradle and build configurations for better stability
 
 ### Improved
+
 - **App Performance**: Enhanced overall app responsiveness and stability
-- **CI/CD Pipeline**: 
+- **CI/CD Pipeline**:
   - Multi-platform workflow improvements
   - Analytics disabled in CI builds for faster processing
   - Better error handling in automated builds
 
 ### Fixed
+
 - **Flutter Version Conflicts**: Resolved compatibility issues after Flutter upgrade
 - **Widget Loading**: Fixed RemoteViews compatibility issues in home widgets
 - **Build Issues**: Resolved dependencies conflicts and build warnings
 
 ### Technical
+
 - Total of 103 files updated with code formatting improvements
 - Improved code consistency and maintainability
 - Better error handling across features
@@ -453,6 +519,7 @@ Change the privacy link in app about
 ## [2.3.2] - 2026-01-12
 
 ### Added - Home Screen Widgets
+
 - **Hijri Calendar Widget**:
   - Interactive home screen widget displaying Hijri calendar
   - Month navigation (next/previous) with smooth transitions
@@ -475,6 +542,7 @@ Change the privacy link in app about
   - App theme color integration (#20497D primary, #B3D9FF accent)
 
 ### Improved - Widget System
+
 - **Widget Architecture**:
   - Proper RemoteViews compatibility
   - Removed problematic View separators causing loading issues
@@ -489,6 +557,7 @@ Change the privacy link in app about
   - SharedPreferences integration for widget state
 
 ### Fixed - CI/CD & Build
+
 - **GitHub Actions**:
   - Updated Flutter version in CI from 3.35.3 to 3.27.1
   - Fixed timezone package dependency resolution error
@@ -502,6 +571,7 @@ Change the privacy link in app about
   - Removed complex UI elements causing rendering failures
 
 ### Changed - UI/UX Polish
+
 - **Text Optimization**:
   - Header dates: 9-10sp for compact display
   - Prayer labels: 8sp
@@ -515,6 +585,7 @@ Change the privacy link in app about
   - Better contrast and readability
 
 ### Technical Details
+
 - **Files Modified**: 15+ files
 - **New Drawables**: 3 (widget_background_rounded, widget_header_background, current_prayer_background)
 - **Removed Drawables**: 5 prayer icon XMLs (simplified approach)
@@ -523,6 +594,7 @@ Change the privacy link in app about
 - **Backward Compatibility**: Full - existing widgets update seamlessly
 
 ### User-Facing Changes
+
 - **New Features**:
   - Hijri calendar widget on home screen
   - Enhanced prayer times widget with dates
@@ -539,6 +611,7 @@ Change the privacy link in app about
   - Better performance on all Android versions
 
 ### Migration Notes
+
 - Update from 2.3.1 by installing 2.3.2+9
 - Existing widgets will update automatically
 - No user action required
@@ -547,6 +620,7 @@ Change the privacy link in app about
 ## [2.3.0] - 2025-12-31
 
 ### Added - Fasting Notifications System
+
 - **Monday and Thursday Fasting Reminders**:
   - Configurable notification time (default: 21:00 / 9:00 PM)
   - Notifications sent the night before fasting days
@@ -594,6 +668,7 @@ Change the privacy link in app about
   - fasting_time key with subtitle (AR/EN)
 
 ### Improved - Settings UI Complete Modernization
+
 - **Design System Established**:
   - Consistent color patterns across all components
   - Selector backgrounds: isDark ? primaryContainer(0.2) : surface
@@ -682,6 +757,7 @@ Change the privacy link in app about
   - Compact padding (20px/16px)
 
 ### Fixed - Native Compatibility
+
 - **Android Build System**:
   - Resolved Kotlin compilation cache issues
   - Fixed incremental build problems
@@ -689,6 +765,7 @@ Change the privacy link in app about
   - Improved build reliability
 
 ### Changed - Code Quality
+
 - **Architecture Improvements**:
   - 3 StatefulWidget → StatelessWidget conversions
   - Better separation of concerns
@@ -703,6 +780,7 @@ Change the privacy link in app about
   - Improved app responsiveness
 
 ### Technical Details
+
 - **Files Modified**: 16 files
 - **Lines Changed**: +2,318 insertions, -2,109 deletions
 - **New Files**: 1 (fasting_notification_settings_widget.dart)
@@ -711,6 +789,7 @@ Change the privacy link in app about
 - **Migration**: Automatic via model defaults
 
 ### User-Facing Changes
+
 - **New Features**:
   - Monday/Thursday fasting notification reminders
   - Configurable reminder time with visual time picker
@@ -728,6 +807,7 @@ Change the privacy link in app about
   - Improved battery life (no continuous animations)
 
 ### Migration Notes
+
 - Update from 2.2.0 by installing 2.3.0+7
 - All existing settings preserved
 - New fasting notification fields have sensible defaults
@@ -737,6 +817,7 @@ Change the privacy link in app about
 ## [2.2.0] - 2025-12-14
 
 ### Added - Hadith Library Feature
+
 - **Complete Hadith Library System** with comprehensive Islamic hadith collections
   - 17 major hadith collections with multilingual support
   - Data models: `bookmark_model.dart`, `hadith_model.dart`, `hadith_collection_metadata.dart`
@@ -808,6 +889,7 @@ Change the privacy link in app about
   - Translations for collection names, book titles, and UI elements
 
 ### Added - UI/UX Enhancements
+
 - **Animated Islamic Splash Screen**:
   - Custom mosque pattern painter with Islamic decorative elements
   - Animated wave effects and gradient backgrounds
@@ -830,6 +912,7 @@ Change the privacy link in app about
   - Responsive layout improvements
 
 ### Added - Shorebird Integration
+
 - **Over-The-Air (OTA) Updates**:
   - Integrated Shorebird Code Push for instant app updates
   - `shorebird.yaml` configuration file
@@ -837,12 +920,14 @@ Change the privacy link in app about
   - Removed automated Shorebird CI workflows (manual deployment preferred)
 
 ### Added - Quran Integration
+
 - **Quran Library Package Integration**:
   - Integrated `quran_library` package v2.2.3+1 (local package)
   - Enhanced Quran reading experience
   - Improved page rendering and navigation
 
 ### Improved - Prayer Times System
+
 - **Prayer Times Refactoring**:
   - Migrated to `adhan_dart` library for accurate calculations
   - Fixed state management in `prayer_times_cubit.dart`
@@ -853,6 +938,7 @@ Change the privacy link in app about
   - Enhanced prayer notification system with custom adhan sounds
 
 ### Improved - Settings & Notifications
+
 - **Settings Screen Refactor**:
   - Comprehensive settings reorganization
   - Adhan customization features (Fajr and regular prayers)
@@ -864,6 +950,7 @@ Change the privacy link in app about
   - Enhanced notification permission handling
 
 ### Fixed - Notifications & Permissions
+
 - **Notification System Fixes**:
   - Resolved notification sound repetition issue
   - Fixed notification permission dialog and navigation issues
@@ -872,6 +959,7 @@ Change the privacy link in app about
   - Fixed notification timing accuracy
 
 ### Fixed - Compatibility & Stability
+
 - **Android 15 Compatibility**:
   - Fixed edge-to-edge display issues
   - Updated deprecated APIs for Android 15
@@ -886,6 +974,7 @@ Change the privacy link in app about
   - Improved app stability and performance
 
 ### Changed - Dependencies
+
 - **Package Updates**:
   - Updated `flutter_bloc` to ^9.1.1
   - Updated `shared_preferences` to ^2.5.3
@@ -917,6 +1006,7 @@ Change the privacy link in app about
   - Updated `json_serializable` to ^6.7.1
 
 ### Changed - Documentation & CI/CD
+
 - **Documentation Updates**:
   - Added comprehensive GitHub setup guide (`GITHUB_SETUP_GUIDE.md`)
   - Added workflow documentation (`WORKFLOW.md`)
@@ -935,6 +1025,7 @@ Change the privacy link in app about
   - Removed hotfix branch from workflow structure
 
 ### Changed - Assets & Data
+
 - **Hadith Collections Assets**:
   - Added extensive JSON data for 17 hadith collections
   - Organized by collection and language (Arabic, English, Urdu, Bangla)
@@ -947,6 +1038,7 @@ Change the privacy link in app about
   - Proper asset path organization for scalability
 
 ### Technical Details
+
 - **Architecture Improvements**:
   - Clean Architecture implementation for hadith library
   - Separation of concerns: Data, Domain, and Presentation layers
@@ -969,6 +1061,7 @@ Change the privacy link in app about
   - Improved app startup time
 
 ### Migration Notes
+
 - Update from any previous version by installing v2.2.0+6
 - Existing user data (bookmarks, settings) will be preserved
 - First launch may take slightly longer due to hadith library initialization
@@ -978,6 +1071,7 @@ Change the privacy link in app about
 ## [2.1.0] - 2025-12-XX
 
 ### Added
+
 - Git workflow with branch protection and CI/CD
 - Conventional commit messages
 - PR and issue templates
@@ -986,22 +1080,26 @@ Change the privacy link in app about
 ## [1.1.0] - 2024-10-XX
 
 ### Added
+
 - Enhanced Radio Controls
 - Persistent Dhikr Counters
 - Floating radio player across the app
 
 ### Fixed
+
 - Android 15 edge-to-edge compatibility
 - Deprecated APIs updated
 - Various UI improvements
 
 ### Changed
+
 - Updated Flutter and packages
 - Improved splash screen
 
 ## [1.0.0] - 2024-XX-XX
 
 ### Added
+
 - Initial release of Wadhakir
 - Core Islamic features implementation
 - Prayer times functionality
@@ -1010,12 +1108,14 @@ Change the privacy link in app about
 - Islamic names and content
 
 ### Fixed
+
 - URLs in about developer section
 - Palestine support button functionality
 - URL launcher issues
 - Default theme set to light
 
 ### Changed
+
 - Updated package name
 - Updated project structure
 - Made light theme default

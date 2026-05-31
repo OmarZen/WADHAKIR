@@ -3,127 +3,148 @@
     android:id="@+id/widget_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_background"
-    android:padding="8dp">
+    android:background="@drawable/glass_widget_bg"
+    android:padding="10dp">
 
-    <!-- Location and Date Container -->
+    <!-- Header: location + date on the left, live clock on the right -->
     <LinearLayout
         android:id="@+id/header_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginStart="4dp">
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/location_text"
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/location_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/ic_location"
+                android:drawablePadding="4dp"
+                android:text="Location"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:fontFamily="@font/almarai"
+                android:alpha="0.9"
+                android:singleLine="true"
+                android:ellipsize="end"/>
+
+            <TextView
+                android:id="@+id/date_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Date"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="@font/almarai"
+                android:alpha="0.6"
+                android:singleLine="true"/>
+        </LinearLayout>
+
+        <!-- Live clock — ticks itself every minute -->
+        <TextClock
+            android:id="@+id/live_clock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_location"
-            android:drawablePadding="4dp"
-            android:text="Location"
+            android:format12Hour="h:mm"
+            android:format24Hour="HH:mm"
             android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:alpha="0.9"
-            android:layout_marginTop="4dp"/>
-
-        <TextView
-            android:id="@+id/date_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="Date"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:alpha="0.9"/>
+            android:textSize="19sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/almarai"
+            android:includeFontPadding="false"/>
     </LinearLayout>
 
-    <!-- Current Prayer Info -->
+    <!-- Current Prayer (single row, glass accent) -->
     <LinearLayout
         android:id="@+id/current_prayer_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/header_container"
-        android:layout_marginTop="10dp"
-        android:layout_marginHorizontal="4dp"
-        android:orientation="vertical"
+        android:layout_marginTop="9dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:background="@drawable/current_prayer_card_background"
-        android:padding="10dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Current Prayer"
-            android:textColor="#FFFFFF"
-            android:textSize="11sp"
-            android:alpha="1.0"/>
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
 
         <TextView
             android:id="@+id/current_prayer_name"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_weight="1"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold"/>
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/almarai"
+            android:singleLine="true"
+            android:ellipsize="end"/>
 
         <TextView
             android:id="@+id/current_prayer_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
             android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:layout_marginTop="2dp"/>
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/almarai"
+            android:alpha="0.95"/>
     </LinearLayout>
 
-    <!-- Next Prayer Info -->
+    <!-- Next Prayer (single row) -->
     <LinearLayout
         android:id="@+id/next_prayer_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/current_prayer_container"
-        android:layout_marginTop="12dp"
-        android:orientation="vertical"
-        android:layout_marginStart="4dp">
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Next Prayer"
+            android:text="Next"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            android:fontFamily="@font/almarai"
+            android:alpha="0.6"/>
+
+        <TextView
+            android:id="@+id/next_prayer_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/almarai"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="in"
             android:textColor="#FFFFFF"
             android:textSize="11sp"
-            android:alpha="0.9"/>
+            android:fontFamily="@font/almarai"
+            android:alpha="0.7"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/time_until_next_prayer"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/next_prayer_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:text="in"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"
-                android:alpha="0.7"/>
-
-            <TextView
-                android:id="@+id/time_until_next_prayer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"/>
-        </LinearLayout>
+            android:layout_marginStart="4dp"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:fontFamily="@font/almarai"/>
     </LinearLayout>
 </RelativeLayout>

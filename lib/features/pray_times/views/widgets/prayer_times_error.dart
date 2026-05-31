@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
@@ -58,24 +59,14 @@ class PrayerTimesErrorWidget extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: size.height * 0.04),
-            ElevatedButton.icon(
-              onPressed: () {
+            FButton(
+              onPress: () {
                 context.read<PrayerTimesCubit>().refreshPrayerTimes();
               },
-              icon: const Icon(Icons.refresh),
-              label: Text(
+              mainAxisSize: MainAxisSize.min,
+              prefix: const Icon(Icons.refresh),
+              child: Text(
                 l10n?.translate('prayer_times.retry') ?? 'إعادة المحاولة',
-              ),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.06,
-                  vertical: size.height * 0.015,
-                ),
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
               ),
             ),
           ],

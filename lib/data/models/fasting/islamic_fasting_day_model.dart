@@ -157,9 +157,7 @@ class IslamicFastingDay extends Equatable {
       hijriDay: 9,
       isMonthlyRecurring: true,
       isSpecialDay: false,
-      virtuesAr: [
-        'صيام التاسع والعاشر من كل شهر من السنن المستحبة',
-      ],
+      virtuesAr: ['صيام التاسع والعاشر من كل شهر من السنن المستحبة'],
       virtuesEn: [
         'Fasting the 9th and 10th of every month is a recommended Sunnah',
       ],
@@ -179,9 +177,7 @@ class IslamicFastingDay extends Equatable {
       hijriDay: 10,
       isMonthlyRecurring: true,
       isSpecialDay: false,
-      virtuesAr: [
-        'صيام التاسع والعاشر من كل شهر من السنن المستحبة',
-      ],
+      virtuesAr: ['صيام التاسع والعاشر من كل شهر من السنن المستحبة'],
       virtuesEn: [
         'Fasting the 9th and 10th of every month is a recommended Sunnah',
       ],
@@ -356,19 +352,19 @@ class IslamicFastingDay extends Equatable {
 
   @override
   List<Object?> get props => [
-        nameAr,
-        nameEn,
-        descriptionAr,
-        descriptionEn,
-        hijriMonth,
-        hijriDay,
-        isMonthlyRecurring,
-        isSpecialDay,
-        virtuesAr,
-        virtuesEn,
-        rewardLevel,
-        type,
-      ];
+    nameAr,
+    nameEn,
+    descriptionAr,
+    descriptionEn,
+    hijriMonth,
+    hijriDay,
+    isMonthlyRecurring,
+    isSpecialDay,
+    virtuesAr,
+    virtuesEn,
+    rewardLevel,
+    type,
+  ];
 
   @override
   String toString() {

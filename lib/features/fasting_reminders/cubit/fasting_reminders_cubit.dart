@@ -26,13 +26,13 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
     required SetFastingReminderSettingsUseCase setSettingsUseCase,
     required GetFastingReminderSettingsStreamUseCase getSettingsStreamUseCase,
     FastingNotificationService? notificationService,
-  })  : _hijriCalculator = hijriCalculator ?? HijriDateCalculatorService(),
-        _getSettingsUseCase = getSettingsUseCase,
-        _setSettingsUseCase = setSettingsUseCase,
-        _getSettingsStreamUseCase = getSettingsStreamUseCase,
-        _notificationService =
-            notificationService ?? FastingNotificationService(),
-        super(const FastingRemindersInitial()) {
+  }) : _hijriCalculator = hijriCalculator ?? HijriDateCalculatorService(),
+       _getSettingsUseCase = getSettingsUseCase,
+       _setSettingsUseCase = setSettingsUseCase,
+       _getSettingsStreamUseCase = getSettingsStreamUseCase,
+       _notificationService =
+           notificationService ?? FastingNotificationService(),
+       super(const FastingRemindersInitial()) {
     loadSettings();
     _listenToSettingsChanges();
   }
@@ -75,16 +75,18 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
         ? _hijriCalculator.getDaysUntilFastingDay(nextFastingDay)
         : null;
 
-    emit(FastingRemindersLoaded(
-      settings: settings,
-      upcomingFastingDays: upcomingDays,
-      yearFastingDays: yearDays,
-      daysUntilNext: daysUntilNext,
-      nextFastingDay: nextFastingDay,
-      currentHijriMonth: currentHijri.month,
-      currentHijriYear: currentHijri.year,
-      currentHijriDay: currentHijri.day,
-    ));
+    emit(
+      FastingRemindersLoaded(
+        settings: settings,
+        upcomingFastingDays: upcomingDays,
+        yearFastingDays: yearDays,
+        daysUntilNext: daysUntilNext,
+        nextFastingDay: nextFastingDay,
+        currentHijriMonth: currentHijri.month,
+        currentHijriYear: currentHijri.year,
+        currentHijriDay: currentHijri.day,
+      ),
+    );
   }
 
   /// Load settings and calculate upcoming fasting days.
@@ -102,17 +104,21 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
       log('🟦 FastingRemindersCubit.loadSettings: reading settings from repo…');
       final sw = Stopwatch()..start();
       final settings = await _getSettingsUseCase();
-      log('🟦 FastingRemindersCubit.loadSettings: settings loaded in ${sw.elapsedMilliseconds}ms '
-          '(monthly=${settings.monthlyFastingRemindersEnabled} '
-          'mon=${settings.mondayFastingEnabled} '
-          'thu=${settings.thursdayFastingEnabled})');
+      log(
+        '🟦 FastingRemindersCubit.loadSettings: settings loaded in ${sw.elapsedMilliseconds}ms '
+        '(monthly=${settings.monthlyFastingRemindersEnabled} '
+        'mon=${settings.mondayFastingEnabled} '
+        'thu=${settings.thursdayFastingEnabled})',
+      );
 
       // Emit Loaded FIRST so the UI shows immediately. The user can
       // already interact with the settings even before notification
       // scheduling finishes.
       _updateStateWithSettings(settings);
-      log('🟦 FastingRemindersCubit.loadSettings: Loaded state emitted, '
-          'kicking off background notification scheduling');
+      log(
+        '🟦 FastingRemindersCubit.loadSettings: Loaded state emitted, '
+        'kicking off background notification scheduling',
+      );
 
       // Fire-and-forget. Errors here are logged but never bubble up to
       // the UI — scheduling failing isn't a reason to hide the settings.
@@ -129,14 +135,18 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
   /// in the background. The user sees the toggle flip immediately instead
   /// of waiting for the platform-side notification work.
   Future<void> updateSettings(FastingReminderSettings settings) async {
-    log('🟦 FastingRemindersCubit.updateSettings: START '
-        '(monthly=${settings.monthlyFastingRemindersEnabled} '
-        'mon=${settings.mondayFastingEnabled} '
-        'thu=${settings.thursdayFastingEnabled})');
+    log(
+      '🟦 FastingRemindersCubit.updateSettings: START '
+      '(monthly=${settings.monthlyFastingRemindersEnabled} '
+      'mon=${settings.mondayFastingEnabled} '
+      'thu=${settings.thursdayFastingEnabled})',
+    );
     try {
       final sw = Stopwatch()..start();
       await _setSettingsUseCase(settings);
-      log('🟦 FastingRemindersCubit.updateSettings: persisted in ${sw.elapsedMilliseconds}ms');
+      log(
+        '🟦 FastingRemindersCubit.updateSettings: persisted in ${sw.elapsedMilliseconds}ms',
+      );
 
       // State updates automatically via settings stream; no need to wait
       // for scheduling.
@@ -161,8 +171,10 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
       await _notificationService.scheduleAllFastingNotifications(settings);
       log('🟪 _scheduleSafely[$source]: DONE in ${sw.elapsedMilliseconds}ms');
     } catch (e, st) {
-      log('🟥 _scheduleSafely[$source]: scheduling failed after '
-          '${sw.elapsedMilliseconds}ms: $e\n$st');
+      log(
+        '🟥 _scheduleSafely[$source]: scheduling failed after '
+        '${sw.elapsedMilliseconds}ms: $e\n$st',
+      );
     }
   }
 
@@ -317,9 +329,7 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
     final currentState = state;
     if (currentState is! FastingRemindersLoaded) return;
 
-    final updatedSettings = currentState.settings.copyWith(
-      vibration: enabled,
-    );
+    final updatedSettings = currentState.settings.copyWith(vibration: enabled);
 
     await updateSettings(updatedSettings);
   }

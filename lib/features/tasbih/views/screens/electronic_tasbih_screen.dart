@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
@@ -136,14 +137,11 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
 
   void _showCompletionDialog() {
     final l10n = context.l10n;
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) {
+      builder: (context, style, animation) {
         final theme = Theme.of(context);
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+        return FDialog(
           title: Row(
             children: [
               Icon(
@@ -157,13 +155,13 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
               ),
             ],
           ),
-          content: Text(
+          body: Text(
             l10n?.translate('tasbih.completion_message') ??
                 'أحسنت! لقد أكملت $_target تسبيحة',
           ),
           actions: [
-            TextButton(
-              onPressed: () {
+            FButton(
+              onPress: () {
                 Navigator.of(context).pop();
                 _resetCounter();
               },
@@ -177,70 +175,79 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
 
   void _changeTarget() {
     final l10n = context.l10n;
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) {
+      builder: (context, style, animation) {
         int tempTarget = _target;
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+            return FDialog(
               title: Text(
                 l10n?.translate('tasbih.change_target') ?? 'تغيير الهدف',
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    l10n?.translate('tasbih.select_target') ??
-                        'اختر عدد التسبيحات',
+              // FDialog (forui) provides no Material ancestor, so the
+              // FilterChip + TextField below need one or they throw
+              // "No Material widget found".
+              body: Material(
+                type: MaterialType.transparency,
+                child: ConstrainedBox(
+                  // Bound the body height so the keyboard (resizeToAvoidInsets)
+                  // can't collapse it into an overflow; scroll instead.
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.5,
                   ),
-                  const SizedBox(height: 20),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [33, 99, 100, 1000].map((value) {
-                      final isSelected = tempTarget == value;
-                      return FilterChip(
-                        label: Text('$value'),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setDialogState(() {
-                            tempTarget = value;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText:
-                          l10n?.translate('tasbih.custom_target') ?? 'عدد مخصص',
-                      border: const OutlineInputBorder(),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n?.translate('tasbih.select_target') ??
+                              'اختر عدد التسبيحات',
+                        ),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.center,
+                          children: [33, 99, 100, 1000].map((value) {
+                            final isSelected = tempTarget == value;
+                            return FilterChip(
+                              label: Text('$value'),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setDialogState(() {
+                                  tempTarget = value;
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText:
+                                l10n?.translate('tasbih.custom_target') ??
+                                'عدد مخصص',
+                            border: const OutlineInputBorder(),
+                          ),
+                          onChanged: (value) {
+                            final parsed = int.tryParse(value);
+                            if (parsed != null && parsed > 0) {
+                              setDialogState(() {
+                                tempTarget = parsed;
+                              });
+                            }
+                          },
+                        ),
+                      ],
                     ),
-                    onChanged: (value) {
-                      final parsed = int.tryParse(value);
-                      if (parsed != null && parsed > 0) {
-                        setDialogState(() {
-                          tempTarget = parsed;
-                        });
-                      }
-                    },
                   ),
-                ],
+                ),
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l10n?.translate('tasbih.cancel') ?? 'إلغاء'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
+                FButton(
+                  onPress: () {
                     setState(() {
                       _target = tempTarget;
                       if (_counter > _target) _counter = 0;
@@ -249,6 +256,11 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                     Navigator.of(context).pop();
                   },
                   child: Text(l10n?.translate('tasbih.save') ?? 'حفظ'),
+                ),
+                FButton(
+                  onPress: () => Navigator.of(context).pop(),
+                  variant: FButtonVariant.outline,
+                  child: Text(l10n?.translate('tasbih.cancel') ?? 'إلغاء'),
                 ),
               ],
             );
@@ -279,22 +291,19 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () {
-              showDialog(
+              showFDialog(
                 context: context,
-                builder: (context) => AlertDialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                builder: (context, style, animation) => FDialog(
                   title: Text(
                     l10n?.translate('tasbih.about_title') ?? 'عن المسبحة',
                   ),
-                  content: Text(
+                  body: Text(
                     l10n?.translate('tasbih.about_description') ??
                         'المسبحة الإلكترونية تساعدك على عد التسبيحات والأذكار بسهولة.\n\nاضغط على الزر الأوسط للتسبيح.\n\nيمكنك تغيير الهدف وإعادة ضبط العداد من خلال الأزرار في الأسفل.',
                   ),
                   actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
+                    FButton(
+                      onPress: () => Navigator.pop(context),
                       child: Text(l10n?.translate('tasbih.close') ?? 'إغلاق'),
                     ),
                   ],
@@ -381,14 +390,16 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                 final beadSize = index == (_counter % 33) && _isPressed
                     ? 10.0
                     : index < (_counter % 33)
-                        ? 8.0
-                        : 6.0;
+                    ? 8.0
+                    : 6.0;
 
                 return Positioned(
-                  left: size.width * 0.25 +
+                  left:
+                      size.width * 0.25 +
                       radius * math.cos(adjustedAngle) -
                       beadSize / 2,
-                  top: size.width * 0.25 +
+                  top:
+                      size.width * 0.25 +
                       radius * math.sin(adjustedAngle) -
                       beadSize / 2,
                   child: AnimatedContainer(
@@ -657,28 +668,20 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
         child: Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _resetCounter,
-                icon: const Icon(Icons.refresh, size: 18),
-                label: Text(l10n?.translate('tasbih.reset') ?? 'إعادة ضبط'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  side: BorderSide(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                  ),
-                ),
+              child: FButton(
+                onPress: _resetCounter,
+                variant: FButtonVariant.outline,
+                prefix: const Icon(Icons.refresh, size: 18),
+                child: Text(l10n?.translate('tasbih.reset') ?? 'إعادة ضبط'),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _changeTarget,
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: Text(
+              child: FButton(
+                onPress: _changeTarget,
+                prefix: const Icon(Icons.edit_outlined, size: 18),
+                child: Text(
                   l10n?.translate('tasbih.change_target') ?? 'تغيير الهدف',
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),

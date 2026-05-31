@@ -233,27 +233,27 @@ class FastingReminderSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        // Hijri calendar fasting
-        monthlyFastingRemindersEnabled,
-        ayyamAlBidEnabled,
-        ninthTenthEnabled,
-        specialDaysEmphasis,
-        // Weekly fasting
-        mondayFastingEnabled,
-        thursdayFastingEnabled,
-        // Notification preferences
-        daysBeforeNotification,
-        eveReminder,
-        morningReminder,
-        advanceReminder,
-        vibration,
-        weeklyNotificationTime,
-        eveReminderTime,
-        morningReminderTime,
-        advanceReminderTime,
-        lastNotificationSent,
-        customMorningTime,
-      ];
+    // Hijri calendar fasting
+    monthlyFastingRemindersEnabled,
+    ayyamAlBidEnabled,
+    ninthTenthEnabled,
+    specialDaysEmphasis,
+    // Weekly fasting
+    mondayFastingEnabled,
+    thursdayFastingEnabled,
+    // Notification preferences
+    daysBeforeNotification,
+    eveReminder,
+    morningReminder,
+    advanceReminder,
+    vibration,
+    weeklyNotificationTime,
+    eveReminderTime,
+    morningReminderTime,
+    advanceReminderTime,
+    lastNotificationSent,
+    customMorningTime,
+  ];
 
   @override
   String toString() {

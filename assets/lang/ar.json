@@ -6,7 +6,69 @@
     "ok": "موافق",
     "downloading": "جارِ التحميل",
     "retry": "إعادة المحاولة",
-    "loading": "جارِ التحميل..."
+    "loading": "جارِ التحميل...",
+    "change": "تغيير",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "error": "حدث خطأ",
+    "soon": "قريباً"
+  },
+  "hadith_nawawi": {
+    "title": "الأربعون النووية",
+    "hadith": "الحديث",
+    "copy": "نسخ",
+    "share": "مشاركة",
+    "copied": "تم نسخ الحديث",
+    "share_lang": "لغة المشاركة",
+    "share_lang_hint": "اختر لغة الحديث المراد مشاركته",
+    "arabic": "العربية",
+    "english": "الإنجليزية"
+  },
+  "prayer_adhkar": {
+    "title": "أذكار بعد الصلاة",
+    "progress": "أتممت",
+    "of": "من",
+    "reset": "إعادة تعيين",
+    "completed": "أتممت أذكار الصلاة، تقبّل الله"
+  },
+  "wird": {
+    "home_title": "الورد اليومي",
+    "setup_title": "ابدأ ختمتك",
+    "setup_subtitle": "اختر هدفك والتنبيه اليومي للبقاء على المسار",
+    "progress_title": "خطة ختم القرآن",
+    "your_progress": "تقدّمك",
+    "goal_label": "الهدف",
+    "goal_fixed_daily": "قراءة مقدار ثابت يومياً",
+    "goal_by_date": "الختم في تاريخ محدد",
+    "unit_label": "وحدة التتبع",
+    "unit_subtitle": "اختر وحدة التتبع المفضلة لديك",
+    "unit_pages": "صفحات",
+    "unit_rub": "ربع (ربع جزء)",
+    "unit_hizb": "حزب (نصف جزء)",
+    "unit_juz": "جزء",
+    "amount_pages": "صفحة يومياً",
+    "amount_rub": "ربع يومياً",
+    "amount_hizb": "حزب يومياً",
+    "amount_juz": "جزء يومياً",
+    "start_page": "بداية صفحة",
+    "reminder_time": "وقت التذكير",
+    "reminder_enabled": "تفعيل التذكير",
+    "expected_completion": "موعد الختم المتوقع",
+    "view_schedule": "عرض الجدول الكامل",
+    "full_schedule_subtitle": "جميع أيام الختمة",
+    "start_plan": "بدء الخطة",
+    "schedule_title": "جدول القراءة",
+    "remaining_days": "الأيام المتبقية",
+    "pages_read": "التقدم الحالي",
+    "day": "يوم",
+    "days": "يوم",
+    "pages_from": "صفحات من",
+    "to": "إلى",
+    "read_now": "اقرأ الآن",
+    "mark_complete": "حدد اليوم كمكتمل",
+    "mark_incomplete": "إلغاء الإكمال",
+    "reset_plan": "إعادة ضبط الختمة؟",
+    "reset_confirm": "سيؤدي هذا إلى حذف الخطة الحالية والتقدّم."
   },
   "global": {
     "jan": "يناير",
@@ -39,7 +101,8 @@
     "ramadan": "رمضان",
     "shawwal": "شوال",
     "dhul_kadah": "ذو القعدة",
-    "dhul_hijjah": "ذو الحجة"
+    "dhul_hijjah": "ذو الحجة",
+    "locale_code": "ar"
   },
   "home": {
     "welcome_message": "السلام عليكم",
@@ -107,6 +170,12 @@
     "hadith_previous": "السابق",
     "hadith_next": "التالي",
     "more_islamic_excerpts": "مقتطفات إسلامية",
+    "daily_progress": "تقدّمك اليومي",
+    "nawafil": "النوافل",
+    "religious_occasions": "مناسبات دينية",
+    "section_read": "اقرأ وتدبّر",
+    "section_adhkar": "أذكار وتسبيح",
+    "section_tools": "مواقيت وأدوات",
     "islamic_history": "السيرة النبوية",
     "free_palestine": "فلسطين حرة",
     "palestine_support": "اللهم انصر إخواننا في فلسطين، وادفع عنهم البلاء، واجعل لهم من كل هم فرجاً، ومن كل ضيق مخرجاً، وارزقهم الصبر والثبات، وأطعمهم من جوع وآمنهم من خوف واجعل لهم النصر المبين",
@@ -114,7 +183,8 @@
     "palestine_duah": "لا تنسوهم من دعائكم",
     "close": "إغلاق",
     "support_developer": "ادعم المطور",
-    "support_developer_title": "إذا وجدت هذا التطبيق مفيداً، يمكنك دعمي من خلال التبرع لمواصلة تطوير المزيد من التطبيقات الإسلامية المجانية."
+    "support_developer_title": "إذا وجدت هذا التطبيق مفيداً، يمكنك دعمي من خلال التبرع لمواصلة تطوير المزيد من التطبيقات الإسلامية المجانية.",
+    "reset": "إعادة تعيين"
   },
   "quran": {
     "meccan": "مكية",
@@ -396,6 +466,9 @@
     "app_lock_overlay_not_found_subtitle": "افتح تفاصيل التطبيق ثم فعّل الظهور فوق التطبيقات الأخرى يدوياً.",
     "app_lock_select_apps_first": "اختر التطبيقات أولاً لتفعيل الحظر.",
     "app_lock_usage_required_message": "صلاحية Usage Access مطلوبة لحظر التطبيقات المختارة.",
+    "app_lock_overlay_required_message": "يجب السماح بظهور التطبيق فوق التطبيقات الأخرى لعرض شاشة القفل.",
+    "battery_opt_title": "تحسين البطارية",
+    "battery_opt_message": "للحصول على التنبيهات في وقتها بدقة، يُفضّل استثناء التطبيق من تحسين البطارية.",
     "app_lock_overlay_message": "استثمر هذا الوقت في شيء نافع. تركيزك الآن أثمن.",
     "app_lock_duration_title": "مدة القفل",
     "app_lock_duration_10_min": "10 دقائق",
@@ -414,7 +487,7 @@
     "medium": "متوسط",
     "large": "كبير",
     "app_description": "تطبيق وذكّر لمساعدتك في شعائر الإسلام",
-    "version": "الإصدار 3.1.1+17",
+    "version": "الإصدار 3.2.0+18",
     "copyright": "© 2025 جميع الحقوق محفوظة",
     "close": "إغلاق",
     "notifications": "التنبيهات",
@@ -481,7 +554,11 @@
     "ok": "حسناً",
     "notification_permission_title": "إذن الإشعارات",
     "notification_permission_message": "يحتاج تطبيق واذكِّر إلى إذن الإشعارات لإرسال تنبيهات أوقات الصلاة والأذان والأذكار.\n\nلن يتم إرسال أي إشعارات غير مرغوب فيها.",
-    "exact_alarm_permission_warning": "لن تصل التنبيهات في الوقت المحدد بدون إذن \"التنبيهات والتذكيرات\""
+    "exact_alarm_permission_warning": "لن تصل التنبيهات في الوقت المحدد بدون إذن \"التنبيهات والتذكيرات\"",
+    "settings": "الإعدادات",
+    "app_lock_prayer_name_fallback": "وقت الصلاة",
+    "notifications_on": "مفعّلة",
+    "notifications_off": "متوقفة"
   },
   "nav_bar": {
     "home": "الرئيسية",
@@ -568,7 +645,7 @@
     "calculation_method_settings": "إعدادات طريقة الحساب",
     "choose_calculation_method": "اختر الطريقة المناسبة لحساب المواقيت حسب منطقتك",
     "asr_calculation_method_shafi": "الشافعي، المالكي، الحنبلي",
-    "asr_calculation_method_shafi_description": "عندما يكون ظل الشيء مثل طوله", 
+    "asr_calculation_method_shafi_description": "عندما يكون ظل الشيء مثل طوله",
     "asr_calculation_method_hanafi": "الحنفي",
     "asr_calculation_method_hanafi_description": "عندما يكون ظل الشيء ضعف طوله",
     "location_update": "تحديث الموقع",
@@ -612,9 +689,10 @@
     "turkey": "تركيا",
     "turkey_description": "المعيار المستخدم في تركيا زاوية الفجر: 18، زاوية العشاء: 17",
     "tehran": "طهران، إيران",
-    "tehran_description": "المعيار المستخدم في إيران زاوية الفجر: 17.7، زاوية العشاء: 14، زاوية المغرب: 4.5"
+    "tehran_description": "المعيار المستخدم في إيران زاوية الفجر: 17.7، زاوية العشاء: 14، زاوية المغرب: 4.5",
+    "settings": "الإعدادات"
   },
-    "radio": {
+  "radio": {
     "title": "راديو",
     "search": "بحث",
     "clear": "مسح",
@@ -911,6 +989,11 @@
     "guide_intention": "النية",
     "guide_intention_desc": "تبييت النية من الليل للصيام المستحب",
     "guide_iftar": "الإفطار",
-    "guide_iftar_desc": "يُستحب التعجيل بالفطر عند غروب الشمس"
-  }
+    "guide_iftar_desc": "يُستحب التعجيل بالفطر عند غروب الشمس",
+    "today": "اليوم",
+    "tomorrow": "غداً",
+    "upcoming": "قريباً"
+  },
+  "cancel": "إلغاء",
+  "loading": "جارِ التحميل..."
 }

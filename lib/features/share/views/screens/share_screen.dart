@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:forui/forui.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
@@ -52,28 +53,26 @@ class _ShareScreenState extends State<ShareScreen> {
     // await — analyzer (rightly) flags reading context across async gaps.
     final caption = _caption();
     final subject = widget.payload.categoryLabel;
-    final failureMsg = _tr('azkar.share_image_failed',
-        'Could not generate image. Sharing as text instead.');
+    final failureMsg = _tr(
+      'azkar.share_image_failed',
+      'Could not generate image. Sharing as text instead.',
+    );
     setState(() => _isSharing = true);
     try {
       final file = await _captureCardToFile();
       if (file == null) {
         if (!mounted) return;
-        _showSnack(failureMsg);
+        _showSnack(failureMsg, destructive: true);
         await _shareTextOnlyWith(caption, subject, silent: true);
         return;
       }
       await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(file.path)],
-          text: caption,
-          subject: subject,
-        ),
+        ShareParams(files: [XFile(file.path)], text: caption, subject: subject),
       );
     } catch (e, st) {
       debugPrint('ShareScreen.shareImage error: $e\n$st');
       if (!mounted) return;
-      _showSnack(failureMsg);
+      _showSnack(failureMsg, destructive: true);
       await _shareTextOnlyWith(caption, subject, silent: true);
     } finally {
       if (mounted) setState(() => _isSharing = false);
@@ -130,12 +129,14 @@ class _ShareScreenState extends State<ShareScreen> {
       // where the share button fires from a still-animating route).
       await Future<void>.delayed(const Duration(milliseconds: 32));
       if (!mounted) return null;
-      final boundary = _boundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return null;
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      final ByteData? bytes =
-          await image.toByteData(format: ui.ImageByteFormat.png);
+      final ByteData? bytes = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       image.dispose();
       if (bytes == null) return null;
       final dir = await getTemporaryDirectory();
@@ -158,6 +159,13 @@ class _ShareScreenState extends State<ShareScreen> {
       return p.captionOverride!;
     }
     final lines = <String>[p.headline];
+    if (p.secondaryText != null && p.secondaryText!.isNotEmpty) {
+      lines.add('');
+      lines.add(p.secondaryText!);
+    }
+    if (p.reference != null && p.reference!.isNotEmpty) {
+      lines.add(p.reference!);
+    }
     if (p.categoryLabel != null && p.categoryLabel!.isNotEmpty) {
       final from = _tr('azkar.from', 'from');
       lines.add('');
@@ -173,13 +181,53 @@ class _ShareScreenState extends State<ShareScreen> {
   String _tr(String key, String fallback) =>
       AppLocalizations.of(context)?.translate(key) ?? fallback;
 
-  void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
+  void _showSnack(String msg, {bool destructive = false}) {
+    showFToast(
+      context: context,
+      title: Text(msg),
+      variant: destructive ? FToastVariant.destructive : FToastVariant.primary,
+    );
+  }
+
+  /// The capture target. Compact cards are sized to the fixed 4:5 ratio;
+  /// passage cards are given a fixed width and grow to content height inside
+  /// a scroll view (the RepaintBoundary still captures the FULL card, even
+  /// the parts scrolled out of view).
+  Widget _buildPreview() {
+    if (widget.payload.variant == ShareCardVariant.passage) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 460),
+            child: RepaintBoundary(
+              key: _boundaryKey,
+              child: ShareCard(payload: widget.payload),
+            ),
+          ),
+        ),
+      );
+    }
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(28, 12, 28, 12),
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final maxW = c.maxWidth;
+            final maxH = c.maxHeight;
+            final byWidth = maxW / ShareCard.aspectRatio;
+            final height = byWidth <= maxH ? byWidth : maxH;
+            final width = height * ShareCard.aspectRatio;
+            return SizedBox(
+              width: width,
+              height: height,
+              child: RepaintBoundary(
+                key: _boundaryKey,
+                child: ShareCard(payload: widget.payload),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -191,8 +239,9 @@ class _ShareScreenState extends State<ShareScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF0F1A2A) : const Color(0xFFEEF3FB),
+      backgroundColor: isDark
+          ? const Color(0xFF0F1A2A)
+          : const Color(0xFFEEF3FB),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -208,33 +257,7 @@ class _ShareScreenState extends State<ShareScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 12, 28, 12),
-                  // RepaintBoundary scopes the layer we capture. Sized via
-                  // LayoutBuilder so the preview fills available space
-                  // without ever exceeding ShareCard's 4:5 ratio.
-                  child: LayoutBuilder(
-                    builder: (context, c) {
-                      final maxW = c.maxWidth;
-                      final maxH = c.maxHeight;
-                      final byWidth = maxW / ShareCard.aspectRatio;
-                      final height = byWidth <= maxH ? byWidth : maxH;
-                      final width = height * ShareCard.aspectRatio;
-                      return SizedBox(
-                        width: width,
-                        height: height,
-                        child: RepaintBoundary(
-                          key: _boundaryKey,
-                          child: ShareCard(payload: widget.payload),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
+            Expanded(child: _buildPreview()),
             _ActionBar(
               isSharing: _isSharing,
               shareImageLabel: _tr('azkar.share_as_image', 'Share as image'),
@@ -344,43 +367,20 @@ class _ActionBar extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: isSharing ? null : onShareText,
-                  icon: const Icon(Icons.text_snippet_outlined, size: 18),
-                  label: Text(
-                    shareTextLabel,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF20497D),
-                    side: const BorderSide(
-                      color: Color(0x6620497D),
-                      width: 1.4,
-                    ),
-                    minimumSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
+                child: FButton(
+                  onPress: isSharing ? null : onShareText,
+                  variant: FButtonVariant.outline,
+                  prefix: const Icon(Icons.text_snippet_outlined, size: 18),
+                  child: Text(shareTextLabel, overflow: TextOverflow.ellipsis),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: isSharing ? null : onCopy,
-                  icon: const Icon(Icons.copy_rounded, size: 18),
-                  label: Text(copyLabel, overflow: TextOverflow.ellipsis),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF20497D),
-                    side: const BorderSide(
-                      color: Color(0x6620497D),
-                      width: 1.4,
-                    ),
-                    minimumSize: const Size.fromHeight(48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
+                child: FButton(
+                  onPress: isSharing ? null : onCopy,
+                  variant: FButtonVariant.outline,
+                  prefix: const Icon(Icons.copy_rounded, size: 18),
+                  child: Text(copyLabel, overflow: TextOverflow.ellipsis),
                 ),
               ),
             ],

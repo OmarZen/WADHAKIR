@@ -73,13 +73,13 @@ class BookmarkModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        hadithId,
-        createdAt,
-        updatedAt,
-        collectionIds,
-        note,
-        tags,
-        isFavorite,
-      ];
+    id,
+    hadithId,
+    createdAt,
+    updatedAt,
+    collectionIds,
+    note,
+    tags,
+    isFavorite,
+  ];
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
@@ -14,67 +15,41 @@ class AboutSectionWidgets extends StatelessWidget {
   static Widget buildAboutTile(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
+    return FItem(
+      prefix: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          Icons.info_outline,
+          color: theme.colorScheme.onPrimary,
+          size: 18,
         ),
       ),
-      // Material(transparency) wrapper so the ListTile finds a Material
-      // ancestor before walking up to the colored outer Container — avoids
-      // the framework warning "ListTile background color or ink splashes
-      // may be invisible." every time this section repaints.
-      child: Material(
-        type: MaterialType.transparency,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          title: Text(
-            l10n?.translate('settings.about_app') ?? 'حول التطبيق',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              l10n?.translate('settings.app_description') ??
-                  'تطبيق وذكّر لمساعدتك في شعائر الإسلام',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.info_outline,
-              color: theme.colorScheme.onPrimary,
-              size: 18,
-            ),
-          ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-          onTap: () => _showAboutDialog(context),
+      title: Text(
+        l10n?.translate('settings.about_app') ?? 'حول التطبيق',
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
+      subtitle: Text(
+        l10n?.translate('settings.app_description') ??
+            'تطبيق وذكّر لمساعدتك في شعائر الإسلام',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          fontSize: 12,
+        ),
+      ),
+      suffix: Icon(
+        Icons.arrow_forward_ios,
+        size: 14,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      ),
+      onPress: () => _showAboutDialog(context),
     );
   }
 
@@ -212,67 +187,41 @@ class AboutSectionWidgets extends StatelessWidget {
   static Widget buildFeedbackTile(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
+    return FItem(
+      prefix: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          Icons.feedback_outlined,
+          color: theme.colorScheme.onPrimary,
+          size: 18,
         ),
       ),
-      // Material(transparency) wrapper so the ListTile finds a Material
-      // ancestor before walking up to the colored outer Container — avoids
-      // the framework warning "ListTile background color or ink splashes
-      // may be invisible." every time this section repaints.
-      child: Material(
-        type: MaterialType.transparency,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          title: Text(
-            l10n?.translate('settings.feedback') ?? 'إرسال تعليق',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              l10n?.translate('settings.feedback_description') ??
-                  'شاركنا رأيك لتحسين التطبيق',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.feedback_outlined,
-              color: theme.colorScheme.onPrimary,
-              size: 18,
-            ),
-          ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-          onTap: () => _openFeedbackForm(context),
+      title: Text(
+        l10n?.translate('settings.feedback') ?? 'إرسال تعليق',
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
+      subtitle: Text(
+        l10n?.translate('settings.feedback_description') ??
+            'شاركنا رأيك لتحسين التطبيق',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          fontSize: 12,
+        ),
+      ),
+      suffix: Icon(
+        Icons.arrow_forward_ios,
+        size: 14,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      ),
+      onPress: () => _openFeedbackForm(context),
     );
   }
 
@@ -287,14 +236,13 @@ class AboutSectionWidgets extends StatelessWidget {
         await launchUrl(url, mode: LaunchMode.platformDefault);
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n?.translate('settings.feedback_error') ??
-                    'لا يمكن فتح نموذج التعليقات: ${url.toString()}',
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
+          showFToast(
+            context: context,
+            title: Text(
+              l10n?.translate('settings.feedback_error') ??
+                  'لا يمكن فتح نموذج التعليقات: ${url.toString()}',
             ),
+            variant: FToastVariant.destructive,
           );
         }
       }
@@ -304,67 +252,41 @@ class AboutSectionWidgets extends StatelessWidget {
   static Widget buildWebsiteTile(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
+    return FItem(
+      prefix: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          Icons.language,
+          color: theme.colorScheme.onPrimary,
+          size: 18,
         ),
       ),
-      // Material(transparency) wrapper so the ListTile finds a Material
-      // ancestor before walking up to the colored outer Container — avoids
-      // the framework warning "ListTile background color or ink splashes
-      // may be invisible." every time this section repaints.
-      child: Material(
-        type: MaterialType.transparency,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          title: Text(
-            l10n?.translate('settings.website') ?? 'موقع التطبيق',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              l10n?.translate('settings.website_description') ??
-                  'زيارة موقع التطبيق الرسمي',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.language,
-              color: theme.colorScheme.onPrimary,
-              size: 18,
-            ),
-          ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-          onTap: () => _openWebsite(context),
+      title: Text(
+        l10n?.translate('settings.website') ?? 'موقع التطبيق',
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
+      subtitle: Text(
+        l10n?.translate('settings.website_description') ??
+            'زيارة موقع التطبيق الرسمي',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          fontSize: 12,
+        ),
+      ),
+      suffix: Icon(
+        Icons.arrow_forward_ios,
+        size: 14,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      ),
+      onPress: () => _openWebsite(context),
     );
   }
 
@@ -379,14 +301,13 @@ class AboutSectionWidgets extends StatelessWidget {
         await launchUrl(url, mode: LaunchMode.platformDefault);
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n?.translate('settings.website_error') ??
-                    'لا يمكن فتح موقع التطبيق: ${url.toString()}',
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
+          showFToast(
+            context: context,
+            title: Text(
+              l10n?.translate('settings.website_error') ??
+                  'لا يمكن فتح موقع التطبيق: ${url.toString()}',
             ),
+            variant: FToastVariant.destructive,
           );
         }
       }
@@ -396,67 +317,41 @@ class AboutSectionWidgets extends StatelessWidget {
   static Widget buildPrivacyTile(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
+    return FItem(
+      prefix: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          Icons.privacy_tip_outlined,
+          color: theme.colorScheme.onPrimary,
+          size: 18,
         ),
       ),
-      // Material(transparency) wrapper so the ListTile finds a Material
-      // ancestor before walking up to the colored outer Container — avoids
-      // the framework warning "ListTile background color or ink splashes
-      // may be invisible." every time this section repaints.
-      child: Material(
-        type: MaterialType.transparency,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          title: Text(
-            l10n?.translate('settings.privacy') ?? 'سياسة الخصوصية',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              l10n?.translate('settings.privacy_description') ??
-                  'اطلع على سياسة الخصوصية',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.privacy_tip_outlined,
-              color: theme.colorScheme.onPrimary,
-              size: 18,
-            ),
-          ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-          onTap: () => _openPrivacyPolicy(context),
+      title: Text(
+        l10n?.translate('settings.privacy') ?? 'سياسة الخصوصية',
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
+      subtitle: Text(
+        l10n?.translate('settings.privacy_description') ??
+            'اطلع على سياسة الخصوصية',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          fontSize: 12,
+        ),
+      ),
+      suffix: Icon(
+        Icons.arrow_forward_ios,
+        size: 14,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      ),
+      onPress: () => _openPrivacyPolicy(context),
     );
   }
 
@@ -471,14 +366,13 @@ class AboutSectionWidgets extends StatelessWidget {
         await launchUrl(url, mode: LaunchMode.platformDefault);
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n?.translate('settings.privacy_error') ??
-                    'لا يمكن فتح سياسة الخصوصية: ${url.toString()}',
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
+          showFToast(
+            context: context,
+            title: Text(
+              l10n?.translate('settings.privacy_error') ??
+                  'لا يمكن فتح سياسة الخصوصية: ${url.toString()}',
             ),
+            variant: FToastVariant.destructive,
           );
         }
       }
@@ -488,67 +382,41 @@ class AboutSectionWidgets extends StatelessWidget {
   static Widget buildRateAppTile(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-          width: 1,
+    return FItem(
+      prefix: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          Icons.star_rate,
+          color: theme.colorScheme.onPrimary,
+          size: 18,
         ),
       ),
-      // Material(transparency) wrapper so the ListTile finds a Material
-      // ancestor before walking up to the colored outer Container — avoids
-      // the framework warning "ListTile background color or ink splashes
-      // may be invisible." every time this section repaints.
-      child: Material(
-        type: MaterialType.transparency,
-        child: ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          title: Text(
-            l10n?.translate('settings.rate_app') ?? 'قيّم التطبيق',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              l10n?.translate('settings.rate_app_description') ??
-                  'قيّم التطبيق في متجر التطبيقات',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.star_rate,
-              color: theme.colorScheme.onPrimary,
-              size: 18,
-            ),
-          ),
-          trailing: Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-          onTap: () => _openPlayStore(context),
+      title: Text(
+        l10n?.translate('settings.rate_app') ?? 'قيّم التطبيق',
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
+      subtitle: Text(
+        l10n?.translate('settings.rate_app_description') ??
+            'قيّم التطبيق في متجر التطبيقات',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          fontSize: 12,
+        ),
+      ),
+      suffix: Icon(
+        Icons.arrow_forward_ios,
+        size: 14,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      ),
+      onPress: () => _openPlayStore(context),
     );
   }
 
@@ -565,14 +433,13 @@ class AboutSectionWidgets extends StatelessWidget {
         await launchUrl(url, mode: LaunchMode.platformDefault);
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                l10n?.translate('settings.rate_app_error') ??
-                    'لا يمكن فتح متجر التطبيقات: ${url.toString()}',
-              ),
-              backgroundColor: Theme.of(context).colorScheme.error,
+          showFToast(
+            context: context,
+            title: Text(
+              l10n?.translate('settings.rate_app_error') ??
+                  'لا يمكن فتح متجر التطبيقات: ${url.toString()}',
             ),
+            variant: FToastVariant.destructive,
           );
         }
       }

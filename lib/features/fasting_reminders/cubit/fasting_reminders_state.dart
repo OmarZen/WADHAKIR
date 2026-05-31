@@ -84,15 +84,15 @@ class FastingRemindersLoaded extends FastingRemindersState {
 
   @override
   List<Object?> get props => [
-        settings,
-        upcomingFastingDays,
-        yearFastingDays,
-        daysUntilNext,
-        nextFastingDay,
-        currentHijriMonth,
-        currentHijriYear,
-        currentHijriDay,
-      ];
+    settings,
+    upcomingFastingDays,
+    yearFastingDays,
+    daysUntilNext,
+    nextFastingDay,
+    currentHijriMonth,
+    currentHijriYear,
+    currentHijriDay,
+  ];
 }
 
 /// Error state when something goes wrong

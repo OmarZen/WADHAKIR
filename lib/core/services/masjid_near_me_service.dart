@@ -22,7 +22,8 @@ class MasjidNearMeService {
     int radius = _defaultRadiusMeters,
     String preferredLanguage = 'ar',
   }) async {
-    final cacheKey = '${lat.toStringAsFixed(3)},'
+    final cacheKey =
+        '${lat.toStringAsFixed(3)},'
         '${lng.toStringAsFixed(3)},$radius';
     final cached = _overpassCache[cacheKey];
     if (cached != null && !cached.isExpired) {
@@ -30,7 +31,8 @@ class MasjidNearMeService {
     }
 
     try {
-      final query = '''
+      final query =
+          '''
 [out:json][timeout:25];
 (
   node["amenity"="place_of_worship"]["religion"="muslim"](around:$radius,$lat,$lng);
@@ -40,13 +42,13 @@ class MasjidNearMeService {
 out center tags;
 ''';
 
-      final response = await http.post(
-        Uri.parse(_overpassUrl),
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: {'data': query},
-      ).timeout(const Duration(seconds: 20));
+      final response = await http
+          .post(
+            Uri.parse(_overpassUrl),
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: {'data': query},
+          )
+          .timeout(const Duration(seconds: 20));
 
       if (response.statusCode != 200) {
         throw Exception('Overpass returned ${response.statusCode}');
@@ -103,13 +105,15 @@ out center tags;
         },
       );
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
@@ -153,13 +157,15 @@ out center tags;
         '$_baseUrl/search',
       ).replace(queryParameters: {'name': name});
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
@@ -194,13 +200,15 @@ out center tags;
         '$_baseUrl/search',
       ).replace(queryParameters: {'city': city});
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;

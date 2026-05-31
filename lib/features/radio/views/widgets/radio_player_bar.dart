@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
@@ -36,8 +37,9 @@ class RadioPlayerBar extends StatelessWidget {
               ),
               child: Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal:
-                      PlatformUtils.isDesktop ? 14.0 : size.width * 0.03,
+                  horizontal: PlatformUtils.isDesktop
+                      ? 14.0
+                      : size.width * 0.03,
                   vertical: PlatformUtils.isDesktop ? 10.0 : size.height * 0.01,
                 ),
                 decoration: BoxDecoration(
@@ -57,8 +59,9 @@ class RadioPlayerBar extends StatelessWidget {
                       size: PlatformUtils.isDesktop ? 40.0 : size.width * 0.10,
                     ),
                     SizedBox(
-                      width:
-                          PlatformUtils.isDesktop ? 10.0 : size.width * 0.025,
+                      width: PlatformUtils.isDesktop
+                          ? 10.0
+                          : size.width * 0.025,
                     ),
                     Expanded(
                       child: Column(
@@ -85,8 +88,9 @@ class RadioPlayerBar extends StatelessWidget {
                                   ? 14.0
                                   : size.width * 0.036,
                               fontWeight: FontWeight.w700,
-                              fontFamily:
-                                  languageCode == 'en' ? null : 'Almarai',
+                              fontFamily: languageCode == 'en'
+                                  ? null
+                                  : 'Almarai',
                             ),
                           ),
                           SizedBox(height: PlatformUtils.isDesktop ? 4.0 : 4.0),
@@ -102,43 +106,24 @@ class RadioPlayerBar extends StatelessWidget {
                       listener: (context, st) {},
                       builder: (context, st) {
                         final playing = st is RadioLoaded && st.isPlaying;
-                        return ElevatedButton(
-                          onPressed: () =>
+                        return FButton(
+                          onPress: () =>
                               context.read<RadioCubit>().togglePlayPause(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: PlatformUtils.isDesktop ? 12.0 : 12.0,
-                              vertical: PlatformUtils.isDesktop ? 8.0 : 8.0,
-                            ),
-                            minimumSize: Size.zero,
+                          mainAxisSize: MainAxisSize.min,
+                          prefix: Icon(
+                            playing
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            size: PlatformUtils.isDesktop ? 18.0 : 18.0,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                playing
-                                    ? Icons.pause_rounded
-                                    : Icons.play_arrow_rounded,
-                                size: PlatformUtils.isDesktop ? 18.0 : 18.0,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                playing
-                                    ? (l10n?.translate('radio.pause') ??
-                                        'Pause')
-                                    : (l10n?.translate('radio.play') ?? 'Play'),
-                                style: TextStyle(
-                                  fontSize:
-                                      PlatformUtils.isDesktop ? 13.0 : 13.0,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            playing
+                                ? (l10n?.translate('radio.pause') ?? 'Pause')
+                                : (l10n?.translate('radio.play') ?? 'Play'),
+                            style: TextStyle(
+                              fontSize: PlatformUtils.isDesktop ? 13.0 : 13.0,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         );
                       },
@@ -329,18 +314,11 @@ class _NowPlayingSheet extends StatelessWidget {
                               builder: (context, st) {
                                 final playing =
                                     st is RadioLoaded && st.isPlaying;
-                                return ElevatedButton(
-                                  onPressed: () => context
+                                return FButton(
+                                  onPress: () => context
                                       .read<RadioCubit>()
                                       .togglePlayPause(),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: theme.colorScheme.primary,
-                                    foregroundColor: Colors.white,
-                                    shape: const CircleBorder(),
-                                    padding: EdgeInsets.all(
-                                      isDesktop ? 20.0 : size.width * 0.05,
-                                    ),
-                                  ),
+                                  mainAxisSize: MainAxisSize.min,
                                   child: Icon(
                                     playing
                                         ? Icons.pause_rounded

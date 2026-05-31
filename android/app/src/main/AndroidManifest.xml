@@ -43,6 +43,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Required by flutter_overlay_window's foreground service on Android 14+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Lets the app prompt the user to exempt it from Doze/battery
+         optimization so scheduled adhan/fasting/wird alarms fire on time. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
 
     <application
@@ -84,10 +87,45 @@
             android:taskAffinity=""
             android:theme="@style/NormalTheme" />
 
+        <!-- App-lock monitor. On Android 14+ (targetSDK 34+) a foreground
+             service MUST declare a type, else startForeground throws
+             MissingForegroundServiceTypeException. It watches the foreground
+             app and overlays a lock screen during prayer windows, which fits
+             "specialUse" (the FOREGROUND_SERVICE_SPECIAL_USE permission is
+             declared above). The property justifies it for Play review. -->
         <service
             android:name=".AppLockMonitorService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="app_lock_monitor_foreground_app_during_prayer_times" />
+        </service>
+
+        <!-- Native floating-dhikr foreground service: keeps showing the pill
+             over other apps on a timer even when the app is killed. -->
+        <service
+            android:name=".FloatingDhikrService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="floating_dhikr_reminder_over_other_apps" />
+        </service>
+
+        <!-- Restarts the floating-dhikr service after reboot / app update. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- flutter_overlay_window's foreground service. Required by the
              plugin to draw the floating adhkar reminder over other apps.
@@ -149,6 +187,48 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/hijri_calendar_widget_info" />
+        </receiver>
+
+        <!-- Glass Prayer Detail Widget -->
+        <receiver
+            android:name=".GlassPrayerDetailWidgetProvider"
+            android:label="Prayer Detail"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glass_prayer_detail_widget_info" />
+        </receiver>
+
+        <!-- Glass Prayer Next Widget -->
+        <receiver
+            android:name=".GlassPrayerNextWidgetProvider"
+            android:label="Prayer Next"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glass_prayer_next_widget_info" />
+        </receiver>
+
+        <!-- Live Prayer Clock Widget -->
+        <receiver
+            android:name=".GlassClockWidgetProvider"
+            android:label="Prayer Clock"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glass_clock_widget_info" />
         </receiver>
 
         <!-- Home Widget Background Receiver -->

@@ -8,6 +8,8 @@ import 'package:wadhakir/features/home/views/widgets/prayer_card_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/welcome_section_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/more_islamic_excerpts_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/palestine_support_card_widget.dart';
+import 'package:wadhakir/features/home/views/widgets/daily_progress_strip.dart';
+import 'package:wadhakir/features/home/views/widgets/religious_occasions_strip.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -35,8 +37,9 @@ class HomeScreenContent extends StatelessWidget {
       backgroundColor: theme.colorScheme.surface,
       body: BlocBuilder<UnsplashCubit, UnsplashState>(
         builder: (context, state) {
-          final mosqueImage =
-              context.read<UnsplashCubit>().getCurrentMosqueImage();
+          final mosqueImage = context
+              .read<UnsplashCubit>()
+              .getCurrentMosqueImage();
 
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
@@ -50,10 +53,12 @@ class HomeScreenContent extends StatelessWidget {
               ),
               // Compact Prayer Times Card
               SliverToBoxAdapter(child: CompactPrayerCardWidget()),
-              // Hadith Card removed (pruned to reduce bundle size)
-              // More Islamic Excerpts
+              // Daily progress (wird / adhkar / nawafil)
+              const SliverToBoxAdapter(child: DailyProgressStrip()),
+              // Feature directory grouped into labelled sections
               const SliverToBoxAdapter(child: MoreIslamicExcerptsWidget()),
-              // Tight spacing between sections
+              // Religious occasions strip
+              const SliverToBoxAdapter(child: ReligiousOccasionsStrip()),
               const SliverToBoxAdapter(child: SizedBox(height: 6)),
               // Palestine Support Card
               const SliverToBoxAdapter(child: PalestineSupportCardWidget()),

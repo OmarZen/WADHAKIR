@@ -1,127 +1,93 @@
-import 'grids/raqia_grid_item.dart';
-import 'grids/tasbih_grid_item.dart';
 import 'package:flutter/material.dart';
 import 'grids/moon_phases_grid_item.dart';
 import 'grids/pray_azkar_grid_item.dart';
 import 'grids/allah_names_grid_item.dart';
 import 'grids/fasting_calendar_grid_item.dart';
 import 'grids/nearest_mosque_grid_item.dart';
-// Hadith library grid removed (hadith feature pruned)
-import 'grids/islamic_history_grid_item.dart';
+import 'grids/wird_grid_item.dart';
+import 'grids/hadith_nawawi_grid_item.dart';
+import 'grids/raqia_grid_item.dart';
+import 'grids/tasbih_grid_item.dart';
 import 'grids/electronic_tasbih_grid_item.dart';
+// Hadith library grid removed (hadith feature pruned)
+// Islamic history grid removed (data retained in assets/json_data/history.json
+// for future re-enable — see islamic_history feature, currently unreferenced)
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/widgets/titled_section.dart';
 
+/// The home feature directory, grouped into labelled sections of vertical
+/// icon tiles so users can discover every feature at a glance.
 class MoreIslamicExcerptsWidget extends StatelessWidget {
   const MoreIslamicExcerptsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final size = MediaQuery.of(context).size;
     final l10n = context.l10n;
-    final isDark = theme.brightness == Brightness.dark;
-    final isDesktop = PlatformUtils.isDesktop;
 
-    // Responsive grid configuration
-    final crossAxisCount = _getGridCrossAxisCount(size.width, isDesktop);
-    final childAspectRatio = _getChildAspectRatio(size.width, isDesktop);
-    final horizontalPadding = isDesktop ? 32.0 : 16.0;
-    final verticalPadding = isDesktop ? 16.0 : 12.0;
-    final gridSpacing = isDesktop ? 16.0 : 8.0;
-    final iconPadding = isDesktop ? 10.0 : 8.0;
-    final titleSpacing = isDesktop ? 12.0 : 8.0;
-
-    return Center(
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: isDesktop ? 1400 : double.infinity,
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: verticalPadding,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(iconPadding),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.rectangle,
-                    color: isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
-                        : theme.colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    size: isDesktop ? 28 : 20,
-                    color: isDark
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.primary,
-                  ),
-                ),
-                SizedBox(width: titleSpacing),
-                Text(
-                  l10n?.translate('home.more_islamic_excerpts') ??
-                      'مقتطفات إسلامية',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontSize: isDesktop ? 24 : null,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(
-              height: isDesktop ? size.height * 0.04 : size.height * 0.03,
-            ),
-            GridView.count(
-              crossAxisCount: crossAxisCount,
-              childAspectRatio: childAspectRatio,
-              crossAxisSpacing: gridSpacing,
-              mainAxisSpacing: gridSpacing,
-              padding: EdgeInsets.zero,
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              children: [
-                MoonPhasesGridItem(),
-                AllahNamesGridItem(),
-                // HadithLibraryGridItem removed
-                FastingCalendarGridItem(),
-                PrayAzkarGridItem(),
-                RaqiaGridItem(),
-                TasbihGridItem(),
-                ElectronicTasbihGridItem(),
-                NearestMosqueGridItem(),
-                IslamicHistoryGridItem(),
-              ],
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _section(
+          context,
+          title: l10n?.translate('home.section_read') ?? 'اقرأ وتدبّر',
+          icon: Icons.auto_stories_rounded,
+          items: const [
+            WirdGridItem(),
+            HadithNawawiGridItem(),
+            AllahNamesGridItem(),
+            RaqiaGridItem(),
           ],
         ),
-      ),
+        _section(
+          context,
+          title: l10n?.translate('home.section_adhkar') ?? 'أذكار وتسبيح',
+          icon: Icons.favorite_rounded,
+          items: const [
+            PrayAzkarGridItem(),
+            TasbihGridItem(),
+            ElectronicTasbihGridItem(),
+          ],
+        ),
+        _section(
+          context,
+          title: l10n?.translate('home.section_tools') ?? 'مواقيت وأدوات',
+          icon: Icons.explore_rounded,
+          items: const [
+            FastingCalendarGridItem(),
+            MoonPhasesGridItem(),
+            NearestMosqueGridItem(),
+          ],
+        ),
+      ],
     );
   }
 
-  /// Calculate grid columns based on screen width and platform
-  int _getGridCrossAxisCount(double width, bool isDesktop) {
-    if (!isDesktop) return 2; // Mobile: 2 columns
+  Widget _section(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required List<Widget> items,
+  }) {
+    final width = MediaQuery.of(context).size.width;
+    final isDesktop = PlatformUtils.isDesktop;
+    final columns = !isDesktop
+        ? 3
+        : (width >= 1200 ? 5 : (width >= 900 ? 4 : 3));
 
-    // Desktop breakpoints
-    if (width >= 1400) return 4; // Extra large: 4 columns
-    if (width >= 1200) return 4; // Large: 4 columns
-    if (width >= 900) return 3; // Medium: 3 columns
-    return 2; // Small desktop: 2 columns
-  }
-
-  /// Calculate aspect ratio based on screen width and platform
-  double _getChildAspectRatio(double width, bool isDesktop) {
-    if (!isDesktop) return 2.4; // Mobile: wider cards
-
-    // Desktop: adjust ratio based on column count
-    if (width >= 1400) return 3.8; // 4 columns: slightly wider
-    if (width >= 1200) return 3.5; // 4 columns: balanced
-    if (width >= 900) return 3.0; // 3 columns: wider
-    return 2.4; // 2 columns: same as mobile
+    return TitledSection(
+      title: title,
+      icon: icon,
+      child: GridView.count(
+        crossAxisCount: columns,
+        childAspectRatio: 0.92,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        padding: EdgeInsets.zero,
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        children: items,
+      ),
+    );
   }
 }

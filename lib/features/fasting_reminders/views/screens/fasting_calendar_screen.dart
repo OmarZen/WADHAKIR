@@ -450,11 +450,7 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                   color: primaryColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  typeIcon,
-                  color: primaryColor,
-                  size: 20,
-                ),
+                child: Icon(typeIcon, color: primaryColor, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -476,18 +472,15 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                               ? 'صوم في هذا اليوم'
                               : 'Fast on this day'),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
-                Icons.info_outline,
-                size: 20,
-                color: primaryColor,
-              ),
+              Icon(Icons.info_outline, size: 20, color: primaryColor),
             ],
           ),
         ),
@@ -504,8 +497,9 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
     IslamicFastingDay fastingDay,
   ) {
     final primaryColor = theme.colorScheme.primary;
-    final fastingName =
-        languageCode == 'ar' ? fastingDay.nameAr : fastingDay.nameEn;
+    final fastingName = languageCode == 'ar'
+        ? fastingDay.nameAr
+        : fastingDay.nameEn;
     final fastingDescription = languageCode == 'ar'
         ? fastingDay.descriptionAr
         : fastingDay.descriptionEn;
@@ -516,9 +510,7 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 450, maxHeight: 580),
           decoration: BoxDecoration(
@@ -533,8 +525,9 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: primaryColor,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -597,8 +590,9 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                         fastingDescription,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           height: 1.6,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.8),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.8,
+                          ),
                         ),
                       ),
 
@@ -637,35 +631,36 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                               ...fastingDay
                                   .getVirtues(languageCode)
                                   .take(3)
-                                  .map((virtue) => Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 6),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Icon(
-                                              Icons.check_circle_outline,
-                                              color: primaryColor,
-                                              size: 16,
+                                  .map(
+                                    (virtue) => Padding(
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle_outline,
+                                            color: primaryColor,
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              virtue,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    height: 1.5,
+                                                    fontFamily:
+                                                        languageCode == 'ar'
+                                                        ? 'ScheherazadeNew'
+                                                        : null,
+                                                  ),
                                             ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                virtue,
-                                                style: theme.textTheme.bodySmall
-                                                    ?.copyWith(
-                                                  height: 1.5,
-                                                  fontFamily:
-                                                      languageCode == 'ar'
-                                                          ? 'ScheherazadeNew'
-                                                          : null,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                             ],
                           ),
                         ),
@@ -738,12 +733,7 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
       children: [
         Icon(icon, size: 16, color: theme.colorScheme.primary),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodySmall,
-          ),
-        ),
+        Expanded(child: Text(text, style: theme.textTheme.bodySmall)),
       ],
     );
   }
@@ -796,7 +786,7 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
       30,
       29,
       30,
-      29
+      29,
     ];
 
     // Adjust for leap years (adds day to month 12)

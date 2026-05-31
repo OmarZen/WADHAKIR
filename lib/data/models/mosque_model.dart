@@ -77,7 +77,8 @@ class MosqueModel {
       state: (tags['addr:state'] as String?) ?? '',
       city: (tags['addr:city'] as String?) ?? '',
       locality: (tags['addr:suburb'] as String?) ?? '',
-      phone: (tags['contact:phone'] as String?) ??
+      phone:
+          (tags['contact:phone'] as String?) ??
           (tags['phone'] as String?) ??
           '',
       googlePlaceId: '',
@@ -116,7 +117,8 @@ class MosqueModel {
     final double dLat = _degreesToRadians(lat2 - lat1);
     final double dLon = _degreesToRadians(lon2 - lon1);
 
-    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final double a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_degreesToRadians(lat1)) *
             math.cos(_degreesToRadians(lat2)) *
             math.sin(dLon / 2) *

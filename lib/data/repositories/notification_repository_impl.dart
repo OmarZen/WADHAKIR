@@ -48,26 +48,24 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required DateTime prayerTime,
     required PrayerNotificationSettings settings,
     String? locationName,
-  }) =>
-      _platformRepository.schedulePrayerNotification(
-        prayerName: prayerName,
-        prayerNameArabic: prayerNameArabic,
-        prayerTime: prayerTime,
-        settings: settings,
-        locationName: locationName,
-      );
+  }) => _platformRepository.schedulePrayerNotification(
+    prayerName: prayerName,
+    prayerNameArabic: prayerNameArabic,
+    prayerTime: prayerTime,
+    settings: settings,
+    locationName: locationName,
+  );
 
   @override
   Future<void> scheduleAllPrayerNotifications({
     required Map<String, DateTime> prayerTimes,
     required NotificationSettingsModel settings,
     String? locationName,
-  }) =>
-      _platformRepository.scheduleAllPrayerNotifications(
-        prayerTimes: prayerTimes,
-        settings: settings,
-        locationName: locationName,
-      );
+  }) => _platformRepository.scheduleAllPrayerNotifications(
+    prayerTimes: prayerTimes,
+    settings: settings,
+    locationName: locationName,
+  );
 
   @override
   Future<void> cancelPrayerNotification(String prayerName) =>
@@ -91,13 +89,12 @@ class NotificationRepositoryImpl implements NotificationRepository {
     required String nextPrayerNameArabic,
     required DateTime nextPrayerTime,
     String? locationName,
-  }) =>
-      _platformRepository.showPersistentNotification(
-        nextPrayerName: nextPrayerName,
-        nextPrayerNameArabic: nextPrayerNameArabic,
-        nextPrayerTime: nextPrayerTime,
-        locationName: locationName,
-      );
+  }) => _platformRepository.showPersistentNotification(
+    nextPrayerName: nextPrayerName,
+    nextPrayerNameArabic: nextPrayerNameArabic,
+    nextPrayerTime: nextPrayerTime,
+    locationName: locationName,
+  );
 
   @override
   Future<void> hidePersistentNotification() =>
@@ -119,6 +116,10 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   // app uses or the other service's channels disappear. Keeping the key in
   // sync makes that safe.
   static const String _channelKeyFasting = 'fasting_reminders_channel';
+  // Must match `WirdNotificationService._channelKey`. Registered here too
+  // because `initialize()` REPLACES all channels — otherwise the wird
+  // channel (added via setChannel) would be wiped whenever this runs.
+  static const String _channelKeyWird = 'wird_reminders_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
   // Notification IDs for each prayer
@@ -146,8 +147,9 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     final offset = DateTime.now().timeZoneOffset;
     final hours = offset.inHours;
     // POSIX-style "Etc/GMT" inverts the sign: UTC+3 -> Etc/GMT-3.
-    final etc =
-        hours == 0 ? 'UTC' : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
+    final etc = hours == 0
+        ? 'UTC'
+        : 'Etc/GMT${hours > 0 ? '-' : '+'}${hours.abs()}';
     debugPrint('NotificationRepository: timezone fallback to $etc');
     return etc;
   }
@@ -266,6 +268,21 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
           onlyAlertOnce: true,
           icon: 'resource://drawable/ic_notification',
         ),
+        // Wird (daily Quran reading) reminder channel.
+        NotificationChannel(
+          channelKey: _channelKeyWird,
+          channelName: 'تذكير الورد',
+          channelDescription: 'تذكير الورد اليومي من القرآن الكريم',
+          importance: NotificationImportance.High,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
+        ),
       ],
       channelGroups: [
         NotificationChannelGroup(
@@ -333,7 +350,8 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
 
     final int notificationId = _getNotificationId(prayerName);
     final bool isFajr = prayerName.toLowerCase() == 'fajr';
-    final bool useCustomAdhan = settings.customSoundPath != null &&
+    final bool useCustomAdhan =
+        settings.customSoundPath != null &&
         settings.customSoundPath!.isNotEmpty;
 
     // Select channel based on sound preference
@@ -345,46 +363,61 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     final String formattedTime = _formatTime(prayerTime);
     final String location = locationName ?? '';
 
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: notificationId,
-        channelKey: channelKey,
-        groupKey: _channelGroupKey,
-        title: '🕌 حان وقت صلاة $prayerNameArabic$timingText',
-        body: '$formattedTime${location.isNotEmpty ? ' • $location' : ''}',
-        notificationLayout: NotificationLayout.Default,
-        payload: {
-          'prayer': prayerName,
-          'time': prayerTime.toIso8601String(),
-          'soundPath': settings.customSoundPath ?? '',
-          'useCustomAdhan': useCustomAdhan.toString(),
-        },
-        wakeUpScreen: true,
-        category: NotificationCategory.Reminder,
-        criticalAlert: isFajr,
-      ),
-      actionButtons: [
-        NotificationActionButton(
-          key: 'DISMISS',
-          label: 'تم',
-          actionType: ActionType.DismissAction,
-        ),
-      ],
-      // Explicit-constructor form (fromDate doesn't expose timeZone) so we
-      // can pass our pre-resolved IANA zone string and avoid the
-      // TimeZone.getDefault() NPE on certain OEM Android builds.
-      schedule: NotificationCalendar(
-        year: notificationTime.year,
-        month: notificationTime.month,
-        day: notificationTime.day,
-        hour: notificationTime.hour,
-        minute: notificationTime.minute,
-        second: notificationTime.second,
-        timeZone: _localTimeZone,
-        allowWhileIdle: true,
-        preciseAlarm: true,
-      ),
+    final content = NotificationContent(
+      id: notificationId,
+      channelKey: channelKey,
+      groupKey: _channelGroupKey,
+      title: '🕌 حان وقت صلاة $prayerNameArabic$timingText',
+      body: '$formattedTime${location.isNotEmpty ? ' • $location' : ''}',
+      notificationLayout: NotificationLayout.Default,
+      payload: {
+        'prayer': prayerName,
+        'time': prayerTime.toIso8601String(),
+        'soundPath': settings.customSoundPath ?? '',
+        'useCustomAdhan': useCustomAdhan.toString(),
+      },
+      wakeUpScreen: true,
+      category: NotificationCategory.Reminder,
+      criticalAlert: isFajr,
     );
+    final actionButtons = [
+      NotificationActionButton(
+        key: 'DISMISS',
+        label: 'تم',
+        actionType: ActionType.DismissAction,
+      ),
+    ];
+    // Explicit-constructor form (fromDate doesn't expose timeZone) so we can
+    // pass our pre-resolved IANA zone string and avoid the
+    // TimeZone.getDefault() NPE on certain OEM Android builds.
+    NotificationCalendar buildSchedule(bool precise) => NotificationCalendar(
+      year: notificationTime.year,
+      month: notificationTime.month,
+      day: notificationTime.day,
+      hour: notificationTime.hour,
+      minute: notificationTime.minute,
+      second: notificationTime.second,
+      timeZone: _localTimeZone,
+      allowWhileIdle: true,
+      preciseAlarm: precise,
+    );
+    try {
+      await AwesomeNotifications().createNotification(
+        content: content,
+        actionButtons: actionButtons,
+        schedule: buildSchedule(true),
+      );
+    } catch (e) {
+      // On Android 14+ exact alarms require SCHEDULE_EXACT_ALARM. If it isn't
+      // granted, preciseAlarm scheduling throws — retry with an inexact (but
+      // allowWhileIdle) schedule so the adhan is delayed, not dropped.
+      debugPrint('Exact-alarm schedule failed, retrying inexact: $e');
+      await AwesomeNotifications().createNotification(
+        content: content,
+        actionButtons: actionButtons,
+        schedule: buildSchedule(false),
+      );
+    }
   }
 
   @override
@@ -500,15 +533,15 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
 
   @override
   Future<bool> hasActiveNotifications() async {
-    final scheduledNotifications =
-        await AwesomeNotifications().listScheduledNotifications();
+    final scheduledNotifications = await AwesomeNotifications()
+        .listScheduledNotifications();
     return scheduledNotifications.isNotEmpty;
   }
 
   @override
   Future<List<int>> getScheduledNotificationIds() async {
-    final scheduledNotifications =
-        await AwesomeNotifications().listScheduledNotifications();
+    final scheduledNotifications = await AwesomeNotifications()
+        .listScheduledNotifications();
     return scheduledNotifications.map((n) => n.content!.id!).toList();
   }
 
@@ -583,7 +616,8 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
         : '';
 
     // Enhanced notification body with emoji-enhanced formatting
-    final String notificationBody = '''⏰ الموعد
+    final String notificationBody =
+        '''⏰ الموعد
 $formattedTime
 
 ⏳ الوقت المتبقي

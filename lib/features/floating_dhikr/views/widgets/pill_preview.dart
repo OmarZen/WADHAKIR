@@ -36,10 +36,7 @@ class PillPreview extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

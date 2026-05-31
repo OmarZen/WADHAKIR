@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/data/models/azkar_item.dart';
 import 'package:wadhakir/data/models/azkar_category.dart';
@@ -114,14 +115,11 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
         curve: Curves.easeInOut,
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n?.translate('azkar.completed_all_azkar') ??
-                'أكملت جميع الأذكار',
-          ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          duration: const Duration(seconds: 2),
+      showFToast(
+        context: context,
+        title: Text(
+          context.l10n?.translate('azkar.completed_all_azkar') ??
+              'أكملت جميع الأذكار',
         ),
       );
     }
@@ -132,8 +130,9 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
     final theme = Theme.of(context);
 
     return BlocProvider(
-      create: (context) => AzkarCubit(azkarRepository: AzkarRepositoryImpl())
-        ..selectCategory(widget.category),
+      create: (context) =>
+          AzkarCubit(azkarRepository: AzkarRepositoryImpl())
+            ..selectCategory(widget.category),
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: _buildBody(theme),
@@ -288,7 +287,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: LinearProgressIndicator(
-                              value: ((_currentPage + 1) /
+                              value:
+                                  ((_currentPage + 1) /
                                   state.category.items.length),
                               backgroundColor: theme.colorScheme.primary
                                   .withValues(alpha: 0.1),
@@ -303,7 +303,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                         // used play/pause which was confusing; "skip_next"
                         // matches the actual behaviour.
                         Tooltip(
-                          message: context.l10n?.translate(
+                          message:
+                              context.l10n?.translate(
                                 'azkar.auto_advance_tooltip',
                               ) ??
                               'ينتقل تلقائياً للذكر التالي عند الانتهاء من العدد',
@@ -394,15 +395,16 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                         return FadeTransition(
                           opacity: _animationController,
                           child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.1),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(
-                                parent: _animationController,
-                                curve: Curves.easeOut,
-                              ),
-                            ),
+                            position:
+                                Tween<Offset>(
+                                  begin: const Offset(0, 0.1),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: _animationController,
+                                    curve: Curves.easeOut,
+                                  ),
+                                ),
                             child: _buildAdhkarPage(context, item, theme),
                           ),
                         );
@@ -535,7 +537,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
           Padding(
             padding: const EdgeInsets.only(top: 20, bottom: 16),
             child: Tooltip(
-              message: context.l10n?.translate('azkar.tap_to_count_tooltip') ??
+              message:
+                  context.l10n?.translate('azkar.tap_to_count_tooltip') ??
                   'اضغط للعدّ — يمكنك أيضاً الضغط على أي مكان من الشاشة',
               waitDuration: const Duration(milliseconds: 250),
               child: GestureDetector(
@@ -622,7 +625,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                     Icons.copy_rounded,
                     context.l10n?.translate('azkar.copy') ?? 'نسخ',
                     theme,
-                    onTap: () => _copyTextToClipboard(context, state, theme),
+                    onTap: () => _copyTextToClipboard(context, state),
                   ),
                   _buildActionButton(
                     context,
@@ -680,20 +683,14 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
   void _copyTextToClipboard(
     BuildContext context,
     AzkarCategorySelected state,
-    ThemeData theme,
   ) async {
     final text = state.category.items[_currentPage].text;
     await Clipboard.setData(ClipboardData(text: text));
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n?.translate('azkar.text_copied') ?? 'تم النسخ',
-          ),
-          duration: const Duration(seconds: 2),
-          backgroundColor: theme.colorScheme.primary,
-        ),
+      showFToast(
+        context: context,
+        title: Text(context.l10n?.translate('azkar.text_copied') ?? 'تم النسخ'),
       );
     }
   }
@@ -738,7 +735,8 @@ class _AdhkarSourceRowState extends State<_AdhkarSourceRow> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
-    final muted = theme.textTheme.bodySmall?.color?.withValues(alpha: 0.75) ??
+    final muted =
+        theme.textTheme.bodySmall?.color?.withValues(alpha: 0.75) ??
         Colors.grey;
 
     return Align(

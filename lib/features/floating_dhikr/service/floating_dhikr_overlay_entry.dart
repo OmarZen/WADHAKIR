@@ -36,10 +36,7 @@ class _PillBarRoot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: _PillBar(),
-    );
+    return Material(color: Colors.transparent, child: _PillBar());
   }
 }
 
@@ -77,15 +74,18 @@ class _PillBarState extends State<_PillBar>
     FlutterOverlayWindow.overlayListener.listen((event) {
       dev.log('PillBar received event: $event', name: 'FloatingDhikrOverlay');
       try {
-        final raw =
-            event is String ? event : (event is Map ? jsonEncode(event) : null);
+        final raw = event is String
+            ? event
+            : (event is Map ? jsonEncode(event) : null);
         if (raw == null) return;
         final data = jsonDecode(raw) as Map<String, dynamic>;
         if (!mounted) return;
         setState(() {
           _text = (data['text'] as String?) ?? _text;
-          _opacity = ((data['opacity'] as num?)?.toDouble() ?? _opacity)
-              .clamp(0.5, 1.0);
+          _opacity = ((data['opacity'] as num?)?.toDouble() ?? _opacity).clamp(
+            0.5,
+            1.0,
+          );
           _anchor = (data['anchor'] as String?) ?? _anchor;
         });
       } catch (e) {
@@ -123,8 +123,9 @@ class _PillBarState extends State<_PillBar>
     final padding = bottomAnchored
         ? const EdgeInsets.fromLTRB(12, 12, 12, 180)
         : const EdgeInsets.fromLTRB(12, 180, 12, 12);
-    final alignment =
-        bottomAnchored ? Alignment.bottomCenter : Alignment.topCenter;
+    final alignment = bottomAnchored
+        ? Alignment.bottomCenter
+        : Alignment.topCenter;
 
     return SizedBox.expand(
       child: FadeTransition(
@@ -157,10 +158,7 @@ class _PillBarState extends State<_PillBar>
                   ),
                 ],
               ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 16,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

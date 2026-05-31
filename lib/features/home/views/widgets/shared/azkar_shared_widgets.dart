@@ -39,8 +39,9 @@ class ProgressButtonShared extends StatelessWidget {
               child: CircularProgressIndicator(
                 value: progress,
                 strokeWidth: 3,
-                backgroundColor:
-                    theme.colorScheme.primary.withValues(alpha: 0.15),
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.15,
+                ),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   theme.colorScheme.primary,
                 ),

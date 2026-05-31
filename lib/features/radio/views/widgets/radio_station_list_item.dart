@@ -89,8 +89,9 @@ class RadioStationListItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize:
-                        PlatformUtils.isDesktop ? 14.0 : size.width * 0.038,
+                    fontSize: PlatformUtils.isDesktop
+                        ? 14.0
+                        : size.width * 0.038,
                     color: isLoading ? Colors.grey : null,
                     fontFamily: languageCode == 'en' ? null : 'Almarai',
                   ),
@@ -132,8 +133,9 @@ class RadioStationListItem extends StatelessWidget {
                         isActive
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
-                        color:
-                            isActive ? Colors.white : theme.colorScheme.primary,
+                        color: isActive
+                            ? Colors.white
+                            : theme.colorScheme.primary,
                         size: PlatformUtils.isDesktop
                             ? size.width * 0.03
                             : size.width * 0.05,

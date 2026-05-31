@@ -14,6 +14,7 @@ class Radii {
 
   static BorderRadius all(double value) => BorderRadius.circular(value);
 
-  static const BorderRadius pillBorder =
-      BorderRadius.all(Radius.circular(pill));
+  static const BorderRadius pillBorder = BorderRadius.all(
+    Radius.circular(pill),
+  );
 }

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/core/utils/alarm_permission_helper.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
@@ -35,8 +36,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       child: Material(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
@@ -57,107 +58,99 @@ class NotificationSettingsWidgets extends StatelessWidget {
               // committing to the full schedule.
               if (isEnabled)
                 _NotificationTestRow(
-                  label: l10n?.translate('settings.test_notification') ??
+                  label:
+                      l10n?.translate('settings.test_notification') ??
                       'إرسال تنبيه تجريبي',
                   onTap: () async {
-                    final scaffoldMessenger = ScaffoldMessenger.of(context);
-                    final ok =
-                        await PrayerNotificationService().sendQuickTest();
+                    final ok = await PrayerNotificationService()
+                        .sendQuickTest();
                     if (!context.mounted) return;
-                    scaffoldMessenger.showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          ok
-                              ? (l10n?.translate('settings.test_sent') ??
+                    showFToast(
+                      context: context,
+                      title: Text(
+                        ok
+                            ? (l10n?.translate('settings.test_sent') ??
                                   'تم إرسال التنبيه التجريبي')
-                              : (l10n?.translate('settings.test_failed') ??
+                            : (l10n?.translate('settings.test_failed') ??
                                   'تعذّر الإرسال — تأكد من منح صلاحية الإشعارات'),
-                        ),
-                        behavior: SnackBarBehavior.floating,
                       ),
+                      variant: ok
+                          ? FToastVariant.primary
+                          : FToastVariant.destructive,
                     );
                   },
                 ),
-              SwitchListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                title: Text(
-                  l10n?.translate('settings.enable_notifications') ??
-                      'تفعيل التنبيهات',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    l10n?.translate('settings.enable_notifications_subtitle') ??
-                        'إرسال تنبيه عند حلول وقت كل صلاة',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontSize: 12,
+                child: FSwitch(
+                  label: Text(
+                    l10n?.translate('settings.enable_notifications') ??
+                        'تفعيل التنبيهات',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
-                ),
-                value: isEnabled,
-                onChanged: (value) async {
-                  if (value) {
-                    // Request permissions before enabling
-                    final permissions =
-                        await AlarmPermissionHelper.requestAllPermissions(
-                            context);
+                  description: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      l10n?.translate(
+                            'settings.enable_notifications_subtitle',
+                          ) ??
+                          'إرسال تنبيه عند حلول وقت كل صلاة',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  value: isEnabled,
+                  onChange: (value) async {
+                    if (value) {
+                      // Request permissions before enabling
+                      final permissions =
+                          await AlarmPermissionHelper.requestAllPermissions(
+                            context,
+                          );
 
-                    // Only enable if we got notification permission at minimum
-                    if (permissions['notifications'] == true) {
-                      cubit.toggleNotifications(value);
+                      // Only enable if we got notification permission at minimum
+                      if (permissions['notifications'] == true) {
+                        cubit.toggleNotifications(value);
 
-                      // Show warning if exact alarm permission was denied
-                      if (permissions['exactAlarms'] != true &&
-                          context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              l10n?.translate(
-                                    'settings.exact_alarm_permission_warning',
-                                  ) ??
-                                  'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
-                            ),
-                            action: SnackBarAction(
-                              label: l10n?.translate('settings.settings') ??
-                                  'الإعدادات',
-                              onPressed: () => AlarmPermissionHelper
-                                  .showPermissionDeniedDialog(
-                                context,
+                        // Show warning if exact alarm permission was denied
+                        if (permissions['exactAlarms'] != true &&
+                            context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                l10n?.translate(
+                                      'settings.exact_alarm_permission_warning',
+                                    ) ??
+                                    'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
+                              ),
+                              action: SnackBarAction(
+                                label:
+                                    l10n?.translate('settings.settings') ??
+                                    'الإعدادات',
+                                onPressed: () =>
+                                    AlarmPermissionHelper.showPermissionDeniedDialog(
+                                      context,
+                                    ),
                               ),
                             ),
-                          ),
-                        );
+                          );
+                        }
                       }
+                    } else {
+                      // Disable notifications
+                      cubit.toggleNotifications(value);
                     }
-                  } else {
-                    // Disable notifications
-                    cubit.toggleNotifications(value);
-                  }
-                },
-                activeThumbColor: theme.colorScheme.primary,
-                secondary: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isEnabled
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    isEnabled
-                        ? Icons.notifications_active
-                        : Icons.notifications_off,
-                    color: isEnabled
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    size: 18,
-                  ),
+                  },
                 ),
               ),
             ],
@@ -191,8 +184,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       child: Material(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
@@ -206,83 +199,70 @@ class NotificationSettingsWidgets extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: SwitchListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            title: Text(
-              l10n?.translate('settings.persistent_notification') ??
-                  'إشعار دائم للصلاة القادمة',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: FSwitch(
+              label: Text(
+                l10n?.translate('settings.persistent_notification') ??
+                    'إشعار دائم للصلاة القادمة',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
               ),
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n?.translate(
-                            'settings.persistent_notification_subtitle') ??
-                        'عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                  if (isDesktop) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 14,
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.7),
+              description: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n?.translate(
+                            'settings.persistent_notification_subtitle',
+                          ) ??
+                          'عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
                         ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            l10n?.translate(
-                                  'settings.persistent_notification_mobile_only',
-                                ) ??
-                                'هذه الميزة متاحة على الهواتف فقط',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.7,
-                              ),
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic,
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (isDesktop) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 14,
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.7,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              l10n?.translate(
+                                    'settings.persistent_notification_mobile_only',
+                                  ) ??
+                                  'هذه الميزة متاحة على الهواتف فقط',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.7,
+                                ),
+                                fontSize: 11,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            value: isEnabled,
-            onChanged: isDesktop
-                ? null
-                : (value) => cubit.togglePersistentNotification(value),
-            activeThumbColor: theme.colorScheme.primary,
-            secondary: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isEnabled
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                isEnabled ? Icons.push_pin : Icons.push_pin_outlined,
-                color: isEnabled
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                size: 18,
-              ),
+              value: isEnabled,
+              enabled: !isDesktop,
+              onChange: (value) => cubit.togglePersistentNotification(value),
             ),
           ),
         ),
@@ -318,8 +298,10 @@ class NotificationSettingsWidgets extends StatelessWidget {
             ),
           ),
           child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
             title: Text(
               l10n?.translate('settings.notification_timing') ?? 'وقت التنبيه',
               style: theme.textTheme.titleMedium?.copyWith(
@@ -609,8 +591,10 @@ class NotificationSettingsWidgets extends StatelessWidget {
             ),
           ),
           child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
             title: Text(
               l10n?.translate('settings.customize_prayers') ?? 'تخصيص كل صلاة',
               style: theme.textTheme.titleMedium?.copyWith(
@@ -821,8 +805,8 @@ class NotificationSettingsWidgets extends StatelessWidget {
       child: Material(
         color: isEnabled
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
@@ -836,46 +820,25 @@ class NotificationSettingsWidgets extends StatelessWidget {
               width: 1,
             ),
           ),
-          child: SwitchListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isEnabled
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 18,
-                    color: isEnabled
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: FSwitch(
+              label: Text(
+                displayName,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  displayName,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+              ),
+              value: prayerSettings.enabled,
+              onChange: (value) {
+                final newSettings = prayerSettings.copyWith(enabled: value);
+                cubit.updatePrayerNotificationSettings(
+                  prayerName: prayerNameEnglish,
+                  prayerSettings: newSettings,
+                );
+              },
             ),
-            value: prayerSettings.enabled,
-            onChanged: (value) {
-              final newSettings = prayerSettings.copyWith(enabled: value);
-              cubit.updatePrayerNotificationSettings(
-                prayerName: prayerNameEnglish,
-                prayerSettings: newSettings,
-              );
-            },
-            activeThumbColor: theme.colorScheme.primary,
           ),
         ),
       ),

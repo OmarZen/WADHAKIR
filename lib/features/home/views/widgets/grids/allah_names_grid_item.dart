@@ -1,75 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/home/views/widgets/grids/feature_grid_card.dart';
 
 class AllahNamesGridItem extends StatelessWidget {
   const AllahNamesGridItem({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = context.l10n;
-    final isDark = theme.brightness == Brightness.dark;
-    final isDesktop = PlatformUtils.isDesktop;
 
-    final padding = isDesktop ? 16.0 : 12.0;
-    final verticalPadding = isDesktop ? 12.0 : 10.0;
-    final iconPadding = isDesktop ? 10.0 : 8.0;
-    final iconSize = isDesktop ? 22.0 : 20.0;
-    final spacing = isDesktop ? 12.0 : 10.0;
-
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () => _showAllahNamesSheet(context),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: padding,
-            vertical: verticalPadding,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(iconPadding),
-                decoration: BoxDecoration(
-                  shape: BoxShape.rectangle,
-                  borderRadius: BorderRadius.circular(8.0),
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                ),
-                child: Icon(
-                  Icons.collections_bookmark,
-                  size: iconSize,
-                  color: isDark
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-                      : theme.colorScheme.primary,
-                ),
-              ),
-              SizedBox(width: spacing),
-              Expanded(
-                child: Text(
-                  l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: isDesktop ? 16 : null,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return FeatureGridCard(
+      icon: Icons.collections_bookmark,
+      label: l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
+      onTap: () => _showAllahNamesSheet(context),
     );
   }
 
@@ -105,8 +50,9 @@ class AllahNamesGridItem extends StatelessWidget {
       builder: (context) {
         final l10n = context.l10n;
         return Directionality(
-          textDirection:
-              languageCode == 'en' ? TextDirection.ltr : TextDirection.rtl,
+          textDirection: languageCode == 'en'
+              ? TextDirection.ltr
+              : TextDirection.rtl,
           child: SizedBox(
             height: MediaQuery.of(context).size.height * 0.8,
             child: Column(
@@ -136,7 +82,7 @@ class AllahNamesGridItem extends StatelessWidget {
                         languageCode == 'en'
                             ? 'The 99 Names of Allah'
                             : (l10n?.translate('home.asmallah') ??
-                                'أسماء الله الحسنى'),
+                                  'أسماء الله الحسنى'),
                         style: theme.textTheme.titleLarge,
                       ),
                     ],

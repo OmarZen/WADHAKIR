@@ -92,11 +92,11 @@ class AppLockSettingsModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        enabled,
-        useAccessibilityFallback,
-        lockDurationMinutes,
-        emergencyBypassEnabled,
-        lockedAppPackageNames,
-        excludedAppPackageNames,
-      ];
+    enabled,
+    useAccessibilityFallback,
+    lockDurationMinutes,
+    emergencyBypassEnabled,
+    lockedAppPackageNames,
+    excludedAppPackageNames,
+  ];
 }

@@ -26,11 +26,12 @@
         <item name="android:layout_height">0dp</item>
         <item name="android:layout_rowWeight">1</item>
         <item name="android:layout_columnWeight">1</item>
-        <item name="android:textColor">#F0F0F0</item>
+        <item name="android:textColor">#EAF0FB</item>
         <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">@font/almarai</item>
         <item name="android:gravity">center</item>
-        <item name="android:padding">6dp</item>
-        <item name="android:layout_margin">3dp</item>
+        <item name="android:padding">1dp</item>
+        <item name="android:layout_margin">2dp</item>
         <item name="android:background">@drawable/day_box_background</item>
         <item name="android:visibility">gone</item>
     </style>
@@ -40,8 +41,9 @@
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_columnWeight">1</item>
-        <item name="android:textColor">#C8E0F0</item>
+        <item name="android:textColor">#8FA3C8</item>
         <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">@font/almarai</item>
         <item name="android:gravity">center</item>
         <item name="android:paddingVertical">5dp</item>
         <item name="android:textStyle">bold</item>

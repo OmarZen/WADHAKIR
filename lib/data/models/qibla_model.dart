@@ -29,9 +29,9 @@ class QiblaModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        latitude,
-        longitude,
-        qiblaDirection,
-        compassDirection,
-      ];
+    latitude,
+    longitude,
+    qiblaDirection,
+    compassDirection,
+  ];
 }

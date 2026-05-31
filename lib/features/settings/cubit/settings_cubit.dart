@@ -26,24 +26,17 @@ class SettingsCubit extends Cubit<SettingsState> {
   StreamSubscription? _settingsSubscription;
 
   SettingsCubit({
-    required GetSettingsUseCase getSettingsUseCase,
-    required GetSettingsStreamUseCase getSettingsStreamUseCase,
-    required SetThemeModeUseCase setThemeModeUseCase,
-    required SetLanguageUseCase setLanguageUseCase,
-    required SetNotificationSettingsUseCase setNotificationSettingsUseCase,
-    required SetAppLockSettingsUseCase setAppLockSettingsUseCase,
-    SetOnboardingCompletedUseCase? setOnboardingCompletedUseCase,
+    required this._getSettingsUseCase,
+    required this._getSettingsStreamUseCase,
+    required this._setThemeModeUseCase,
+    required this._setLanguageUseCase,
+    required this._setNotificationSettingsUseCase,
+    required this._setAppLockSettingsUseCase,
+    this._setOnboardingCompletedUseCase,
     PrayerNotificationService? notificationService,
-  })  : _getSettingsUseCase = getSettingsUseCase,
-        _getSettingsStreamUseCase = getSettingsStreamUseCase,
-        _setThemeModeUseCase = setThemeModeUseCase,
-        _setLanguageUseCase = setLanguageUseCase,
-        _setNotificationSettingsUseCase = setNotificationSettingsUseCase,
-        _setAppLockSettingsUseCase = setAppLockSettingsUseCase,
-        _setOnboardingCompletedUseCase = setOnboardingCompletedUseCase,
-        _notificationService =
-            notificationService ?? PrayerNotificationService(),
-        super(const SettingsInitial()) {
+  }) : _notificationService =
+           notificationService ?? PrayerNotificationService(),
+       super(const SettingsInitial()) {
     loadSettings();
     _listenToSettingsChanges();
   }
@@ -51,7 +44,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> setOnboardingCompleted(bool completed) async {
     if (_setOnboardingCompletedUseCase == null) return;
     try {
-      await _setOnboardingCompletedUseCase?.call(completed);
+      await _setOnboardingCompletedUseCase.call(completed);
     } catch (e) {
       emit(SettingsError(e.toString()));
     }
@@ -113,8 +106,8 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> toggleNotifications(bool enabled) async {
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;
-      final newNotificationSettings =
-          currentSettings.notificationSettings.copyWith(masterEnabled: enabled);
+      final newNotificationSettings = currentSettings.notificationSettings
+          .copyWith(masterEnabled: enabled);
 
       await setNotificationSettings(newNotificationSettings);
 
@@ -258,8 +251,9 @@ class SettingsCubit extends Cubit<SettingsState> {
   Future<void> toggleAppLock(bool enabled) async {
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).settings;
-      final updated =
-          currentSettings.appLockSettings.copyWith(enabled: enabled);
+      final updated = currentSettings.appLockSettings.copyWith(
+        enabled: enabled,
+      );
       await setAppLockSettings(updated);
     }
   }

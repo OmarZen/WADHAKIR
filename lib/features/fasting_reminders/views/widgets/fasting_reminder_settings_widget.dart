@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/utils/alarm_permission_helper.dart';
@@ -80,10 +81,12 @@ class FastingReminderSettingsWidget extends StatelessWidget {
                 const SizedBox(height: 12),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: OutlinedButton.icon(
-                    onPressed: () => cubit.loadSettings(),
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: Text(
+                  child: FButton(
+                    onPress: () => cubit.loadSettings(),
+                    variant: FButtonVariant.outline,
+                    mainAxisSize: MainAxisSize.min,
+                    prefix: const Icon(Icons.refresh_rounded, size: 18),
+                    child: Text(
                       l10n?.translate('common.retry') ?? 'إعادة المحاولة',
                     ),
                   ),
@@ -253,7 +256,8 @@ class FastingReminderSettingsWidget extends StatelessWidget {
                   // Request permissions before enabling
                   final permissions =
                       await AlarmPermissionHelper.requestAllPermissions(
-                          context);
+                        context,
+                      );
 
                   // Only enable if we got notification permission at minimum
                   if (permissions['notifications'] == true) {
@@ -270,12 +274,13 @@ class FastingReminderSettingsWidget extends StatelessWidget {
                                 'لن تصل التنبيهات في الوقت المحدد بدون إذن "التنبيهات والتذكيرات"',
                           ),
                           action: SnackBarAction(
-                            label: l10n?.translate('settings.settings') ??
+                            label:
+                                l10n?.translate('settings.settings') ??
                                 'الإعدادات',
-                            onPressed: () => AlarmPermissionHelper
-                                .showPermissionDeniedDialog(
-                              context,
-                            ),
+                            onPressed: () =>
+                                AlarmPermissionHelper.showPermissionDeniedDialog(
+                                  context,
+                                ),
                           ),
                         ),
                       );
@@ -335,9 +340,11 @@ class FastingReminderSettingsWidget extends StatelessWidget {
               theme,
               isDark,
               icon: Icons.calendar_today,
-              title: l10n?.translate('settings.fasting_monday') ??
+              title:
+                  l10n?.translate('settings.fasting_monday') ??
                   (languageCode == 'ar' ? 'الإثنين' : 'Monday'),
-              subtitle: l10n?.translate('settings.fasting_monday_subtitle') ??
+              subtitle:
+                  l10n?.translate('settings.fasting_monday_subtitle') ??
                   (languageCode == 'ar' ? 'صيام الإثنين' : 'Monday fasting'),
               value: settings.mondayFastingEnabled,
               onChanged: (value) => cubit.toggleMondayFasting(value),
@@ -348,9 +355,11 @@ class FastingReminderSettingsWidget extends StatelessWidget {
               theme,
               isDark,
               icon: Icons.calendar_today,
-              title: l10n?.translate('settings.fasting_thursday') ??
+              title:
+                  l10n?.translate('settings.fasting_thursday') ??
                   (languageCode == 'ar' ? 'الخميس' : 'Thursday'),
-              subtitle: l10n?.translate('settings.fasting_thursday_subtitle') ??
+              subtitle:
+                  l10n?.translate('settings.fasting_thursday_subtitle') ??
                   (languageCode == 'ar' ? 'صيام الخميس' : 'Thursday fasting'),
               value: settings.thursdayFastingEnabled,
               onChanged: (value) => cubit.toggleThursdayFasting(value),
@@ -401,7 +410,8 @@ class FastingReminderSettingsWidget extends StatelessWidget {
           theme,
           isDark,
           icon: Icons.wb_twilight,
-          title: l10n?.translate('fasting.ayyam_al_bid') ??
+          title:
+              l10n?.translate('fasting.ayyam_al_bid') ??
               (languageCode == 'ar' ? 'الأيام البيض' : 'White Days'),
           subtitle: '13-15',
           value: settings.ayyamAlBidEnabled,
@@ -413,7 +423,8 @@ class FastingReminderSettingsWidget extends StatelessWidget {
           theme,
           isDark,
           icon: Icons.calendar_today,
-          title: l10n?.translate('fasting.ninth_tenth') ??
+          title:
+              l10n?.translate('fasting.ninth_tenth') ??
               (languageCode == 'ar' ? 'التاسع والعاشر' : '9th & 10th'),
           subtitle: l10n?.translate('fasting.ninth_tenth_days') ?? '9-10',
           value: settings.ninthTenthEnabled,
@@ -425,9 +436,11 @@ class FastingReminderSettingsWidget extends StatelessWidget {
           theme,
           isDark,
           icon: Icons.star,
-          title: l10n?.translate('fasting.special_days') ??
+          title:
+              l10n?.translate('fasting.special_days') ??
               (languageCode == 'ar' ? 'الأيام المميزة' : 'Special Days'),
-          subtitle: l10n?.translate('fasting.special_days_subtitle') ??
+          subtitle:
+              l10n?.translate('fasting.special_days_subtitle') ??
               (languageCode == 'ar'
                   ? 'عاشوراء، عرفة وأخرى'
                   : 'Ashura, Arafah & more'),
@@ -478,9 +491,11 @@ class FastingReminderSettingsWidget extends StatelessWidget {
           theme,
           isDark,
           icon: Icons.nightlight_round,
-          title: l10n?.translate('fasting.eve_reminder') ??
+          title:
+              l10n?.translate('fasting.eve_reminder') ??
               (languageCode == 'ar' ? 'تذكير المساء' : 'Evening'),
-          subtitle: l10n?.translate('fasting.eve_maghrib_time') ??
+          subtitle:
+              l10n?.translate('fasting.eve_maghrib_time') ??
               (languageCode == 'ar' ? 'عند أذان المغرب' : 'At Maghrib Adhan'),
           value: settings.eveReminder,
           onChanged: (value) => cubit.toggleEveReminder(value),
@@ -491,9 +506,11 @@ class FastingReminderSettingsWidget extends StatelessWidget {
           theme,
           isDark,
           icon: Icons.wb_sunny,
-          title: l10n?.translate('fasting.morning_reminder') ??
+          title:
+              l10n?.translate('fasting.morning_reminder') ??
               (languageCode == 'ar' ? 'تذكير الصباح' : 'Morning'),
-          subtitle: l10n?.translate('fasting.morning_fajr_time') ??
+          subtitle:
+              l10n?.translate('fasting.morning_fajr_time') ??
               (languageCode == 'ar'
                   ? 'قبل الفجر بـ 5 دقائق'
                   : '5 min before Fajr'),
@@ -506,7 +523,8 @@ class FastingReminderSettingsWidget extends StatelessWidget {
           theme,
           isDark,
           icon: Icons.schedule,
-          title: l10n?.translate('fasting.advance_reminder') ??
+          title:
+              l10n?.translate('fasting.advance_reminder') ??
               (languageCode == 'ar' ? 'التذكير المسبق' : 'Advance'),
           subtitle: _buildAdvanceReminderSubtitle(
             settings.daysBeforeNotification,
@@ -570,22 +588,22 @@ class FastingReminderSettingsWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: value
                     ? (isDark
-                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                        : theme.colorScheme.primary.withValues(alpha: 0.05))
+                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                          : theme.colorScheme.primary.withValues(alpha: 0.05))
                     : (isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.1)
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.1)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.1)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
                 color: value
                     ? (isDark
-                        ? theme.colorScheme.onPrimary.withValues(alpha: 0.8)
-                        : theme.colorScheme.primary)
+                          ? theme.colorScheme.onPrimary.withValues(alpha: 0.8)
+                          : theme.colorScheme.primary)
                     : (isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                        : theme.colorScheme.onSurface.withValues(alpha: 0.6)),
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                 size: 20,
               ),
             ),
@@ -666,9 +684,9 @@ class FastingReminderSettingsWidget extends StatelessWidget {
     String currentTime,
     FastingRemindersCubit cubit,
   ) {
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (dialogContext) => _AdvanceReminderDialog(
+      builder: (dialogContext, style, animation) => _AdvanceReminderDialog(
         theme: theme,
         languageCode: languageCode,
         l10n: l10n,
@@ -690,8 +708,8 @@ class FastingReminderSettingsWidget extends StatelessWidget {
   ) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
+      child: FButton(
+        onPress: () {
           showDialog(
             context: context,
             builder: (_) => BlocProvider.value(
@@ -700,28 +718,13 @@ class FastingReminderSettingsWidget extends StatelessWidget {
             ),
           );
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        prefix: const Icon(Icons.calendar_month, size: 24),
+        child: Text(
+          l10n?.translate('fasting.view_calendar') ??
+              (languageCode == 'ar' ? 'عرض التقويم' : 'View Calendar'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.calendar_month, size: 24),
-            const SizedBox(width: 10),
-            Text(
-              l10n?.translate('fasting.view_calendar') ??
-                  (languageCode == 'ar' ? 'عرض التقويم' : 'View Calendar'),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -766,7 +769,7 @@ class _AdvanceReminderDialogState extends State<_AdvanceReminderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return FDialog(
       title: Row(
         children: [
           Icon(
@@ -788,140 +791,161 @@ class _AdvanceReminderDialogState extends State<_AdvanceReminderDialog> {
           ),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Days before section
-            Text(
-              widget.l10n?.translate('fasting.days_before_fasting') ??
-                  (widget.languageCode == 'ar'
-                      ? 'عدد الأيام قبل الصيام'
-                      : 'Days before fasting'),
-              style: widget.theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: widget.theme.colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color:
-                      widget.theme.colorScheme.primary.withValues(alpha: 0.3),
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    color: widget.theme.colorScheme.primary,
-                    onPressed: tempDays > 1
-                        ? () {
-                            setState(() {
-                              tempDays--;
-                            });
-                          }
-                        : null,
+      // FDialog (forui) does NOT provide a Material ancestor, so the
+      // IconButton/InkWell/showTimePicker widgets below need one — otherwise
+      // they throw "No Material widget found" and the resulting error widgets
+      // are what blow up the inner Row with a huge RenderFlex overflow.
+      body: Material(
+        type: MaterialType.transparency,
+        // Hard-bound the body width so no inner Row can ever be handed an
+        // unbounded/huge width (the source of the RenderFlex overflow).
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Days before section
+                Text(
+                  widget.l10n?.translate('fasting.days_before_fasting') ??
+                      (widget.languageCode == 'ar'
+                          ? 'عدد الأيام قبل الصيام'
+                          : 'Days before fasting'),
+                  style: widget.theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
-                  Text(
-                    '$tempDays ${widget.languageCode == 'ar' ? (tempDays == 1 ? 'يوم' : 'أيام') : (tempDays == 1 ? 'day' : 'days')}',
-                    style: widget.theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: widget.theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: widget.theme.colorScheme.primary.withValues(
+                      alpha: 0.08,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: widget.theme.colorScheme.primary.withValues(
+                        alpha: 0.3,
+                      ),
+                      width: 1.5,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    color: widget.theme.colorScheme.primary,
-                    onPressed: tempDays < 7
-                        ? () {
-                            setState(() {
-                              tempDays++;
-                            });
-                          }
-                        : null,
+                  // Center + mainAxisSize.min so the stepper sizes to its content
+                  // and never overflows even if the dialog body hands it an
+                  // unbounded width.
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline),
+                          color: widget.theme.colorScheme.primary,
+                          onPressed: tempDays > 1
+                              ? () {
+                                  setState(() {
+                                    tempDays--;
+                                  });
+                                }
+                              : null,
+                        ),
+                        const SizedBox(width: 20),
+                        Text(
+                          '$tempDays ${widget.languageCode == 'ar' ? (tempDays == 1 ? 'يوم' : 'أيام') : (tempDays == 1 ? 'day' : 'days')}',
+                          style: widget.theme.textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: widget.theme.colorScheme.primary,
+                              ),
+                        ),
+                        const SizedBox(width: 20),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline),
+                          color: widget.theme.colorScheme.primary,
+                          onPressed: tempDays < 7
+                              ? () {
+                                  setState(() {
+                                    tempDays++;
+                                  });
+                                }
+                              : null,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Time selection section
-            Text(
-              widget.l10n?.translate('fasting.reminder_time') ??
-                  (widget.languageCode == 'ar'
-                      ? 'وقت التذكير'
-                      : 'Reminder Time'),
-              style: widget.theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 12),
-            InkWell(
-              onTap: () async {
-                final selectedTime = await showTimePicker(
-                  context: context,
-                  initialTime: tempTime,
-                );
-                if (selectedTime != null) {
-                  setState(() {
-                    tempTime = selectedTime;
-                  });
-                }
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color:
-                      widget.theme.colorScheme.primary.withValues(alpha: 0.08),
+                ),
+                const SizedBox(height: 20),
+                // Time selection section
+                Text(
+                  widget.l10n?.translate('fasting.reminder_time') ??
+                      (widget.languageCode == 'ar'
+                          ? 'وقت التذكير'
+                          : 'Reminder Time'),
+                  style: widget.theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () async {
+                    final selectedTime = await showTimePicker(
+                      context: context,
+                      initialTime: tempTime,
+                    );
+                    if (selectedTime != null) {
+                      setState(() {
+                        tempTime = selectedTime;
+                      });
+                    }
+                  },
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color:
-                        widget.theme.colorScheme.primary.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.access_time,
-                      color: widget.theme.colorScheme.primary,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 16),
-                    Text(
-                      tempTime.format(context),
-                      style: widget.theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: widget.theme.colorScheme.primary,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: widget.theme.colorScheme.primary.withValues(
+                        alpha: 0.08,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: widget.theme.colorScheme.primary.withValues(
+                          alpha: 0.3,
+                        ),
+                        width: 1.5,
                       ),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          color: widget.theme.colorScheme.primary,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          tempTime.format(context),
+                          style: widget.theme.textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: widget.theme.colorScheme.primary,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            widget.l10n?.translate('common.cancel') ??
-                (widget.languageCode == 'ar' ? 'إلغاء' : 'Cancel'),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () {
+        FButton(
+          onPress: () {
             // Save all settings at once to avoid multiple reschedules
             final timeString =
                 '${tempTime.hour.toString().padLeft(2, '0')}:${tempTime.minute.toString().padLeft(2, '0')}';
@@ -937,6 +961,14 @@ class _AdvanceReminderDialogState extends State<_AdvanceReminderDialog> {
           child: Text(
             widget.l10n?.translate('common.save') ??
                 (widget.languageCode == 'ar' ? 'حفظ' : 'Save'),
+          ),
+        ),
+        FButton(
+          onPress: () => Navigator.of(context).pop(),
+          variant: FButtonVariant.outline,
+          child: Text(
+            widget.l10n?.translate('common.cancel') ??
+                (widget.languageCode == 'ar' ? 'إلغاء' : 'Cancel'),
           ),
         ),
       ],
@@ -962,21 +994,19 @@ class _FastingTestButton extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () async {
-            final scaffoldMessenger = ScaffoldMessenger.of(context);
-            final ok =
-                await FastingNotificationService().sendTestNotification();
+            final ok = await FastingNotificationService()
+                .sendTestNotification();
             if (!context.mounted) return;
-            scaffoldMessenger.showSnackBar(
-              SnackBar(
-                content: Text(
-                  ok
-                      ? (l10n?.translate('fasting.test_sent') ??
+            showFToast(
+              context: context,
+              title: Text(
+                ok
+                    ? (l10n?.translate('fasting.test_sent') ??
                           'تم إرسال تذكير تجريبي للصيام')
-                      : (l10n?.translate('fasting.test_failed') ??
+                    : (l10n?.translate('fasting.test_failed') ??
                           'تعذّر الإرسال — تأكد من منح صلاحية الإشعارات'),
-                ),
-                behavior: SnackBarBehavior.floating,
               ),
+              variant: ok ? FToastVariant.primary : FToastVariant.destructive,
             );
           },
           child: Padding(

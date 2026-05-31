@@ -2,80 +2,25 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import '../shared/azkar_shared_widgets.dart';
+import 'feature_grid_card.dart';
 
 class RaqiaGridItem extends StatelessWidget {
   const RaqiaGridItem({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = context.l10n;
-    final isDark = theme.brightness == Brightness.dark;
-    final isDesktop = PlatformUtils.isDesktop;
 
-    final padding = isDesktop ? 16.0 : 12.0;
-    final verticalPadding = isDesktop ? 12.0 : 10.0;
-    final iconPadding = isDesktop ? 10.0 : 8.0;
-    final iconSize = isDesktop ? 22.0 : 20.0;
-    final spacing = isDesktop ? 12.0 : 10.0;
-
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () =>
-            _showAzkarSheet(context, 'assets/json_data/raqia sharia.json'),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: padding,
-            vertical: verticalPadding,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(iconPadding),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                ),
-                child: Icon(
-                  Icons.healing_rounded,
-                  size: iconSize,
-                  color: isDark
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-                      : theme.colorScheme.primary,
-                ),
-              ),
-              SizedBox(width: spacing),
-              Expanded(
-                child: Text(
-                  l10n?.translate('home.raqia_sharia') ?? 'الرقية الشرعية',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: isDesktop ? 16 : null,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-              SizedBox(width: spacing),
-              GridProgressBadge(
-                assetPath: 'assets/json_data/raqia sharia.json',
-                prefsPrefix: 'raqia_',
-              ),
-            ],
-          ),
-        ),
+    return FeatureGridCard(
+      icon: Icons.healing_rounded,
+      label: l10n?.translate('home.raqia_sharia') ?? 'الرقية الشرعية',
+      onTap: () =>
+          _showAzkarSheet(context, 'assets/json_data/raqia sharia.json'),
+      trailing: GridProgressBadge(
+        assetPath: 'assets/json_data/raqia sharia.json',
+        prefsPrefix: 'raqia_',
       ),
     );
   }
@@ -215,8 +160,9 @@ class _AzkarCardState extends State<_AzkarCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final double progress =
-        widget.repeat <= 0 ? 0 : (completed / widget.repeat).clamp(0.0, 1.0);
+    final double progress = widget.repeat <= 0
+        ? 0
+        : (completed / widget.repeat).clamp(0.0, 1.0);
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),

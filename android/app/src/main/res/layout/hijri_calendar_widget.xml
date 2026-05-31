@@ -11,7 +11,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="0dp"
-        android:background="@drawable/main_card_background"
+        android:background="@drawable/glass_widget_bg"
         android:clipToOutline="true">
 
         <!-- Header Section -->
@@ -19,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#20497D"
+            android:background="@android:color/transparent"
             android:paddingHorizontal="14dp"
             android:paddingTop="14dp"
             android:paddingBottom="10dp">
@@ -54,6 +54,7 @@
                     android:textColor="#FFFFFF"
                     android:textSize="19sp"
                     android:textStyle="bold"
+                    android:fontFamily="@font/almarai"
                     android:gravity="center"
                     android:letterSpacing="0.05"/>
 
@@ -89,6 +90,7 @@
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
                     android:textStyle="bold"
+                    android:fontFamily="@font/almarai"
                     android:letterSpacing="0.03"/>
 
                 <TextView
@@ -104,9 +106,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="12 يناير"
-                    android:textColor="#F0F0F0"
+                    android:textColor="#D6DEEC"
                     android:textSize="13sp"
-                    android:textStyle="normal"/>
+                    android:textStyle="normal"
+                    android:fontFamily="@font/almarai"/>
 
             </LinearLayout>
 
@@ -118,7 +121,7 @@
             android:layout_height="wrap_content"
             android:columnCount="7"
             android:rowCount="1"
-            android:background="#1a406f"
+            android:background="#10FFFFFF"
             android:paddingVertical="7dp"
             android:paddingHorizontal="6dp"
             android:alignmentMode="alignBounds">
@@ -139,7 +142,7 @@
             android:layout_weight="1"
             android:columnCount="7"
             android:rowCount="5"
-            android:background="#14324d"
+            android:background="@android:color/transparent"
             android:paddingHorizontal="6dp"
             android:paddingVertical="6dp"
             android:alignmentMode="alignBounds"

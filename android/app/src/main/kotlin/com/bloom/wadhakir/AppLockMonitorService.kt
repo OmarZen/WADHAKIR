@@ -10,6 +10,7 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.Color
 // Removed RenderEffect-based blur to prevent overlay content from becoming unreadable.
 import android.graphics.Typeface
@@ -271,7 +272,18 @@ class AppLockMonitorService : Service() {
                 lockStartedAtMs = 0L
                 lockExpiresAtMs = 0L
 
-                startForeground(NOTIFICATION_ID, buildNotification())
+                // Android 14+ (API 34) requires a foreground-service type to
+                // be supplied (matching the manifest's specialUse type), else
+                // startForeground throws MissingForegroundServiceTypeException.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    startForeground(
+                        NOTIFICATION_ID,
+                        buildNotification(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                    )
+                } else {
+                    startForeground(NOTIFICATION_ID, buildNotification())
+                }
                 startMonitoringLoop()
                 isRunning = true
             }

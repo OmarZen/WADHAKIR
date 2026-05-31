@@ -23,9 +23,6 @@ class FloatingDhikrRepository {
 
   Future<void> save(FloatingDhikrSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      FloatingDhikrSettings.prefsKey,
-      settings.encode(),
-    );
+    await prefs.setString(FloatingDhikrSettings.prefsKey, settings.encode());
   }
 }

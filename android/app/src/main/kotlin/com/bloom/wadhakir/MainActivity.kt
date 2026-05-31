@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream
 class MainActivity : AudioServiceActivity() {
     private val widgetChannel = "com.bloom.wadhakir/widget_navigation"
     private val appLockChannel = "com.bloom.wadhakir/app_lock"
+    private val floatingDhikrChannel = "com.bloom.wadhakir/floating_dhikr"
     
     override fun onCreate(savedInstanceState: Bundle?) {
         // Enable edge-to-edge display for Android 15 (API 35) compatibility
@@ -148,8 +149,52 @@ class MainActivity : AudioServiceActivity() {
                 else -> result.notImplemented()
             }
         }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, floatingDhikrChannel).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "start", "updateConfig" -> {
+                    startFloatingDhikr(call, FloatingDhikrService.ACTION_START)
+                    result.success(null)
+                }
+                "emitNow" -> {
+                    startFloatingDhikr(call, FloatingDhikrService.ACTION_EMIT_NOW)
+                    result.success(null)
+                }
+                "stop" -> {
+                    val intent = Intent(this, FloatingDhikrService::class.java).apply {
+                        action = FloatingDhikrService.ACTION_STOP
+                    }
+                    startService(intent)
+                    result.success(null)
+                }
+                "isRunning" -> result.success(FloatingDhikrService.isEnabled(this))
+                else -> result.notImplemented()
+            }
+        }
     }
-    
+
+    private fun startFloatingDhikr(call: io.flutter.plugin.common.MethodCall, action: String) {
+        val intent = Intent(this, FloatingDhikrService::class.java).apply {
+            this.action = action
+            putStringArrayListExtra(
+                FloatingDhikrService.EXTRA_DHIKR,
+                ArrayList(call.argument<List<String>>("dhikr") ?: emptyList()),
+            )
+            putExtra(FloatingDhikrService.EXTRA_INTERVAL_MIN, call.argument<Int>("intervalMinutes") ?: 30)
+            putExtra(FloatingDhikrService.EXTRA_DISMISS_SEC, call.argument<Int>("dismissSeconds") ?: 8)
+            putExtra(FloatingDhikrService.EXTRA_ANCHOR, call.argument<String>("anchor") ?: "bottomBar")
+            putExtra(FloatingDhikrService.EXTRA_OPACITY, call.argument<Double>("opacity") ?: 0.95)
+            putExtra(FloatingDhikrService.EXTRA_IS_DARK, call.argument<Boolean>("isDark") ?: false)
+            putExtra(FloatingDhikrService.EXTRA_QUIET_START, call.argument<Int>("quietStart") ?: -1)
+            putExtra(FloatingDhikrService.EXTRA_QUIET_END, call.argument<Int>("quietEnd") ?: -1)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
     private fun handleIntent(intent: Intent?) {
         when (intent?.action) {
             "HIJRI_PREVIOUS_MONTH" -> {

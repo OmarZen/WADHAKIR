@@ -82,22 +82,24 @@ class _MoonPhasesCalendarScreenState extends State<MoonPhasesCalendarScreen>
             child: FadeTransition(
               opacity: _enterController,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, -0.08),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _enterController,
-                  curve: Curves.easeOutCubic,
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, -0.08),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _enterController,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: _TodayHero(
                   info: today,
                   l10n: l10n,
                   onMore: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => MoonPhaseDetailScreen(
-                          initialDate: today.date,
-                        ),
+                        builder: (_) =>
+                            MoonPhaseDetailScreen(initialDate: today.date),
                       ),
                     );
                   },
@@ -160,8 +162,11 @@ class _MoonPhasesCalendarScreenState extends State<MoonPhasesCalendarScreen>
   }
 
   Widget _calendarGrid(List<MoonPhaseInfo> phases) {
-    final firstWeekday =
-        DateTime(_viewedMonth.year, _viewedMonth.month, 1).weekday; // 1=Mon
+    final firstWeekday = DateTime(
+      _viewedMonth.year,
+      _viewedMonth.month,
+      1,
+    ).weekday; // 1=Mon
     // Sunday-first to match the reference design and the rest of the app.
     final leadingBlanks = firstWeekday % 7;
     final cells = leadingBlanks + phases.length;
@@ -175,26 +180,23 @@ class _MoonPhasesCalendarScreenState extends State<MoonPhasesCalendarScreen>
         mainAxisSpacing: 4,
         crossAxisSpacing: 4,
       ),
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          if (index < leadingBlanks) return const SizedBox.shrink();
-          final phaseIndex = index - leadingBlanks;
-          if (phaseIndex >= phases.length) return const SizedBox.shrink();
-          final info = phases[phaseIndex];
-          return _MoonCell(
-            info: info,
-            isToday: _isSameDay(info.date, DateTime.now()),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => MoonPhaseDetailScreen(initialDate: info.date),
-                ),
-              );
-            },
-          );
-        },
-        childCount: itemCount,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        if (index < leadingBlanks) return const SizedBox.shrink();
+        final phaseIndex = index - leadingBlanks;
+        if (phaseIndex >= phases.length) return const SizedBox.shrink();
+        final info = phases[phaseIndex];
+        return _MoonCell(
+          info: info,
+          isToday: _isSameDay(info.date, DateTime.now()),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => MoonPhaseDetailScreen(initialDate: info.date),
+              ),
+            );
+          },
+        );
+      }, childCount: itemCount),
     );
   }
 
@@ -223,12 +225,7 @@ class _TodayHero extends StatelessWidget {
     final illum = formatPercent(info.illumination);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(
-        Spacing.lg,
-        0,
-        Spacing.lg,
-        Spacing.lg,
-      ),
+      margin: const EdgeInsets.fromLTRB(Spacing.lg, 0, Spacing.lg, Spacing.lg),
       padding: const EdgeInsets.all(Spacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -240,9 +237,7 @@ class _TodayHero extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(Radii.lg),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.10),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +327,8 @@ class _TodayHero extends StatelessWidget {
                     const SizedBox(height: 6),
                     _HeroStat(
                       icon: Icons.straighten_rounded,
-                      label: l10n?.translate('moon_phases.moon_distance') ??
+                      label:
+                          l10n?.translate('moon_phases.moon_distance') ??
                           'Distance',
                       value: formatKm(info.distanceKm),
                     ),
@@ -440,7 +436,10 @@ class _CalendarMonthHeader extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       color: const Color(0xFF0B1024),
       padding: const EdgeInsets.symmetric(

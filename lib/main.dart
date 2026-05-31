@@ -5,8 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:quran_library/quran_library.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/routes/app_router.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
+import 'package:wadhakir/core/app_theme/forui_theme.dart';
 import 'package:wadhakir/data/models/hive_adapters.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
@@ -30,17 +32,25 @@ import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/core/localization/app_localizations_delegate.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
+import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/glass_prayer_home_widget.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
+import 'package:wadhakir/data/repositories/notification_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
 import 'package:wadhakir/data/repositories/fasting_reminders_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_stream_usecase.dart';
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_cubit.dart';
+import 'package:wadhakir/data/repositories/wird_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_wird_plan_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_wird_plan_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_wird_plan_stream_usecase.dart';
+import 'package:wadhakir/domain/usecases/clear_wird_plan_usecase.dart';
+import 'package:wadhakir/features/wird/cubit/wird_cubit.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_platform_service.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_prayer_window.dart';
 import 'package:wadhakir/features/floating_dhikr/service/floating_dhikr_overlay_entry.dart';
@@ -121,11 +131,25 @@ void main() async {
   // The Quran package requires its init to be completed before its screen builds.
   await QuranLibrary.init();
 
+  // Initialize awesome_notifications + register ALL channels ONCE, up front.
+  // The fasting/wird cubits are eager (lazy:false) and schedule at cold start;
+  // if the plugin isn't initialized first their createNotification/setChannel
+  // calls fail silently. Bounded + guarded so it never blocks cold start.
+  try {
+    await NotificationRepositoryImpl().initialize().timeout(
+      const Duration(seconds: 3),
+    );
+  } catch (e) {
+    debugPrint('Notification init failed/timed out (non-fatal): $e');
+  }
+
   // Create repositories
   final appSettingsRepository = AppSettingsRepositoryImpl(sharedPreferences);
   final prayerTimesRepository = PrayerTimesRepositoryImpl();
-  final fastingRemindersRepository =
-      FastingRemindersRepositoryImpl(sharedPreferences);
+  final fastingRemindersRepository = FastingRemindersRepositoryImpl(
+    sharedPreferences,
+  );
+  final wirdRepository = WirdRepositoryImpl(sharedPreferences);
 
   // Create settings use cases
   final getSettingsUseCase = GetSettingsUseCase(appSettingsRepository);
@@ -141,8 +165,9 @@ void main() async {
   final setAppLockSettingsUseCase = SetAppLockSettingsUseCase(
     appSettingsRepository,
   );
-  final setOnboardingCompletedUseCase =
-      SetOnboardingCompletedUseCase(appSettingsRepository);
+  final setOnboardingCompletedUseCase = SetOnboardingCompletedUseCase(
+    appSettingsRepository,
+  );
 
   // Create prayer times use cases
   final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
@@ -165,6 +190,12 @@ void main() async {
   );
   final getFastingReminderSettingsStreamUseCase =
       GetFastingReminderSettingsStreamUseCase(fastingRemindersRepository);
+
+  // Create wird (Quran reading plan) use cases
+  final getWirdPlanUseCase = GetWirdPlanUseCase(wirdRepository);
+  final setWirdPlanUseCase = SetWirdPlanUseCase(wirdRepository);
+  final getWirdPlanStreamUseCase = GetWirdPlanStreamUseCase(wirdRepository);
+  final clearWirdPlanUseCase = ClearWirdPlanUseCase(wirdRepository);
 
   // Defer fasting notification service initialization
   // It will be lazily initialized when fasting reminders are accessed
@@ -192,6 +223,11 @@ void main() async {
       setFastingReminderSettingsUseCase: setFastingReminderSettingsUseCase,
       getFastingReminderSettingsStreamUseCase:
           getFastingReminderSettingsStreamUseCase,
+      // Wird (Quran reading plan)
+      getWirdPlanUseCase: getWirdPlanUseCase,
+      setWirdPlanUseCase: setWirdPlanUseCase,
+      getWirdPlanStreamUseCase: getWirdPlanStreamUseCase,
+      clearWirdPlanUseCase: clearWirdPlanUseCase,
     ),
   );
 
@@ -228,11 +264,15 @@ class MyApp extends StatelessWidget {
   final GetFastingReminderSettingsUseCase getFastingReminderSettingsUseCase;
   final SetFastingReminderSettingsUseCase setFastingReminderSettingsUseCase;
   final GetFastingReminderSettingsStreamUseCase
-      getFastingReminderSettingsStreamUseCase;
+  getFastingReminderSettingsStreamUseCase;
 
-  final _appLockPrayerSync = _AppLockPrayerSync(
-    const AppLockPlatformService(),
-  );
+  // Wird (Quran reading plan)
+  final GetWirdPlanUseCase getWirdPlanUseCase;
+  final SetWirdPlanUseCase setWirdPlanUseCase;
+  final GetWirdPlanStreamUseCase getWirdPlanStreamUseCase;
+  final ClearWirdPlanUseCase clearWirdPlanUseCase;
+
+  final _appLockPrayerSync = _AppLockPrayerSync(const AppLockPlatformService());
 
   MyApp({
     super.key,
@@ -256,6 +296,11 @@ class MyApp extends StatelessWidget {
     required this.getFastingReminderSettingsUseCase,
     required this.setFastingReminderSettingsUseCase,
     required this.getFastingReminderSettingsStreamUseCase,
+    // Wird (Quran reading plan)
+    required this.getWirdPlanUseCase,
+    required this.setWirdPlanUseCase,
+    required this.getWirdPlanStreamUseCase,
+    required this.clearWirdPlanUseCase,
   });
 
   @override
@@ -286,7 +331,10 @@ class MyApp extends StatelessWidget {
             setCalculationMethodUseCase,
             repository: prayerTimesRepository,
           ),
-          lazy: true,
+          // Eager so prayer times load at cold start and the BlocListeners
+          // schedule the adhan notifications without needing the user to open
+          // the prayer-times screen first.
+          lazy: false,
         ),
         BlocProvider<FastingRemindersCubit>(
           create: (_) => FastingRemindersCubit(
@@ -300,6 +348,16 @@ class MyApp extends StatelessWidget {
           // instantiated when BlocBuilder accessed it, and the widget
           // showed SizedBox.shrink() during the async load — making the
           // whole "تذكيرات الصيام" section invisible.
+          lazy: false,
+        ),
+        BlocProvider<WirdCubit>(
+          create: (_) => WirdCubit(
+            getPlanUseCase: getWirdPlanUseCase,
+            setPlanUseCase: setWirdPlanUseCase,
+            getPlanStreamUseCase: getWirdPlanStreamUseCase,
+            clearPlanUseCase: clearWirdPlanUseCase,
+          ),
+          // Eager so the daily reminder is (re)scheduled at app start.
           lazy: false,
         ),
       ],
@@ -345,43 +403,102 @@ class MyApp extends StatelessWidget {
             },
           ),
         ],
-        child: BlocBuilder<SettingsCubit, SettingsState>(
-          buildWhen: (previous, current) =>
-              previous != current && current is SettingsLoaded,
-          builder: (context, state) {
-            // Default settings if not loaded yet
-            var themeMode = ThemeMode.light;
-            var locale = const Locale('ar');
+        child: _GlassWidgetResumeRefresher(
+          child: BlocBuilder<SettingsCubit, SettingsState>(
+            buildWhen: (previous, current) =>
+                previous != current && current is SettingsLoaded,
+            builder: (context, state) {
+              // Default settings if not loaded yet
+              var themeMode = ThemeMode.light;
+              var locale = const Locale('ar');
 
-            // Update with loaded settings if available
-            if (state is SettingsLoaded) {
-              themeMode = state.settings.themeMode;
-              locale = Locale(state.settings.languageCode);
-            }
+              // Update with loaded settings if available
+              if (state is SettingsLoaded) {
+                themeMode = state.settings.themeMode;
+                locale = Locale(state.settings.languageCode);
+              }
 
-            return MaterialApp(
-              title: AppConstants.appName,
-              debugShowCheckedModeBanner: false,
-              theme: lightTheme,
-              darkTheme: darkTheme,
-              themeMode: themeMode,
-              localizationsDelegates: const [
-                AppLocalizationsDelegate(),
-                SfGlobalLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: LanguageManager.supportedLocales,
-              locale: locale,
-              onGenerateRoute: AppRouter.onGenerateRoute,
-              home: const WadhakirSplashScreen(),
-            );
-          },
+              return MaterialApp(
+                title: AppConstants.appName,
+                debugShowCheckedModeBanner: false,
+                theme: lightTheme,
+                darkTheme: darkTheme,
+                themeMode: themeMode,
+                localizationsDelegates: const [
+                  AppLocalizationsDelegate(),
+                  SfGlobalLocalizations.delegate,
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+                supportedLocales: LanguageManager.supportedLocales,
+                locale: locale,
+                onGenerateRoute: AppRouter.onGenerateRoute,
+                // Layer forui alongside Material: every route below gets an
+                // FTheme derived from the active Material theme, so forui
+                // components match the app's brand colors + light/dark mode.
+                // Material widgets (Quran reader, syncfusion pickers) ignore it.
+                builder: (context, child) => FTheme(
+                  data: buildForuiTheme(Theme.of(context)),
+                  // FToaster provides the overlay host for forui toasts so any
+                  // screen can call showFToast(...) with the unified styling.
+                  child: FToaster(child: child ?? const SizedBox.shrink()),
+                ),
+                home: const WadhakirSplashScreen(),
+              );
+            },
+          ),
         ),
       ),
     );
   }
+}
+
+/// Re-renders the Flutter-drawn glass prayer widgets (Prayer Detail + Prayer
+/// Next) whenever the app is resumed, so their snapshot (countdown, progress)
+/// is fresh. `renderFlutterWidget` cannot run while the app is fully
+/// backgrounded, so this resume hook is the moment to refresh them.
+class _GlassWidgetResumeRefresher extends StatefulWidget {
+  final Widget child;
+  const _GlassWidgetResumeRefresher({required this.child});
+
+  @override
+  State<_GlassWidgetResumeRefresher> createState() =>
+      _GlassWidgetResumeRefresherState();
+}
+
+class _GlassWidgetResumeRefresherState
+    extends State<_GlassWidgetResumeRefresher>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final prayerState = context.read<PrayerTimesCubit>().state;
+    if (prayerState is! PrayerTimesLoaded) return;
+    final now = DateTime.now();
+    final dateKey = DateTime(now.year, now.month, now.day);
+    final today = prayerState.prayerTimes[dateKey];
+    if (today != null) {
+      // Fire-and-forget; failures are logged inside the manager.
+      // ignore: unawaited_futures
+      GlassPrayerHomeWidget.updateGlassWidgets(today);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 class _AppLockPrayerSync {

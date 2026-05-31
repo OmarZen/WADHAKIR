@@ -31,6 +31,30 @@ class ShareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Passage: content-height card that grows with the text so long entries
+    // (e.g. the 40 Hadith) stay readable instead of being shrunk to fit a
+    // fixed box. The parent gives it a fixed width; height is intrinsic.
+    if (payload.variant == ShareCardVariant.passage) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_brandPrimary, _brandAccent],
+            ),
+          ),
+          child: Stack(
+            children: [
+              const Positioned.fill(child: _DecorativeOrbs()),
+              _PassageForeground(payload: payload),
+            ],
+          ),
+        ),
+      );
+    }
+
     return AspectRatio(
       aspectRatio: aspectRatio,
       child: ClipRRect(
@@ -46,6 +70,91 @@ class ShareCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Foreground for [ShareCardVariant.passage]: brand strip, full (non-shrunk)
+/// Arabic text, an optional English block under a divider, reference, footer.
+/// Sizes to content height.
+class _PassageForeground extends StatelessWidget {
+  const _PassageForeground({required this.payload});
+  final SharePayload payload;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasEnglish =
+        payload.secondaryText != null && payload.secondaryText!.isNotEmpty;
+    final hasReference =
+        payload.reference != null && payload.reference!.isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _BrandStrip(),
+          const SizedBox(height: 22),
+          Text(
+            payload.headline,
+            textAlign: TextAlign.center,
+            textDirection: payload.headlineRtl
+                ? TextDirection.rtl
+                : TextDirection.ltr,
+            style: TextStyle(
+              color: ShareCard._ink,
+              fontFamily: payload.headlineRtl ? 'ScheherazadeNew' : 'Almarai',
+              fontSize: payload.headlineRtl ? 23 : 17,
+              height: payload.headlineRtl ? 1.95 : 1.6,
+              fontWeight: FontWeight.w600,
+              shadows: const [
+                Shadow(
+                  color: Color(0x33000000),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          if (hasEnglish) ...[
+            const SizedBox(height: 18),
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 40),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withValues(alpha: 0),
+                    Colors.white.withValues(alpha: 0.4),
+                    Colors.white.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              payload.secondaryText!,
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.ltr,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.92),
+                fontFamily: 'Almarai',
+                fontSize: 14.5,
+                height: 1.6,
+              ),
+            ),
+          ],
+          if (hasReference) ...[
+            const SizedBox(height: 18),
+            _ReferenceLine(text: payload.reference!),
+          ],
+          const SizedBox(height: 22),
+          _Footer(
+            categoryLabel: payload.categoryLabel,
+            repetitions: payload.repetitions,
+          ),
+        ],
       ),
     );
   }
@@ -96,15 +205,13 @@ class _DecorativeOrbs extends StatelessWidget {
   }
 
   Widget _orb(double size, Color color) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
-          ),
-        ),
-      );
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
+    ),
+  );
 }
 
 /// Foreground: top brand strip, centered Arabic headline, optional
@@ -122,9 +229,7 @@ class _CardForeground extends StatelessWidget {
         children: [
           const _BrandStrip(),
           Expanded(
-            child: Center(
-              child: _Headline(payload: payload),
-            ),
+            child: Center(child: _Headline(payload: payload)),
           ),
           if (payload.reference != null && payload.reference!.isNotEmpty) ...[
             const SizedBox(height: 8),

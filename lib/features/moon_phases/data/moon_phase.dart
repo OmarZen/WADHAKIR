@@ -154,7 +154,8 @@ class MoonPhaseCalculator {
     }
     final a = (y / 100).floor();
     final b = 2 - a + (a / 4).floor();
-    final jd = (365.25 * (y + 4716)).floor() +
+    final jd =
+        (365.25 * (y + 4716)).floor() +
         (30.6001 * (m + 1)).floor() +
         d +
         b -

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/features/settings/view/widgets/settings_section.dart';
-import 'package:wadhakir/features/settings/view/widgets/app_lock_settings_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/appearance_settings_widget.dart';
 import 'package:wadhakir/features/settings/view/widgets/about_section_widgets.dart';
-import 'package:wadhakir/features/settings/view/widgets/adhan_sounds_section_widget.dart';
-import 'package:wadhakir/features/settings/view/widgets/notification_settings_widgets.dart';
-import 'package:wadhakir/features/fasting_reminders/views/widgets/fasting_reminder_settings_widget.dart';
+import 'package:wadhakir/features/settings/view/screens/notification_settings_page.dart';
+import 'package:wadhakir/features/settings/view/screens/fasting_settings_page.dart';
+import 'package:wadhakir/features/settings/view/screens/app_lock_settings_page.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -139,7 +139,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                   title:
                       l10n?.translate('settings.appearance') ?? 'المظهر واللغة',
                   icon: Icons.palette_outlined,
-                  subtitle: l10n?.translate('settings.appearance_subtitle') ??
+                  subtitle:
+                      l10n?.translate('settings.appearance_subtitle') ??
                       'تخصيص السمة واللغة',
                   children: [
                     AppearanceSettingsWidget(settings: settings, cubit: cubit),
@@ -154,77 +155,89 @@ class _SettingsScreenState extends State<SettingsScreen>
                   icon: Icons.notifications_outlined,
                   subtitle:
                       l10n?.translate('settings.notifications_subtitle') ??
-                          'تنبيهات أوقات الصلاة',
+                      'تنبيهات أوقات الصلاة',
                   children: [
-                    NotificationSettingsWidgets.buildNotificationMasterToggle(
+                    _buildNavTile(
                       context,
-                      settings,
-                      cubit,
+                      icon: Icons.notifications_active_outlined,
+                      title:
+                          l10n?.translate('settings.notifications') ??
+                          'التنبيهات',
+                      subtitle: settings.notificationSettings.masterEnabled
+                          ? (l10n?.translate('settings.notifications_on') ??
+                                'مفعّلة')
+                          : (l10n?.translate('settings.notifications_off') ??
+                                'متوقفة'),
+                      page: const NotificationSettingsPage(),
                     ),
-                    if (settings.notificationSettings.masterEnabled) ...[
-                      _buildDivider(theme),
-                      NotificationSettingsWidgets
-                          .buildPersistentNotificationToggle(
-                        context,
-                        settings,
-                        cubit,
-                      ),
-                      _buildDivider(theme),
-                      NotificationSettingsWidgets
-                          .buildNotificationTimingSelector(
-                        context,
-                        settings,
-                        cubit,
-                      ),
-                      _buildDivider(theme),
-                      const AdhanSoundsSectionWidget(),
-                      _buildDivider(theme),
-                      NotificationSettingsWidgets
-                          .buildPrayerNotificationsSettings(
-                        context,
-                        settings,
-                        cubit,
-                      ),
-                    ],
                   ],
                 ),
               ),
               _buildAnimatedSection(
                 delay: 150,
                 child: SettingsSection(
-                  title: l10n?.translate('settings.app_lock') ??
+                  title:
+                      l10n?.translate('settings.app_lock') ??
                       'قفل التطبيقات وقت الصلاة',
                   icon: Icons.lock_outline,
-                  subtitle: l10n?.translate('settings.app_lock_subtitle') ??
+                  subtitle:
+                      l10n?.translate('settings.app_lock_subtitle') ??
                       'قفل التطبيقات المختارة حتى إنهاء الصلاة',
                   children: [
-                    AppLockSettingsWidget(settings: settings, cubit: cubit),
+                    _buildNavTile(
+                      context,
+                      icon: Icons.lock_outline,
+                      title:
+                          l10n?.translate('settings.app_lock') ??
+                          'قفل التطبيقات وقت الصلاة',
+                      subtitle: settings.appLockSettings.enabled
+                          ? (l10n?.translate('settings.notifications_on') ??
+                                'مفعّلة')
+                          : (l10n?.translate('settings.notifications_off') ??
+                                'متوقفة'),
+                      page: const AppLockSettingsPage(),
+                    ),
                   ],
                 ),
               ),
               _buildAnimatedSection(
                 delay: 175,
                 child: SettingsSection(
-                  title: l10n?.translate('fasting.fasting_reminders') ??
+                  title:
+                      l10n?.translate('fasting.fasting_reminders') ??
                       'تذكيرات الصيام',
                   icon: Icons.restaurant_menu_outlined,
-                  subtitle: l10n?.translate(
-                        'fasting.fasting_reminders_subtitle',
-                      ) ??
+                  subtitle:
+                      l10n?.translate('fasting.fasting_reminders_subtitle') ??
                       'الصيام الأسبوعي والشهري والأيام المميزة',
                   children: [
-                    const FastingReminderSettingsWidget(),
+                    _buildNavTile(
+                      context,
+                      icon: Icons.restaurant_menu_outlined,
+                      title:
+                          l10n?.translate('fasting.fasting_reminders') ??
+                          'تذكيرات الصيام',
+                      subtitle:
+                          l10n?.translate(
+                            'fasting.fasting_reminders_subtitle',
+                          ) ??
+                          'الصيام الأسبوعي والشهري والأيام المميزة',
+                      page: const FastingSettingsPage(),
+                    ),
                   ],
                 ),
               ),
               _buildAnimatedSection(
                 delay: 188,
                 child: SettingsSection(
-                  title: l10n?.translate('floating_dhikr.settings_tile') ??
+                  title:
+                      l10n?.translate('floating_dhikr.settings_tile') ??
                       'تذكير الأذكار العائم',
                   icon: Icons.bubble_chart_outlined,
-                  subtitle: l10n?.translate(
-                          'floating_dhikr.settings_tile_subtitle') ??
+                  subtitle:
+                      l10n?.translate(
+                        'floating_dhikr.settings_tile_subtitle',
+                      ) ??
                       'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
                   children: [
                     // Material(transparency) guards against the "ListTile
@@ -249,9 +262,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                               'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
                         ),
                         trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(context).pushNamed(
-                          AppConstants.floatingDhikrSettingsRoute,
-                        ),
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pushNamed(AppConstants.floatingDhikrSettingsRoute),
                       ),
                     ),
                   ],
@@ -262,7 +275,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 child: SettingsSection(
                   title: l10n?.translate('settings.about_app') ?? 'حول التطبيق',
                   icon: Icons.info_outline,
-                  subtitle: l10n?.translate('settings.about_subtitle') ??
+                  subtitle:
+                      l10n?.translate('settings.about_subtitle') ??
                       'معلومات عن التطبيق',
                   children: [
                     AboutSectionWidgets.buildAboutTile(context),
@@ -296,8 +310,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         final settings = state is SettingsLoaded ? state.settings : null;
 
         // Count active notifications
-        final notificationCount =
-            settings != null ? _countActiveNotifications(settings) : 0;
+        final notificationCount = settings != null
+            ? _countActiveNotifications(settings)
+            : 0;
 
         // Get language display
         final languageDisplay = settings?.languageCode == 'ar' ? 'AR' : 'EN';
@@ -373,10 +388,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                               l10n?.translate('settings.description') ??
                                   'خصص تجربتك مع التطبيق',
                               style: theme.textTheme.bodyMedium?.copyWith(
-                                color: (isDark
-                                        ? theme.colorScheme.onSurface
-                                        : Colors.white)
-                                    .withValues(alpha: 0.7),
+                                color:
+                                    (isDark
+                                            ? theme.colorScheme.onSurface
+                                            : Colors.white)
+                                        .withValues(alpha: 0.7),
                                 fontSize: 12,
                               ),
                             ),
@@ -397,10 +413,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                           .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: (isDark
-                                ? theme.colorScheme.onSurface
-                                : Colors.white)
-                            .withValues(alpha: 0.2),
+                        color:
+                            (isDark
+                                    ? theme.colorScheme.onSurface
+                                    : Colors.white)
+                                .withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -418,10 +435,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                         Container(
                           width: 1,
                           height: 24,
-                          color: (isDark
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.white)
-                              .withValues(alpha: 0.2),
+                          color:
+                              (isDark
+                                      ? theme.colorScheme.onSurface
+                                      : Colors.white)
+                                  .withValues(alpha: 0.2),
                         ),
                         _buildStatItem(
                           Icons.language,
@@ -433,10 +451,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                         Container(
                           width: 1,
                           height: 24,
-                          color: (isDark
-                                  ? theme.colorScheme.onSurface
-                                  : Colors.white)
-                              .withValues(alpha: 0.2),
+                          color:
+                              (isDark
+                                      ? theme.colorScheme.onSurface
+                                      : Colors.white)
+                                  .withValues(alpha: 0.2),
                         ),
                         _buildStatItem(
                           Icons.palette,
@@ -519,14 +538,23 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildDivider(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Divider(
-        height: 1,
-        thickness: 0.5,
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-      ),
+  /// A tappable row inside a settings section that navigates to a dedicated
+  /// settings page. Keeps the main settings screen clean by routing dense
+  /// sections out instead of expanding them inline.
+  Widget _buildNavTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Widget page,
+  }) {
+    return FItem(
+      prefix: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      suffix: const Icon(Icons.chevron_right_rounded),
+      onPress: () =>
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => page)),
     );
   }
 }

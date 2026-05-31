@@ -174,8 +174,9 @@ class _IslamicHistoryScreenContentState
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth:
-                          PlatformUtils.isDesktop ? 1400.0 : double.infinity,
+                      maxWidth: PlatformUtils.isDesktop
+                          ? 1400.0
+                          : double.infinity,
                     ),
                     child: Padding(
                       padding: EdgeInsets.all(
@@ -248,8 +249,9 @@ class _IslamicHistoryScreenContentState
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth:
-                            PlatformUtils.isDesktop ? 1400.0 : double.infinity,
+                        maxWidth: PlatformUtils.isDesktop
+                            ? 1400.0
+                            : double.infinity,
                       ),
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
@@ -346,8 +348,9 @@ class _IslamicHistoryScreenContentState
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth:
-                            PlatformUtils.isDesktop ? 1400.0 : double.infinity,
+                        maxWidth: PlatformUtils.isDesktop
+                            ? 1400.0
+                            : double.infinity,
                       ),
                       child: Padding(
                         padding: EdgeInsets.all(
@@ -424,8 +427,8 @@ class _IslamicHistoryScreenContentState
               child: Text(
                 'تم عرض جميع الأحداث',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).hintColor,
-                    ),
+                  color: Theme.of(context).hintColor,
+                ),
               ),
             ),
           ),
@@ -531,11 +534,11 @@ class _IslamicHistoryScreenContentState
                                     const SizedBox(width: 4),
                                     Text(
                                       event.hijriYear,
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.primary,
-                                        fontSize: size.width * 0.028,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontSize: size.width * 0.028,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -578,12 +581,12 @@ class _IslamicHistoryScreenContentState
                                       event.lunarMonth
                                           .replaceAll('الشهر القمري : ', '')
                                           .replaceAll('الشهر القمري :', ''),
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.primary,
-                                        fontSize: size.width * 0.028,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontSize: size.width * 0.028,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -816,9 +819,9 @@ class _IslamicHistoryScreenContentState
                                           event.hijriYear,
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
-                                            fontFamily: 'Almarai',
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                                fontFamily: 'Almarai',
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -859,10 +862,11 @@ class _IslamicHistoryScreenContentState
                                           event.lunarMonth,
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
-                                            fontFamily: 'Almarai',
-                                            fontWeight: FontWeight.w600,
-                                            color: theme.colorScheme.primary,
-                                          ),
+                                                fontFamily: 'Almarai',
+                                                fontWeight: FontWeight.w600,
+                                                color:
+                                                    theme.colorScheme.primary,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -890,9 +894,9 @@ class _IslamicHistoryScreenContentState
                                           event.gregorianYear,
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
-                                            fontFamily: 'Almarai',
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                                fontFamily: 'Almarai',
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                         ),
                                       ),
                                     ],

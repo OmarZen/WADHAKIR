@@ -98,20 +98,26 @@ class FastingNotificationService {
   ///    service initialized, and move on. Subsequent calls are no-ops.
   Future<void> initialize() async {
     if (_initialized) {
-      log('🟢 FastingNotificationService.initialize: already initialized, skipping');
+      log(
+        '🟢 FastingNotificationService.initialize: already initialized, skipping',
+      );
       return;
     }
     final sw = Stopwatch()..start();
     log('🟢 FastingNotificationService.initialize: START');
 
     _localTimeZone = await _resolveTimeZone();
-    log('🟢 FastingNotificationService.initialize: timezone resolved = $_localTimeZone (${sw.elapsedMilliseconds}ms)');
+    log(
+      '🟢 FastingNotificationService.initialize: timezone resolved = $_localTimeZone (${sw.elapsedMilliseconds}ms)',
+    );
 
     try {
       // `forceUpdate: false` so we don't trigger the buggy needs-update
       // path when the channel already exists. setChannel still creates
       // the channel on first run.
-      log('🟢 FastingNotificationService.initialize: calling setChannel(channel=$_channelKey)');
+      log(
+        '🟢 FastingNotificationService.initialize: calling setChannel(channel=$_channelKey)',
+      );
       await AwesomeNotifications().setChannel(
         NotificationChannel(
           channelKey: _channelKey,
@@ -131,12 +137,16 @@ class FastingNotificationService {
       // codepath is `androidChannelNeedsForceUpdate` — it has to read an
       // existing channel to compare). Treat it as "already registered"
       // and continue. Do NOT call initialize() — see the docstring above.
-      log('🟡 FastingNotificationService.initialize: setChannel failed '
-          '(channel likely already registered): $e');
+      log(
+        '🟡 FastingNotificationService.initialize: setChannel failed '
+        '(channel likely already registered): $e',
+      );
     } finally {
       _initialized = true;
       sw.stop();
-      log('🟢 FastingNotificationService.initialize: DONE in ${sw.elapsedMilliseconds}ms');
+      log(
+        '🟢 FastingNotificationService.initialize: DONE in ${sw.elapsedMilliseconds}ms',
+      );
     }
   }
 
@@ -179,7 +189,9 @@ class FastingNotificationService {
     if (settings.monthlyFastingRemindersEnabled) {
       await _scheduleHijriCalendarNotifications(settings);
     } else {
-      log('⏭️  Monthly Hijri fasting reminders DISABLED, skipping Hijri scheduling');
+      log(
+        '⏭️  Monthly Hijri fasting reminders DISABLED, skipping Hijri scheduling',
+      );
     }
 
     log('');
@@ -278,15 +290,18 @@ class FastingNotificationService {
       minute,
     );
 
-    final weekdayForNotification =
-        dayOfWeek == DateTime.monday ? 7 : dayOfWeek - 1;
+    final weekdayForNotification = dayOfWeek == DateTime.monday
+        ? 7
+        : dayOfWeek - 1;
 
     log('   📋 Notification Details:');
     log('      • ID: $notificationId');
     log('      • Title: 🌙 تذكير بصيام $dayNameArabic');
     log('      • Body: غداً يوم $dayNameArabic، يُستحب الصيام');
     log('      • Scheduled Time: $scheduledDate');
-    log('      • Weekday: $weekdayForNotification (${_getWeekdayName(weekdayForNotification)})');
+    log(
+      '      • Weekday: $weekdayForNotification (${_getWeekdayName(weekdayForNotification)})',
+    );
     log('      • Hour: $hour, Minute: $minute');
     log('      • Repeats: WEEKLY');
 
@@ -335,9 +350,11 @@ class FastingNotificationService {
     final currentWeekday = from.weekday;
     int daysToAdd = (desiredWeekday - currentWeekday) % 7;
     if (daysToAdd <= 0) daysToAdd += 7;
-    return DateTime(from.year, from.month, from.day).add(
-      Duration(days: daysToAdd),
-    );
+    return DateTime(
+      from.year,
+      from.month,
+      from.day,
+    ).add(Duration(days: daysToAdd));
   }
 
   /// Get weekday name from weekday number (1=Monday, 7=Sunday)
@@ -374,7 +391,9 @@ class FastingNotificationService {
     final currentMonth = currentHijri.month;
     final currentYear = currentHijri.year;
 
-    log('📆 Current Hijri Date: ${currentHijri.day}/$currentMonth/$currentYear');
+    log(
+      '📆 Current Hijri Date: ${currentHijri.day}/$currentMonth/$currentYear',
+    );
     log('');
 
     // Schedule notifications for this month
@@ -410,7 +429,8 @@ class FastingNotificationService {
 
     // Helper function to check if notification should be scheduled
     bool shouldSchedule(int day) {
-      final should = month != currentHijri.month ||
+      final should =
+          month != currentHijri.month ||
           year != currentHijri.year ||
           day >= currentHijri.day;
       if (!should) {
@@ -540,7 +560,9 @@ class FastingNotificationService {
       log('\n   ⏭️  Special Days DISABLED');
     }
 
-    log('\n   ✅ Month $month/$year: Scheduled $notificationCount fasting day(s)');
+    log(
+      '\n   ✅ Month $month/$year: Scheduled $notificationCount fasting day(s)',
+    );
   }
 
   /// Schedule notification for a specific day
@@ -553,8 +575,12 @@ class FastingNotificationService {
     required int notificationIdBase,
     bool isSpecial = false,
   }) async {
-    log('      📅 ${fastingDay.nameEn} (${fastingDay.nameAr}) - $hijriDay/$hijriMonth/$hijriYear');
-    log('         🔍 Prayer times repository status: ${_prayerTimesRepository == null ? "NULL ❌" : "AVAILABLE ✅"}');
+    log(
+      '      📅 ${fastingDay.nameEn} (${fastingDay.nameAr}) - $hijriDay/$hijriMonth/$hijriYear',
+    );
+    log(
+      '         🔍 Prayer times repository status: ${_prayerTimesRepository == null ? "NULL ❌" : "AVAILABLE ✅"}',
+    );
 
     // Get Gregorian date for this Hijri date
     final gregorianDate = _hijriCalculator.getGregorianFromHijri(
@@ -563,7 +589,9 @@ class FastingNotificationService {
       day: hijriDay,
     );
 
-    log('         ➡️  Gregorian: ${gregorianDate.day}/${gregorianDate.month}/${gregorianDate.year}');
+    log(
+      '         ➡️  Gregorian: ${gregorianDate.day}/${gregorianDate.month}/${gregorianDate.year}',
+    );
 
     // Skip if date is in the past
     if (gregorianDate.isBefore(DateTime.now())) {
@@ -589,10 +617,14 @@ class FastingNotificationService {
 
           // Use Maghrib time as reminder time
           eveNotificationTime = evePrayerTimes.maghrib;
-          log('         🕌 Using Maghrib prayer time: ${eveNotificationTime.hour}:${eveNotificationTime.minute.toString().padLeft(2, '0')}');
+          log(
+            '         🕌 Using Maghrib prayer time: ${eveNotificationTime.hour}:${eveNotificationTime.minute.toString().padLeft(2, '0')}',
+          );
         } else {
           // Fallback: Use settings time if prayer times repository not  available
-          log('         ⚠️  Prayer times repository not available, using settings time');
+          log(
+            '         ⚠️  Prayer times repository not available, using settings time',
+          );
           final eveTimeParts = settings.eveReminderTime.split(':');
           final eveHour = int.parse(eveTimeParts[0]);
           final eveMinute = int.parse(eveTimeParts[1]);
@@ -609,8 +641,11 @@ class FastingNotificationService {
         if (eveNotificationTime.isAfter(DateTime.now())) {
           await _scheduleNotification(
             id: notificationIdBase + 1,
-            title: _getNotificationTitle(fastingDay,
-                isEve: true, isSpecial: isSpecial),
+            title: _getNotificationTitle(
+              fastingDay,
+              isEve: true,
+              isSpecial: isSpecial,
+            ),
             body: _getNotificationBody(fastingDay, isEve: true),
             scheduledDate: eveNotificationTime,
             settings: settings,
@@ -632,19 +667,21 @@ class FastingNotificationService {
 
         if (_prayerTimesRepository != null) {
           // Get Fajr time from prayer times
-          final morningPrayerTimes =
-              await _prayerTimesRepository!.getPrayerTimes(
-            date: gregorianDate,
-          );
+          final morningPrayerTimes = await _prayerTimesRepository!
+              .getPrayerTimes(date: gregorianDate);
 
           // Use Fajr time minus 5 minutes as reminder time
           morningNotificationTime = morningPrayerTimes.fajr.subtract(
             const Duration(minutes: 5),
           );
-          log('         🕌 Using Fajr-5min prayer time: ${morningNotificationTime.hour}:${morningNotificationTime.minute.toString().padLeft(2, '0')}');
+          log(
+            '         🕌 Using Fajr-5min prayer time: ${morningNotificationTime.hour}:${morningNotificationTime.minute.toString().padLeft(2, '0')}',
+          );
         } else {
           // Fallback: Use settings time if prayer times repository not available
-          log('         ⚠️  Prayer times repository not available, using settings time');
+          log(
+            '         ⚠️  Prayer times repository not available, using settings time',
+          );
           final morningTimeParts = settings.morningReminderTime.split(':');
           final morningHour = int.parse(morningTimeParts[0]);
           final morningMinute = int.parse(morningTimeParts[1]);
@@ -661,8 +698,11 @@ class FastingNotificationService {
         if (morningNotificationTime.isAfter(DateTime.now())) {
           await _scheduleNotification(
             id: notificationIdBase + 2,
-            title: _getNotificationTitle(fastingDay,
-                isEve: false, isSpecial: isSpecial),
+            title: _getNotificationTitle(
+              fastingDay,
+              isEve: false,
+              isSpecial: isSpecial,
+            ),
             body: _getNotificationBody(fastingDay, isEve: false),
             scheduledDate: morningNotificationTime,
             settings: settings,
@@ -699,10 +739,15 @@ class FastingNotificationService {
       if (advanceNotificationTime.isAfter(DateTime.now())) {
         await _scheduleNotification(
           id: notificationIdBase + 3,
-          title: _getNotificationTitle(fastingDay,
-              isAdvance: true, isSpecial: isSpecial),
+          title: _getNotificationTitle(
+            fastingDay,
+            isAdvance: true,
+            isSpecial: isSpecial,
+          ),
           body: _getAdvanceNotificationBody(
-              fastingDay, settings.daysBeforeNotification),
+            fastingDay,
+            settings.daysBeforeNotification,
+          ),
           scheduledDate: advanceNotificationTime,
           settings: settings,
           fastingDay: fastingDay,
@@ -711,7 +756,9 @@ class FastingNotificationService {
       }
     }
 
-    log('         ✅ Total notifications scheduled for this day: $scheduledCount');
+    log(
+      '         ✅ Total notifications scheduled for this day: $scheduledCount',
+    );
   }
 
   /// Schedule a single notification
@@ -753,7 +800,9 @@ class FastingNotificationService {
         ),
       );
 
-      log('         ✅ Created notification #$id: "$title" @ ${scheduledDate.day}/${scheduledDate.month}/${scheduledDate.year} ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}');
+      log(
+        '         ✅ Created notification #$id: "$title" @ ${scheduledDate.day}/${scheduledDate.month}/${scheduledDate.year} ${scheduledDate.hour}:${scheduledDate.minute.toString().padLeft(2, '0')}',
+      );
     } catch (e) {
       log('         ❌ ERROR creating notification #$id: $e');
     }
@@ -813,18 +862,24 @@ class FastingNotificationService {
     log('🗑️  cancelAllFastingNotifications: start (channel=$_channelKey)');
     try {
       await AwesomeNotifications().cancelNotificationsByChannelKey(_channelKey);
-      log('🗑️  cancelAllFastingNotifications: displayed notifications cleared');
+      log(
+        '🗑️  cancelAllFastingNotifications: displayed notifications cleared',
+      );
     } catch (e) {
       log('🗑️  cancelNotificationsByChannelKey error (continuing): $e');
     }
     try {
       await AwesomeNotifications().cancelSchedulesByChannelKey(_channelKey);
-      log('🗑️  cancelAllFastingNotifications: scheduled notifications cleared');
+      log(
+        '🗑️  cancelAllFastingNotifications: scheduled notifications cleared',
+      );
     } catch (e) {
       log('🗑️  cancelSchedulesByChannelKey error (continuing): $e');
     }
     sw.stop();
-    log('🗑️  cancelAllFastingNotifications: done in ${sw.elapsedMilliseconds}ms');
+    log(
+      '🗑️  cancelAllFastingNotifications: done in ${sw.elapsedMilliseconds}ms',
+    );
   }
 
   /// Cancel weekly fasting notification for specific day
@@ -860,7 +915,9 @@ class FastingNotificationService {
         break;
     }
 
-    log('🗑️  Cancelling $typeName notifications (ID range $baseId to ${baseId + 99})...');
+    log(
+      '🗑️  Cancelling $typeName notifications (ID range $baseId to ${baseId + 99})...',
+    );
     for (int i = 0; i < 100; i++) {
       await AwesomeNotifications().cancel(baseId + i);
     }
@@ -876,11 +933,11 @@ class FastingNotificationService {
       // Make sure the channel exists; calling initialize() is idempotent.
       await initialize();
 
-      final hasPermission =
-          await AwesomeNotifications().isNotificationAllowed();
+      final hasPermission = await AwesomeNotifications()
+          .isNotificationAllowed();
       if (!hasPermission) {
-        final granted =
-            await AwesomeNotifications().requestPermissionToSendNotifications();
+        final granted = await AwesomeNotifications()
+            .requestPermissionToSendNotifications();
         if (!granted) return false;
       }
 

@@ -40,9 +40,9 @@ enum DhikrSource { random, morning, evening, prayer, tasbih }
 extension DhikrSourceX on DhikrSource {
   String get id => name;
   static DhikrSource fromId(String? id) => DhikrSource.values.firstWhere(
-        (s) => s.name == id,
-        orElse: () => DhikrSource.random,
-      );
+    (s) => s.name == id,
+    orElse: () => DhikrSource.random,
+  );
 }
 
 /// User preferences for the floating adhkar overlay. Persisted as JSON in
@@ -102,16 +102,16 @@ class FloatingDhikrSettings {
   }
 
   Map<String, dynamic> toJson() => {
-        'enabled': enabled,
-        'interval_minutes': interval.inMinutes,
-        'position': position.id,
-        'opacity': opacity,
-        'source': source.id,
-        'auto_dismiss_seconds': autoDismissAfter.inSeconds,
-        'pause_during_prayer': pauseDuringPrayer,
-        'quiet_start_minutes': quietHoursStartMinutes,
-        'quiet_end_minutes': quietHoursEndMinutes,
-      };
+    'enabled': enabled,
+    'interval_minutes': interval.inMinutes,
+    'position': position.id,
+    'opacity': opacity,
+    'source': source.id,
+    'auto_dismiss_seconds': autoDismissAfter.inSeconds,
+    'pause_during_prayer': pauseDuringPrayer,
+    'quiet_start_minutes': quietHoursStartMinutes,
+    'quiet_end_minutes': quietHoursEndMinutes,
+  };
 
   factory FloatingDhikrSettings.fromJson(Map<String, dynamic> json) {
     return FloatingDhikrSettings(
@@ -120,8 +120,9 @@ class FloatingDhikrSettings {
       position: OverlayAnchorX.fromId(json['position'] as String?),
       opacity: (json['opacity'] as num?)?.toDouble() ?? 0.92,
       source: DhikrSourceX.fromId(json['source'] as String?),
-      autoDismissAfter:
-          Duration(seconds: (json['auto_dismiss_seconds'] as int?) ?? 10),
+      autoDismissAfter: Duration(
+        seconds: (json['auto_dismiss_seconds'] as int?) ?? 10,
+      ),
       pauseDuringPrayer: json['pause_during_prayer'] as bool? ?? true,
       quietHoursStartMinutes: json['quiet_start_minutes'] as int?,
       quietHoursEndMinutes: json['quiet_end_minutes'] as int?,

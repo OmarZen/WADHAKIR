@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
@@ -116,28 +117,29 @@ class _QiblaScreenState extends State<QiblaScreen>
 
   void _showLocationServiceDialog() {
     final l10n = context.l10n;
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
         title: Text(
           l10n?.translate('campus.location_service_disabled') ??
               'خدمة الموقع معطلة',
         ),
-        content: Text(
+        body: Text(
           l10n?.translate('campus.enable_location_service') ??
               'يرجى تفعيل خدمة الموقع لتحديد اتجاه القبلة',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n?.translate('campus.cancel') ?? 'إلغاء'),
-          ),
-          TextButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.pop(context);
               Geolocator.openLocationSettings();
             },
             child: Text(l10n?.translate('campus.settings') ?? 'الإعدادات'),
+          ),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.outline,
+            child: Text(l10n?.translate('campus.cancel') ?? 'إلغاء'),
           ),
         ],
       ),
@@ -146,29 +148,30 @@ class _QiblaScreenState extends State<QiblaScreen>
 
   void _showPermissionRequiredDialog() {
     final l10n = context.l10n;
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
         title: Text(
           l10n?.translate('campus.permission_required') ?? 'الإذن مطلوب',
         ),
-        content: Text(
+        body: Text(
           l10n?.translate('campus.location_permission_required') ??
               'يحتاج التطبيق إلى إذن الموقع لتحديد اتجاه القبلة',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              AppLocalizations.of(context)?.translate('cancel') ?? 'إلغاء',
-            ),
-          ),
-          TextButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.pop(context);
               _requestLocationPermission();
             },
             child: Text(l10n?.translate('campus.retry') ?? 'إعادة المحاولة'),
+          ),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.outline,
+            child: Text(
+              AppLocalizations.of(context)?.translate('cancel') ?? 'إلغاء',
+            ),
           ),
         ],
       ),
@@ -177,27 +180,28 @@ class _QiblaScreenState extends State<QiblaScreen>
 
   void _showOpenSettingsDialog() {
     final l10n = context.l10n;
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
         title: Text(
           l10n?.translate('campus.permission_denied') ?? 'تم رفض الإذن',
         ),
-        content: Text(
+        body: Text(
           l10n?.translate('campus.open_app_settings') ??
               'يرجى فتح إعدادات التطبيق لمنح إذن الموقع',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n?.translate('campus.cancel') ?? 'إلغاء'),
-          ),
-          TextButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.pop(context);
               Geolocator.openAppSettings();
             },
             child: Text(l10n?.translate('campus.settings') ?? 'الإعدادات'),
+          ),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.outline,
+            child: Text(l10n?.translate('campus.cancel') ?? 'إلغاء'),
           ),
         ],
       ),
@@ -269,10 +273,10 @@ class _QiblaScreenState extends State<QiblaScreen>
                         child: state is QiblaLoading
                             ? _buildLoadingState()
                             : state is QiblaLoaded
-                                ? _buildQiblaContent(context, state)
-                                : state is QiblaError
-                                    ? _buildErrorState(context, state)
-                                    : _buildDefaultState(),
+                            ? _buildQiblaContent(context, state)
+                            : state is QiblaError
+                            ? _buildErrorState(context, state)
+                            : _buildDefaultState(),
                       ),
                     ],
                   );
@@ -463,9 +467,9 @@ class _QiblaScreenState extends State<QiblaScreen>
         Text(
           '${state.qiblaModel.qiblaDirection.toStringAsFixed(1)}°',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: state.isAligned ? const Color(0xFF00C853) : null,
-              ),
+            fontWeight: FontWeight.bold,
+            color: state.isAligned ? const Color(0xFF00C853) : null,
+          ),
         ),
         SizedBox(height: size.height * 0.01),
         // Accuracy indicator
@@ -495,7 +499,8 @@ class _QiblaScreenState extends State<QiblaScreen>
                     // Location info
                     _buildInfoCard(
                       icon: Icons.location_on,
-                      title: l10n?.translate('campus.your_location') ??
+                      title:
+                          l10n?.translate('campus.your_location') ??
                           'موقعك الحالي',
                       value:
                           '${state.qiblaModel.latitude.toStringAsFixed(4)}, ${state.qiblaModel.longitude.toStringAsFixed(4)}',
@@ -769,7 +774,8 @@ class _QiblaScreenState extends State<QiblaScreen>
     final isDesktop = PlatformUtils.isDesktop;
 
     // Check if this is a compass sensor error
-    final isCompassError = state.message.contains('Compass') ||
+    final isCompassError =
+        state.message.contains('Compass') ||
         state.message.contains('compass') ||
         state.message.contains('magnetometer') ||
         state.message.contains('sensor');
@@ -802,10 +808,11 @@ class _QiblaScreenState extends State<QiblaScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: (isCompassError
-                              ? Colors.orange[200]!
-                              : Colors.red[200]!)
-                          .withValues(alpha: 0.3),
+                      color:
+                          (isCompassError
+                                  ? Colors.orange[200]!
+                                  : Colors.red[200]!)
+                              .withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -814,8 +821,9 @@ class _QiblaScreenState extends State<QiblaScreen>
                 child: Icon(
                   isCompassError ? Icons.explore_off : Icons.error_outline,
                   size: isDesktop ? 80.0 : size.width * 0.2,
-                  color:
-                      isCompassError ? Colors.deepOrange[400] : Colors.red[400],
+                  color: isCompassError
+                      ? Colors.deepOrange[400]
+                      : Colors.red[400],
                 ),
               ),
               SizedBox(height: isDesktop ? 32.0 : size.height * 0.03),
@@ -824,12 +832,12 @@ class _QiblaScreenState extends State<QiblaScreen>
               Text(
                 isCompassError
                     ? (l10n?.translate('campus.compass_unavailable') ??
-                        'البوصلة غير متاحة')
+                          'البوصلة غير متاحة')
                     : (l10n?.translate('campus.error') ?? 'خطأ'),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: isDesktop ? 16.0 : size.height * 0.02),
@@ -838,10 +846,10 @@ class _QiblaScreenState extends State<QiblaScreen>
               Text(
                 state.message,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.8),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: isDesktop ? 24.0 : size.height * 0.03),
@@ -869,14 +877,14 @@ class _QiblaScreenState extends State<QiblaScreen>
                     Text(
                       isCompassError
                           ? (l10n?.translate('campus.compass_requirement') ??
-                              'تتطلب هذه الميزة جهازًا مزودًا بمستشعر البوصلة (المغناطيس) والذي يتوفر عادة في الهواتف الذكية والأجهزة اللوحية فقط.')
+                                'تتطلب هذه الميزة جهازًا مزودًا بمستشعر البوصلة (المغناطيس) والذي يتوفر عادة في الهواتف الذكية والأجهزة اللوحية فقط.')
                           : (l10n?.translate('campus.qibla_error_message') ??
-                              'تأكد من تفعيل خدمة الموقع وإذن الوصول للموقع'),
+                                'تأكد من تفعيل خدمة الموقع وإذن الوصول للموقع'),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -886,24 +894,14 @@ class _QiblaScreenState extends State<QiblaScreen>
               // Show retry button only if it's not a compass error
               if (!isCompassError) ...[
                 SizedBox(height: isDesktop ? 32.0 : size.height * 0.04),
-                ElevatedButton.icon(
-                  onPressed: () {
+                FButton(
+                  onPress: () {
                     context.read<QiblaCubit>().getQiblaDirection();
                   },
-                  icon: const Icon(Icons.refresh),
-                  label: Text(
+                  mainAxisSize: MainAxisSize.min,
+                  prefix: const Icon(Icons.refresh),
+                  child: Text(
                     l10n?.translate('campus.retry') ?? 'إعادة المحاولة',
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isDesktop ? 32.0 : size.width * 0.06,
-                      vertical: isDesktop ? 16.0 : size.height * 0.015,
-                    ),
-                    backgroundColor: qiblaPrimaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
                   ),
                 ),
               ],

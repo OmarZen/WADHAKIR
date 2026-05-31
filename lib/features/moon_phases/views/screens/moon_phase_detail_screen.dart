@@ -28,8 +28,11 @@ class _MoonPhaseDetailScreenState extends State<MoonPhaseDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _selected = DateTime(widget.initialDate.year, widget.initialDate.month,
-        widget.initialDate.day);
+    _selected = DateTime(
+      widget.initialDate.year,
+      widget.initialDate.month,
+      widget.initialDate.day,
+    );
   }
 
   @override
@@ -86,10 +89,9 @@ class _MoonPhaseDetailScreenState extends State<MoonPhaseDetailScreen> {
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.22),
+                                Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.22),
                                 Colors.transparent,
                               ],
                             ),
@@ -152,7 +154,8 @@ class _DateStrip extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: days.map((d) {
-          final isSelected = d.year == selected.year &&
+          final isSelected =
+              d.year == selected.year &&
               d.month == selected.month &&
               d.day == selected.day;
           return _DateChip(
@@ -181,8 +184,9 @@ class _DateChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final weekday = DateFormat.E().format(date).toUpperCase();
     final day = DateFormat.MMMd().format(date);
-    final color =
-        selected ? Colors.white : Colors.white.withValues(alpha: 0.55);
+    final color = selected
+        ? Colors.white
+        : Colors.white.withValues(alpha: 0.55);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -336,7 +340,8 @@ class _MoreInfo extends StatelessWidget {
             value: formatPercent(info.illumination),
           ),
           _InfoRow(
-            label: l10n?.translate('moon_phases.ecliptic_longitude') ??
+            label:
+                l10n?.translate('moon_phases.ecliptic_longitude') ??
                 'Ecliptic longitude',
             value: '${info.eclipticLongitude.toStringAsFixed(2)}°',
           ),
@@ -498,10 +503,12 @@ class _SparklinePainter extends CustomPainter {
     // Y-axis labels
     final textStyle = const TextStyle(color: Colors.white54, fontSize: 11);
     final tps = ['100%', '50%', '0%']
-        .map((t) => TextPainter(
-              text: TextSpan(text: t, style: textStyle),
-              textDirection: ui.TextDirection.ltr,
-            )..layout())
+        .map(
+          (t) => TextPainter(
+            text: TextSpan(text: t, style: textStyle),
+            textDirection: ui.TextDirection.ltr,
+          )..layout(),
+        )
         .toList();
     for (int i = 0; i < tps.length; i++) {
       final y = size.height * (i / 2);

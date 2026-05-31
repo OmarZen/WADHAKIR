@@ -26,8 +26,9 @@ class FastingDayCardWidget extends StatelessWidget {
     final languageCode = Localizations.localeOf(context).languageCode;
     final l10n = context.l10n;
 
-    final fastingName =
-        languageCode == 'ar' ? fastingDay.nameAr : fastingDay.nameEn;
+    final fastingName = languageCode == 'ar'
+        ? fastingDay.nameAr
+        : fastingDay.nameEn;
     final fastingDescription = languageCode == 'ar'
         ? fastingDay.descriptionAr
         : fastingDay.descriptionEn;
@@ -47,8 +48,8 @@ class FastingDayCardWidget extends StatelessWidget {
             color: isUpcoming
                 ? cardColor.withValues(alpha: 0.98)
                 : isDark
-                    ? theme.colorScheme.surface
-                    : Colors.white,
+                ? theme.colorScheme.surface
+                : Colors.white,
             borderRadius: borderRadius,
             boxShadow: [
               BoxShadow(
@@ -95,8 +96,10 @@ class FastingDayCardWidget extends StatelessWidget {
                   right: languageCode == 'ar' ? null : 12,
                   left: languageCode == 'ar' ? 12 : null,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -143,11 +146,7 @@ class FastingDayCardWidget extends StatelessWidget {
                           : cardColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.star_rounded,
-                      size: 20,
-                      color: cardColor,
-                    ),
+                    child: Icon(Icons.star_rounded, size: 20, color: cardColor),
                   ),
                 ),
 
@@ -290,7 +289,10 @@ class FastingDayCardWidget extends StatelessWidget {
   }
 
   String _getCountdownText(
-      int days, String languageCode, AppLocalizations? l10n) {
+    int days,
+    String languageCode,
+    AppLocalizations? l10n,
+  ) {
     if (days == 0) {
       return l10n?.translate('fasting.today') ??
           (languageCode == 'ar' ? 'اليوم' : 'Today');

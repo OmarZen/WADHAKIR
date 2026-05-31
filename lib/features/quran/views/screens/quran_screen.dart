@@ -90,7 +90,8 @@ class QuranScreen extends StatelessWidget {
         audioIconPath: 'assets/icons/custom_audio.svg',
         fontsDialogTitle:
             l10n?.translate('quran.fonts_dialog_title') ?? 'Fonts',
-        fontsDialogNotes: l10n?.translate('quran.fonts_dialog_notes') ??
+        fontsDialogNotes:
+            l10n?.translate('quran.fonts_dialog_notes') ??
             'Download Quran fonts to match Medina Mushaf style',
         fontsDialogDownloadingText:
             l10n?.translate('common.downloading') ?? 'Downloading',

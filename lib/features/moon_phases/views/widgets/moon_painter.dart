@@ -179,17 +179,14 @@ class _MoonPainter extends CustomPainter {
       ..shader = RadialGradient(
         center: litAlignment,
         radius: 0.85,
-        colors: const [
-          Color(0xFFF5F1E1),
-          Color(0xFFE8E1C7),
-          Color(0xFFC8C0A5),
-        ],
+        colors: const [Color(0xFFF5F1E1), Color(0xFFE8E1C7), Color(0xFFC8C0A5)],
         stops: const [0.0, 0.65, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
 
     canvas.save();
     canvas.clipPath(
-        Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
+      Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
+    );
 
     if (p < 0.5) {
       // Waxing: lit area is on the right.
@@ -289,7 +286,8 @@ class _MoonPainter extends CustomPainter {
     ];
     canvas.save();
     canvas.clipPath(
-        Path()..addOval(Rect.fromCircle(center: center, radius: radius)));
+      Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
+    );
     for (final c in craters) {
       canvas.drawCircle(
         Offset(center.dx + c[0] * radius, center.dy + c[1] * radius),

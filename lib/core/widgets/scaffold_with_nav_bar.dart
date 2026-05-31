@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
@@ -75,6 +75,63 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     // Trigger animation when changing tabs
     _animationController.reset();
     _animationController.forward();
+  }
+
+  /// A single pill-style navigation item: icon-only when inactive, icon +
+  /// label inside a rounded highlight when active (mimics the previous GNav
+  /// look without the extra dependency).
+  Widget _buildNavItem({
+    required int index,
+    required Widget icon,
+    required String label,
+    required Color activeColor,
+    required Color inactiveColor,
+    required Size size,
+  }) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        _onItemTapped(index);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? size.width * 0.045 : size.width * 0.03,
+          vertical: size.height * 0.012,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconTheme.merge(
+              data: IconThemeData(
+                color: isSelected ? activeColor : inactiveColor,
+                size: 22,
+              ),
+              child: icon,
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: activeColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildCurrentScreen() {
@@ -170,50 +227,49 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
                   horizontal: size.width * 0.04,
                   vertical: size.height * 0.008,
                 ),
-                child: GNav(
-                  gap: 8,
-                  rippleColor: theme.colorScheme.onPrimary.withValues(
-                    alpha: 0.1,
-                  ),
-                  hoverColor: theme.colorScheme.onPrimary.withValues(
-                    alpha: 0.06,
-                  ),
-                  haptic: true,
-                  tabBorderRadius: 16,
-                  curve: Curves.easeOutCubic,
-                  duration: const Duration(milliseconds: 350),
-                  color: inactiveColor,
-                  activeColor: activeColor,
-                  iconSize: 22,
-                  tabBackgroundColor: Colors.white.withValues(alpha: 0.12),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.045,
-                    vertical: size.height * 0.012,
-                  ),
-                  selectedIndex: _selectedIndex,
-                  onTabChange: _onItemTapped,
-                  tabs: [
-                    GButton(
-                      icon: Icons.home_rounded,
-                      text: l10n?.translate('nav_bar.home') ?? 'الرئيسية',
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildNavItem(
+                      index: 0,
+                      icon: const Icon(Icons.home_rounded, size: 22),
+                      label: l10n?.translate('nav_bar.home') ?? 'الرئيسية',
+                      activeColor: activeColor,
+                      inactiveColor: inactiveColor,
+                      size: size,
                     ),
-                    GButton(
-                      icon: Icons.menu_book_rounded,
-                      leading: HugeIcon(
+                    _buildNavItem(
+                      index: 1,
+                      icon: HugeIcon(
                         icon: HugeIcons.strokeRoundedQuran01,
-                        color:
-                            _selectedIndex == 1 ? activeColor : inactiveColor,
+                        color: _selectedIndex == 1
+                            ? activeColor
+                            : inactiveColor,
                         size: 22,
                       ),
-                      text: l10n?.translate('nav_bar.quran') ?? 'المصحف',
+                      label: l10n?.translate('nav_bar.quran') ?? 'المصحف',
+                      activeColor: activeColor,
+                      inactiveColor: inactiveColor,
+                      size: size,
                     ),
-                    GButton(
-                      icon: Icons.format_list_bulleted_rounded,
-                      text: l10n?.translate('nav_bar.azkar') ?? 'الاذكار',
+                    _buildNavItem(
+                      index: 2,
+                      icon: const Icon(
+                        Icons.format_list_bulleted_rounded,
+                        size: 22,
+                      ),
+                      label: l10n?.translate('nav_bar.azkar') ?? 'الاذكار',
+                      activeColor: activeColor,
+                      inactiveColor: inactiveColor,
+                      size: size,
                     ),
-                    GButton(
-                      icon: Icons.settings_rounded,
-                      text: l10n?.translate('nav_bar.settings') ?? 'الإعدادات',
+                    _buildNavItem(
+                      index: 3,
+                      icon: const Icon(Icons.settings_rounded, size: 22),
+                      label: l10n?.translate('nav_bar.settings') ?? 'الإعدادات',
+                      activeColor: activeColor,
+                      inactiveColor: inactiveColor,
+                      size: size,
                     ),
                   ],
                 ),
@@ -224,12 +280,4 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
       ),
     );
   }
-}
-
-class NavItem {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-
-  NavItem({required this.icon, required this.activeIcon, required this.label});
 }

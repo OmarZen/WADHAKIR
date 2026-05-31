@@ -16,11 +16,13 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.1.1+17
+version: 3.2.0+18
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  flutter: ">=3.24.0"
+  # Bumped for forui 0.22.x (requires Dart >=3.12 / Flutter >=3.44).
+  # CI runners and all contributors must use Flutter >=3.44.0.
+  sdk: '>=3.12.0 <4.0.0'
+  flutter: ">=3.44.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -37,7 +39,11 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.9
-  
+
+  # Unified component library (layered alongside Material). Requires
+  # Dart >=3.12 / Flutter >=3.44 — see environment block below.
+  forui: ^0.22.3
+
   # State management
   flutter_bloc: ^9.1.1
   equatable: ^2.0.8
@@ -54,9 +60,9 @@ dependencies:
   geocoding: ^4.0.0
   vector_math: ^2.1.4
   adhan_dart: ^2.0.1
-  syncfusion_flutter_datepicker: ^33.2.7
-  syncfusion_flutter_core: ^33.2.7
-  syncfusion_localizations: ^33.2.7
+  syncfusion_flutter_datepicker: ^33.2.8
+  syncfusion_flutter_core: ^33.2.8
+  syncfusion_localizations: ^33.2.8
   intl: ^0.20.2
   
   # Quran Library (pub.dev package)
@@ -80,9 +86,7 @@ dependencies:
   url_launcher: ^6.3.2
   http: ^1.6.0
   flutter_dotenv: ^6.0.1
-  google_nav_bar: ^5.0.7
   font_awesome_flutter: ^11.0.0
-  country_flags: ^4.1.2
   home_widget: ^0.9.1
   path_provider: ^2.1.5
   hugeicons: ^1.1.7
@@ -111,11 +115,11 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
-  # Code generators — run via `dart run build_runner`, not bundled into the
-  # release APK. Kept here so production builds stay lean.
-  build_runner: ^2.4.13
-  hive_generator: ^2.0.1
-  json_serializable: ^6.8.0
+  # NOTE: build_runner / hive_generator / json_serializable were removed —
+  # the project has no @HiveType/@JsonSerializable annotations or .g.dart
+  # files (Hive adapters are hand-written in data/models/hive_adapters.dart),
+  # so they were unused. Removing them also lifts the analyzer <7.0.0 cap
+  # that was forcing forui down to an ancient 0.10.x.
 
   # CLI tools — invoked manually to generate icons / splash assets.
   flutter_launcher_icons: ^0.14.4
@@ -175,13 +179,19 @@ flutter:
           weight: 400
         - asset: assets/fonts/ScheherazadeNew/ScheherazadeNew-Bold.ttf
           weight: 700
+    - family: ArefRuqaa
+      fonts:
+        - asset: assets/fonts/Aref_Ruqaa/ArefRuqaa-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Aref_Ruqaa/ArefRuqaa-Bold.ttf
+          weight: 700
 
 msix_config:
   display_name: Wadhakir
   publisher_display_name: Omar Waleed
   publisher: CN=DF776E6F-2B42-431A-B1DB-7378360B1BC1
   identity_name: OmarWaleed.Wadhakir
-  msix_version: 3.0.0.0
+  msix_version: 3.2.0.0
   capabilities: "internetClient,location"
   
   # Store submission settings

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as dev;
 
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
@@ -124,7 +125,8 @@ class _FloatingDhikrSettingsScreenState
               'يحتاج التطبيق إلى صلاحية الظهور فوق التطبيقات الأخرى لعرض التذكير.',
           Icons.shield_outlined,
           action: SnackBarAction(
-            label: l10n?.translate('floating_dhikr.grant_permission') ??
+            label:
+                l10n?.translate('floating_dhikr.grant_permission') ??
                 'منح الصلاحية',
             onPressed: () async {
               final granted = await _service.requestPermission();
@@ -203,9 +205,7 @@ class _FloatingDhikrSettingsScreenState
         centerTitle: true,
       ),
       body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: _brandPrimary),
-            )
+          ? const Center(child: CircularProgressIndicator(color: _brandPrimary))
           : SafeArea(
               top: false,
               child: SingleChildScrollView(
@@ -231,7 +231,8 @@ class _FloatingDhikrSettingsScreenState
                       _Banner(
                         icon: Icons.info_outline,
                         tone: _BannerTone.info,
-                        text: l10n?.translate(
+                        text:
+                            l10n?.translate(
                               'floating_dhikr.unsupported_platform',
                             ) ??
                             'هذه الميزة متاحة على نظام أندرويد فقط',
@@ -241,11 +242,13 @@ class _FloatingDhikrSettingsScreenState
                       _Banner(
                         icon: Icons.shield_outlined,
                         tone: _BannerTone.warning,
-                        text: l10n?.translate(
+                        text:
+                            l10n?.translate(
                               'floating_dhikr.permission_explainer',
                             ) ??
                             'يحتاج التطبيق إلى صلاحية الظهور فوق التطبيقات الأخرى لعرض التذكير.',
-                        actionLabel: l10n?.translate(
+                        actionLabel:
+                            l10n?.translate(
                               'floating_dhikr.grant_permission',
                             ) ??
                             'منح الصلاحية',
@@ -268,7 +271,8 @@ class _FloatingDhikrSettingsScreenState
                       children: [
                         _GroupRow(
                           icon: Icons.timer_outlined,
-                          label: l10n?.translate('floating_dhikr.interval') ??
+                          label:
+                              l10n?.translate('floating_dhikr.interval') ??
                               'كل كم دقيقة',
                           child: _IntervalChips(
                             value: _settings.interval.inMinutes,
@@ -283,7 +287,8 @@ class _FloatingDhikrSettingsScreenState
                         const _GroupDivider(),
                         _GroupRow(
                           icon: Icons.menu_book_rounded,
-                          label: l10n?.translate('floating_dhikr.source') ??
+                          label:
+                              l10n?.translate('floating_dhikr.source') ??
                               'مصدر الأذكار',
                           child: _SourceChips(
                             value: _settings.source,
@@ -295,19 +300,20 @@ class _FloatingDhikrSettingsScreenState
                         const _GroupDivider(),
                         _GroupRow(
                           icon: Icons.crop_free_rounded,
-                          label: l10n?.translate('floating_dhikr.position') ??
+                          label:
+                              l10n?.translate('floating_dhikr.position') ??
                               'مكان الظهور',
                           child: PositionPicker(
                             selected: _settings.position,
-                            onSelected: (anchor) => _persist(
-                              _settings.copyWith(position: anchor),
-                            ),
+                            onSelected: (anchor) =>
+                                _persist(_settings.copyWith(position: anchor)),
                           ),
                         ),
                         const _GroupDivider(),
                         _GroupRow(
                           icon: Icons.opacity_rounded,
-                          label: l10n?.translate('floating_dhikr.opacity') ??
+                          label:
+                              l10n?.translate('floating_dhikr.opacity') ??
                               'الشفافية',
                           child: _OpacityControl(
                             value: _settings.opacity,
@@ -321,7 +327,8 @@ class _FloatingDhikrSettingsScreenState
                         const _GroupDivider(),
                         _GroupRow(
                           icon: Icons.notifications_paused_rounded,
-                          label: l10n?.translate(
+                          label:
+                              l10n?.translate(
                                 'floating_dhikr.pause_during_prayer',
                               ) ??
                               'إيقاف أثناء وقت الصلاة',
@@ -339,9 +346,8 @@ class _FloatingDhikrSettingsScreenState
                     const SizedBox(height: Spacing.xl),
                     if (_service.isSupported && _hasPermission)
                       _PrimaryCta(
-                        label: l10n?.translate(
-                              'floating_dhikr.preview_now',
-                            ) ??
+                        label:
+                            l10n?.translate('floating_dhikr.preview_now') ??
                             'معاينة الآن',
                         icon: Icons.visibility_outlined,
                         loading: _previewing,
@@ -364,28 +370,19 @@ class _FloatingDhikrSettingsScreenState
                     if (effectivelyEnabled) ...[
                       const SizedBox(height: Spacing.lg),
                       _SecondaryCta(
-                        label: l10n?.translate(
-                              'floating_dhikr.stop_now',
-                            ) ??
+                        label:
+                            l10n?.translate('floating_dhikr.stop_now') ??
                             'إيقاف الآن',
                         icon: Icons.stop_circle_outlined,
                         danger: true,
                         onPressed: () async {
-                          final scaffoldMessenger =
-                              ScaffoldMessenger.of(context);
-                          final stoppedMsg = l10n?.translate(
-                                'floating_dhikr.stopped',
-                              ) ??
+                          final stoppedMsg =
+                              l10n?.translate('floating_dhikr.stopped') ??
                               'تم إيقاف التذكير العائم.';
                           await _service.closeOverlay();
                           await _persist(_settings.copyWith(enabled: false));
-                          if (!mounted) return;
-                          scaffoldMessenger.showSnackBar(
-                            SnackBar(
-                              content: Text(stoppedMsg),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                          if (!context.mounted) return;
+                          showFToast(context: context, title: Text(stoppedMsg));
                         },
                       ),
                     ],
@@ -872,10 +869,7 @@ class _BrandChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(Radii.pill),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Radii.pill),
             border: Border.all(
@@ -1012,8 +1006,9 @@ class _PrimaryCta extends StatelessWidget {
           borderRadius: BorderRadius.circular(Radii.md),
           boxShadow: [
             BoxShadow(
-              color: _FloatingDhikrSettingsScreenState._brandPrimary
-                  .withValues(alpha: 0.32),
+              color: _FloatingDhikrSettingsScreenState._brandPrimary.withValues(
+                alpha: 0.32,
+              ),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -1077,26 +1072,15 @@ class _SecondaryCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = danger
-        ? theme.colorScheme.error
-        : _FloatingDhikrSettingsScreenState._brandPrimary;
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 18),
-      label: Text(
+    return FButton(
+      onPress: onPressed,
+      variant: FButtonVariant.outline,
+      prefix: Icon(icon, size: 18),
+      child: Text(
         label,
         style: const TextStyle(
           fontFamily: 'Almarai',
           fontWeight: FontWeight.w700,
-        ),
-      ),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.5), width: 1.2),
-        minimumSize: const Size.fromHeight(48),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Radii.md),
         ),
       ),
     );
@@ -1151,14 +1135,10 @@ class _Banner extends StatelessWidget {
                 ),
                 if (actionLabel != null && onAction != null) ...[
                   const SizedBox(height: Spacing.xs),
-                  TextButton(
-                    onPressed: onAction,
-                    style: TextButton.styleFrom(
-                      foregroundColor: accent,
-                      padding: EdgeInsets.zero,
-                      minimumSize: const Size(0, 32),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
+                  FButton(
+                    onPress: onAction,
+                    variant: FButtonVariant.ghost,
+                    mainAxisSize: MainAxisSize.min,
                     child: Text(
                       actionLabel!,
                       style: const TextStyle(

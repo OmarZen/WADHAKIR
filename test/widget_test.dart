@@ -19,6 +19,11 @@ import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/set_notification_settings_usecase.dart';
+import 'package:wadhakir/data/repositories/wird_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_wird_plan_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_wird_plan_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_wird_plan_stream_usecase.dart';
+import 'package:wadhakir/domain/usecases/clear_wird_plan_usecase.dart';
 // This is a basic Flutter widget test.
 //
 // To perform an interaction with a widget in your test, use the WidgetTester
@@ -69,13 +74,25 @@ void main() {
         ),
         getFastingReminderSettingsStreamUseCase:
             GetFastingReminderSettingsStreamUseCase(
-          FastingRemindersRepositoryImpl(sharedPreferences),
-        ),
+              FastingRemindersRepositoryImpl(sharedPreferences),
+            ),
         setAppLockSettingsUseCase: SetAppLockSettingsUseCase(
           AppSettingsRepositoryImpl(sharedPreferences),
         ),
         setOnboardingCompletedUseCase: SetOnboardingCompletedUseCase(
           AppSettingsRepositoryImpl(sharedPreferences),
+        ),
+        getWirdPlanUseCase: GetWirdPlanUseCase(
+          WirdRepositoryImpl(sharedPreferences),
+        ),
+        setWirdPlanUseCase: SetWirdPlanUseCase(
+          WirdRepositoryImpl(sharedPreferences),
+        ),
+        getWirdPlanStreamUseCase: GetWirdPlanStreamUseCase(
+          WirdRepositoryImpl(sharedPreferences),
+        ),
+        clearWirdPlanUseCase: ClearWirdPlanUseCase(
+          WirdRepositoryImpl(sharedPreferences),
         ),
       ),
     );

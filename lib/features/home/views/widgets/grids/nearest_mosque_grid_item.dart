@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/home/views/widgets/grids/feature_grid_card.dart';
 import 'package:wadhakir/features/home/views/widgets/mosque_list_bottom_sheet.dart';
 
 class NearestMosqueGridItem extends StatelessWidget {
@@ -9,66 +10,12 @@ class NearestMosqueGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = context.l10n;
-    final isDark = theme.brightness == Brightness.dark;
-    final isDesktop = PlatformUtils.isDesktop;
 
-    final padding = isDesktop ? 16.0 : 12.0;
-    final verticalPadding = isDesktop ? 12.0 : 10.0;
-    final iconPadding = isDesktop ? 10.0 : 8.0;
-    final iconSize = isDesktop ? 22.0 : 20.0;
-    final spacing = isDesktop ? 12.0 : 10.0;
-
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () => _handleNearestMosqueTap(context),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: padding,
-            vertical: verticalPadding,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(iconPadding),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                ),
-                child: Icon(
-                  Icons.mosque,
-                  size: iconSize,
-                  color: isDark
-                      ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-                      : theme.colorScheme.primary,
-                ),
-              ),
-              SizedBox(width: spacing),
-              Expanded(
-                child: Text(
-                  l10n?.translate('home.nearest_mosque') ?? 'أقرب مسجد',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontSize: isDesktop ? 16 : null,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return FeatureGridCard(
+      icon: Icons.mosque,
+      label: l10n?.translate('home.nearest_mosque') ?? 'أقرب مسجد',
+      onTap: () => _handleNearestMosqueTap(context),
     );
   }
 
@@ -141,34 +88,33 @@ class NearestMosqueGridItem extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      builder: (context, style, animation) => FDialog(
         title: Text(
           l10n?.translate('home.location_services_disabled') ??
               'خدمات الموقع معطلة',
           style: theme.textTheme.titleLarge,
         ),
-        content: Text(
+        body: Text(
           l10n?.translate('home.location_services_disabled_message') ??
               'يرجى تفعيل خدمات الموقع للعثور على أقرب مسجد',
           style: theme.textTheme.bodyMedium,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n?.translate('common.cancel') ?? 'إلغاء'),
-          ),
-          FilledButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.pop(context);
               Geolocator.openLocationSettings();
             },
             child: Text(
               l10n?.translate('home.enable_location') ?? 'تفعيل الموقع',
             ),
+          ),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.outline,
+            child: Text(l10n?.translate('common.cancel') ?? 'إلغاء'),
           ),
         ],
       ),
@@ -179,24 +125,22 @@ class NearestMosqueGridItem extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      builder: (context, style, animation) => FDialog(
         title: Text(
           l10n?.translate('home.location_permission_denied') ??
               'تم رفض إذن الموقع',
           style: theme.textTheme.titleLarge,
         ),
-        content: Text(
+        body: Text(
           l10n?.translate('home.location_permission_denied_message') ??
               'يرجى منح التطبيق إذن الوصول إلى الموقع للعثور على أقرب مسجد',
           style: theme.textTheme.bodyMedium,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
+          FButton(
+            onPress: () => Navigator.pop(context),
             child: Text(l10n?.translate('common.ok') ?? 'موافق'),
           ),
         ],
@@ -208,17 +152,15 @@ class NearestMosqueGridItem extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    showDialog(
+    showFDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      builder: (context, style, animation) => FDialog(
         title: Text(
           l10n?.translate('home.location_permission_denied_permanently') ??
               'تم رفض إذن الموقع بشكل دائم',
           style: theme.textTheme.titleLarge,
         ),
-        content: Text(
+        body: Text(
           l10n?.translate(
                 'home.location_permission_denied_permanently_message',
               ) ??
@@ -226,18 +168,19 @@ class NearestMosqueGridItem extends StatelessWidget {
           style: theme.textTheme.bodyMedium,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n?.translate('common.cancel') ?? 'إلغاء'),
-          ),
-          FilledButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.pop(context);
               Geolocator.openAppSettings();
             },
             child: Text(
               l10n?.translate('home.open_settings') ?? 'فتح الإعدادات',
             ),
+          ),
+          FButton(
+            onPress: () => Navigator.pop(context),
+            variant: FButtonVariant.outline,
+            child: Text(l10n?.translate('common.cancel') ?? 'إلغاء'),
           ),
         ],
       ),
@@ -268,13 +211,10 @@ class NearestMosqueGridItem extends StatelessWidget {
   }
 
   void _showErrorSnackBar(BuildContext context, String message) {
-    final theme = Theme.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: theme.colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-      ),
+    showFToast(
+      context: context,
+      title: Text(message),
+      variant: FToastVariant.destructive,
     );
   }
 }

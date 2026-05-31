@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
@@ -174,29 +175,19 @@ class LocationDisabledDialog extends StatelessWidget {
                   // Open Settings button
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
+                    child: FButton(
+                      onPress: () async {
                         await Geolocator.openLocationSettings();
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }
                       },
-                      icon: const Icon(Icons.settings),
-                      label: Text(
+                      prefix: const Icon(Icons.settings),
+                      child: Text(
                         l10n?.translate(
                               'prayer_times.open_location_settings',
                             ) ??
                             'فتح إعدادات الموقع',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          vertical: size.height * 0.015,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
                       ),
                     ),
                   ),
@@ -205,8 +196,9 @@ class LocationDisabledDialog extends StatelessWidget {
                   // Close button
                   SizedBox(
                     width: double.infinity,
-                    child: TextButton(
-                      onPressed: () {
+                    child: FButton(
+                      variant: FButtonVariant.ghost,
+                      onPress: () {
                         Navigator.of(context).pop();
                       },
                       child: Text(

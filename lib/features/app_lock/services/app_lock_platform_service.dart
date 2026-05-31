@@ -3,17 +3,16 @@ import 'package:wadhakir/features/app_lock/models/installed_app_model.dart';
 import 'package:wadhakir/features/app_lock/models/app_lock_permission_status.dart';
 
 class AppLockPlatformService {
-  static const MethodChannel _channel =
-      MethodChannel('com.bloom.wadhakir/app_lock');
+  static const MethodChannel _channel = MethodChannel(
+    'com.bloom.wadhakir/app_lock',
+  );
 
   const AppLockPlatformService();
 
   Future<List<InstalledAppModel>> getInstalledApps() async {
     final raw = await _channel.invokeMethod<List<dynamic>>('getInstalledApps');
     final apps = (raw ?? const <dynamic>[])
-        .map(
-          (e) => InstalledAppModel.fromMap(e as Map<dynamic, dynamic>),
-        )
+        .map((e) => InstalledAppModel.fromMap(e as Map<dynamic, dynamic>))
         .toList();
 
     apps.sort(
@@ -47,10 +46,9 @@ class AppLockPlatformService {
   }
 
   Future<Uint8List?> getAppIcon(String packageName) async {
-    return _channel.invokeMethod<Uint8List>(
-      'getAppIcon',
-      <String, dynamic>{'packageName': packageName},
-    );
+    return _channel.invokeMethod<Uint8List>('getAppIcon', <String, dynamic>{
+      'packageName': packageName,
+    });
   }
 
   Future<void> startLockMonitor({
@@ -65,21 +63,18 @@ class AppLockPlatformService {
     required int prayerWindowStartMs,
     required int nextPrayerStartMs,
   }) async {
-    await _channel.invokeMethod(
-      'startLockMonitor',
-      <String, dynamic>{
-        'lockedPackages': lockedPackages,
-        'overlayMessage': overlayMessage,
-        'overlayTexts': overlayTexts,
-        if (overlayMessages != null) 'overlayMessages': overlayMessages,
-        if (overlayReferences != null) 'overlayReferences': overlayReferences,
-        'lockDurationMinutes': lockDurationMinutes,
-        'emergencyBypassEnabled': emergencyBypassEnabled,
-        'overlayIsDark': overlayIsDark,
-        'prayerWindowStartMs': prayerWindowStartMs,
-        'nextPrayerStartMs': nextPrayerStartMs,
-      },
-    );
+    await _channel.invokeMethod('startLockMonitor', <String, dynamic>{
+      'lockedPackages': lockedPackages,
+      'overlayMessage': overlayMessage,
+      'overlayTexts': overlayTexts,
+      if (overlayMessages != null) 'overlayMessages': overlayMessages,
+      if (overlayReferences != null) 'overlayReferences': overlayReferences,
+      'lockDurationMinutes': lockDurationMinutes,
+      'emergencyBypassEnabled': emergencyBypassEnabled,
+      'overlayIsDark': overlayIsDark,
+      'prayerWindowStartMs': prayerWindowStartMs,
+      'nextPrayerStartMs': nextPrayerStartMs,
+    });
   }
 
   Future<void> stopLockMonitor() async {
@@ -87,10 +82,9 @@ class AppLockPlatformService {
   }
 
   Future<void> updateLockedPackages(List<String> lockedPackages) async {
-    await _channel.invokeMethod(
-      'updateLockedPackages',
-      <String, dynamic>{'lockedPackages': lockedPackages},
-    );
+    await _channel.invokeMethod('updateLockedPackages', <String, dynamic>{
+      'lockedPackages': lockedPackages,
+    });
   }
 
   Future<void> updateMonitorConfig({
@@ -104,33 +98,27 @@ class AppLockPlatformService {
     required int prayerWindowStartMs,
     required int nextPrayerStartMs,
   }) async {
-    await _channel.invokeMethod(
-      'updateMonitorConfig',
-      <String, dynamic>{
-        'lockedPackages': lockedPackages,
-        if (overlayTexts != null) 'overlayTexts': overlayTexts,
-        if (overlayMessages != null) 'overlayMessages': overlayMessages,
-        if (overlayReferences != null) 'overlayReferences': overlayReferences,
-        'lockDurationMinutes': lockDurationMinutes,
-        'emergencyBypassEnabled': emergencyBypassEnabled,
-        'overlayIsDark': overlayIsDark,
-        'prayerWindowStartMs': prayerWindowStartMs,
-        'nextPrayerStartMs': nextPrayerStartMs,
-      },
-    );
+    await _channel.invokeMethod('updateMonitorConfig', <String, dynamic>{
+      'lockedPackages': lockedPackages,
+      if (overlayTexts != null) 'overlayTexts': overlayTexts,
+      if (overlayMessages != null) 'overlayMessages': overlayMessages,
+      if (overlayReferences != null) 'overlayReferences': overlayReferences,
+      'lockDurationMinutes': lockDurationMinutes,
+      'emergencyBypassEnabled': emergencyBypassEnabled,
+      'overlayIsDark': overlayIsDark,
+      'prayerWindowStartMs': prayerWindowStartMs,
+      'nextPrayerStartMs': nextPrayerStartMs,
+    });
   }
 
   Future<void> updatePrayerWindow({
     required int prayerWindowStartMs,
     required int nextPrayerStartMs,
   }) async {
-    await _channel.invokeMethod(
-      'updatePrayerWindow',
-      <String, dynamic>{
-        'prayerWindowStartMs': prayerWindowStartMs,
-        'nextPrayerStartMs': nextPrayerStartMs,
-      },
-    );
+    await _channel.invokeMethod('updatePrayerWindow', <String, dynamic>{
+      'prayerWindowStartMs': prayerWindowStartMs,
+      'nextPrayerStartMs': nextPrayerStartMs,
+    });
   }
 
   Future<void> showTestOverlay({
@@ -138,14 +126,11 @@ class AppLockPlatformService {
     required Map<String, String> overlayTexts,
     required bool overlayIsDark,
   }) async {
-    await _channel.invokeMethod(
-      'showTestOverlay',
-      <String, dynamic>{
-        'overlayMessage': overlayMessage,
-        'overlayTexts': overlayTexts,
-        'overlayIsDark': overlayIsDark,
-      },
-    );
+    await _channel.invokeMethod('showTestOverlay', <String, dynamic>{
+      'overlayMessage': overlayMessage,
+      'overlayTexts': overlayTexts,
+      'overlayIsDark': overlayIsDark,
+    });
   }
 
   Future<bool> isLockMonitorRunning() async {

@@ -202,16 +202,16 @@ class PrayerTimesModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        fajr,
-        sunrise,
-        dhuhr,
-        asr,
-        maghrib,
-        isha,
-        date,
-        calculationParameters,
-        coordinates,
-        middleOfTheNight,
-        lastThirdOfTheNight,
-      ];
+    fajr,
+    sunrise,
+    dhuhr,
+    asr,
+    maghrib,
+    isha,
+    date,
+    calculationParameters,
+    coordinates,
+    middleOfTheNight,
+    lastThirdOfTheNight,
+  ];
 }

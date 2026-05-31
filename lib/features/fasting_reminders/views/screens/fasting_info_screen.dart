@@ -93,28 +93,16 @@ class _FastingInfoScreenState extends State<FastingInfoScreen>
 
             // Virtues/Hadiths section
             SliverToBoxAdapter(
-              child: _buildVirtuesSection(
-                theme,
-                isDark,
-                languageCode,
-                l10n,
-              ),
+              child: _buildVirtuesSection(theme, isDark, languageCode, l10n),
             ),
 
             // Fasting guide
             SliverToBoxAdapter(
-              child: _buildFastingGuide(
-                theme,
-                isDark,
-                languageCode,
-                l10n,
-              ),
+              child: _buildFastingGuide(theme, isDark, languageCode, l10n),
             ),
 
             // Bottom padding
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 100),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
       ),
@@ -133,10 +121,7 @@ class _FastingInfoScreenState extends State<FastingInfoScreen>
       height: 280,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            cardColor,
-            cardColor.withValues(alpha: 0.85),
-          ],
+          colors: [cardColor, cardColor.withValues(alpha: 0.85)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -397,30 +382,31 @@ class _FastingInfoScreenState extends State<FastingInfoScreen>
             ],
           ),
           const SizedBox(height: 16),
-          ...widget.fastingDay.getVirtues(languageCode).map((virtue) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        virtue,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          height: 1.6,
-                          fontFamily:
-                              languageCode == 'ar' ? 'ScheherazadeNew' : null,
+          ...widget.fastingDay
+              .getVirtues(languageCode)
+              .map(
+                (virtue) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          virtue,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.6,
+                            fontFamily: languageCode == 'ar'
+                                ? 'ScheherazadeNew'
+                                : null,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              )),
+              ),
         ],
       ),
     );
@@ -525,11 +511,7 @@ class _FastingInfoScreenState extends State<FastingInfoScreen>
               color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: theme.colorScheme.primary,
-              size: 20,
-            ),
+            child: Icon(icon, color: theme.colorScheme.primary, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

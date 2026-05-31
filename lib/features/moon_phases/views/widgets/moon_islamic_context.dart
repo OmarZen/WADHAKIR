@@ -34,7 +34,8 @@ class MoonIslamicContext extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _SectionTitle(
-            label: l10n?.translate('moon_phases.islamic_section_title') ??
+            label:
+                l10n?.translate('moon_phases.islamic_section_title') ??
                 'القمر في الإسلام',
           ),
           const SizedBox(height: Spacing.md),
@@ -43,20 +44,25 @@ class MoonIslamicContext extends StatelessWidget {
                 'هُوَ ٱلَّذِى جَعَلَ ٱلشَّمْسَ ضِيَآءًۭ وَٱلْقَمَرَ نُورًۭا '
                 'وَقَدَّرَهُۥ مَنَازِلَ لِتَعْلَمُوا۟ عَدَدَ ٱلسِّنِينَ '
                 'وَٱلْحِسَابَ',
-            reference: l10n?.translate('moon_phases.verse_yunus_ref') ??
+            reference:
+                l10n?.translate('moon_phases.verse_yunus_ref') ??
                 'سورة يونس · الآية 5',
-            commentary: l10n?.translate('moon_phases.verse_yunus_explain') ??
+            commentary:
+                l10n?.translate('moon_phases.verse_yunus_explain') ??
                 'القمر آية من آيات الله، جعله نوراً وقدّر له منازل '
                     'يستدلّ بها الناس على عدد السنين وحساب الأوقات.',
           ),
           const SizedBox(height: Spacing.md),
           _VerseCard(
             arabicVerse: 'ٱقْتَرَبَتِ ٱلسَّاعَةُ وَٱنشَقَّ ٱلْقَمَرُ',
-            reference: l10n?.translate('moon_phases.verse_qamar_ref') ??
+            reference:
+                l10n?.translate('moon_phases.verse_qamar_ref') ??
                 'سورة القمر · الآية 1',
-            badge: l10n?.translate('moon_phases.splitting_badge') ??
+            badge:
+                l10n?.translate('moon_phases.splitting_badge') ??
                 'انشقاق القمر',
-            commentary: l10n?.translate('moon_phases.splitting_explain') ??
+            commentary:
+                l10n?.translate('moon_phases.splitting_explain') ??
                 'انشقاق القمر معجزة ظاهرة للنبي ﷺ، رآها أهل مكة وانشطر '
                     'القمر فلقتين ثم التأم. رواها البخاري ومسلم عن أنس وابن '
                     'مسعود وابن عباس رضي الله عنهم. وهي دليل على صدق رسالته '
@@ -67,9 +73,11 @@ class MoonIslamicContext extends StatelessWidget {
             arabicVerse:
                 'يَسْـَٔلُونَكَ عَنِ ٱلْأَهِلَّةِ ۖ قُلْ هِىَ مَوَٰقِيتُ '
                 'لِلنَّاسِ وَٱلْحَجِّ',
-            reference: l10n?.translate('moon_phases.verse_baqarah_ref') ??
+            reference:
+                l10n?.translate('moon_phases.verse_baqarah_ref') ??
                 'سورة البقرة · الآية 189',
-            commentary: l10n?.translate('moon_phases.verse_baqarah_explain') ??
+            commentary:
+                l10n?.translate('moon_phases.verse_baqarah_explain') ??
                 'بالأهلّة تُعرف الشهور القمرية: شهر رمضان للصيام، شهور '
                     'الحج، وبه تضبط مواقيت العبادات والمعاملات في حياة '
                     'المسلم.',
@@ -160,10 +168,7 @@ class _VerseCard extends StatelessWidget {
         children: [
           if (badge != null) ...[
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: MoonIslamicContext._brandGlow.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(Radii.pill),
@@ -214,10 +219,7 @@ class _VerseCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Spacing.md),
-          Container(
-            height: 1,
-            color: Colors.white.withValues(alpha: 0.10),
-          ),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.10)),
           const SizedBox(height: Spacing.md),
           // Commentary — slightly muted body text, RTL because all
           // commentaries here are Arabic.
@@ -319,11 +321,7 @@ class _Bullet extends StatelessWidget {
             shape: BoxShape.circle,
             color: MoonIslamicContext._brandAccent.withValues(alpha: 0.20),
           ),
-          child: Icon(
-            icon,
-            size: 14,
-            color: MoonIslamicContext._brandGlow,
-          ),
+          child: Icon(icon, size: 14, color: MoonIslamicContext._brandGlow),
         ),
         const SizedBox(width: Spacing.sm),
         Expanded(
@@ -384,20 +382,20 @@ class CrescentSightingCard extends StatelessWidget {
     final verdict = _verdictFor(info.ageDays);
     final (verdictLabel, verdictColor) = switch (verdict) {
       _CrescentVerdict.tooYoung => (
-          l10n?.translate('moon_phases.sighting_verdict_too_young') ??
-              'صغير جداً للرؤية',
-          const Color(0xFFE0A458),
-        ),
+        l10n?.translate('moon_phases.sighting_verdict_too_young') ??
+            'صغير جداً للرؤية',
+        const Color(0xFFE0A458),
+      ),
       _CrescentVerdict.difficult => (
-          l10n?.translate('moon_phases.sighting_verdict_difficult') ??
-              'يحتاج سماء صافية',
-          const Color(0xFFE3C766),
-        ),
+        l10n?.translate('moon_phases.sighting_verdict_difficult') ??
+            'يحتاج سماء صافية',
+        const Color(0xFFE3C766),
+      ),
       _CrescentVerdict.easy => (
-          l10n?.translate('moon_phases.sighting_verdict_easy') ??
-              'الرؤية ممكنة بالعين المجردة',
-          const Color(0xFF7CD49C),
-        ),
+        l10n?.translate('moon_phases.sighting_verdict_easy') ??
+            'الرؤية ممكنة بالعين المجردة',
+        const Color(0xFF7CD49C),
+      ),
     };
 
     return Padding(
@@ -427,8 +425,9 @@ class CrescentSightingCard extends StatelessWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color:
-                        MoonIslamicContext._brandGlow.withValues(alpha: 0.22),
+                    color: MoonIslamicContext._brandGlow.withValues(
+                      alpha: 0.22,
+                    ),
                   ),
                   child: const Icon(
                     Icons.nightlight_round,
@@ -455,7 +454,8 @@ class CrescentSightingCard extends StatelessWidget {
             const SizedBox(height: Spacing.md),
             _SightingFact(
               icon: Icons.access_time_rounded,
-              label: l10n?.translate('moon_phases.sighting_moon_age') ??
+              label:
+                  l10n?.translate('moon_phases.sighting_moon_age') ??
                   'عمر القمر',
               value: _formatMoonAgeHours(info.ageDays, l10n),
             ),
@@ -463,7 +463,8 @@ class CrescentSightingCard extends StatelessWidget {
             _SightingFact(
               icon: Icons.wb_sunny_outlined,
               label: l10n?.translate('moon_phases.sighting_when') ?? 'متى تنظر',
-              value: l10n?.translate('moon_phases.sighting_when_value') ??
+              value:
+                  l10n?.translate('moon_phases.sighting_when_value') ??
                   'بعد غروب الشمس مباشرة (وقت المغرب).',
             ),
             const SizedBox(height: Spacing.sm),
@@ -471,14 +472,16 @@ class CrescentSightingCard extends StatelessWidget {
               icon: Icons.explore_outlined,
               label:
                   l10n?.translate('moon_phases.sighting_where') ?? 'أين تنظر',
-              value: l10n?.translate('moon_phases.sighting_where_value') ??
+              value:
+                  l10n?.translate('moon_phases.sighting_where_value') ??
                   'منخفض في الأفق الغربي حيث غربت الشمس.',
             ),
             const SizedBox(height: Spacing.sm),
             _SightingFact(
               icon: Icons.visibility_outlined,
               label: l10n?.translate('moon_phases.sighting_how') ?? 'كيف تنظر',
-              value: l10n?.translate('moon_phases.sighting_how_value') ??
+              value:
+                  l10n?.translate('moon_phases.sighting_how_value') ??
                   'بالعين المجردة في سماء صافية بعيداً عن أضواء المدينة.',
             ),
           ],
@@ -546,11 +549,7 @@ class _SightingFact extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.white.withValues(alpha: 0.72),
-        ),
+        Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.72)),
         const SizedBox(width: Spacing.sm),
         Expanded(
           child: Directionality(

@@ -96,8 +96,11 @@ class _BarSlot extends StatelessWidget {
         ),
         child: isSelected
             ? const Center(
-                child: Icon(Icons.bubble_chart_rounded,
-                    size: 14, color: Colors.white),
+                child: Icon(
+                  Icons.bubble_chart_rounded,
+                  size: 14,
+                  color: Colors.white,
+                ),
               )
             : null,
       ),

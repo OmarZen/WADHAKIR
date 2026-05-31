@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
 import 'package:wadhakir/features/settings/view/widgets/app_lock_settings_widget.dart';
@@ -365,9 +366,7 @@ class _ParallaxOrbs extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [color, color.withValues(alpha: 0)],
-        ),
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
       ),
     );
   }
@@ -429,15 +428,10 @@ class _OnboardingHeader extends StatelessWidget {
           const SizedBox(width: 8),
           // Skip stays available on every page — onboarding should never
           // feel like a trap.
-          TextButton(
-            onPressed: onSkip,
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurface.withValues(
-                alpha: 0.7,
-              ),
-              minimumSize: const Size(0, 40),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
+          FButton(
+            onPress: onSkip,
+            variant: FButtonVariant.ghost,
+            mainAxisSize: MainAxisSize.min,
             child: Text(_t(l10n, 'onboarding.skip', 'Skip')),
           ),
         ],
@@ -486,19 +480,9 @@ class _OnboardingFooter extends StatelessWidget {
               if (onBack != null) ...[
                 Expanded(
                   flex: 1,
-                  child: OutlinedButton(
-                    onPressed: onBack,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: palette.primary,
-                      side: BorderSide(
-                        color: palette.primary.withValues(alpha: 0.35),
-                        width: 1.4,
-                      ),
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                  child: FButton(
+                    onPress: onBack,
+                    variant: FButtonVariant.outline,
                     child: Text(
                       _t(l10n, 'onboarding.back', 'Back'),
                       style: const TextStyle(fontWeight: FontWeight.w700),
@@ -524,11 +508,7 @@ class _OnboardingFooter extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            _t(
-              l10n,
-              'onboarding.swipe_hint',
-              'Swipe or tap to navigate',
-            ),
+            _t(l10n, 'onboarding.swipe_hint', 'Swipe or tap to navigate'),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
               fontSize: 11,
@@ -716,9 +696,7 @@ class _PageHero extends StatelessWidget {
               alpha: isDark ? 0.78 : 0.92,
             ),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: palette.primary.withValues(alpha: 0.08),
-            ),
+            border: Border.all(color: palette.primary.withValues(alpha: 0.08)),
             boxShadow: [
               BoxShadow(
                 color: palette.primary.withValues(alpha: isDark ? 0.30 : 0.10),
@@ -1112,8 +1090,11 @@ class _PrayerPage extends StatelessWidget {
             _InfoRow(
               palette: palette,
               icon: Icons.location_on_rounded,
-              title:
-                  _t(l10n, 'onboarding.prayer_loc', 'Location-based timings'),
+              title: _t(
+                l10n,
+                'onboarding.prayer_loc',
+                'Location-based timings',
+              ),
               subtitle: _t(
                 l10n,
                 'onboarding.prayer_loc_subtitle',
@@ -1124,11 +1105,7 @@ class _PrayerPage extends StatelessWidget {
             _InfoRow(
               palette: palette,
               icon: Icons.calculate_rounded,
-              title: _t(
-                l10n,
-                'onboarding.prayer_method',
-                'Calculation method',
-              ),
+              title: _t(l10n, 'onboarding.prayer_method', 'Calculation method'),
               subtitle: _t(
                 l10n,
                 'onboarding.prayer_method_subtitle',
@@ -1260,13 +1237,12 @@ class _FloatingDhikrPageState extends State<_FloatingDhikrPage> {
 
   Future<void> _enable() async {
     if (!_service.isSupported) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _tr(
-              'floating_dhikr.unsupported_platform',
-              'This feature is only available on Android.',
-            ),
+      showFToast(
+        context: context,
+        title: Text(
+          _tr(
+            'floating_dhikr.unsupported_platform',
+            'This feature is only available on Android.',
           ),
         ),
       );
@@ -1281,13 +1257,13 @@ class _FloatingDhikrPageState extends State<_FloatingDhikrPage> {
         _busy = false;
         _hasPermission = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _tr(
-              'floating_dhikr.permission_denied',
-              "Permission denied. The floating reminder can't run without it.",
-            ),
+      showFToast(
+        context: context,
+        variant: FToastVariant.destructive,
+        title: Text(
+          _tr(
+            'floating_dhikr.permission_denied',
+            "Permission denied. The floating reminder can't run without it.",
           ),
         ),
       );
@@ -1752,9 +1728,7 @@ class _SuccessBadge extends StatelessWidget {
         children: [
           Icon(Icons.check_circle_rounded, color: palette.primary),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(label, style: theme.textTheme.bodySmall),
-          ),
+          Expanded(child: Text(label, style: theme.textTheme.bodySmall)),
         ],
       ),
     );
@@ -1823,9 +1797,6 @@ class _SmoothPageScrollPhysics extends PageScrollPhysics {
       _SmoothPageScrollPhysics(parent: buildParent(ancestor));
 
   @override
-  SpringDescription get spring => const SpringDescription(
-        mass: 80,
-        stiffness: 100,
-        damping: 1,
-      );
+  SpringDescription get spring =>
+      const SpringDescription(mass: 80, stiffness: 100, damping: 1);
 }

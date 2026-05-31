@@ -19,6 +19,7 @@ class AppConstants {
   static const String floatingDhikrSettingsRoute = '/floating-dhikr-settings';
   static const String moonPhasesRoute = '/moon-phases';
   static const String shareRoute = '/share';
+  static const String wirdRoute = '/wird';
 
   // External links — used by the branded share-image flow so the caption
   // and the on-card wordmark stay in sync no matter which screen invokes

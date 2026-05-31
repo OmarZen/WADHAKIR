@@ -26,24 +26,16 @@ class AppearanceSettingsWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Theme Card
-          Expanded(
-            child: _buildThemeCard(context, theme, isDark),
-          ),
+          Expanded(child: _buildThemeCard(context, theme, isDark)),
           const SizedBox(width: 12),
           // Language Card
-          Expanded(
-            child: _buildLanguageCard(context, theme, isDark),
-          ),
+          Expanded(child: _buildLanguageCard(context, theme, isDark)),
         ],
       ),
     );
   }
 
-  Widget _buildThemeCard(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
+  Widget _buildThemeCard(BuildContext context, ThemeData theme, bool isDark) {
     final l10n = context.l10n;
 
     return Material(
@@ -79,8 +71,8 @@ class AppearanceSettingsWidget extends StatelessWidget {
                       settings.themeMode == ThemeMode.light
                           ? Icons.light_mode
                           : settings.themeMode == ThemeMode.dark
-                              ? Icons.dark_mode
-                              : Icons.brightness_auto,
+                          ? Icons.dark_mode
+                          : Icons.brightness_auto,
                       color: theme.colorScheme.onPrimary,
                       size: 18,
                     ),
@@ -105,11 +97,12 @@ class AppearanceSettingsWidget extends StatelessWidget {
                           settings.themeMode == ThemeMode.system
                               ? l10n?.translate('settings.system') ?? 'تلقائي'
                               : settings.themeMode == ThemeMode.light
-                                  ? l10n?.translate('settings.light') ?? 'فاتح'
-                                  : l10n?.translate('settings.dark') ?? 'داكن',
+                              ? l10n?.translate('settings.light') ?? 'فاتح'
+                              : l10n?.translate('settings.dark') ?? 'داكن',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                             fontSize: 12,
                           ),
                           maxLines: 1,
@@ -196,8 +189,9 @@ class AppearanceSettingsWidget extends StatelessWidget {
                               ? 'العربية 🇸🇦'
                               : 'English 🇺🇸',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                             fontSize: 12,
                           ),
                           maxLines: 1,
@@ -510,10 +504,7 @@ class AppearanceSettingsWidget extends StatelessWidget {
                       : theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(
-                  flag,
-                  style: const TextStyle(fontSize: 20),
-                ),
+                child: Text(flag, style: const TextStyle(fontSize: 20)),
               ),
               const SizedBox(width: 12),
               Expanded(

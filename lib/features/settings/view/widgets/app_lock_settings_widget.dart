@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
@@ -62,7 +63,6 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final l10n = context.l10n;
     final appLockSettings = widget.settings.appLockSettings;
     final selectedAppsCount = appLockSettings.lockedAppPackageNames.length;
@@ -77,24 +77,23 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
       type: MaterialType.transparency,
       child: Column(
         children: [
-          SwitchListTile.adaptive(
+          FSwitch(
             value: appLockSettings.enabled,
-            onChanged: (enabled) => _handleAppLockToggle(context, enabled),
-            title: Text(
+            onChange: (enabled) => _handleAppLockToggle(context, enabled),
+            label: Text(
               l10n?.translate('settings.app_lock_enable') ??
                   'Enable app lock during prayer',
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
-            subtitle: Text(
+            description: Text(
               l10n?.translate('settings.app_lock_enable_subtitle') ??
                   'Lock selected apps during prayer windows',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
-            activeThumbColor: theme.colorScheme.primary,
           ),
           _divider(theme),
           ListTile(
@@ -106,16 +105,13 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
             subtitle: Text(
               selectedAppsCount == 0
                   ? (l10n?.translate('settings.app_lock_no_apps_selected') ??
-                      'No apps selected yet')
+                        'No apps selected yet')
                   : '$selectedAppsCount ${l10n?.translate('settings.app_lock_apps_count_suffix') ?? 'apps selected'}',
             ),
-            trailing: TextButton(
-              onPressed: () => _showAppPicker(context),
-              style: ButtonStyle(
-                foregroundColor: isDark
-                    ? WidgetStateProperty.all(theme.colorScheme.onPrimary)
-                    : null,
-              ),
+            trailing: FButton(
+              onPress: () => _showAppPicker(context),
+              variant: FButtonVariant.ghost,
+              mainAxisSize: MainAxisSize.min,
               child: Text(
                 l10n?.translate('settings.app_lock_manage_apps') ?? 'Manage',
               ),
@@ -141,18 +137,22 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                 final status = snapshot.data!;
                 final usage = status.usageAccessGranted
                     ? (l10n?.translate(
-                            'settings.app_lock_permission_granted') ??
-                        'Granted')
+                            'settings.app_lock_permission_granted',
+                          ) ??
+                          'Granted')
                     : (l10n?.translate(
-                            'settings.app_lock_permission_missing') ??
-                        'Missing');
+                            'settings.app_lock_permission_missing',
+                          ) ??
+                          'Missing');
                 final overlay = status.overlayGranted
                     ? (l10n?.translate(
-                            'settings.app_lock_permission_granted') ??
-                        'Granted')
+                            'settings.app_lock_permission_granted',
+                          ) ??
+                          'Granted')
                     : (l10n?.translate(
-                            'settings.app_lock_permission_missing') ??
-                        'Missing');
+                            'settings.app_lock_permission_missing',
+                          ) ??
+                          'Missing');
 
                 return Text('Usage: $usage • Overlay: $overlay');
               },
@@ -222,34 +222,35 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
               ),
             ),
             _divider(theme),
-            SwitchListTile.adaptive(
+            FSwitch(
               value: appLockSettings.emergencyBypassEnabled,
-              onChanged: (enabled) async {
+              onChange: (enabled) async {
                 await widget.cubit.toggleEmergencyBypass(enabled);
                 await _syncMonitorConfigIfEnabled(
                   emergencyBypassEnabled: enabled,
                 );
               },
-              title: Text(
+              label: Text(
                 l10n?.translate('settings.app_lock_bypass_title') ??
                     'Emergency bypass',
               ),
-              subtitle: Text(
+              description: Text(
                 l10n?.translate('settings.app_lock_bypass_subtitle') ??
                     'Hold 3 seconds, then confirm to unlock temporarily',
               ),
             ),
             _divider(theme),
-            SwitchListTile.adaptive(
+            FSwitch(
               value: appLockSettings.useAccessibilityFallback,
-              onChanged: widget.cubit.toggleAccessibilityFallback,
-              title: Text(
+              onChange: widget.cubit.toggleAccessibilityFallback,
+              label: Text(
                 l10n?.translate('settings.app_lock_accessibility_fallback') ??
                     'Enable accessibility fallback',
               ),
-              subtitle: Text(
+              description: Text(
                 l10n?.translate(
-                        'settings.app_lock_accessibility_fallback_subtitle') ??
+                      'settings.app_lock_accessibility_fallback_subtitle',
+                    ) ??
                     'Use accessibility only when usage access is not enough',
               ),
             ),
@@ -263,20 +264,19 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     final l10n = context.l10n;
 
     if (!_isAndroidOnlyFeature) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.translate('settings.app_lock_android_only') ??
-                'This feature is currently Android only',
-          ),
+      showFToast(
+        context: context,
+        title: Text(
+          l10n?.translate('settings.app_lock_android_only') ??
+              'This feature is currently Android only',
         ),
       );
       return;
     }
 
     try {
-      final List<InstalledAppModel> apps =
-          await _platformService.getInstalledApps();
+      final List<InstalledAppModel> apps = await _platformService
+          .getInstalledApps();
       if (!context.mounted) return;
 
       final filtered = apps
@@ -286,8 +286,8 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
           )
           .toList();
 
-      final selected =
-          widget.settings.appLockSettings.lockedAppPackageNames.toSet();
+      final selected = widget.settings.appLockSettings.lockedAppPackageNames
+          .toSet();
 
       await showDialog<void>(
         context: context,
@@ -295,27 +295,29 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
           String query = '';
           return StatefulBuilder(
             builder: (context, setLocalState) {
-              final visible = filtered.where((app) {
-                if (query.isEmpty) return true;
-                final q = query.toLowerCase();
-                return app.appName.toLowerCase().contains(q) ||
-                    app.packageName.toLowerCase().contains(q);
-              }).toList()
-                ..sort((a, b) {
-                  final aSelected = selected.contains(a.packageName);
-                  final bSelected = selected.contains(b.packageName);
-                  if (aSelected != bSelected) {
-                    return aSelected ? -1 : 1;
-                  }
-                  return a.appName.toLowerCase().compareTo(
-                        b.appName.toLowerCase(),
-                      );
-                });
+              final visible =
+                  filtered.where((app) {
+                    if (query.isEmpty) return true;
+                    final q = query.toLowerCase();
+                    return app.appName.toLowerCase().contains(q) ||
+                        app.packageName.toLowerCase().contains(q);
+                  }).toList()..sort((a, b) {
+                    final aSelected = selected.contains(a.packageName);
+                    final bSelected = selected.contains(b.packageName);
+                    if (aSelected != bSelected) {
+                      return aSelected ? -1 : 1;
+                    }
+                    return a.appName.toLowerCase().compareTo(
+                      b.appName.toLowerCase(),
+                    );
+                  });
 
               return Dialog(
                 child: ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(maxWidth: 520, maxHeight: 620),
+                  constraints: const BoxConstraints(
+                    maxWidth: 520,
+                    maxHeight: 620,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -324,27 +326,25 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                         Text(
                           l10n?.translate('settings.app_lock_picker_title') ??
                               'Select apps to lock',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           '${selected.length} ${l10n?.translate('settings.app_lock_apps_count_suffix') ?? 'apps selected'}',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.7),
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.search),
-                            hintText: l10n?.translate(
+                            hintText:
+                                l10n?.translate(
                                   'settings.app_lock_picker_search_hint',
                                 ) ??
                                 'Search apps...',
@@ -368,8 +368,9 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               final app = visible[index];
-                              final isSelected =
-                                  selected.contains(app.packageName);
+                              final isSelected = selected.contains(
+                                app.packageName,
+                              );
                               return InkWell(
                                 borderRadius: BorderRadius.circular(14),
                                 onTap: () {
@@ -390,23 +391,21 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                                     borderRadius: BorderRadius.circular(14),
                                     border: Border.all(
                                       color: isSelected
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
                                           : Theme.of(context)
-                                              .colorScheme
-                                              .outline
-                                              .withValues(alpha: 0.25),
+                                                .colorScheme
+                                                .outline
+                                                .withValues(alpha: 0.25),
                                     ),
                                     color: isSelected
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withValues(alpha: 0.08)
+                                        ? Theme.of(context).colorScheme.primary
+                                              .withValues(alpha: 0.08)
                                         : Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest
-                                            .withValues(alpha: 0.25),
+                                              .colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.25),
                                   ),
                                   child: Row(
                                     children: [
@@ -441,35 +440,37 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                                                         .colorScheme
                                                         .onSurface
                                                         .withValues(
-                                                            alpha: 0.65),
+                                                          alpha: 0.65,
+                                                        ),
                                                   ),
                                             ),
                                           ],
                                         ),
                                       ),
                                       AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 220),
+                                        duration: const Duration(
+                                          milliseconds: 220,
+                                        ),
                                         width: 28,
                                         height: 28,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: isSelected
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.primary
                                               : Theme.of(context)
-                                                  .colorScheme
-                                                  .surfaceContainerHighest,
+                                                    .colorScheme
+                                                    .surfaceContainerHighest,
                                           border: Border.all(
                                             color: isSelected
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
+                                                ? Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary
                                                 : Theme.of(context)
-                                                    .colorScheme
-                                                    .outline
-                                                    .withValues(alpha: 0.35),
+                                                      .colorScheme
+                                                      .outline
+                                                      .withValues(alpha: 0.35),
                                           ),
                                         ),
                                         child: Icon(
@@ -478,13 +479,13 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                                               : Icons.add_rounded,
                                           size: 18,
                                           color: isSelected
-                                              ? Theme.of(context)
-                                                  .colorScheme
-                                                  .onPrimary
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.onPrimary
                                               : Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withValues(alpha: 0.7),
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(alpha: 0.7),
                                         ),
                                       ),
                                     ],
@@ -501,32 +502,36 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                               onPressed: () =>
                                   Navigator.of(dialogContext).pop(),
                               child: Text(
-                                  l10n?.translate('common.cancel') ?? 'Cancel'),
+                                l10n?.translate('common.cancel') ?? 'Cancel',
+                              ),
                             ),
                             const Spacer(),
-                            FilledButton(
-                              onPressed: () async {
+                            FButton(
+                              onPress: () async {
                                 final isArabic =
-                                    Localizations.localeOf(dialogContext)
-                                            .languageCode ==
-                                        'ar';
+                                    Localizations.localeOf(
+                                      dialogContext,
+                                    ).languageCode ==
+                                    'ar';
                                 final isDark =
                                     Theme.of(dialogContext).brightness ==
-                                        Brightness.dark;
+                                    Brightness.dark;
                                 final prayerWindow =
                                     _currentPrayerWindowPayload();
-                                final prayerName =
-                                    _currentPrayerName(dialogContext.l10n);
+                                final prayerName = _currentPrayerName(
+                                  dialogContext.l10n,
+                                );
                                 await widget.cubit.setLockedAppPackageNames(
-                                    selected.toList());
+                                  selected.toList(),
+                                );
                                 final latestSettings =
                                     _currentAppLockSettings();
                                 if (latestSettings.enabled) {
                                   if (!dialogContext.mounted) return;
                                   final quotePayload =
                                       await _buildOverlayQuotePayload(
-                                    useArabic: isArabic,
-                                  );
+                                        useArabic: isArabic,
+                                      );
                                   if (!dialogContext.mounted) return;
                                   await _platformService.updateMonitorConfig(
                                     lockedPackages: selected.toList(),
@@ -555,7 +560,8 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                                 Navigator.of(dialogContext).pop();
                               },
                               child: Text(
-                                  l10n?.translate('common.save') ?? 'Save'),
+                                l10n?.translate('common.save') ?? 'Save',
+                              ),
                             ),
                           ],
                         ),
@@ -570,12 +576,12 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
       );
     } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.translate('settings.app_lock_app_picker_error') ??
-                'Failed to load installed apps',
-          ),
+      showFToast(
+        context: context,
+        variant: FToastVariant.destructive,
+        title: Text(
+          l10n?.translate('settings.app_lock_app_picker_error') ??
+              'Failed to load installed apps',
         ),
       );
     }
@@ -585,12 +591,11 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     final l10n = context.l10n;
 
     if (!_isAndroidOnlyFeature) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.translate('settings.app_lock_android_only') ??
-                'This feature is currently Android only',
-          ),
+      showFToast(
+        context: context,
+        title: Text(
+          l10n?.translate('settings.app_lock_android_only') ??
+              'This feature is currently Android only',
         ),
       );
       return;
@@ -619,14 +624,18 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                 subtitle: Text(
                   status.usageAccessGranted
                       ? (l10n?.translate(
-                              'settings.app_lock_permission_granted') ??
-                          'Granted')
+                              'settings.app_lock_permission_granted',
+                            ) ??
+                            'Granted')
                       : (l10n?.translate(
-                              'settings.app_lock_permission_missing') ??
-                          'Missing'),
+                              'settings.app_lock_permission_missing',
+                            ) ??
+                            'Missing'),
                 ),
-                trailing: TextButton(
-                  onPressed: () => _platformService.openUsageAccessSettings(),
+                trailing: FButton(
+                  onPress: () => _platformService.openUsageAccessSettings(),
+                  variant: FButtonVariant.ghost,
+                  mainAxisSize: MainAxisSize.min,
                   child: Text(
                     l10n?.translate('settings.app_lock_open_settings') ??
                         'Open',
@@ -646,14 +655,18 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                 subtitle: Text(
                   status.overlayGranted
                       ? (l10n?.translate(
-                              'settings.app_lock_permission_granted') ??
-                          'Granted')
+                              'settings.app_lock_permission_granted',
+                            ) ??
+                            'Granted')
                       : (l10n?.translate(
-                              'settings.app_lock_permission_missing') ??
-                          'Missing'),
+                              'settings.app_lock_permission_missing',
+                            ) ??
+                            'Missing'),
                 ),
-                trailing: TextButton(
-                  onPressed: () => _platformService.openOverlaySettings(),
+                trailing: FButton(
+                  onPress: () => _platformService.openOverlaySettings(),
+                  variant: FButtonVariant.ghost,
+                  mainAxisSize: MainAxisSize.min,
                   child: Text(
                     l10n?.translate('settings.app_lock_open_settings') ??
                         'Open',
@@ -664,16 +677,20 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                 leading: const Icon(Icons.tune),
                 title: Text(
                   l10n?.translate(
-                          'settings.app_lock_overlay_not_found_title') ??
+                        'settings.app_lock_overlay_not_found_title',
+                      ) ??
                       'App not listed in overlay screen?',
                 ),
                 subtitle: Text(
                   l10n?.translate(
-                          'settings.app_lock_overlay_not_found_subtitle') ??
+                        'settings.app_lock_overlay_not_found_subtitle',
+                      ) ??
                       'Open app details and check Display over other apps manually.',
                 ),
-                trailing: TextButton(
-                  onPressed: () => _platformService.openAppDetailsSettings(),
+                trailing: FButton(
+                  onPress: () => _platformService.openAppDetailsSettings(),
+                  variant: FButtonVariant.ghost,
+                  mainAxisSize: MainAxisSize.min,
                   child: Text(
                     l10n?.translate('settings.app_lock_open_settings') ??
                         'Open',
@@ -690,8 +707,10 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                   l10n?.translate('settings.app_lock_accessibility_subtitle') ??
                       'Optional fallback mode',
                 ),
-                trailing: TextButton(
-                  onPressed: () => _platformService.openAccessibilitySettings(),
+                trailing: FButton(
+                  onPress: () => _platformService.openAccessibilitySettings(),
+                  variant: FButtonVariant.ghost,
+                  mainAxisSize: MainAxisSize.min,
                   child: Text(
                     l10n?.translate('settings.app_lock_open_settings') ??
                         'Open',
@@ -737,12 +756,11 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
         await widget.cubit.toggleAppLock(false);
         await _platformService.stopLockMonitor();
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.l10n?.translate('settings.app_lock_select_apps_first') ??
-                  'Select apps first to enable blocking.',
-            ),
+        showFToast(
+          context: context,
+          title: Text(
+            context.l10n?.translate('settings.app_lock_select_apps_first') ??
+                'Select apps first to enable blocking.',
           ),
         );
         return;
@@ -753,24 +771,44 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
         await widget.cubit.toggleAppLock(false);
         await _platformService.stopLockMonitor();
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.l10n
-                      ?.translate('settings.app_lock_usage_required_message') ??
-                  'Usage access is required to block selected apps.',
-            ),
+        showFToast(
+          context: context,
+          title: Text(
+            context.l10n?.translate(
+                  'settings.app_lock_usage_required_message',
+                ) ??
+                'Usage access is required to block selected apps.',
           ),
         );
+        return;
+      }
+
+      // The lock screen is drawn over other apps, so "display over other
+      // apps" (SYSTEM_ALERT_WINDOW) is required too — without it the monitor
+      // runs but can't show the lock. Gate enabling on it and guide the user
+      // to grant it.
+      if (!permissionStatus.overlayGranted && context.mounted) {
+        await widget.cubit.toggleAppLock(false);
+        await _platformService.stopLockMonitor();
+        if (!context.mounted) return;
+        showFToast(
+          context: context,
+          title: Text(
+            context.l10n?.translate(
+                  'settings.app_lock_overlay_required_message',
+                ) ??
+                'Allow "display over other apps" to show the lock screen.',
+          ),
+        );
+        await _platformService.openOverlaySettings();
+        await _refreshPermissionStatus();
         return;
       }
 
       if (!context.mounted) return;
 
       final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-      final quotePayload = await _buildOverlayQuotePayload(
-        useArabic: isArabic,
-      );
+      final quotePayload = await _buildOverlayQuotePayload(useArabic: isArabic);
       if (!context.mounted) return;
       final prayerWindow = _currentPrayerWindowPayload();
       final prayerName = _currentPrayerName(context.l10n);
@@ -861,8 +899,10 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     required bool useArabic,
   }) async {
     final quotes = await _quotesService.getAllQuotes(useArabic: useArabic);
-    final messages =
-        quotes.map((q) => q.message.trim()).where((m) => m.isNotEmpty).toList();
+    final messages = quotes
+        .map((q) => q.message.trim())
+        .where((m) => m.isNotEmpty)
+        .toList();
     final references = quotes.map((q) => q.reference.trim()).toList();
 
     if (messages.isEmpty) {
@@ -950,27 +990,32 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     String? prayerName,
   }) {
     return <String, String>{
-      'title': l10n?.translate('settings.app_lock_overlay_title_text') ??
+      'title':
+          l10n?.translate('settings.app_lock_overlay_title_text') ??
           'Valuable time',
       'reference': referenceText ?? '',
-      'prayerName': prayerName ??
+      'prayerName':
+          prayerName ??
           (l10n?.translate('settings.app_lock_prayer_name_fallback') ??
               'Prayer time'),
-      'goHome': l10n?.translate('settings.app_lock_overlay_go_home') ??
+      'goHome':
+          l10n?.translate('settings.app_lock_overlay_go_home') ??
           'Return to home',
       'completedPrayer':
           l10n?.translate('settings.app_lock_overlay_completed_prayer') ??
-              'I completed prayer',
-      'holdBypass': l10n?.translate('settings.app_lock_overlay_hold_bypass') ??
+          'I completed prayer',
+      'holdBypass':
+          l10n?.translate('settings.app_lock_overlay_hold_bypass') ??
           'Hold 3 seconds for emergency bypass',
       'keepHolding':
           l10n?.translate('settings.app_lock_overlay_keep_holding') ??
-              'Keep holding...',
-      'holdReady': l10n?.translate('settings.app_lock_overlay_hold_ready') ??
+          'Keep holding...',
+      'holdReady':
+          l10n?.translate('settings.app_lock_overlay_hold_ready') ??
           'Hold complete. Confirm to unlock for 10 seconds.',
       'confirmBypass':
           l10n?.translate('settings.app_lock_overlay_confirm_bypass') ??
-              'Confirm emergency bypass',
+          'Confirm emergency bypass',
       'cancel': l10n?.translate('common.cancel') ?? 'Cancel',
     };
   }

@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -85,32 +87,33 @@ class AlarmPermissionHelper {
 
     final l10n = context.l10n;
 
-    await showDialog(
+    await showFDialog(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (context, style, animation) => FDialog(
         title: Text(
           l10n?.translate('settings.permission_required_title') ??
               'الإذن مطلوب',
           textAlign: TextAlign.right,
         ),
-        content: Text(
+        body: Text(
           l10n?.translate('settings.permission_required_message') ??
               'لتلقي تنبيهات أوقات الصلاة في الوقت المحدد، يرجى تفعيل إذن "التنبيهات والتذكيرات" من الإعدادات.\n\nالإعدادات > التطبيقات > واذكِّر > الأذونات > التنبيهات والتذكيرات',
           textAlign: TextAlign.right,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n?.translate('settings.ok') ?? 'حسناً'),
-          ),
-          FilledButton(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.of(context).pop();
               openAppSettings();
             },
             child: Text(
               l10n?.translate('settings.open_settings') ?? 'فتح الإعدادات',
             ),
+          ),
+          FButton(
+            onPress: () => Navigator.of(context).pop(),
+            variant: FButtonVariant.outline,
+            child: Text(l10n?.translate('settings.ok') ?? 'حسناً'),
           ),
         ],
       ),
@@ -179,7 +182,72 @@ class AlarmPermissionHelper {
       results['exactAlarms'] = false;
     }
 
+    // 3. One-time battery-optimization exemption prompt (improves on-time
+    //    delivery on aggressive OEMs / deep Doze).
+    if (context.mounted) {
+      await maybePromptBatteryOptimizationsOnce(context);
+    }
+
     return results;
+  }
+
+  /// Ask the user to exempt the app from battery optimization (Doze). Returns
+  /// true if already exempt or granted. The system shows its own dialog after
+  /// our short explanation.
+  static Future<bool> requestIgnoreBatteryOptimizations(
+    BuildContext context,
+  ) async {
+    if (!Platform.isAndroid) return true;
+    final status = await Permission.ignoreBatteryOptimizations.status;
+    if (status.isGranted) return true;
+    if (!context.mounted) return false;
+
+    final l10n = context.l10n;
+    final proceed = await showFDialog<bool>(
+      context: context,
+      builder: (ctx, style, animation) => FDialog(
+        title: Text(
+          l10n?.translate('settings.battery_opt_title') ?? 'تحسين البطارية',
+        ),
+        body: Text(
+          l10n?.translate('settings.battery_opt_message') ??
+              'للحصول على التنبيهات في وقتها بدقة، يُفضّل استثناء التطبيق من تحسين البطارية.',
+        ),
+        actions: [
+          FButton(
+            onPress: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n?.translate('common.confirm') ?? 'متابعة'),
+          ),
+          FButton(
+            onPress: () => Navigator.of(ctx).pop(false),
+            variant: FButtonVariant.outline,
+            child: Text(l10n?.translate('common.cancel') ?? 'لاحقاً'),
+          ),
+        ],
+      ),
+    );
+    if (proceed != true) return false;
+
+    try {
+      final result = await Permission.ignoreBatteryOptimizations.request();
+      return result.isGranted;
+    } catch (e) {
+      debugPrint('Error requesting battery optimization exemption: $e');
+      return false;
+    }
+  }
+
+  /// Prompt for the battery-optimization exemption at most once (persisted via
+  /// SharedPreferences) so the user isn't nagged on every enable.
+  static Future<void> maybePromptBatteryOptimizationsOnce(
+    BuildContext context,
+  ) async {
+    if (!Platform.isAndroid) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('battery_opt_prompted') ?? false) return;
+    await prefs.setBool('battery_opt_prompted', true);
+    if (!context.mounted) return;
+    await requestIgnoreBatteryOptimizations(context);
   }
 }
 

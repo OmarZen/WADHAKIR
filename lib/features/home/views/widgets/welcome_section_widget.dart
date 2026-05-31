@@ -379,12 +379,15 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
               // Islamic Quotes with source badge
               Builder(
                 builder: (context) {
-                  final languageCode =
-                      Localizations.localeOf(context).languageCode;
-                  final quoteText =
-                      languageCode == 'en' ? _quote.textEn : _quote.text;
-                  final quoteSource =
-                      languageCode == 'en' ? _quote.sourceEn : _quote.source;
+                  final languageCode = Localizations.localeOf(
+                    context,
+                  ).languageCode;
+                  final quoteText = languageCode == 'en'
+                      ? _quote.textEn
+                      : _quote.text;
+                  final quoteSource = languageCode == 'en'
+                      ? _quote.sourceEn
+                      : _quote.source;
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,8 +402,9 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                           color: Colors.white.withValues(alpha: 0.92),
                           fontWeight: FontWeight.w400,
                           height: 1.5,
-                          fontFamily:
-                              languageCode == 'en' ? null : 'ScheherazadeNew',
+                          fontFamily: languageCode == 'en'
+                              ? null
+                              : 'ScheherazadeNew',
                         ),
                       ),
                       SizedBox(height: isDesktop ? 10 : 8),
@@ -421,8 +425,9 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                                 color: Colors.white.withValues(alpha: 0.75),
                                 fontSize: sourceFontSize,
                                 fontWeight: FontWeight.w500,
-                                fontFamily:
-                                    languageCode == 'en' ? null : 'Almarai',
+                                fontFamily: languageCode == 'en'
+                                    ? null
+                                    : 'Almarai',
                               ),
                             ),
                           ),
@@ -501,9 +506,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
           child: BackdropFilter(
             filter: GlassTokens.filterFor(GlassIntensity.medium),
             child: Container(
-              padding: EdgeInsets.all(
-                isDesktop ? Spacing.md : Spacing.sm + 2,
-              ),
+              padding: EdgeInsets.all(isDesktop ? Spacing.md : Spacing.sm + 2),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,

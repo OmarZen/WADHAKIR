@@ -10,6 +10,7 @@ import 'package:wadhakir/features/floating_dhikr/views/screens/floating_dhikr_se
 import 'package:wadhakir/features/moon_phases/views/screens/moon_phases_calendar_screen.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
 import 'package:wadhakir/features/share/views/screens/share_screen.dart';
+import 'package:wadhakir/features/wird/views/screens/wird_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -41,6 +42,9 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const MoonPhasesCalendarScreen(),
         );
+
+      case AppConstants.wirdRoute:
+        return MaterialPageRoute(builder: (_) => const WirdScreen());
 
       case AppConstants.shareRoute:
         // The share screen always receives a SharePayload via arguments;

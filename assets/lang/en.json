@@ -6,7 +6,69 @@
     "ok": "OK",
     "downloading": "Downloading",
     "retry": "Retry",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "change": "Change",
+    "confirm": "Confirm",
+    "back": "Back",
+    "error": "An error occurred",
+    "soon": "Soon"
+  },
+  "hadith_nawawi": {
+    "title": "Forty Hadith of an-Nawawi",
+    "hadith": "Hadith",
+    "copy": "Copy",
+    "share": "Share",
+    "copied": "Hadith copied",
+    "share_lang": "Share language",
+    "share_lang_hint": "Choose the hadith language to share",
+    "arabic": "Arabic",
+    "english": "English"
+  },
+  "prayer_adhkar": {
+    "title": "After-Prayer Adhkar",
+    "progress": "Completed",
+    "of": "of",
+    "reset": "Reset",
+    "completed": "You completed the after-prayer adhkar — may Allah accept it"
+  },
+  "wird": {
+    "home_title": "Daily Wird",
+    "setup_title": "Start Your Khatmah",
+    "setup_subtitle": "Choose your goal and daily reminder to stay on track",
+    "progress_title": "Quran Khatmah Plan",
+    "your_progress": "Your Progress",
+    "goal_label": "Goal",
+    "goal_fixed_daily": "Read a fixed amount daily",
+    "goal_by_date": "Finish by a target date",
+    "unit_label": "Tracking Unit",
+    "unit_subtitle": "Choose your preferred tracking unit",
+    "unit_pages": "Pages",
+    "unit_rub": "Rub (quarter juz)",
+    "unit_hizb": "Hizb (half juz)",
+    "unit_juz": "Juz",
+    "amount_pages": "Pages per day",
+    "amount_rub": "Rub per day",
+    "amount_hizb": "Hizb per day",
+    "amount_juz": "Juz per day",
+    "start_page": "Start page",
+    "reminder_time": "Reminder time",
+    "reminder_enabled": "Enable reminder",
+    "expected_completion": "Expected completion",
+    "view_schedule": "View full schedule",
+    "full_schedule_subtitle": "All days of the khatmah",
+    "start_plan": "Start Plan",
+    "schedule_title": "Reading Schedule",
+    "remaining_days": "Remaining days",
+    "pages_read": "Current progress",
+    "day": "Day",
+    "days": "days",
+    "pages_from": "Pages from",
+    "to": "to",
+    "read_now": "Read now",
+    "mark_complete": "Mark day complete",
+    "mark_incomplete": "Undo completion",
+    "reset_plan": "Reset khatmah?",
+    "reset_confirm": "This will delete the current plan and progress."
   },
   "global": {
     "jan": "January",
@@ -39,7 +101,8 @@
     "ramadan": "Ramadan",
     "shawwal": "Shawwal",
     "dhul_kadah": "Dhul Kadah",
-    "dhul_hijjah": "Dhul Hijjah"
+    "dhul_hijjah": "Dhul Hijjah",
+    "locale_code": "en"
   },
   "home": {
     "welcome_message": "Assalamualaikum",
@@ -107,6 +170,12 @@
     "hadith_previous": "Previous Hadith",
     "hadith_next": "Next Hadith",
     "more_islamic_excerpts": "More Islamic Excerpts",
+    "daily_progress": "Your Daily Progress",
+    "nawafil": "Nawafil",
+    "religious_occasions": "Religious Occasions",
+    "section_read": "Read & Reflect",
+    "section_adhkar": "Adhkar & Tasbih",
+    "section_tools": "Times & Tools",
     "islamic_history": "Islamic History",
     "free_palestine": "Free Palestine",
     "palestine_support": "O God, support our brothers in Palestine, ward off calamity from them, and grant them relief from every worry and a way out from every difficulty, and grant them patience and steadfastness, feed them when they are hungry and secure them when they are afraid, and grant them clear victory.",
@@ -114,7 +183,8 @@
     "palestine_duah": "Do not forget to remember Allah's mercy",
     "close": "Close",
     "support_developer": "Support the Developer",
-    "support_developer_title": "If you find this app useful, you can support me by donating to continue developing more free Islamic apps."
+    "support_developer_title": "If you find this app useful, you can support me by donating to continue developing more free Islamic apps.",
+    "reset": "Reset"
   },
   "quran": {
     "meccan": "Meccan",
@@ -396,6 +466,9 @@
     "app_lock_overlay_not_found_subtitle": "Open app details and check Display over other apps manually.",
     "app_lock_select_apps_first": "Select apps first to enable blocking.",
     "app_lock_usage_required_message": "Usage access is required to block selected apps.",
+    "app_lock_overlay_required_message": "Allow \"display over other apps\" to show the lock screen.",
+    "battery_opt_title": "Battery optimization",
+    "battery_opt_message": "For on-time alerts, it's best to exclude the app from battery optimization.",
     "app_lock_overlay_message": "Use this time in something beneficial. Your focus now is more valuable.",
     "app_lock_duration_title": "Lock duration",
     "app_lock_duration_10_min": "10 minutes",
@@ -414,7 +487,7 @@
     "medium": "Medium",
     "large": "Large",
     "app_description": "Wadhakir is an app that helps you memorize the Quran",
-    "version": "Version 3.1.1+17",
+    "version": "Version 3.2.0+18",
     "copyright": "© 2025 All rights reserved",
     "close": "Close",
     "notifications": "Notifications",
@@ -481,7 +554,11 @@
     "ok": "OK",
     "notification_permission_title": "Notification Permission",
     "notification_permission_message": "Wadhakir app needs notification permission to send prayer times, adhan, and azkar notifications.\n\nNo unwanted notifications will be sent.",
-    "exact_alarm_permission_warning": "Notifications will not arrive at the exact time without \"Alarms & reminders\" permission"
+    "exact_alarm_permission_warning": "Notifications will not arrive at the exact time without \"Alarms & reminders\" permission",
+    "settings": "Settings",
+    "app_lock_prayer_name_fallback": "Prayer time",
+    "notifications_on": "Enabled",
+    "notifications_off": "Disabled"
   },
   "nav_bar": {
     "home": "Home",
@@ -612,7 +689,8 @@
     "turkey": "Turkey",
     "turkey_description": "The standard used in Turkey Fajr angle: 18, Isha angle: 17",
     "tehran": "Tehran, Iran",
-    "tehran_description": "The standard used in Iran Fajr angle: 17.7, Isha angle: 14, Maghrib angle: 4.5"
+    "tehran_description": "The standard used in Iran Fajr angle: 17.7, Isha angle: 14, Maghrib angle: 4.5",
+    "settings": "Settings"
   },
   "radio": {
     "title": "Radio",
@@ -911,6 +989,11 @@
     "guide_intention": "Intention (Niyyah)",
     "guide_intention_desc": "Make intention the night before",
     "guide_iftar": "Breaking fast (Iftar)",
-    "guide_iftar_desc": "Break fast immediately at sunset"
-  }
+    "guide_iftar_desc": "Break fast immediately at sunset",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "upcoming": "Upcoming"
+  },
+  "cancel": "Cancel",
+  "loading": "Loading..."
 }

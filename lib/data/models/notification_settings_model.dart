@@ -76,12 +76,12 @@ class PrayerNotificationSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        enabled,
-        timing,
-        sound,
-        vibration,
-        customSoundPath,
-      ];
+    enabled,
+    timing,
+    sound,
+    vibration,
+    customSoundPath,
+  ];
 }
 
 /// Complete notification settings model
@@ -210,12 +210,12 @@ class NotificationSettingsModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        masterEnabled,
-        persistentNotificationEnabled,
-        fajrSettings,
-        dhuhrSettings,
-        asrSettings,
-        maghribSettings,
-        ishaSettings,
-      ];
+    masterEnabled,
+    persistentNotificationEnabled,
+    fajrSettings,
+    dhuhrSettings,
+    asrSettings,
+    maghribSettings,
+    ishaSettings,
+  ];
 }

@@ -53,13 +53,13 @@ class IslamicHistoryLoaded extends IslamicHistoryState {
 
   @override
   List<Object?> get props => [
-        events,
-        totalCount,
-        currentPage,
-        hasMorePages,
-        isLoadingMore,
-        searchQuery,
-      ];
+    events,
+    totalCount,
+    currentPage,
+    hasMorePages,
+    isLoadingMore,
+    searchQuery,
+  ];
 }
 
 class IslamicHistoryError extends IslamicHistoryState {

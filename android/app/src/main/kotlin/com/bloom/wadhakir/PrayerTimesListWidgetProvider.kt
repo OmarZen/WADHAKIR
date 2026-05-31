@@ -58,9 +58,10 @@ class PrayerTimesListWidgetProvider : HomeWidgetProvider() {
                 views.setTextViewText(R.id.gregorian_date, gregorianDate ?: "")
                 views.setTextViewText(R.id.day_name, dayName ?: "")
 
-                // Get current prayer and highlight it
-                val currentPrayer = widgetData.getString("currentPrayer", "")?.uppercase()
-                
+                // Highlight the NEXT upcoming prayer (not the one that already
+                // passed) so the card points to what's coming next.
+                val nextPrayer = widgetData.getString("nextPrayer", "")?.uppercase()
+
                 // Reset all backgrounds first
                 views.setInt(R.id.fajr_container, "setBackgroundResource", 0)
                 views.setInt(R.id.dhuhr_container, "setBackgroundResource", 0)
@@ -68,8 +69,8 @@ class PrayerTimesListWidgetProvider : HomeWidgetProvider() {
                 views.setInt(R.id.maghrib_container, "setBackgroundResource", 0)
                 views.setInt(R.id.isha_container, "setBackgroundResource", 0)
 
-                // Set background for current prayer
-                when (currentPrayer) {
+                // Set background for the next prayer
+                when (nextPrayer) {
                     "FAJR" -> views.setInt(R.id.fajr_container, "setBackgroundResource", R.drawable.current_prayer_background)
                     "DHUHR" -> views.setInt(R.id.dhuhr_container, "setBackgroundResource", R.drawable.current_prayer_background)
                     "ASR" -> views.setInt(R.id.asr_container, "setBackgroundResource", R.drawable.current_prayer_background)

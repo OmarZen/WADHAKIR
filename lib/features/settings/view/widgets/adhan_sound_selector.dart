@@ -245,7 +245,8 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-              itemCount: widget.soundOptions.length +
+              itemCount:
+                  widget.soundOptions.length +
                   1, // +1 for default option at top
               itemBuilder: (context, index) {
                 // Default sound option
@@ -309,11 +310,11 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
       decoration: BoxDecoration(
         color: isSelected
             ? (isDark
-                ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                : theme.colorScheme.primary.withValues(alpha: 0.08))
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
             : (isDark
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
-                : theme.colorScheme.surface),
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.1)
+                  : theme.colorScheme.surface),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isSelected
@@ -330,24 +331,24 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
           decoration: BoxDecoration(
             color: isSelected
                 ? isDark
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
-                    : theme.colorScheme.primary
+                      ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+                      : theme.colorScheme.primary
                 : (isDark
-                    ? theme.colorScheme.primaryContainer.withValues(
-                        alpha: 0.2,
-                      )
-                    : theme.colorScheme.surface),
+                      ? theme.colorScheme.primaryContainer.withValues(
+                          alpha: 0.2,
+                        )
+                      : theme.colorScheme.surface),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             option.isDefault ? Icons.notifications : Icons.music_note,
             color: isSelected
                 ? isDark
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onPrimary
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimary
                 : isDark
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
-                    : theme.colorScheme.primary,
+                ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                : theme.colorScheme.primary,
             size: 18,
           ),
         ),
@@ -357,11 +358,11 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: isSelected
                 ? isDark
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.primary
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.primary
                 : isDark
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
-                    : theme.colorScheme.onSurface,
+                ? theme.colorScheme.onSurface.withValues(alpha: 0.8)
+                : theme.colorScheme.onSurface,
             fontSize: 14,
           ),
           maxLines: 2,
@@ -439,8 +440,8 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
     return Material(
       color: widget.enabled
           ? (isDark
-              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-              : theme.colorScheme.surface)
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+                : theme.colorScheme.surface)
           : Colors.transparent,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
@@ -490,8 +491,9 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
                         fontSize: 14,
                         color: widget.enabled
                             ? theme.colorScheme.onSurface
-                            : theme.colorScheme.onSurface
-                                .withValues(alpha: 0.4),
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.4,
+                              ),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -510,8 +512,10 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
               const SizedBox(height: 12),
               // Current Sound Name
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),

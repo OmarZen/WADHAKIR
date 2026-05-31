@@ -107,13 +107,13 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
       curve: Curves.easeIn,
     );
 
-    final slideAnimation =
-        Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    final slideAnimation = Tween(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
 
     return Scaffold(
       extendBodyBehindAppBar: true,

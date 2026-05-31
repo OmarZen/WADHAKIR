@@ -91,15 +91,15 @@ class _AzkarScreenState extends State<AzkarScreen>
     final filteredCategories = _searchQuery.isEmpty
         ? state.categories
         : state.categories
-            .where(
-              (c) =>
-                  c
-                      .getLocalizedTitle(languageCode)
-                      .toLowerCase()
-                      .contains(_searchQuery.toLowerCase()) ||
-                  c.title.toLowerCase().contains(_searchQuery.toLowerCase()),
-            )
-            .toList();
+              .where(
+                (c) =>
+                    c
+                        .getLocalizedTitle(languageCode)
+                        .toLowerCase()
+                        .contains(_searchQuery.toLowerCase()) ||
+                    c.title.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
 
     return Stack(
       children: [
@@ -168,7 +168,8 @@ class _AzkarScreenState extends State<AzkarScreen>
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: context.l10n?.translate('azkar.search_azkar') ??
+                  hintText:
+                      context.l10n?.translate('azkar.search_azkar') ??
                       'البحث في الأذكار...',
                   prefixIcon: Icon(
                     Icons.search,

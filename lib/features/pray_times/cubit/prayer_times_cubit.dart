@@ -15,6 +15,7 @@ import 'package:wadhakir/features/pray_times/services/prayer_notification_servic
 import 'package:wadhakir/features/pray_times/services/persistent_notification_manager.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/hijri_calendar_home_widget.dart';
+import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/glass_prayer_home_widget.dart';
 
 class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   final GetPrayerTimesUseCase _getPrayerTimesUseCase;
@@ -48,12 +49,12 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     required PrayerTimesRepository repository,
     PrayerNotificationService? notificationService,
     PersistentNotificationManager? persistentManager,
-  })  : _repository = repository,
-        _notificationService =
-            notificationService ?? PrayerNotificationService(),
-        _persistentManager =
-            persistentManager ?? PersistentNotificationManager(),
-        super(const PrayerTimesInitial()) {
+  }) : _repository = repository,
+       _notificationService =
+           notificationService ?? PrayerNotificationService(),
+       _persistentManager =
+           persistentManager ?? PersistentNotificationManager(),
+       super(const PrayerTimesInitial()) {
     // Load saved time adjustments
     _loadSavedTimeAdjustments();
   }
@@ -91,6 +92,9 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
           'Updating widget with prayer times for: ${dateKey.toString()}',
         );
         await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
+
+        // Render the two glass prayer widgets (Prayer Detail + Prayer Next)
+        await GlassPrayerHomeWidget.updateGlassWidgets(todayPrayerTimes);
 
         // Update Hijri calendar widget
         await HijriCalendarHomeWidget.updateCalendar();
@@ -268,6 +272,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
             'Refreshing widget with prayer times for: ${dateKey.toString()}',
           );
           await PrayerTimesHomeWidget.updatePrayerTimes(todayPrayerTimes);
+          await GlassPrayerHomeWidget.updateGlassWidgets(todayPrayerTimes);
         } else {
           debugPrint(
             'No prayer times found for today during refresh: ${dateKey.toString()}',

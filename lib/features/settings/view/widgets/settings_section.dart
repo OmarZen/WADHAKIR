@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 
 class SettingsSection extends StatelessWidget {
   final String title;
@@ -80,36 +81,8 @@ class SettingsSection extends StatelessWidget {
               ],
             ),
           ),
-          // Clean Card with Material ancestor so ListTile ink splashes
-          // render correctly (previous Container-only setup triggered the
-          // "ListTile background color or ink splashes may be invisible"
-          // framework warning).
-          Material(
-            color: isDark ? theme.colorScheme.surface : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.06),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.2)
-                        : Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(children: children),
-            ),
-          ),
+          // Themed forui card surface holding the section children.
+          FCard.raw(child: Column(children: children)),
         ],
       ),
     );

@@ -42,27 +42,28 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
       ),
     );
 
-    _logoScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(
-          begin: 0.5,
-          end: 1.15,
-        ).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween(
-          begin: 1.15,
-          end: 1.0,
-        ).chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 1,
-      ),
-    ]).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeInOut),
-      ),
-    );
+    _logoScale =
+        TweenSequence<double>([
+          TweenSequenceItem(
+            tween: Tween(
+              begin: 0.5,
+              end: 1.15,
+            ).chain(CurveTween(curve: Curves.easeOut)),
+            weight: 1,
+          ),
+          TweenSequenceItem(
+            tween: Tween(
+              begin: 1.15,
+              end: 1.0,
+            ).chain(CurveTween(curve: Curves.elasticOut)),
+            weight: 1,
+          ),
+        ]).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.0, 0.5, curve: Curves.easeInOut),
+          ),
+        );
 
     // Text fade in (600-1400ms)
     _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -112,14 +113,14 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
                       const OnboardingScreen(),
                   transitionsBuilder:
                       (context, animation, secondaryAnimation, child) {
-                    return FadeTransition(
-                      opacity: CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeIn,
-                      ),
-                      child: child,
-                    );
-                  },
+                        return FadeTransition(
+                          opacity: CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeIn,
+                          ),
+                          child: child,
+                        );
+                      },
                   transitionDuration: const Duration(milliseconds: 600),
                 ),
               );
@@ -136,14 +137,14 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
                     const ScaffoldWithNavBar(),
                 transitionsBuilder:
                     (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(
-                    opacity: CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeIn,
-                    ),
-                    child: child,
-                  );
-                },
+                      return FadeTransition(
+                        opacity: CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeIn,
+                        ),
+                        child: child,
+                      );
+                    },
                 transitionDuration: const Duration(milliseconds: 600),
               ),
             );
@@ -227,8 +228,9 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Colors.white
-                            .withValues(alpha: 0.12 * _backgroundExpand.value),
+                        Colors.white.withValues(
+                          alpha: 0.12 * _backgroundExpand.value,
+                        ),
                         Colors.transparent,
                       ],
                       stops: [0.0, 1.0],
@@ -285,8 +287,9 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
       child: ScaleTransition(
         scale: Tween<double>(begin: 0.98, end: 1.0).animate(
           CurvedAnimation(
-              parent: _controller,
-              curve: const Interval(0.24, 0.56, curve: Curves.easeOut)),
+            parent: _controller,
+            curve: const Interval(0.24, 0.56, curve: Curves.easeOut),
+          ),
         ),
         child: Text(
           l10n.translate("splash.tag_line"),

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
@@ -228,8 +229,9 @@ class _RadioScreenState extends State<RadioScreen> {
                 ),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal:
-                        PlatformUtils.isDesktop ? 24.0 : size.width * 0.04,
+                    horizontal: PlatformUtils.isDesktop
+                        ? 24.0
+                        : size.width * 0.04,
                     vertical: 6,
                   ),
                   child: Container(
@@ -327,8 +329,8 @@ class _RadioScreenState extends State<RadioScreen> {
                     final filtered = _applyCategory(state)
                         .where(
                           (s) => s.name.toLowerCase().contains(
-                                _query.toLowerCase(),
-                              ),
+                            _query.toLowerCase(),
+                          ),
                         )
                         .toList();
 
@@ -713,7 +715,8 @@ class _WavePatternPainter extends CustomPainter {
       final yOffset = size.height * (0.3 + i * 0.2);
 
       for (var x = -waveLength; x <= size.width + waveLength; x += 0.5) {
-        final y = yOffset +
+        final y =
+            yOffset +
             waveHeight *
                 (0.5 + 0.5 * (i % 2 == 0 ? 1 : -1)) *
                 (1 + 0.3 * i) *
@@ -816,31 +819,21 @@ class _ErrorView extends StatelessWidget {
             Text(
               errorType == 'network'
                   ? (l10n?.translate('radio.error_network_check') ??
-                      'تأكد من اتصالك بالإنترنت وحاول مرة أخرى')
+                        'تأكد من اتصالك بالإنترنت وحاول مرة أخرى')
                   : (l10n?.translate('radio.error_try_again_later') ??
-                      'حاول مرة أخرى بعد قليل'),
+                        'حاول مرة أخرى بعد قليل'),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: Text(
+            FButton(
+              onPress: onRetry,
+              mainAxisSize: MainAxisSize.min,
+              prefix: const Icon(Icons.refresh_rounded),
+              child: Text(
                 l10n?.translate('radio.retry_button') ?? 'إعادة المحاولة',
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: errorColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
               ),
             ),
           ],

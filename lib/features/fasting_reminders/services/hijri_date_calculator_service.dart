@@ -365,7 +365,7 @@ class HijriDateCalculatorService {
       30,
       29,
       30,
-      29
+      29,
     ];
 
     // Adjust for leap years (adds day to month 12)

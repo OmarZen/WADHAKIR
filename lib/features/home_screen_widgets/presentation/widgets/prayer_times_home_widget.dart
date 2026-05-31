@@ -9,6 +9,24 @@ import 'package:wadhakir/data/repositories/prayer_times_repository_impl.dart';
 class PrayerTimesHomeWidget {
   static const String compactWidgetProvider = 'PrayerTimesWidgetProvider';
   static const String listWidgetProvider = 'PrayerTimesListWidgetProvider';
+  static const String clockWidgetProvider = 'GlassClockWidgetProvider';
+
+  static String _arabicPrayerName(String? englishName) {
+    switch (englishName) {
+      case 'Fajr':
+        return 'الفجر';
+      case 'Dhuhr':
+        return 'الظهر';
+      case 'Asr':
+        return 'العصر';
+      case 'Maghrib':
+        return 'المغرب';
+      case 'Isha':
+        return 'العشاء';
+      default:
+        return englishName ?? '';
+    }
+  }
 
   static Future<void> updatePrayerTimes(PrayerTimesModel prayerTimes) async {
     // Skip on Windows/Desktop - home_widget not supported
@@ -160,6 +178,17 @@ class PrayerTimesHomeWidget {
           '${remaining.inHours}h ${remaining.inMinutes % 60}m';
       await HomeWidget.saveWidgetData('timeUntilNext', timeUntilNext);
 
+      // Next-prayer epoch + Arabic name for the live clock widget's
+      // self-ticking countdown chronometer.
+      await HomeWidget.saveWidgetData(
+        'nextPrayerEpoch',
+        nextPrayerTime.millisecondsSinceEpoch.toString(),
+      );
+      await HomeWidget.saveWidgetData(
+        'nextPrayerArabic',
+        _arabicPrayerName(nextPrayerName),
+      );
+
       // Update compact widget
       await HomeWidget.updateWidget(
         androidName: compactWidgetProvider,
@@ -172,6 +201,13 @@ class PrayerTimesHomeWidget {
         androidName: listWidgetProvider,
         iOSName: 'PrayerTimesListWidget',
         qualifiedAndroidName: 'com.bloom.wadhakir.$listWidgetProvider',
+      );
+
+      // Update live clock widget
+      await HomeWidget.updateWidget(
+        androidName: clockWidgetProvider,
+        iOSName: 'GlassClockWidget',
+        qualifiedAndroidName: 'com.bloom.wadhakir.$clockWidgetProvider',
       );
       debugPrint('Widget update completed successfully');
     } catch (e) {

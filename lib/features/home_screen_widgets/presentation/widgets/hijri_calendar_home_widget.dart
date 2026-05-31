@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
@@ -7,8 +8,85 @@ import 'package:syncfusion_flutter_core/core.dart';
 class HijriCalendarHomeWidget {
   static const String widgetProvider = 'HijriCalendarWidgetProvider';
   static const String _monthOffsetKey = 'hijri_month_offset';
+  static const String _cacheKey = 'hijri_month_cache';
 
-  /// Update the Hijri calendar widget with today's date and month calendar
+  /// Pre-compute a window of Hijri months around today and store them as a
+  /// single JSON blob under [_cacheKey]. The native widget reads this cache to
+  /// switch months instantly on arrow taps — no Flutter background isolate
+  /// round-trip, so month scrolling is smooth with no flashing.
+  @pragma('vm:entry-point')
+  static Future<void> cacheCalendarWindow({int radius = 24}) async {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) return;
+    try {
+      final hijriToday = HijriDateTime.fromDateTime(DateTime.now());
+      final Map<String, dynamic> cache = {};
+      for (int offset = -radius; offset <= radius; offset++) {
+        cache[offset.toString()] = _computeMonth(hijriToday, offset);
+      }
+      await HomeWidget.saveWidgetData(_cacheKey, jsonEncode(cache));
+      debugPrint('🗓️  Cached Hijri months for offsets -$radius..$radius');
+    } catch (e) {
+      debugPrint('❌ Error caching Hijri calendar window: $e');
+    }
+  }
+
+  /// Compute one month's grid metadata for [monthOffset] relative to today.
+  /// Stores day-1's Gregorian date so the native side can derive any clicked
+  /// day's Gregorian date by adding (day - 1) days — no Hijri math in Kotlin.
+  @pragma('vm:entry-point')
+  static Map<String, dynamic> _computeMonth(
+    HijriDateTime hijriToday,
+    int monthOffset,
+  ) {
+    int targetYear = hijriToday.year;
+    int targetMonth = hijriToday.month + monthOffset;
+    while (targetMonth > 12) {
+      targetMonth -= 12;
+      targetYear++;
+    }
+    while (targetMonth < 1) {
+      targetMonth += 12;
+      targetYear--;
+    }
+
+    final displayMonth = HijriDateTime(targetYear, targetMonth, 1);
+
+    // Hijri months are 29 or 30 days. Creating day 30 throws on a 29-day month.
+    int daysInMonth = 30;
+    try {
+      HijriDateTime(displayMonth.year, displayMonth.month, 30);
+      daysInMonth = 30;
+    } catch (_) {
+      daysInMonth = 29;
+    }
+
+    final firstDayGregorian = displayMonth.toDateTime();
+    // 0 = Sunday column, 1 = Monday, ... 6 = Saturday.
+    final firstDayOffset = firstDayGregorian.weekday % 7;
+
+    final todayDay =
+        (monthOffset == 0 &&
+            hijriToday.month == displayMonth.month &&
+            hijriToday.year == displayMonth.year)
+        ? hijriToday.day
+        : 0;
+
+    return {
+      'monthYear':
+          '${_getHijriMonthName(displayMonth.month)} ${displayMonth.year}',
+      'daysInMonth': daysInMonth,
+      'firstDayOffset': firstDayOffset,
+      'todayDay': todayDay,
+      'hMonth': displayMonth.month,
+      'hYear': displayMonth.year,
+      'gYear': firstDayGregorian.year,
+      'gMonth': firstDayGregorian.month,
+      'gDay': firstDayGregorian.day,
+    };
+  }
+
+  /// Update the Hijri calendar widget for today's month (offset 0 by default).
+  /// Also refreshes the month-window cache used by native navigation.
   @pragma('vm:entry-point')
   static Future<void> updateCalendar([int monthOffset = 0]) async {
     // Skip on Windows/Desktop - home_widget not supported
@@ -20,97 +98,44 @@ class HijriCalendarHomeWidget {
     }
 
     try {
+      // Refresh the month cache so native arrow navigation always has data.
+      await cacheCalendarWindow();
+
       final today = DateTime.now();
       final hijriToday = HijriDateTime.fromDateTime(today);
+      final month = _computeMonth(hijriToday, monthOffset);
 
-      // Calculate target month based on offset
-      int targetYear = hijriToday.year;
-      int targetMonth = hijriToday.month + monthOffset;
-
-      // Handle year boundaries
-      while (targetMonth > 12) {
-        targetMonth -= 12;
-        targetYear++;
-      }
-      while (targetMonth < 1) {
-        targetMonth += 12;
-        targetYear--;
-      }
-
-      final displayMonth = HijriDateTime(targetYear, targetMonth, 1);
-
-      debugPrint('🕌 Updating Hijri calendar widget');
-      debugPrint(
-        '   Today: ${hijriToday.day} ${_getHijriMonthName(hijriToday.month)} ${hijriToday.year} هـ',
-      );
-      debugPrint(
-        '   Display Month: ${_getHijriMonthName(displayMonth.month)} ${displayMonth.year} (offset: $monthOffset)',
-      );
-
-      // Save month offset
+      // Snap the widget back to the requested (usually current) month and
+      // clear any stale day selection.
       await HomeWidget.saveWidgetData(_monthOffsetKey, monthOffset.toString());
+      await HomeWidget.saveWidgetData('selected_day', '0');
 
-      // Calculate month details - Hijri months are either 29 or 30 days
-      // Calculate by checking the last day of the month
-      int daysInMonth = 30;
-      try {
-        // Try to create day 30 of this month
-        HijriDateTime(displayMonth.year, displayMonth.month, 30);
-        daysInMonth = 30;
-      } catch (e) {
-        // If day 30 fails, the month has 29 days
-        daysInMonth = 29;
-      }
-
-      // Calculate first day offset (which day of week the month starts)
-      final firstDayOfMonth = HijriDateTime(
-        displayMonth.year,
-        displayMonth.month,
-        1,
+      // Month grid metadata (also serves as a first-paint fallback when the
+      // JSON cache hasn't been read yet).
+      await HomeWidget.saveWidgetData('hijri_month_year', month['monthYear']);
+      await HomeWidget.saveWidgetData(
+        'days_in_month',
+        month['daysInMonth'].toString(),
       );
-      final firstDayGregorian = firstDayOfMonth.toDateTime();
-      final firstDayOffset =
-          firstDayGregorian.weekday % 7; // 0 = Sunday, 1 = Monday, etc.
-
-      // Check if today is in this displayed month
-      final todayDay = (monthOffset == 0 &&
-              hijriToday.month == displayMonth.month &&
-              hijriToday.year == displayMonth.year)
-          ? hijriToday.day
-          : 0; // 0 means no highlight
-
-      debugPrint('   Days in month: $daysInMonth');
-      debugPrint('   First day offset: $firstDayOffset');
-      debugPrint('   Today highlight: $todayDay');
-
-      // Save month/year
-      final monthYear =
-          '${_getHijriMonthName(displayMonth.month)} ${displayMonth.year}';
-      await HomeWidget.saveWidgetData('hijri_month_year', monthYear);
-
-      // Save calendar data
-      await HomeWidget.saveWidgetData('days_in_month', daysInMonth.toString());
       await HomeWidget.saveWidgetData(
         'first_day_offset',
-        firstDayOffset.toString(),
+        month['firstDayOffset'].toString(),
       );
-      await HomeWidget.saveWidgetData('today_day', todayDay.toString());
+      await HomeWidget.saveWidgetData(
+        'today_day',
+        month['todayDay'].toString(),
+      );
 
-      // Save formatted date displays
+      // Header date card shows today's date.
       final hijriDateDisplay =
           '${hijriToday.day} ${_getHijriMonthName(hijriToday.month)}';
       final gregorianDateDisplay = _formatGregorianDate(today);
-
       await HomeWidget.saveWidgetData('hijri_date_display', hijriDateDisplay);
       await HomeWidget.saveWidgetData(
         'gregorian_date_display',
         gregorianDateDisplay,
       );
 
-      debugPrint('   Hijri display: $hijriDateDisplay');
-      debugPrint('   Gregorian display: $gregorianDateDisplay');
-
-      // Update the widget
       await HomeWidget.updateWidget(
         androidName: widgetProvider,
         iOSName: 'HijriCalendarWidget',
@@ -159,140 +184,5 @@ class HijriCalendarHomeWidget {
       'ديسمبر',
     ];
     return '${date.day} ${months[date.month - 1]}';
-  }
-
-  /// Navigate to previous month
-  @pragma('vm:entry-point')
-  static Future<void> previousMonth() async {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) return;
-
-    try {
-      // Get current offset
-      final currentOffset = await HomeWidget.getWidgetData<String>(
-        _monthOffsetKey,
-      );
-      final offset = int.tryParse(currentOffset ?? '0') ?? 0;
-
-      // Move to previous month (increase offset)
-      await updateCalendar(offset - 1);
-      debugPrint('📅 Navigated to previous month (offset: ${offset - 1})');
-    } catch (e) {
-      debugPrint('❌ Error navigating to previous month: $e');
-    }
-  }
-
-  /// Navigate to next month
-  @pragma('vm:entry-point')
-  static Future<void> nextMonth() async {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) return;
-
-    try {
-      // Get current offset
-      final currentOffset = await HomeWidget.getWidgetData<String>(
-        _monthOffsetKey,
-      );
-      final offset = int.tryParse(currentOffset ?? '0') ?? 0;
-
-      // Move to next month (decrease offset)
-      await updateCalendar(offset + 1);
-      debugPrint('📅 Navigated to next month (offset: ${offset + 1})');
-    } catch (e) {
-      debugPrint('❌ Error navigating to next month: $e');
-    }
-  }
-
-  /// Background callback for widget interactions
-  @pragma('vm:entry-point')
-  static Future<void> backgroundCallback(Uri? uri) async {
-    if (uri == null) return;
-
-    debugPrint('📱 Widget background callback triggered: $uri');
-
-    // Handle month navigation
-    final offsetStr = uri.queryParameters['offset'];
-    if (offsetStr != null && uri.queryParameters['day'] == null) {
-      final offset = int.tryParse(offsetStr) ?? 0;
-      debugPrint('🔄 Updating calendar with offset: $offset');
-
-      // Clear selected day when navigating months
-      await HomeWidget.saveWidgetData('selected_day', '0');
-      await updateCalendar(offset);
-      return;
-    }
-
-    // Handle day click
-    final dayStr = uri.queryParameters['day'];
-    if (dayStr != null) {
-      final day = int.tryParse(dayStr) ?? 0;
-      final offset = int.tryParse(offsetStr ?? '0') ?? 0;
-      debugPrint('📅 Day clicked: $day with offset: $offset');
-      await handleDayClickWithOffset(day, offset);
-      return;
-    }
-  }
-
-  /// Handle day click to update the date card with specific offset
-  @pragma('vm:entry-point')
-  static Future<void> handleDayClickWithOffset(int day, int offset) async {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) return;
-
-    try {
-      final today = DateTime.now();
-      final hijriToday = HijriDateTime.fromDateTime(today);
-
-      // Calculate display month using the provided offset
-      int targetYear = hijriToday.year;
-      int targetMonth = hijriToday.month + offset;
-
-      while (targetMonth > 12) {
-        targetMonth -= 12;
-        targetYear++;
-      }
-      while (targetMonth < 1) {
-        targetMonth += 12;
-        targetYear--;
-      }
-
-      // Create the clicked date
-      final clickedHijriDate = HijriDateTime(targetYear, targetMonth, day);
-      final clickedGregorianDate = clickedHijriDate.toDateTime();
-
-      // Update date displays
-      final hijriDateDisplay = '$day ${_getHijriMonthName(targetMonth)}';
-      final gregorianDateDisplay = _formatGregorianDate(clickedGregorianDate);
-
-      await HomeWidget.saveWidgetData('hijri_date_display', hijriDateDisplay);
-      await HomeWidget.saveWidgetData(
-        'gregorian_date_display',
-        gregorianDateDisplay,
-      );
-
-      // Save selected day for highlighting
-      await HomeWidget.saveWidgetData('selected_day', day.toString());
-
-      debugPrint(
-        '   Updated date display: $hijriDateDisplay • $gregorianDateDisplay',
-      );
-
-      // Update the widget
-      await HomeWidget.updateWidget(
-        androidName: widgetProvider,
-        iOSName: 'HijriCalendarWidget',
-        qualifiedAndroidName: 'com.bloom.wadhakir.$widgetProvider',
-      );
-
-      debugPrint('✅ Date card updated for day $day');
-    } catch (e) {
-      debugPrint('❌ Error handling day click: $e');
-    }
-  }
-
-  /// Setup background callback handler
-  @pragma('vm:entry-point')
-  static Future<void> setupBackgroundCallback() async {
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) return;
-
-    await HomeWidget.setAppGroupId('com.bloom.wadhakir');
-    await HomeWidget.registerInteractivityCallback(backgroundCallback);
   }
 }

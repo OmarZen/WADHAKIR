@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -188,8 +189,8 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                   ],
                 ),
                 const SizedBox(height: 12),
-                FilledButton(
-                  onPressed: () async {
+                FButton(
+                  onPress: () async {
                     await SharePlus.instance.share(
                       ShareParams(
                         text:
@@ -197,14 +198,6 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                       ),
                     );
                   },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
                   child: Text(
                     l10n?.translate('home.share_app') ?? 'مشاركة التطبيق',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -255,8 +248,10 @@ Widget _circleIconButton(
           } catch (e) {
             // Show error if nothing works
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Could not open link: ${url.toString()}')),
+            showFToast(
+              context: context,
+              title: Text('Could not open link: ${url.toString()}'),
+              variant: FToastVariant.destructive,
             );
           }
         }
@@ -289,9 +284,11 @@ Widget _supportChip(
           await launchUrl(uri, mode: LaunchMode.platformDefault);
         } catch (e) {
           if (!context.mounted) return;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Could not open link: $url')));
+          showFToast(
+            context: context,
+            title: Text('Could not open link: $url'),
+            variant: FToastVariant.destructive,
+          );
         }
       }
     },

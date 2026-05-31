@@ -7,10 +7,7 @@ class AppLockHadithQuote {
   final String message;
   final String reference;
 
-  const AppLockHadithQuote({
-    required this.message,
-    required this.reference,
-  });
+  const AppLockHadithQuote({required this.message, required this.reference});
 }
 
 class AppLockHadithQuotesService {
@@ -46,9 +43,7 @@ class AppLockHadithQuotesService {
     }
   }
 
-  Future<AppLockHadithQuote> getRandomQuote({
-    required bool useArabic,
-  }) async {
+  Future<AppLockHadithQuote> getRandomQuote({required bool useArabic}) async {
     try {
       final items = await _loadQuoteItems();
 

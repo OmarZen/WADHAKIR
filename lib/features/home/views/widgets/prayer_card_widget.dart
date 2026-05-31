@@ -164,10 +164,12 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                theme.colorScheme.primary
-                                    .withValues(alpha: 0.15),
-                                theme.colorScheme.primary
-                                    .withValues(alpha: 0.1),
+                                theme.colorScheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(12),
@@ -298,12 +300,13 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                   {
                     'name':
                         l10n?.translate('prayer_times.middle_of_the_night') ??
-                            'منتصف الليل',
+                        'منتصف الليل',
                     'time': prayerTimes.middleOfTheNight,
                     'icon': Icons.bedtime_outlined,
                   },
                   {
-                    'name': l10n?.translate(
+                    'name':
+                        l10n?.translate(
                           'prayer_times.last_third_of_the_night',
                         ) ??
                         'الثلث الأخير من الليل',
@@ -366,12 +369,13 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                   {
                     'label':
                         l10n?.translate('prayer_times.middle_of_the_night') ??
-                            'منتصف الليل',
+                        'منتصف الليل',
                     'time': prayerTimes.middleOfTheNight,
                     'icon': Icons.bedtime_outlined,
                   },
                   {
-                    'label': l10n?.translate(
+                    'label':
+                        l10n?.translate(
                           'prayer_times.last_third_of_the_night',
                         ) ??
                         'الثلث الأخير',
@@ -466,7 +470,8 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                             child: _PrayerTile(
                               label: mainPrayers[i]['label'] as String,
                               time: mainPrayers[i]['time'] as DateTime,
-                              isNext: (mainPrayers[i]['label'] as String) ==
+                              isNext:
+                                  (mainPrayers[i]['label'] as String) ==
                                   nextPrayerName,
                               iconData: mainPrayers[i]['icon'] as IconData,
                               size: size,
@@ -537,12 +542,14 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                         // Midnight prayer
                         Expanded(
                           child: _QiyamPrayerTile(
-                            label: l10n?.translate(
+                            label:
+                                l10n?.translate(
                                   'prayer_times.middle_of_the_night',
                                 ) ??
                                 'منتصف الليل',
                             time: qiyamPrayers[0]['time'] as DateTime,
-                            isNext: nextPrayerTime ==
+                            isNext:
+                                nextPrayerTime ==
                                 qiyamPrayers[0]['time'] as DateTime,
                             iconData: qiyamPrayers[0]['icon'] as IconData,
                             size: size,
@@ -555,12 +562,14 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                         // Last third prayer
                         Expanded(
                           child: _QiyamPrayerTile(
-                            label: l10n?.translate(
+                            label:
+                                l10n?.translate(
                                   'prayer_times.last_third_of_the_night',
                                 ) ??
                                 'الثلث الأخير',
                             time: qiyamPrayers[1]['time'] as DateTime,
-                            isNext: nextPrayerTime ==
+                            isNext:
+                                nextPrayerTime ==
                                 qiyamPrayers[1]['time'] as DateTime,
                             iconData: qiyamPrayers[1]['icon'] as IconData,
                             size: size,
@@ -700,22 +709,22 @@ class _PrayerTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isNext
                     ? isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
-                        : theme.colorScheme.onPrimary.withValues(alpha: 0.2)
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.2)
+                          : theme.colorScheme.onPrimary.withValues(alpha: 0.2)
                     : isDark
-                        ? theme.colorScheme.surface
-                        : theme.colorScheme.primary.withValues(alpha: 0.1),
+                    ? theme.colorScheme.surface
+                    : theme.colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 iconData,
                 color: isNext
                     ? isDark
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onPrimary
+                          ? theme.colorScheme.onSurface
+                          : theme.colorScheme.onPrimary
                     : isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                        : theme.colorScheme.primary,
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                    : theme.colorScheme.primary,
                 size: 16,
               ),
             ),
@@ -731,11 +740,11 @@ class _PrayerTile extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isNext
                     ? isDark
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onPrimary
+                          ? theme.colorScheme.onSurface
+                          : theme.colorScheme.onPrimary
                     : isDark
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onSurface,
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurface,
                 fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
                 fontSize: 11,
               ),
@@ -750,11 +759,11 @@ class _PrayerTile extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: isNext
                     ? (isDark
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onPrimary)
+                          ? theme.colorScheme.onSurface
+                          : theme.colorScheme.onPrimary)
                     : (isDark
-                        ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
-                        : theme.colorScheme.primary),
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
+                          : theme.colorScheme.primary),
                 fontSize: 10,
                 letterSpacing: 0.3,
               ),
@@ -804,11 +813,11 @@ class _QiyamPrayerTile extends StatelessWidget {
         border: Border.all(
           color: isNext
               ? isDark
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.primary
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.primary
               : isDark
-                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                  : theme.colorScheme.primary.withValues(alpha: 0.2),
+              ? theme.colorScheme.primary.withValues(alpha: 0.2)
+              : theme.colorScheme.primary.withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: isNext
@@ -832,11 +841,11 @@ class _QiyamPrayerTile extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: isNext
                     ? isDark
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onPrimary
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onPrimary
                     : isDark
-                        ? theme.colorScheme.onSurface
-                        : theme.colorScheme.primary,
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.primary,
                 fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
                 fontSize: 12,
               ),
@@ -847,11 +856,11 @@ class _QiyamPrayerTile extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: isNext
                   ? isDark
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimary
+                        : theme.colorScheme.onPrimary
                   : isDark
-                      ? theme.colorScheme.onSurface
-                      : theme.colorScheme.primary,
+                  ? theme.colorScheme.onSurface
+                  : theme.colorScheme.primary,
               fontSize: 12,
             ),
           ),
@@ -860,11 +869,11 @@ class _QiyamPrayerTile extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               color: isNext
                   ? isDark
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onPrimary
+                        ? theme.colorScheme.onPrimary
+                        : theme.colorScheme.onPrimary
                   : isDark
-                      ? theme.colorScheme.onSurface
-                      : theme.colorScheme.primary,
+                  ? theme.colorScheme.onSurface
+                  : theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),

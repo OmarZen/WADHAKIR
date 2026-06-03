@@ -1,13 +1,24 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import '../../core/localization/app_localizations.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/features/onboarding/view/screens/onboarding_screen.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 
-/// Wadhakir animated splash screen
+/// Brand palette for the splash. Fixed (theme-independent) so it always matches
+/// the native splash background and reads well in both light and dark mode.
+const Color _splashTop = Color(0xFF2C6BB0); // lighter brand blue
+const Color _splashMid = Color(0xFF20497D); // brand primary
+const Color _splashBottom = Color(0xFF0D1122); // deep navy
+
+/// Wadhakir animated splash screen.
+///
+/// Navigation is gated on readiness (intro animation done AND settings loaded)
+/// rather than a fixed timer, so the app moves on as soon as it can.
 class WadhakirSplashScreen extends StatefulWidget {
   const WadhakirSplashScreen({super.key});
 
@@ -25,16 +36,23 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
   late final Animation<double> _textOpacity;
   late final Animation<double> _backgroundExpand;
 
+  // Readiness gating
+  StreamSubscription<SettingsState>? _settingsSub;
+  bool _animationDone = false;
+  bool _settingsReady = false;
+  bool _onboardingCompleted = false;
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2500),
+      duration: const Duration(milliseconds: 1400),
     );
 
-    // Logo fade in and scale (0-800ms)
+    // Logo fade in (0-30%)
     _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
@@ -42,30 +60,31 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
       ),
     );
 
+    // Logo scale: rise with a gentle overshoot, then settle.
     _logoScale =
         TweenSequence<double>([
           TweenSequenceItem(
             tween: Tween(
-              begin: 0.5,
-              end: 1.15,
-            ).chain(CurveTween(curve: Curves.easeOut)),
-            weight: 1,
+              begin: 0.6,
+              end: 1.08,
+            ).chain(CurveTween(curve: Curves.easeOutCubic)),
+            weight: 60,
           ),
           TweenSequenceItem(
             tween: Tween(
-              begin: 1.15,
+              begin: 1.08,
               end: 1.0,
-            ).chain(CurveTween(curve: Curves.elasticOut)),
-            weight: 1,
+            ).chain(CurveTween(curve: Curves.easeInOut)),
+            weight: 40,
           ),
         ]).animate(
           CurvedAnimation(
             parent: _controller,
-            curve: const Interval(0.0, 0.5, curve: Curves.easeInOut),
+            curve: const Interval(0.0, 0.55, curve: Curves.easeInOut),
           ),
         );
 
-    // Text fade in (600-1400ms)
+    // Tagline fade in (24-56%)
     _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
@@ -73,7 +92,7 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
       ),
     );
 
-    // Background expand to full screen (1600-2500ms)
+    // Soft expanding bloom near the end (64-100%)
     _backgroundExpand = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
@@ -81,81 +100,72 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
       ),
     );
 
-    // Start animation after a brief delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _controller.forward();
-    });
-
-    // Navigate to main app after animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        // Remove this after testing - Loop animation for testing
-        // Future.delayed(const Duration(milliseconds: 1000), () {
-        //   if (mounted) {
-        //     _controller.reset();
-        //     _controller.forward();
-        //   }
-        // });
-
-        // Uncomment this when ready to enable navigation
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          if (!mounted) return;
-
-          try {
-            final settingsState = context.read<SettingsCubit>().state;
-
-            // If settings are loaded and onboarding not completed, go to onboarding
-            if (settingsState is SettingsLoaded &&
-                !settingsState.settings.onboardingCompleted) {
-              Navigator.of(context).pushReplacement(
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      const OnboardingScreen(),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(
-                          opacity: CurvedAnimation(
-                            parent: animation,
-                            curve: Curves.easeIn,
-                          ),
-                          child: child,
-                        );
-                      },
-                  transitionDuration: const Duration(milliseconds: 600),
-                ),
-              );
-              return;
-            }
-          } catch (_) {
-            // Ignore and fallthrough to main screen
-          }
-
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    const ScaffoldWithNavBar(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                      return FadeTransition(
-                        opacity: CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeIn,
-                        ),
-                        child: child,
-                      );
-                    },
-                transitionDuration: const Duration(milliseconds: 600),
-              ),
-            );
-          }
-        });
+        _animationDone = true;
+        _maybeNavigate();
       }
     });
+
+    // Start immediately — no artificial pre-delay.
+    _controller.forward();
+
+    // Hand off from the native splash on the first frame so there's no white
+    // flash between the OS splash and this Dart splash.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
+
+    // Readiness gate: capture settings now and listen for them to load.
+    final settingsCubit = context.read<SettingsCubit>();
+    _captureSettings(settingsCubit.state);
+    _settingsSub = settingsCubit.stream.listen(_captureSettings);
+
+    // Safety net: if settings never report Loaded (e.g. a load error), don't
+    // hang on the splash — proceed to the main screen once the intro has played.
+    Future.delayed(const Duration(seconds: 3), () {
+      if (_navigated || !mounted || _settingsReady) return;
+      _navigated = true;
+      _goTo(const ScaffoldWithNavBar());
+    });
+  }
+
+  void _captureSettings(SettingsState state) {
+    if (state is SettingsLoaded) {
+      _settingsReady = true;
+      _onboardingCompleted = state.settings.onboardingCompleted;
+      _maybeNavigate();
+    }
+  }
+
+  void _maybeNavigate() {
+    if (_navigated || !_animationDone || !_settingsReady || !mounted) return;
+    _navigated = true;
+    _goTo(
+      _onboardingCompleted
+          ? const ScaffoldWithNavBar()
+          : const OnboardingScreen(),
+    );
+  }
+
+  void _goTo(Widget destination) {
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => destination,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 500),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _settingsSub?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -164,8 +174,6 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       body: AnimatedBuilder(
@@ -173,19 +181,14 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
         builder: (context, child) {
           return Stack(
             children: [
-              // Animated background
-              _buildAnimatedBackground(size, theme, isDark),
-
-              // Main content
+              _buildAnimatedBackground(size),
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Animated logo with circle and crescent
                     _buildAnimatedLogo(),
-
-                    // Tagline
-                    _buildTagline(theme, l10n!),
+                    const SizedBox(height: 28),
+                    if (l10n != null) _buildTagline(l10n),
                   ],
                 ),
               ),
@@ -196,27 +199,44 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
     );
   }
 
-  Widget _buildAnimatedBackground(Size size, ThemeData theme, bool isDark) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 600),
+  Widget _buildAnimatedBackground(Size size) {
+    return Container(
       width: double.infinity,
       height: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary, // Primary blue
-            isDark ? Colors.black : theme.colorScheme.onSurface,
-          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [_splashTop, _splashMid, _splashBottom],
+          stops: [0.0, 0.5, 1.0],
         ),
       ),
       child: Stack(
         children: [
-          // Animated waves in background
+          // Subtle animated waves
           CustomPaint(size: size, painter: _WavesPainter(_controller.value)),
 
-          // Expanding radial bloom for a softer effect
+          // Soft radial glow behind the logo, fading in with it
+          Center(
+            child: Opacity(
+              opacity: _logoOpacity.value * 0.6,
+              child: Container(
+                width: size.width * 0.85,
+                height: size.width * 0.85,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.10),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Expanding bloom for a soft hand-off at the end
           if (_backgroundExpand.value > 0)
             Center(
               child: Transform.scale(
@@ -229,11 +249,10 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
                     gradient: RadialGradient(
                       colors: [
                         Colors.white.withValues(
-                          alpha: 0.12 * _backgroundExpand.value,
+                          alpha: 0.10 * _backgroundExpand.value,
                         ),
                         Colors.transparent,
                       ],
-                      stops: [0.0, 1.0],
                     ),
                   ),
                 ),
@@ -242,7 +261,7 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
 
           // Decorative Islamic mosque pattern overlay
           Opacity(
-            opacity: 0.5,
+            opacity: 0.4,
             child: CustomPaint(size: size, painter: _MosquePatternPainter()),
           ),
         ],
@@ -251,39 +270,34 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
   }
 
   Widget _buildAnimatedLogo() {
-    // Subtle wobble and scale for a lively logo
-    final wobble = math.sin(_controller.value * math.pi * 2) * 0.03;
-    return Transform.rotate(
-      angle: wobble,
-      child: Transform.scale(
-        scale: _logoScale.value,
-        child: Opacity(
-          opacity: _logoOpacity.value,
-          child: Container(
-            width: 180,
-            height: 180,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.transparent,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Image.asset('assets/logo.png', fit: BoxFit.contain),
+    return Transform.scale(
+      scale: _logoScale.value,
+      child: Opacity(
+        opacity: _logoOpacity.value,
+        child: Container(
+          width: 180,
+          height: 180,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.white.withValues(alpha: 0.06),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
+          child: Image.asset('assets/logo.png', fit: BoxFit.contain),
         ),
       ),
     );
   }
 
-  Widget _buildTagline(ThemeData theme, AppLocalizations l10n) {
+  Widget _buildTagline(AppLocalizations l10n) {
     return Opacity(
-      opacity: _textOpacity.value * 0.8,
+      opacity: _textOpacity.value,
       child: ScaleTransition(
         scale: Tween<double>(begin: 0.98, end: 1.0).animate(
           CurvedAnimation(
@@ -293,11 +307,15 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
         ),
         child: Text(
           l10n.translate("splash.tag_line"),
-          style: TextStyle(
+          textAlign: TextAlign.center,
+          style: const TextStyle(
             fontSize: 24,
-            color: theme.colorScheme.onPrimary,
+            color: Colors.white,
             fontFamily: 'Cairo',
             fontWeight: FontWeight.w900,
+            shadows: [
+              Shadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 2)),
+            ],
           ),
         ),
       ),
@@ -305,7 +323,9 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
   }
 }
 
-/// Custom painter for animated waves
+/// Custom painter for the subtle animated waves. Samples the wave coarsely
+/// (every ~10px) and only repaints when the animation value changes, so it
+/// stays cheap and smooth.
 class _WavesPainter extends CustomPainter {
   final double animationValue;
 
@@ -313,84 +333,82 @@ class _WavesPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint1 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.03)
+    final phase = animationValue * 2 * math.pi;
+
+    // Two lower waves rising from the bottom + one near the top.
+    _drawWave(
+      canvas,
+      size,
+      baseY: size.height * 0.70,
+      amplitude: 30,
+      freq: 2,
+      phase: phase,
+      color: Colors.white.withValues(alpha: 0.03),
+      fromTop: false,
+    );
+    _drawWave(
+      canvas,
+      size,
+      baseY: size.height * 0.75,
+      amplitude: 25,
+      freq: 2,
+      phase: phase + math.pi / 2,
+      color: Colors.white.withValues(alpha: 0.02),
+      fromTop: false,
+    );
+    _drawWave(
+      canvas,
+      size,
+      baseY: size.height * 0.30,
+      amplitude: 20,
+      freq: 3,
+      phase: -phase,
+      color: Colors.white.withValues(alpha: 0.03),
+      fromTop: true,
+    );
+  }
+
+  void _drawWave(
+    Canvas canvas,
+    Size size, {
+    required double baseY,
+    required double amplitude,
+    required double freq,
+    required double phase,
+    required Color color,
+    required bool fromTop,
+  }) {
+    final paint = Paint()
+      ..color = color
       ..style = PaintingStyle.fill;
 
-    final paint2 = Paint()
-      ..color = Colors.white.withValues(alpha: 0.02)
-      ..style = PaintingStyle.fill;
-
-    // First wave
-    final path1 = Path();
-    path1.moveTo(0, size.height * 0.7);
-
-    for (double i = 0; i <= size.width; i++) {
-      path1.lineTo(
-        i,
-        size.height * 0.7 +
-            30 *
-                math.sin(
-                  (i / size.width * 2 * math.pi) +
-                      (animationValue * 2 * math.pi),
-                ),
-      );
+    final path = Path()..moveTo(0, baseY);
+    const step = 10.0;
+    final w = size.width;
+    for (double x = 0; x <= w; x += step) {
+      final y = baseY + amplitude * math.sin((x / w * freq * math.pi) + phase);
+      path.lineTo(x, y);
     }
+    // Ensure the wave reaches the right edge.
+    path.lineTo(w, baseY + amplitude * math.sin((freq * math.pi) + phase));
 
-    path1.lineTo(size.width, size.height);
-    path1.lineTo(0, size.height);
-    path1.close();
-    canvas.drawPath(path1, paint1);
-
-    // Second wave (offset)
-    final path2 = Path();
-    path2.moveTo(0, size.height * 0.75);
-
-    for (double i = 0; i <= size.width; i++) {
-      path2.lineTo(
-        i,
-        size.height * 0.75 +
-            25 *
-                math.sin(
-                  (i / size.width * 2 * math.pi) +
-                      (animationValue * 2 * math.pi) +
-                      math.pi / 2,
-                ),
-      );
+    if (fromTop) {
+      path.lineTo(w, 0);
+      path.lineTo(0, 0);
+    } else {
+      path.lineTo(w, size.height);
+      path.lineTo(0, size.height);
     }
-
-    path2.lineTo(size.width, size.height);
-    path2.lineTo(0, size.height);
-    path2.close();
-    canvas.drawPath(path2, paint2);
-
-    // Third wave (top)
-    final path3 = Path();
-    path3.moveTo(0, size.height * 0.3);
-
-    for (double i = 0; i <= size.width; i++) {
-      path3.lineTo(
-        i,
-        size.height * 0.3 +
-            20 *
-                math.sin(
-                  (i / size.width * 3 * math.pi) -
-                      (animationValue * 2 * math.pi),
-                ),
-      );
-    }
-
-    path3.lineTo(size.width, 0);
-    path3.lineTo(0, 0);
-    path3.close();
-    canvas.drawPath(path3, paint1);
+    path.close();
+    canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(_WavesPainter oldDelegate) => true;
+  bool shouldRepaint(_WavesPainter oldDelegate) =>
+      oldDelegate.animationValue != animationValue;
 }
 
-/// Custom painter for mosque/masjid pattern
+/// Custom painter for the static mosque/masjid pattern.
 class _MosquePatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

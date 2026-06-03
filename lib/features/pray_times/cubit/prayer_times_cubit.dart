@@ -28,6 +28,15 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
 
   Timer? _prayerTimesTimer;
 
+  // The calendar day the currently-loaded times were computed for. Used by the
+  // periodic timer to detect a midnight rollover while the app stays open.
+  DateTime? _loadedForDay;
+
+  // True from construction until the eager initial load decides how to run.
+  // While set, widget-triggered loads coalesce into the initial load so a
+  // returning user never sees a spinner flash on the first frame.
+  bool _initialLoadClaimed = false;
+
   // Store time adjustments cache
   Map<String, int> _timeAdjustments = {
     'الفجر': 0,
@@ -57,14 +66,72 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
        super(const PrayerTimesInitial()) {
     // Load saved time adjustments
     _loadSavedTimeAdjustments();
+
+    // Eagerly load prayer times at app start. Because the repository now
+    // computes from the last saved location instantly (no blocking GPS fix),
+    // the state becomes Loaded before the home/prayer screens build — so there
+    // is no loading spinner on a returning launch. Then refresh the device
+    // location in the background and silently recompute only if it changed.
+    //
+    // Claim the load synchronously here so a widget-triggered load racing on
+    // the first frame coalesces instead of flashing a spinner.
+    _initialLoadClaimed = true;
+    // ignore: unawaited_futures
+    _initialLoad();
+  }
+
+  Future<void> _initialLoad() async {
+    // Show the loading state only on a genuine first run (no saved location, so
+    // a GPS fix is needed). Returning users have a saved location and compute
+    // instantly, so load silently.
+    final isFirstRun = await _repository.isFirstTimeUser();
+    _initialLoadClaimed = false;
+    await loadPrayerTimes(silent: !isFirstRun);
+
+    try {
+      final locationChanged = await _repository.refreshLocation();
+      if (locationChanged) {
+        await refreshSilently();
+      }
+    } catch (e) {
+      debugPrint('Background location refresh failed (non-fatal): $e');
+    }
+  }
+
+  /// Recompute prayer times without showing a loading spinner. Used for
+  /// in-app refreshes (location/method/madhab/adjustment changes, app resume,
+  /// date rollover) so the user never sees a spinner once times are loaded.
+  Future<void> refreshSilently() => loadPrayerTimes(silent: true);
+
+  /// Silently recompute only if the calendar day changed since the last load
+  /// (e.g. the app was backgrounded across midnight). No-op otherwise — cheap
+  /// to call on every app resume.
+  Future<void> refreshIfStale() async {
+    if (state is! PrayerTimesLoaded) return;
+    final now = DateTime.now();
+    final todayKey = DateTime(now.year, now.month, now.day);
+    if (_loadedForDay == null || todayKey.isAfter(_loadedForDay!)) {
+      await refreshSilently();
+    }
   }
 
   // Load prayer times for a week centered around today
-  Future<void> loadPrayerTimes() async {
-    emit(const PrayerTimesLoading());
+  Future<void> loadPrayerTimes({bool silent = false}) async {
+    // During the cold-start window the constructor owns the initial load; a
+    // widget-triggered load that races in here coalesces (the eager load will
+    // run with the right silent/loud choice) so there's no spinner flash.
+    if (_initialLoadClaimed) return;
+
+    // Only show the spinner on a genuine first load. Silent refreshes — and any
+    // refresh while times are already on screen — recompute in place and emit
+    // Loaded directly.
+    if (!silent && state is! PrayerTimesLoaded) {
+      emit(const PrayerTimesLoading());
+    }
 
     try {
       final today = DateTime.now();
+      _loadedForDay = DateTime(today.year, today.month, today.day);
       final startDate = today.subtract(const Duration(days: 3));
       final endDate = today.add(const Duration(days: 3));
 
@@ -258,7 +325,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   // Refresh prayer times and notifications
   Future<void> refreshPrayerTimes() async {
     try {
-      await loadPrayerTimes();
+      await loadPrayerTimes(silent: true);
 
       // Ensure widget is updated with latest data
       if (state is PrayerTimesLoaded) {
@@ -356,7 +423,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       await _setCalculationMethodUseCase(parameters);
 
       // Reload prayer times with new method
-      await loadPrayerTimes();
+      await loadPrayerTimes(silent: true);
     } catch (e) {
       emit(PrayerTimesError(e.toString()));
     }
@@ -378,7 +445,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       await _repository.setMadhab(madhab);
 
       // Reload prayer times with the new madhab setting
-      await loadPrayerTimes();
+      await loadPrayerTimes(silent: true);
     } catch (e) {
       emit(PrayerTimesError(e.toString()));
     }
@@ -389,17 +456,27 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     _prayerTimesTimer?.cancel();
 
     _prayerTimesTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      if (state is PrayerTimesLoaded) {
-        final currentState = state as PrayerTimesLoaded;
+      if (state is! PrayerTimesLoaded) return;
 
-        // Re-emit the state to update the countdown timer
-        emit(
-          PrayerTimesLoaded(
-            prayerTimes: currentState.prayerTimes,
-            selectedDate: currentState.selectedDate,
-          ),
-        );
+      // If the calendar day rolled over while the app stayed open, recompute
+      // silently (no spinner) so "today" and the countdown stay correct.
+      final now = DateTime.now();
+      final todayKey = DateTime(now.year, now.month, now.day);
+      if (_loadedForDay != null && todayKey.isAfter(_loadedForDay!)) {
+        // ignore: unawaited_futures
+        refreshSilently();
+        return;
       }
+
+      final currentState = state as PrayerTimesLoaded;
+
+      // Re-emit the state to update the countdown timer
+      emit(
+        PrayerTimesLoaded(
+          prayerTimes: currentState.prayerTimes,
+          selectedDate: currentState.selectedDate,
+        ),
+      );
     });
   }
 
@@ -485,7 +562,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         );
       } else {
         // If not in a loaded state, reload prayer times
-        await loadPrayerTimes();
+        await loadPrayerTimes(silent: true);
       }
     } catch (e) {
       debugPrint('Error setting prayer time adjustments: $e');

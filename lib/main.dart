@@ -127,21 +127,29 @@ void main() async {
   // Initialize SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
 
-  // Defer Quran Library initialization for faster cold start
-  // The Quran package requires its init to be completed before its screen builds.
-  await QuranLibrary.init();
+  // Overlap the two slowest remaining initializations (they're independent of
+  // each other) instead of running them one-after-another — faster cold start.
+  // Both are awaited before runApp. Kept after Hive in case QuranLibrary relies
+  // on Hive being initialized.
+  //
+  // QuranLibrary.init() must complete before the Quran screen builds.
+  final quranInitFuture = QuranLibrary.init();
 
-  // Initialize awesome_notifications + register ALL channels ONCE, up front.
-  // The fasting/wird cubits are eager (lazy:false) and schedule at cold start;
-  // if the plugin isn't initialized first their createNotification/setChannel
+  // awesome_notifications + register ALL channels ONCE, up front. The
+  // fasting/wird cubits are eager (lazy:false) and schedule at cold start; if
+  // the plugin isn't initialized first their createNotification/setChannel
   // calls fail silently. Bounded + guarded so it never blocks cold start.
-  try {
-    await NotificationRepositoryImpl().initialize().timeout(
-      const Duration(seconds: 3),
-    );
-  } catch (e) {
-    debugPrint('Notification init failed/timed out (non-fatal): $e');
-  }
+  final notificationInitFuture = NotificationRepositoryImpl()
+      .initialize()
+      .timeout(const Duration(seconds: 3))
+      .catchError((Object e) {
+        debugPrint('Notification init failed/timed out (non-fatal): $e');
+      });
+
+  // Ensure the Quran package and notification channels are ready before the
+  // app builds / eager cubits schedule notifications.
+  await quranInitFuture;
+  await notificationInitFuture;
 
   // Create repositories
   final appSettingsRepository = AppSettingsRepositoryImpl(sharedPreferences);
@@ -237,8 +245,8 @@ void main() async {
   // ignore: unawaited_futures
   FloatingDhikrService.instance.bootstrap();
 
-  // Remove splash screen once app is ready
-  FlutterNativeSplash.remove();
+  // The native splash is removed on the Dart splash's first frame
+  // (see WadhakirSplashScreen) so the hand-off is seamless with no white flash.
 }
 
 class MyApp extends StatelessWidget {
@@ -485,7 +493,14 @@ class _GlassWidgetResumeRefresherState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
-    final prayerState = context.read<PrayerTimesCubit>().state;
+    final prayerCubit = context.read<PrayerTimesCubit>();
+
+    // If the day rolled over while the app was backgrounded, silently recompute
+    // (no spinner) so today's times, countdown and scheduled adhan are correct.
+    // ignore: unawaited_futures
+    prayerCubit.refreshIfStale();
+
+    final prayerState = prayerCubit.state;
     if (prayerState is! PrayerTimesLoaded) return;
     final now = DateTime.now();
     final dateKey = DateTime(now.year, now.month, now.day);

@@ -5,6 +5,28 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1+19] - 2026-06-03
+
+### Changed
+
+- **Instant prayer times on launch** — returning users no longer see a loading spinner on cold start. The app now computes prayer times immediately from the last saved location instead of blocking on a GPS fix, then fetches a fresh device position in the background and silently recomputes only if you've moved materially (> ~500 m).
+- **No more spinner flashes** — changing the calculation method, madhab, or time adjustments, and in-app/resume refreshes, now recompute prayer times in place without flashing the loading state.
+- **Midnight rollover handled** — if the app stays open or is backgrounded across midnight, today's prayer times, the countdown, and the scheduled adhan now update automatically.
+- **Faster cold start** — the Quran library and notification-channel initialization now run concurrently instead of one after another.
+- **Seamless splash hand-off** — the native splash is now removed on the Dart splash's first frame, eliminating the brief white flash between them.
+- **Splash screen redesigned** — shorter (~1.4 s) and readiness-gated: it advances as soon as the intro animation finishes and settings are loaded rather than waiting on a fixed timer, with a refreshed brand-blue gradient. The native splash background colour was retuned to `#20497D` to match.
+
+### Fixed
+
+- **Android build break on AGP 9** — pinned `home_widget` to `0.9.1`. Version `0.9.2` stopped applying the Kotlin Gradle Plugin on AGP 9 (assuming built-in Kotlin is enabled), which left its native widget classes uncompiled and failed the Kotlin compile (`Unresolved reference 'HomeWidgetProvider'`) under our current build configuration. `0.9.1` is behaviorally identical here and applies the plugin like every other dependency.
+- **"View Calendar" button** in the fasting-reminders settings was hard to read in dark mode — adjusted its label colour and weight for proper contrast on the primary button.
+
+### Version
+
+- App version bumped from `3.2.0+18` to `3.2.1+19`.
+- MSIX version bumped from `3.2.0.0` to `3.2.1.0`.
+- Updated the displayed app version in the Arabic and English settings strings.
+
 ## [3.2.0+18] - 2026-05-31
 
 ### Added

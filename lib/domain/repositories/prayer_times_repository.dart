@@ -31,6 +31,12 @@ abstract class PrayerTimesRepository {
 
   Future<void> forceLocationUpdate();
 
+  /// Fetches a fresh device position in the background and persists it.
+  /// Returns true only when the new location differs materially (> ~500m)
+  /// from the one currently in use, so callers can silently recompute prayer
+  /// times only when it actually matters. Never throws.
+  Future<bool> refreshLocation();
+
   Future<bool> isLocationServiceEnabled();
 
   Future<bool> isUsingFallbackLocation();

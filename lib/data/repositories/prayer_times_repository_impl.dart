@@ -164,24 +164,27 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       return _coordinates!;
     }
 
+    // Saved-location-first: if a location was persisted on a previous run, use
+    // it immediately so prayer times compute instantly on cold start without
+    // blocking on a GPS fix (which can take 1-5s and caused the loading spinner
+    // on every app open). A fresh device position is fetched separately and in
+    // the background via [refreshLocation]; it only triggers a silent recompute
+    // when the location materially changed.
+    final savedCoordinates = await _loadLastSavedLocation();
+    if (savedCoordinates != null) {
+      debugPrint('Using last saved location (instant cold-start path)');
+      _coordinates = savedCoordinates;
+      return _coordinates!;
+    }
+
+    // First-ever run (no saved location yet): acquire a position now. This is
+    // the ONLY path that may briefly block the UI.
     try {
-      // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
       if (!serviceEnabled) {
         debugPrint(
-          'Location services are disabled. Attempting to load last saved location.',
-        );
-        // Try to load last saved location
-        final savedCoordinates = await _loadLastSavedLocation();
-        if (savedCoordinates != null) {
-          debugPrint('Using last saved location');
-          _coordinates = savedCoordinates;
-          return _coordinates!;
-        }
-        // If no saved location, use Mecca as default (don't throw exception)
-        debugPrint(
-          'No saved location found. Using Mecca coordinates as default.',
+          'Location services disabled and no saved location. Using Mecca default.',
         );
         _coordinates = Coordinates(21.422487, 39.826206);
         return _coordinates!;
@@ -204,18 +207,52 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
     } catch (e) {
       debugPrint('Error getting coordinates: $e');
 
-      // Try to load last saved location before falling back to Mecca
-      final savedCoordinates = await _loadLastSavedLocation();
-      if (savedCoordinates != null) {
-        debugPrint('Using last saved location');
-        _coordinates = savedCoordinates;
-        return _coordinates!;
-      }
-
-      // Default to Mecca coordinates as final fallback
+      // No saved location was available (checked above), so fall back to Mecca.
       debugPrint('Using Mecca coordinates as fallback');
       _coordinates = Coordinates(21.422487, 39.826206);
       return _coordinates!;
+    }
+  }
+
+  @override
+  Future<bool> refreshLocation() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return false;
+
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return false;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
+      );
+
+      final previous = _coordinates;
+      final fresh = Coordinates(position.latitude, position.longitude);
+      _coordinates = fresh;
+      await _saveLastLocation(fresh);
+
+      // No previous reference (e.g. first acquisition) — treat as changed.
+      if (previous == null) return true;
+
+      final movedMeters = Geolocator.distanceBetween(
+        previous.latitude,
+        previous.longitude,
+        fresh.latitude,
+        fresh.longitude,
+      );
+      final changed = movedMeters > 500;
+      debugPrint(
+        'refreshLocation: moved ${movedMeters.toStringAsFixed(0)}m, changed=$changed',
+      );
+      return changed;
+    } catch (e) {
+      // Non-fatal: keep the existing location and skip the silent recompute.
+      debugPrint('refreshLocation error (non-fatal): $e');
+      return false;
     }
   }
 

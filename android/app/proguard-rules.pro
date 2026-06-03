@@ -6,9 +6,14 @@
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
 
-# Awesome Notifications
--keep class com.awesome.notifications.** { *; }
--dontwarn com.awesome.notifications.**
+# Awesome Notifications (real Android package is me.carda.*; the old
+# com.awesome.notifications rule matched nothing). Also keep any notification
+# broadcast receivers/services so scheduled adhan/fasting/wird alarms survive
+# release minification and still fire after the device wakes/reboots.
+-keep class me.carda.awesome_notifications.** { *; }
+-dontwarn me.carda.awesome_notifications.**
+-keep public class * extends android.content.BroadcastReceiver { *; }
+-keep public class * extends android.app.Service { *; }
 
 # Just Audio & Audio Session
 -keep class com.ryanheise.just_audio.** { *; }

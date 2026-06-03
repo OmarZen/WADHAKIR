@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Keeps resources that are referenced ONLY from Dart code (via runtime strings
+  like `resource://drawable/ic_notification`) and are therefore invisible to
+  R8's resource shrinker. Without this, `isShrinkResources = true` strips the
+  notification small icon in release builds, so awesome_notifications can't
+  post any notification (test, adhan, fasting, wird) — the cause of "works in
+  debug, fails in release". `shrinkMode="safe"` keeps normal shrinking for
+  everything else.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification,@mipmap/launcher_icon"
+    tools:shrinkMode="safe" />

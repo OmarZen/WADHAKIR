@@ -706,6 +706,7 @@ class FastingReminderSettingsWidget extends StatelessWidget {
     int daysBeforeNotification,
     FastingRemindersCubit cubit,
   ) {
+    final isDark = theme.brightness == Brightness.dark;
     return SizedBox(
       width: double.infinity,
       child: FButton(
@@ -722,9 +723,15 @@ class FastingReminderSettingsWidget extends StatelessWidget {
         child: Text(
           l10n?.translate('fasting.view_calendar') ??
               (languageCode == 'ar' ? 'عرض التقويم' : 'View Calendar'),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: isDark
+              ? theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w600,
+                )
+              : theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
         ),
       ),
     );

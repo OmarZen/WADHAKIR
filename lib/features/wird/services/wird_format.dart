@@ -79,4 +79,13 @@ class WirdFormat {
     final month = _arabicMonths[date.month - 1];
     return '${toArabicDigits(date.day)} $month ${toArabicDigits(date.year)}';
   }
+
+  /// Grammatically-aware Arabic day count: "يوم واحد" / "يومين" /
+  /// "٣ أيام" / "١١ يومًا".
+  static String daysLabel(int n) {
+    if (n == 1) return 'يوم واحد';
+    if (n == 2) return 'يومين';
+    if (n >= 3 && n <= 10) return '${toArabicDigits(n)} أيام';
+    return '${toArabicDigits(n)} يومًا';
+  }
 }

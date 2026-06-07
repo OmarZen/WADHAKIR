@@ -18,23 +18,14 @@ class WirdProgressView extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final todayIndex = state.todayDayIndex;
-    final today = (todayIndex >= 0 && todayIndex < state.schedule.length)
-        ? state.schedule[todayIndex]
-        : null;
 
     return ListView(
       padding: const EdgeInsets.all(Spacing.lg),
       children: [
         WirdProgressHeader(state: state),
         const SizedBox(height: Spacing.lg),
-        if (today != null) ...[
-          WirdTodayCard(
-            day: today,
-            completed: state.plan.completedDayIndices.contains(today.dayIndex),
-          ),
-          const SizedBox(height: Spacing.lg),
-        ],
+        WirdTodayCard(state: state),
+        const SizedBox(height: Spacing.lg),
         // Full schedule link
         FItem(
           prefix: Icon(

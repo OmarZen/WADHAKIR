@@ -38,6 +38,62 @@ class WirdDay {
   int get pageCount => endPage - startPage + 1;
 }
 
+/// How the user is doing relative to their plan's schedule.
+enum WirdPace {
+  /// No active plan / not yet started.
+  notStarted,
+
+  /// Fewer days completed than the calendar expects → "متأخر".
+  behind,
+
+  /// Exactly on schedule.
+  onTrack,
+
+  /// More days completed than the calendar expects → "متقدم".
+  ahead,
+
+  /// All days completed — the ختمة is done.
+  finished,
+}
+
+/// Pace snapshot derived from a [WirdPlanModel] + its schedule and "now".
+///
+/// IMPORTANT: the arithmetic here is mirrored natively in
+/// `WirdProgressWidgetProvider.kt` (so the home-screen widget stays date-fresh
+/// without launching the app). Keep the two in sync.
+class WirdProgressStatus {
+  final WirdPace pace;
+
+  /// Number of days the user is behind (0 unless [pace] is behind).
+  final int daysLate;
+
+  /// Number of days the user is ahead (0 unless [pace] is ahead).
+  final int daysAhead;
+
+  /// First incomplete day index — the "current wird" the user should read.
+  /// -1 when finished or there is no schedule.
+  final int currentDayIndex;
+
+  /// Whether every day in the plan has been completed.
+  final bool isFinished;
+
+  const WirdProgressStatus({
+    required this.pace,
+    required this.daysLate,
+    required this.daysAhead,
+    required this.currentDayIndex,
+    required this.isFinished,
+  });
+
+  static const WirdProgressStatus notStarted = WirdProgressStatus(
+    pace: WirdPace.notStarted,
+    daysLate: 0,
+    daysAhead: 0,
+    currentDayIndex: -1,
+    isFinished: false,
+  );
+}
+
 /// Pure logic for turning a [WirdPlanModel] into a day-by-day schedule and
 /// deriving progress metrics. No persistence, no Flutter dependencies (other
 /// than the quran_library used purely for juz labels).
@@ -163,5 +219,69 @@ class WirdScheduleService {
     final today = _dateOnly(DateTime.now());
     final diff = today.difference(start).inDays;
     return diff.clamp(0, days.length - 1);
+  }
+
+  /// Index of the "current wird" — the first day NOT marked complete. This is
+  /// what the today card targets, and it only advances when the user marks the
+  /// current day complete (so the plan never silently rolls forward). Returns
+  /// -1 when every day is complete or there is no schedule.
+  int currentDayIndex(WirdPlanModel plan, [List<WirdDay>? schedule]) {
+    final days = schedule ?? buildSchedule(plan);
+    if (days.isEmpty) return -1;
+    for (var i = 0; i < days.length; i++) {
+      if (!plan.completedDayIndices.contains(i)) return i;
+    }
+    return -1; // all complete
+  }
+
+  /// Derive the pace (late / on-track / ahead / finished) and current day.
+  ///
+  /// Forgiving model: the start day is never counted "late". `expected` is the
+  /// number of *fully elapsed* days since the start, capped at the plan length;
+  /// being behind/ahead is measured by the volume of completed days vs that.
+  WirdProgressStatus progressStatus(
+    WirdPlanModel plan, [
+    List<WirdDay>? schedule,
+    DateTime? now,
+  ]) {
+    final days = schedule ?? buildSchedule(plan);
+    final total = days.length;
+    if (total == 0 || plan.planStartDate == null || !plan.isActive) {
+      return WirdProgressStatus.notStarted;
+    }
+
+    final start = _dateOnly(plan.planStartDate!);
+    final today = _dateOnly(now ?? DateTime.now());
+    final elapsed = today.difference(start).inDays;
+    final expected = elapsed.clamp(0, total);
+    final completed = plan.completedDayIndices
+        .where((i) => i >= 0 && i < total)
+        .length;
+
+    final current = currentDayIndex(plan, days);
+    final isFinished = completed >= total;
+    if (isFinished) {
+      return const WirdProgressStatus(
+        pace: WirdPace.finished,
+        daysLate: 0,
+        daysAhead: 0,
+        currentDayIndex: -1,
+        isFinished: true,
+      );
+    }
+
+    final daysLate = (expected - completed) > 0 ? expected - completed : 0;
+    final daysAhead = (completed - expected) > 0 ? completed - expected : 0;
+    final WirdPace pace = daysLate > 0
+        ? WirdPace.behind
+        : (daysAhead > 0 ? WirdPace.ahead : WirdPace.onTrack);
+
+    return WirdProgressStatus(
+      pace: pace,
+      daysLate: daysLate,
+      daysAhead: daysAhead,
+      currentDayIndex: current,
+      isFinished: false,
+    );
   }
 }

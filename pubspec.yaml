@@ -103,6 +103,14 @@ dependencies:
   # feature degrades gracefully to disabled there.
   flutter_overlay_window: ^0.5.0
 
+  # Islamic-backgrounds / share-card customization
+  flutter_colorpicker: ^1.1.0    # color wheel for custom background colors
+  image_picker: ^1.1.2           # pick a background photo from the device
+  gal: ^2.3.1                    # save the rendered image to the gallery
+  # Set-as-wallpaper is done natively via WallpaperManager (a small
+  # MethodChannel in MainActivity) — no third-party wallpaper plugin, which
+  # keeps the manifest free of live-wallpaper services/foreground-service perms.
+
 dependency_overrides:
   # share_plus 13.x needs win32 ^6.x but geolocator_linux pins win32 ^5.x.
   # Force win32 6.x; package_info_plus 9.x is incompatible with win32 6.x,

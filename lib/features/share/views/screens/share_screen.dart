@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/utils/widget_to_image.dart';
+import 'package:wadhakir/features/share/models/share_background.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/background_picker_bar.dart';
+import 'package:wadhakir/features/share/views/widgets/share_background_layer.dart';
 import 'package:wadhakir/features/share/views/widgets/share_card.dart';
 
 /// Full-screen preview for the branded share-image flow.
@@ -44,6 +45,29 @@ class _ShareScreenState extends State<ShareScreen> {
   /// sheet to dismiss. Disables buttons so the user can't trigger a second
   /// capture mid-flight.
   bool _isSharing = false;
+
+  /// User-chosen card background (gradient preset / color / mosque photo /
+  /// own photo). Seeded from the payload's background or the brand default.
+  late ShareBackground _background;
+
+  /// Completes when the current background's image is decoded into the cache,
+  /// so the capture isn't blank/stale. No-op for gradient/color backgrounds.
+  Future<void> _bgReady = Future<void>.value();
+
+  @override
+  void initState() {
+    super.initState();
+    _background = widget.payload.background ?? ShareBackground.brand;
+  }
+
+  void _onBackgroundChanged(ShareBackground background) {
+    setState(() => _background = background);
+    _bgReady = ShareBackgroundLayer.precache(background, context, width: 1080);
+  }
+
+  /// The payload actually rendered/captured — the caller's payload with the
+  /// currently-selected background applied.
+  SharePayload get _payload => widget.payload.withBackground(_background);
 
   // --------------------------------------------------------------- Actions
 
@@ -124,30 +148,15 @@ class _ShareScreenState extends State<ShareScreen> {
   ///
   /// Returns `null` on any failure — caller falls back to text share.
   Future<File?> _captureCardToFile() async {
-    try {
-      // Wait one frame so the RepaintBoundary is laid out (covers cases
-      // where the share button fires from a still-animating route).
-      await Future<void>.delayed(const Duration(milliseconds: 32));
-      if (!mounted) return null;
-      final boundary =
-          _boundaryKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
-      if (boundary == null) return null;
-      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      final ByteData? bytes = await image.toByteData(
-        format: ui.ImageByteFormat.png,
-      );
-      image.dispose();
-      if (bytes == null) return null;
-      final dir = await getTemporaryDirectory();
-      final ts = DateTime.now().millisecondsSinceEpoch;
-      final file = File('${dir.path}/wadhakir-share-$ts.png');
-      await file.writeAsBytes(bytes.buffer.asUint8List(), flush: true);
-      return file;
-    } catch (e, st) {
-      debugPrint('ShareScreen.capture error: $e\n$st');
-      return null;
-    }
+    // Make sure a freshly-chosen photo background is decoded before capture,
+    // otherwise the PNG can be blank or show the previous photo.
+    await _bgReady;
+    if (!mounted) return null;
+    return captureBoundaryToPngFile(
+      _boundaryKey,
+      pixelRatio: 3.0,
+      prefix: 'wadhakir-share',
+    );
   }
 
   /// Compose the full caption used by both the image and text share. The
@@ -202,7 +211,7 @@ class _ShareScreenState extends State<ShareScreen> {
             constraints: const BoxConstraints(maxWidth: 460),
             child: RepaintBoundary(
               key: _boundaryKey,
-              child: ShareCard(payload: widget.payload),
+              child: ShareCard(payload: _payload),
             ),
           ),
         ),
@@ -223,7 +232,7 @@ class _ShareScreenState extends State<ShareScreen> {
               height: height,
               child: RepaintBoundary(
                 key: _boundaryKey,
-                child: ShareCard(payload: widget.payload),
+                child: ShareCard(payload: _payload),
               ),
             );
           },
@@ -258,6 +267,29 @@ class _ShareScreenState extends State<ShareScreen> {
         child: Column(
           children: [
             Expanded(child: _buildPreview()),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.wallpaper_rounded,
+                    size: 16,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _tr('islamic_backgrounds.background', 'Background'),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            BackgroundPickerBar(
+              selected: _background,
+              onChanged: _onBackgroundChanged,
+            ),
             _ActionBar(
               isSharing: _isSharing,
               shareImageLabel: _tr('azkar.share_as_image', 'Share as image'),

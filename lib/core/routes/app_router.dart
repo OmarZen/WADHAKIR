@@ -11,6 +11,7 @@ import 'package:wadhakir/features/moon_phases/views/screens/moon_phases_calendar
 import 'package:wadhakir/features/share/models/share_payload.dart';
 import 'package:wadhakir/features/share/views/screens/share_screen.dart';
 import 'package:wadhakir/features/wird/views/screens/wird_screen.dart';
+import 'package:wadhakir/features/islamic_backgrounds/views/screens/islamic_backgrounds_screen.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -45,6 +46,11 @@ class AppRouter {
 
       case AppConstants.wirdRoute:
         return MaterialPageRoute(builder: (_) => const WirdScreen());
+
+      case AppConstants.islamicBackgroundsRoute:
+        return MaterialPageRoute(
+          builder: (_) => const IslamicBackgroundsScreen(),
+        );
 
       case AppConstants.shareRoute:
         // The share screen always receives a SharePayload via arguments;

@@ -56,5 +56,10 @@
 			<string>remote-notification</string>
 			<string>audio</string>
 		</array>
+		<!-- Islamic backgrounds: pick a background photo / save rendered image -->
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>اختر صورة من معرضك لاستخدامها كخلفية للتصميم.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>حفظ التصميم في معرض الصور.</string>
 	</dict>
 </plist>

@@ -29,8 +29,26 @@ class WirdLoaded extends WirdState {
   final DateTime? expectedCompletionDate;
   final int remainingDays;
 
-  /// Index of "today" within the schedule, or -1 if not applicable.
+  /// Index of "today" within the schedule (pure-calendar), or -1 if not
+  /// applicable. Used only for the schedule list's "today" highlight.
   final int todayDayIndex;
+
+  /// Index of the "current wird" — the first incomplete day the user should
+  /// read. Advances only when the current day is marked complete. -1 when
+  /// finished or inactive.
+  final int currentDayIndex;
+
+  /// Days behind schedule (متأخر). 0 unless [pace] is behind.
+  final int daysLate;
+
+  /// Days ahead of schedule (متقدم). 0 unless [pace] is ahead.
+  final int daysAhead;
+
+  /// Overall pace relative to the plan.
+  final WirdPace pace;
+
+  /// Whether every day has been completed (the ختمة is done).
+  final bool isFinished;
 
   const WirdLoaded({
     required this.plan,
@@ -41,6 +59,11 @@ class WirdLoaded extends WirdState {
     required this.expectedCompletionDate,
     required this.remainingDays,
     required this.todayDayIndex,
+    required this.currentDayIndex,
+    required this.daysLate,
+    required this.daysAhead,
+    required this.pace,
+    required this.isFinished,
   });
 
   @override
@@ -53,6 +76,11 @@ class WirdLoaded extends WirdState {
     expectedCompletionDate,
     remainingDays,
     todayDayIndex,
+    currentDayIndex,
+    daysLate,
+    daysAhead,
+    pace,
+    isFinished,
   ];
 }
 

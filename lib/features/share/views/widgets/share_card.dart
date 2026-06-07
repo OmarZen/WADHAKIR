@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
+import 'package:wadhakir/features/share/models/share_background.dart';
+import 'package:wadhakir/features/share/views/widgets/share_background_layer.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
 
 /// Visual brand card used both for the on-screen preview and the PNG that
@@ -24,33 +26,31 @@ class ShareCard extends StatelessWidget {
   // Fixed brand palette — same as `_OnboardingPalette` so the share card
   // visually descends from the onboarding flow the user just saw. No
   // theme-derived colors, no near-black.
-  static const Color _brandPrimary = Color(0xFF20497D);
-  static const Color _brandAccent = Color(0xFF3A6BA8);
   static const Color _brandGlow = Color(0xFF7BA7D9);
   static const Color _ink = Color(0xFFFFFFFF);
 
   @override
   Widget build(BuildContext context) {
+    final background = payload.background ?? ShareBackground.brand;
+
     // Passage: content-height card that grows with the text so long entries
     // (e.g. the 40 Hadith) stay readable instead of being shrunk to fit a
     // fixed box. The parent gives it a fixed width; height is intrinsic.
     if (payload.variant == ShareCardVariant.passage) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_brandPrimary, _brandAccent],
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: ShareBackgroundLayer(
+                background: background,
+                imageCacheWidth: 1080,
+              ),
             ),
-          ),
-          child: Stack(
-            children: [
-              const Positioned.fill(child: _DecorativeOrbs()),
-              _PassageForeground(payload: payload),
-            ],
-          ),
+            // Orbs only over flat backgrounds; photos get the scrim instead.
+            if (!background.isImage) const Positioned.fill(child: _DecorativeOrbs()),
+            _PassageForeground(payload: payload),
+          ],
         ),
       );
     }
@@ -59,16 +59,13 @@ class ShareCard extends StatelessWidget {
       aspectRatio: aspectRatio,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        child: ColoredBox(
-          color: _brandPrimary,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              const _BackgroundGradient(),
-              const _DecorativeOrbs(),
-              _CardForeground(payload: payload),
-            ],
-          ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            ShareBackgroundLayer(background: background, imageCacheWidth: 1080),
+            if (!background.isImage) const _DecorativeOrbs(),
+            _CardForeground(payload: payload),
+          ],
         ),
       ),
     );
@@ -155,25 +152,6 @@ class _PassageForeground extends StatelessWidget {
             repetitions: payload.repetitions,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Diagonal brand-blue gradient. Two stops only so the card reads as a
-/// single calm surface rather than a busy color field.
-class _BackgroundGradient extends StatelessWidget {
-  const _BackgroundGradient();
-
-  @override
-  Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [ShareCard._brandPrimary, ShareCard._brandAccent],
-        ),
       ),
     );
   }
@@ -321,32 +299,52 @@ class _Headline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rtl = payload.headlineRtl;
+    // Pick a starting size by length so long azkar fill the card width and
+    // wrap nicely instead of being shrunk to a tiny block. The text wraps to
+    // the full available width; FittedBox only scales DOWN if it's still too
+    // tall, so it never overflows.
+    final len = payload.headline.trim().length;
+    final double base = len < 40
+        ? 32
+        : len < 90
+        ? 26
+        : len < 160
+        ? 21
+        : len < 280
+        ? 17
+        : 14;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 380),
-          child: Text(
-            payload.headline,
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
-            style: const TextStyle(
-              color: ShareCard._ink,
-              fontFamily: 'ScheherazadeNew',
-              fontSize: 32,
-              height: 1.7,
-              fontWeight: FontWeight.w600,
-              shadows: [
-                Shadow(
-                  color: Color(0x40000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final maxW = c.maxWidth.isFinite ? c.maxWidth : 360.0;
+          return FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxW),
+              child: Text(
+                payload.headline,
+                textAlign: TextAlign.center,
+                textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+                style: TextStyle(
+                  color: ShareCard._ink,
+                  fontFamily: rtl ? 'ScheherazadeNew' : 'Almarai',
+                  fontSize: base,
+                  height: 1.7,
+                  fontWeight: FontWeight.w600,
+                  shadows: const [
+                    Shadow(
+                      color: Color(0x40000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

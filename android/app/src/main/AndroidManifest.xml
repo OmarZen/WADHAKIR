@@ -31,6 +31,12 @@
     <!-- Permissions for audio streaming -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Islamic backgrounds: set wallpaper + save rendered image to gallery -->
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+
     <!-- Permissions for notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -51,7 +57,8 @@
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -231,9 +238,23 @@
                 android:resource="@xml/glass_clock_widget_info" />
         </receiver>
 
+        <!-- Wird Progress Widget -->
+        <receiver
+            android:name=".WirdProgressWidgetProvider"
+            android:label="ورد القرآن"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/wird_progress_widget_info" />
+        </receiver>
+
         <!-- Home Widget Background Receiver -->
-        <receiver 
-            android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver" 
+        <receiver
+            android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="es.antonborri.home_widget.action.BACKGROUND" />

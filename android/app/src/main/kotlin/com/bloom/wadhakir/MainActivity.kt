@@ -1,10 +1,12 @@
 package com.bloom.wadhakir
 
 import android.app.AppOpsManager
+import android.app.WallpaperManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -21,6 +23,7 @@ class MainActivity : AudioServiceActivity() {
     private val widgetChannel = "com.bloom.wadhakir/widget_navigation"
     private val appLockChannel = "com.bloom.wadhakir/app_lock"
     private val floatingDhikrChannel = "com.bloom.wadhakir/floating_dhikr"
+    private val wallpaperChannel = "com.bloom.wadhakir/wallpaper"
     
     override fun onCreate(savedInstanceState: Bundle?) {
         // Enable edge-to-edge display for Android 15 (API 35) compatibility
@@ -170,6 +173,39 @@ class MainActivity : AudioServiceActivity() {
                 "isRunning" -> result.success(FloatingDhikrService.isEnabled(this))
                 else -> result.notImplemented()
             }
+        }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, wallpaperChannel).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "setFromFile" -> {
+                    val path = call.argument<String>("path")
+                    val target = call.argument<String>("target") ?: "both"
+                    result.success(setWallpaperFromFile(path, target))
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    /** Sets a static wallpaper from a PNG/JPEG file path for home/lock/both. */
+    private fun setWallpaperFromFile(path: String?, target: String): Boolean {
+        if (path.isNullOrBlank()) return false
+        return try {
+            val bitmap = BitmapFactory.decodeFile(path) ?: return false
+            val wm = WallpaperManager.getInstance(applicationContext)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                val which = when (target) {
+                    "home" -> WallpaperManager.FLAG_SYSTEM
+                    "lock" -> WallpaperManager.FLAG_LOCK
+                    else -> WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
+                }
+                wm.setBitmap(bitmap, null, true, which)
+            } else {
+                wm.setBitmap(bitmap)
+            }
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 

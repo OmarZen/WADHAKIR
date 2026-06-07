@@ -45,6 +45,12 @@ class WirdPlanModel extends Equatable {
   /// [WirdGoalMode.finishByDate] mode. Kept for forward-compat.
   final DateTime? targetDate;
 
+  /// Last Mushaf page (1..604) the user stopped reading on, used to resume the
+  /// reader at the exact page instead of restarting at the day's first page.
+  /// Null when the user has not opened the reader yet, or after the current
+  /// day is marked complete (so the next day resumes at its own start page).
+  final int? lastReadPage;
+
   const WirdPlanModel({
     required this.isActive,
     required this.goalMode,
@@ -56,6 +62,7 @@ class WirdPlanModel extends Equatable {
     required this.completedDayIndices,
     this.planStartDate,
     this.targetDate,
+    this.lastReadPage,
   });
 
   /// Default (inactive) plan — the setup screen is shown.
@@ -71,6 +78,7 @@ class WirdPlanModel extends Equatable {
       completedDayIndices: <int>{},
       planStartDate: null,
       targetDate: null,
+      lastReadPage: null,
     );
   }
 
@@ -85,6 +93,7 @@ class WirdPlanModel extends Equatable {
     Set<int>? completedDayIndices,
     Object? planStartDate = _undefined,
     Object? targetDate = _undefined,
+    Object? lastReadPage = _undefined,
   }) {
     return WirdPlanModel(
       isActive: isActive ?? this.isActive,
@@ -101,6 +110,9 @@ class WirdPlanModel extends Equatable {
       targetDate: targetDate == _undefined
           ? this.targetDate
           : targetDate as DateTime?,
+      lastReadPage: lastReadPage == _undefined
+          ? this.lastReadPage
+          : lastReadPage as int?,
     );
   }
 
@@ -116,6 +128,7 @@ class WirdPlanModel extends Equatable {
       'completedDayIndices': completedDayIndices.toList(),
       'planStartDate': planStartDate?.toIso8601String(),
       'targetDate': targetDate?.toIso8601String(),
+      'lastReadPage': lastReadPage,
     };
   }
 
@@ -147,6 +160,7 @@ class WirdPlanModel extends Equatable {
       targetDate: json['targetDate'] != null
           ? DateTime.tryParse(json['targetDate'] as String)
           : null,
+      lastReadPage: json['lastReadPage'] as int?,
     );
   }
 
@@ -162,6 +176,7 @@ class WirdPlanModel extends Equatable {
     completedDayIndices,
     planStartDate,
     targetDate,
+    lastReadPage,
   ];
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:wadhakir/features/share/models/share_background.dart';
 
 /// How the branded share card lays out its text.
 ///
@@ -54,6 +55,11 @@ class SharePayload {
   /// English-only hadith).
   final bool headlineRtl;
 
+  /// Card background. Null falls back to the brand gradient. The share screen
+  /// lets the user swap this for a gradient preset, solid color, mosque photo
+  /// or one of their own photos.
+  final ShareBackground? background;
+
   const SharePayload({
     required this.headline,
     this.categoryLabel,
@@ -63,5 +69,19 @@ class SharePayload {
     this.secondaryText,
     this.variant = ShareCardVariant.compact,
     this.headlineRtl = true,
+    this.background,
   });
+
+  /// Copy with a different [background] (the only field the editor mutates).
+  SharePayload withBackground(ShareBackground? background) => SharePayload(
+    headline: headline,
+    categoryLabel: categoryLabel,
+    repetitions: repetitions,
+    reference: reference,
+    captionOverride: captionOverride,
+    secondaryText: secondaryText,
+    variant: variant,
+    headlineRtl: headlineRtl,
+    background: background,
+  );
 }

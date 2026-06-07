@@ -5,6 +5,7 @@ import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/wird/cubit/wird_state.dart';
 import 'package:wadhakir/features/wird/services/quran_structure.dart';
 import 'package:wadhakir/features/wird/services/wird_format.dart';
+import 'package:wadhakir/features/wird/services/wird_schedule_service.dart';
 
 /// Progress summary card ("تقدّمك"): percent, pages read, expected
 /// completion date and remaining days.
@@ -85,8 +86,62 @@ class WirdProgressHeader extends StatelessWidget {
               color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
             ),
           ),
+          ..._paceLine(context),
         ],
       ),
     );
+  }
+
+  /// "متأخر / متقدم / على المسار / تمت الختمة" line under the stats. Hidden
+  /// when there is no active pace (notStarted).
+  List<Widget> _paceLine(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    if (state.pace == WirdPace.notStarted) return const [];
+
+    final (String emoji, String text) = switch (state.pace) {
+      WirdPace.finished => ('🎉', l10n?.translate('wird.finished_short') ?? 'تمت الختمة'),
+      WirdPace.behind => (
+        '😔',
+        '${l10n?.translate('wird.behind_by') ?? 'أنت متأخر بـ'} '
+            '${WirdFormat.daysLabel(state.daysLate)}',
+      ),
+      WirdPace.ahead => (
+        '🌟',
+        '${l10n?.translate('wird.ahead_by') ?? 'أنت متقدم بـ'} '
+            '${WirdFormat.daysLabel(state.daysAhead)}',
+      ),
+      _ => ('📖', l10n?.translate('wird.on_track') ?? 'أنت على المسار'),
+    };
+
+    return [
+      const SizedBox(height: Spacing.sm),
+      Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.sm,
+          vertical: Spacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onPrimary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(Radii.pill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: Spacing.xs),
+            Flexible(
+              child: Text(
+                text,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
   }
 }

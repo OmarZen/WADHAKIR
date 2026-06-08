@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/features/share/models/share_background.dart';
 import 'package:wadhakir/features/share/views/widgets/share_background_layer.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
@@ -389,14 +388,19 @@ class _Footer extends StatelessWidget {
           ),
           const SizedBox(height: 14),
         ],
-        Text(
-          AppConstants.websiteLabel,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.92),
-            fontFamily: 'Almarai',
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
+        SizedBox(
+          width: 30,
+          height: 30,
+          child: Image.asset(
+            'assets/logo.png',
+            fit: BoxFit.contain,
+            // If the asset is missing the share still renders — a generic
+            // mosque glyph keeps the card branded.
+            errorBuilder: (_, __, ___) => const Icon(
+              Icons.mosque_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
           ),
         ),
       ],

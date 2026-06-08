@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/features/share/models/share_background.dart';
 import 'package:wadhakir/features/share/views/widgets/share_background_layer.dart';
 
@@ -131,48 +130,32 @@ class IslamicCanvas extends StatelessWidget {
   }
 }
 
-/// Small fixed badge at the bottom of the canvas: app logo + wordmark in a
-/// subtle translucent pill (always present, like the reference design).
+/// Small fixed badge at the bottom of the canvas: app logo only, in a subtle
+/// translucent circular pill (always present, like the reference design).
 class _LogoBadge extends StatelessWidget {
   const _LogoBadge();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.32),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: Image.asset(
-              'assets/logo.png',
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.mosque_rounded,
-                size: 14,
-                color: Colors.white,
-              ),
-            ),
+      child: SizedBox(
+        width: 16,
+        height: 16,
+        child: Image.asset(
+          'assets/logo.png',
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.mosque_rounded,
+            size: 12,
+            color: Colors.white,
           ),
-          const SizedBox(width: 6),
-          const Text(
-            AppConstants.appName,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Almarai',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

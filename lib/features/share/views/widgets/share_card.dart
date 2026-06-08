@@ -224,7 +224,7 @@ class _CardForeground extends StatelessWidget {
   }
 }
 
-/// Top strip — Wadhakir logo + wordmark + a subtle ornament line.
+/// Top strip — Wadhakir logo (icon only) + a subtle ornament line.
 class _BrandStrip extends StatelessWidget {
   const _BrandStrip();
 
@@ -236,8 +236,8 @@ class _BrandStrip extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.16),
@@ -246,7 +246,7 @@ class _BrandStrip extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               child: Image.asset(
                 'assets/logo.png',
                 fit: BoxFit.contain,
@@ -255,18 +255,8 @@ class _BrandStrip extends StatelessWidget {
                 errorBuilder: (_, __, ___) => const Icon(
                   Icons.mosque_rounded,
                   color: ShareCard._ink,
-                  size: 18,
+                  size: 13,
                 ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              AppConstants.appName,
-              style: TextStyle(
-                color: ShareCard._ink,
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                letterSpacing: 1.2,
               ),
             ),
           ],

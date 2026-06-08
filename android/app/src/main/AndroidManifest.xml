@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Queries for intent handling (Android 11+) -->
     <queries>
@@ -28,14 +29,23 @@
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
 
+    <!-- Camera for the Qibla AR (camera overlay) mode; not required so devices
+         without a camera can still install and use the compass. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
     <!-- Permissions for audio streaming -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <!-- Islamic backgrounds: set wallpaper + save rendered image to gallery -->
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <!-- camera_android_camerax declares this with maxSdkVersion=28; keep the
+         app's 29 and tell the merger ours wins. -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29" />
+        android:maxSdkVersion="29"
+        tools:replace="android:maxSdkVersion" />
 
     <!-- Permissions for notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -250,6 +260,20 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/wird_progress_widget_info" />
+        </receiver>
+
+        <!-- Daily Inspiration (Verse/Dua of the Day) Widget -->
+        <receiver
+            android:name=".DailyInspirationWidgetProvider"
+            android:label="آية وذِكر اليوم"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/daily_inspiration_widget_info" />
         </receiver>
 
         <!-- Home Widget Background Receiver -->

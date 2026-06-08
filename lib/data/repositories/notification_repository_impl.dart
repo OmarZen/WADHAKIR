@@ -120,6 +120,9 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   // because `initialize()` REPLACES all channels — otherwise the wird
   // channel (added via setChannel) would be wiped whenever this runs.
   static const String _channelKeyWird = 'wird_reminders_channel';
+  // Must match `DailyInspirationNotificationService.channelKey`. Same reason as
+  // wird — registered here so the eager cold-start initialize() doesn't wipe it.
+  static const String _channelKeyDailyInspiration = 'daily_inspiration_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
   // Notification IDs for each prayer
@@ -273,6 +276,21 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
           channelKey: _channelKeyWird,
           channelName: 'تذكير الورد',
           channelDescription: 'تذكير الورد اليومي من القرآن الكريم',
+          importance: NotificationImportance.High,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
+        ),
+        // Daily inspiration (Verse/Dua of the Day) reminder channel.
+        NotificationChannel(
+          channelKey: _channelKeyDailyInspiration,
+          channelName: 'آية وذِكر اليوم',
+          channelDescription: 'تذكير يومي بآية أو دعاء أو حديث',
           importance: NotificationImportance.High,
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),

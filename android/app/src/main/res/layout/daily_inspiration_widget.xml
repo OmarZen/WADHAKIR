@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/daily_widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/glass_widget_bg"
+    android:padding="12dp"
+    android:gravity="center"
+    android:layoutDirection="rtl">
+
+    <TextView
+        android:id="@+id/daily_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="آية وذِكر اليوم"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/almarai"
+        android:letterSpacing="0.02"
+        android:singleLine="true"
+        android:gravity="center"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/daily_arabic"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:text="افتح التطبيق لعرض ذِكر اليوم"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp"
+        android:fontFamily="@font/almarai"
+        android:gravity="center"
+        android:maxLines="4"
+        android:ellipsize="end"
+        android:lineSpacingMultiplier="1.2"
+        android:textDirection="rtl"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/daily_reference"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text=""
+        android:textColor="#9FB0CE"
+        android:textSize="10.5sp"
+        android:fontFamily="@font/almarai"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:textDirection="rtl"
+        android:includeFontPadding="false" />
+</LinearLayout>

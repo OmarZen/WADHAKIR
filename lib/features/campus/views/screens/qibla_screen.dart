@@ -10,6 +10,7 @@ import 'package:wadhakir/data/repositories/qibla_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_qibla_direction_usecase.dart';
 import 'package:wadhakir/domain/usecases/request_qibla_permissions_usecase.dart';
 import 'package:wadhakir/features/campus/views/widgets/qibla_compass_widget.dart';
+import 'package:wadhakir/features/campus/views/screens/qibla_ar_screen.dart';
 import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
 
 // Modern color scheme for Qibla screen that matches the app theme
@@ -342,6 +343,23 @@ class _QiblaScreenState extends State<QiblaScreen>
               ],
             ),
           ),
+          // AR camera mode (hidden on desktop / when no compass sensor).
+          if (!isDesktop && qiblaRepository.isCompassAvailable) ...[
+            Container(
+              decoration: BoxDecoration(
+                color: qiblaPrimaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.view_in_ar_rounded),
+                color: qiblaPrimaryColor,
+                iconSize: isDesktop ? 24.0 : 20.0,
+                onPressed: _openArMode,
+                tooltip: l10n?.translate('campus.ar_mode') ?? 'وضع الكاميرا',
+              ),
+            ),
+            SizedBox(width: isDesktop ? 12.0 : size.width * 0.02),
+          ],
           Container(
             decoration: BoxDecoration(
               color: qiblaPrimaryColor.withValues(alpha: 0.1),
@@ -358,6 +376,20 @@ class _QiblaScreenState extends State<QiblaScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Push the AR camera screen, reusing the live [QiblaCubit] instance so the
+  /// overlay shares the same heading/bearing stream.
+  void _openArMode() {
+    if (!qiblaRepository.isCompassAvailable) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: qiblaCubit,
+          child: const QiblaArScreen(),
+        ),
       ),
     );
   }

@@ -51,6 +51,8 @@ import 'package:wadhakir/domain/usecases/set_wird_plan_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_wird_plan_stream_usecase.dart';
 import 'package:wadhakir/domain/usecases/clear_wird_plan_usecase.dart';
 import 'package:wadhakir/features/wird/cubit/wird_cubit.dart';
+import 'package:wadhakir/data/repositories/daily_inspiration_settings_repository_impl.dart';
+import 'package:wadhakir/features/daily_inspiration/cubit/daily_inspiration_cubit.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_platform_service.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_prayer_window.dart';
 import 'package:wadhakir/features/floating_dhikr/service/floating_dhikr_overlay_entry.dart';
@@ -205,6 +207,11 @@ void main() async {
   final getWirdPlanStreamUseCase = GetWirdPlanStreamUseCase(wirdRepository);
   final clearWirdPlanUseCase = ClearWirdPlanUseCase(wirdRepository);
 
+  // Daily inspiration (Verse/Dua of the Day) settings repository.
+  final dailyInspirationRepository = DailyInspirationSettingsRepositoryImpl(
+    sharedPreferences,
+  );
+
   // Defer fasting notification service initialization
   // It will be lazily initialized when fasting reminders are accessed
 
@@ -236,6 +243,8 @@ void main() async {
       setWirdPlanUseCase: setWirdPlanUseCase,
       getWirdPlanStreamUseCase: getWirdPlanStreamUseCase,
       clearWirdPlanUseCase: clearWirdPlanUseCase,
+      // Daily inspiration (Verse/Dua of the Day)
+      dailyInspirationRepository: dailyInspirationRepository,
     ),
   );
 
@@ -280,6 +289,9 @@ class MyApp extends StatelessWidget {
   final GetWirdPlanStreamUseCase getWirdPlanStreamUseCase;
   final ClearWirdPlanUseCase clearWirdPlanUseCase;
 
+  // Daily inspiration (Verse/Dua of the Day)
+  final DailyInspirationSettingsRepositoryImpl dailyInspirationRepository;
+
   final _appLockPrayerSync = _AppLockPrayerSync(const AppLockPlatformService());
 
   MyApp({
@@ -309,6 +321,8 @@ class MyApp extends StatelessWidget {
     required this.setWirdPlanUseCase,
     required this.getWirdPlanStreamUseCase,
     required this.clearWirdPlanUseCase,
+    // Daily inspiration (Verse/Dua of the Day)
+    required this.dailyInspirationRepository,
   });
 
   @override
@@ -366,6 +380,12 @@ class MyApp extends StatelessWidget {
             clearPlanUseCase: clearWirdPlanUseCase,
           ),
           // Eager so the daily reminder is (re)scheduled at app start.
+          lazy: false,
+        ),
+        BlocProvider<DailyInspirationCubit>(
+          create: (_) => DailyInspirationCubit(dailyInspirationRepository),
+          // Eager so today's notification is (re)scheduled and the home
+          // widget is pushed at cold start.
           lazy: false,
         ),
       ],
@@ -493,6 +513,12 @@ class _GlassWidgetResumeRefresherState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+
+    // Daily inspiration: if the day rolled over while backgrounded, advance to
+    // today's item and reschedule the notification with the new body.
+    // ignore: unawaited_futures
+    context.read<DailyInspirationCubit>().refreshForToday();
+
     final prayerCubit = context.read<PrayerTimesCubit>();
 
     // If the day rolled over while the app was backgrounded, silently recompute

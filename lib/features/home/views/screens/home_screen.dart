@@ -10,6 +10,7 @@ import 'package:wadhakir/features/home/views/widgets/more_islamic_excerpts_widge
 import 'package:wadhakir/features/home/views/widgets/palestine_support_card_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/daily_progress_strip.dart';
 import 'package:wadhakir/features/home/views/widgets/religious_occasions_strip.dart';
+import 'package:wadhakir/features/daily_inspiration/views/widgets/daily_inspiration_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -55,6 +56,8 @@ class HomeScreenContent extends StatelessWidget {
               SliverToBoxAdapter(child: CompactPrayerCardWidget()),
               // Daily progress (wird / adhkar / nawafil)
               const SliverToBoxAdapter(child: DailyProgressStrip()),
+              // Verse/Dua of the Day card
+              const SliverToBoxAdapter(child: DailyInspirationCard()),
               // Feature directory grouped into labelled sections
               const SliverToBoxAdapter(child: MoreIslamicExcerptsWidget()),
               // Religious occasions strip

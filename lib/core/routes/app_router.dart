@@ -12,6 +12,8 @@ import 'package:wadhakir/features/share/models/share_payload.dart';
 import 'package:wadhakir/features/share/views/screens/share_screen.dart';
 import 'package:wadhakir/features/wird/views/screens/wird_screen.dart';
 import 'package:wadhakir/features/islamic_backgrounds/views/screens/islamic_backgrounds_screen.dart';
+import 'package:wadhakir/features/zakat/views/screens/zakat_screen.dart';
+import 'package:wadhakir/features/daily_inspiration/views/screens/daily_inspiration_settings_page.dart';
 
 class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -50,6 +52,14 @@ class AppRouter {
       case AppConstants.islamicBackgroundsRoute:
         return MaterialPageRoute(
           builder: (_) => const IslamicBackgroundsScreen(),
+        );
+
+      case AppConstants.zakatRoute:
+        return MaterialPageRoute(builder: (_) => const ZakatScreen());
+
+      case AppConstants.dailyInspirationSettingsRoute:
+        return MaterialPageRoute(
+          builder: (_) => const DailyInspirationSettingsPage(),
         );
 
       case AppConstants.shareRoute:

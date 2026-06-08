@@ -6,6 +6,7 @@ import 'grids/fasting_calendar_grid_item.dart';
 import 'grids/nearest_mosque_grid_item.dart';
 import 'grids/islamic_backgrounds_grid_item.dart';
 import 'grids/wird_grid_item.dart';
+import 'grids/zakat_grid_item.dart';
 import 'grids/hadith_nawawi_grid_item.dart';
 import 'grids/raqia_grid_item.dart';
 import 'grids/tasbih_grid_item.dart';
@@ -57,6 +58,7 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
           items: const [
             FastingCalendarGridItem(),
             MoonPhasesGridItem(),
+            ZakatGridItem(),
             NearestMosqueGridItem(),
             IslamicBackgroundsGridItem(),
           ],

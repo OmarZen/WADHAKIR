@@ -14,6 +14,7 @@ import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
+import 'package:wadhakir/data/repositories/daily_inspiration_settings_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
@@ -93,6 +94,9 @@ void main() {
         ),
         clearWirdPlanUseCase: ClearWirdPlanUseCase(
           WirdRepositoryImpl(sharedPreferences),
+        ),
+        dailyInspirationRepository: DailyInspirationSettingsRepositoryImpl(
+          sharedPreferences,
         ),
       ),
     );

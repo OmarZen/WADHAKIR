@@ -8,8 +8,14 @@ import 'package:forui/forui.dart';
 /// Built on forui's [FTappable] for consistent press semantics and styled
 /// from the app's [ColorScheme] so every tile shares one calm, on-brand look.
 class FeatureGridCard extends StatelessWidget {
-  /// Leading icon shown in the tinted circular chip.
-  final IconData icon;
+  /// Leading icon shown in the tinted circular chip. Optional when
+  /// [iconBuilder] is supplied (e.g. for non-[IconData] glyphs like HugeIcons).
+  final IconData? icon;
+
+  /// Builds a custom icon when the glyph isn't a plain [IconData] (e.g. a
+  /// `HugeIcon`). Receives the resolved tint [color] and [size] so it matches
+  /// the standard [Icon] rendering. Takes precedence over [icon].
+  final Widget Function(Color color, double size)? iconBuilder;
 
   /// Card label.
   final String label;
@@ -22,11 +28,15 @@ class FeatureGridCard extends StatelessWidget {
 
   const FeatureGridCard({
     super.key,
-    required this.icon,
+    this.icon,
+    this.iconBuilder,
     required this.label,
     required this.onTap,
     this.trailing,
-  });
+  }) : assert(
+         icon != null || iconBuilder != null,
+         'Provide either icon or iconBuilder',
+       );
 
   @override
   Widget build(BuildContext context) {
@@ -51,12 +61,14 @@ class FeatureGridCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: cs.primary.withValues(alpha: isDark ? 0.22 : 0.12),
               ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: isDark
-                    ? cs.onSurface.withValues(alpha: 0.9)
-                    : cs.primary,
+              child: Builder(
+                builder: (_) {
+                  final color = isDark
+                      ? cs.onSurface.withValues(alpha: 0.9)
+                      : cs.primary;
+                  return iconBuilder?.call(color, 24) ??
+                      Icon(icon, size: 24, color: color);
+                },
               ),
             ),
             const SizedBox(height: 10),

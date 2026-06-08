@@ -56,6 +56,9 @@
 			<string>remote-notification</string>
 			<string>audio</string>
 		</array>
+		<!-- Qibla AR: live camera preview behind the qibla direction overlay -->
+		<key>NSCameraUsageDescription</key>
+		<string>تُستخدم الكاميرا لعرض اتجاه القبلة فوق صورة الكاميرا في وضع الكاميرا.</string>
 		<!-- Islamic backgrounds: pick a background photo / save rendered image -->
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>اختر صورة من معرضك لاستخدامها كخلفية للتصميم.</string>

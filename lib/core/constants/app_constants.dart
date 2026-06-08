@@ -21,6 +21,9 @@ class AppConstants {
   static const String shareRoute = '/share';
   static const String wirdRoute = '/wird';
   static const String islamicBackgroundsRoute = '/islamic-backgrounds';
+  static const String zakatRoute = '/zakat';
+  static const String dailyInspirationSettingsRoute =
+      '/daily-inspiration-settings';
 
   // External links — used by the branded share-image flow so the caption
   // and the on-card wordmark stay in sync no matter which screen invokes
@@ -36,6 +39,8 @@ class AppConstants {
   static const String notificationSettingsKey = 'notification_settings';
   static const String appLockSettingsKey = 'app_lock_settings';
   static const String onboardingCompletedKey = 'onboarding_completed';
+  static const String zakatSettingsKey = 'zakat_settings';
+  static const String dailyInspirationSettingsKey = 'daily_inspiration_settings';
 
   // Assets Paths
   static const String langPath = 'assets/lang/';

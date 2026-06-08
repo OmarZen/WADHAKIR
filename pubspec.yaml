@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.2.1+19
+version: 3.3.0+20
 
 environment:
   # Bumped for forui 0.22.x (requires Dart >=3.12 / Flutter >=3.44).
@@ -208,7 +208,7 @@ msix_config:
   publisher_display_name: Omar Waleed
   publisher: CN=DF776E6F-2B42-431A-B1DB-7378360B1BC1
   identity_name: OmarWaleed.Wadhakir
-  msix_version: 3.2.1.0
+  msix_version: 3.3.0.0
   capabilities: "internetClient,location"
   
   # Store submission settings

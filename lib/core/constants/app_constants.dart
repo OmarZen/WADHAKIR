@@ -1,7 +1,7 @@
 class AppConstants {
   // App Info
   static const String appName = 'Wadhakir';
-  static const String appVersion = '3.1.0';
+  static const String appVersion = '3.3.0';
 
   // Navigation Routes
   static const String homeRoute = '/';

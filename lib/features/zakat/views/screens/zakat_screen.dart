@@ -9,6 +9,7 @@ import 'package:wadhakir/data/models/zakat_settings_model.dart';
 import 'package:wadhakir/data/repositories/zakat_settings_repository_impl.dart';
 import 'package:wadhakir/features/zakat/services/zakat_calculator.dart';
 import 'package:wadhakir/features/zakat/services/zakat_format.dart';
+import 'package:wadhakir/features/zakat/views/widgets/zakat_hero_card.dart';
 import 'package:wadhakir/features/zakat/views/widgets/zakat_input_row.dart';
 import 'package:wadhakir/features/zakat/views/widgets/zakat_result_card.dart';
 
@@ -160,6 +161,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
     final defaultNisabGrams = _basis == NisabBasis.gold
         ? kGoldNisabGrams
         : kSilverNisabGrams;
+    final result = _compute();
 
     return Scaffold(
       appBar: AppBar(
@@ -179,23 +181,8 @@ class _ZakatScreenState extends State<ZakatScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Spacing.lg,
-                      Spacing.md,
-                      Spacing.lg,
-                      0,
-                    ),
-                    child: Text(
-                      l10n?.translate('zakat.subtitle') ??
-                          'احسب زكاة مالك (٢٫٥٪) على ما بلغ النصاب وحال عليه الحول.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // ---- Live result hero ----
+                  ZakatHeroCard(result: result, currencyLabel: cur),
 
                   // ---- Assets ----
                   _section(
@@ -319,18 +306,18 @@ class _ZakatScreenState extends State<ZakatScreen> {
                     ],
                   ),
 
-                  // ---- Result ----
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Spacing.lg,
-                      Spacing.sm,
-                      Spacing.lg,
-                      Spacing.md,
-                    ),
-                    child: ZakatResultCard(
-                      result: _compute(),
-                      currencyLabel: cur,
-                    ),
+                  // ---- Breakdown ----
+                  _section(
+                    context,
+                    title: l10n?.translate('zakat.breakdown') ?? 'التفاصيل',
+                    icon: Icons.receipt_long_rounded,
+                    children: [
+                      ZakatResultCard(
+                        result: result,
+                        currencyLabel: cur,
+                        showHeadline: false,
+                      ),
+                    ],
                   ),
 
                   // ---- Hawl note ----

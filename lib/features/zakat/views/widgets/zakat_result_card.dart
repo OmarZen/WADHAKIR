@@ -12,10 +12,15 @@ class ZakatResultCard extends StatelessWidget {
   final ZakatResult result;
   final String currencyLabel;
 
+  /// When false the due/not-due badge + headline amount are omitted (they live
+  /// in the gradient hero), leaving only the breakdown rows.
+  final bool showHeadline;
+
   const ZakatResultCard({
     super.key,
     required this.result,
     required this.currencyLabel,
+    this.showHeadline = true,
   });
 
   @override
@@ -44,52 +49,54 @@ class ZakatResultCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Due / not-due status badge.
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  result.isDue
-                      ? Icons.check_circle_rounded
-                      : Icons.info_outline_rounded,
-                  color: accent,
-                  size: 20,
-                ),
-                const SizedBox(width: Spacing.sm),
+            if (showHeadline) ...[
+              // Due / not-due status badge.
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    result.isDue
+                        ? Icons.check_circle_rounded
+                        : Icons.info_outline_rounded,
+                    color: accent,
+                    size: 20,
+                  ),
+                  const SizedBox(width: Spacing.sm),
+                  Text(
+                    result.isDue
+                        ? (l10n?.translate('zakat.due') ?? 'الزكاة واجبة')
+                        : (l10n?.translate('zakat.not_due') ??
+                              'لم تبلغ النصاب — لا زكاة'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: accent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              if (result.isDue) ...[
+                const SizedBox(height: Spacing.md),
                 Text(
-                  result.isDue
-                      ? (l10n?.translate('zakat.due') ?? 'الزكاة واجبة')
-                      : (l10n?.translate('zakat.not_due') ??
-                            'لم تبلغ النصاب — لا زكاة'),
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  l10n?.translate('zakat.zakat_amount') ?? 'مقدار الزكاة',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+                const SizedBox(height: Spacing.xs),
+                Text(
+                  money(result.zakatDue),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.displaySmall?.copyWith(
                     color: accent,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
-            ),
-            if (result.isDue) ...[
+              const SizedBox(height: Spacing.lg),
+              Divider(color: accent.withValues(alpha: 0.2), height: 1),
               const SizedBox(height: Spacing.md),
-              Text(
-                l10n?.translate('zakat.zakat_amount') ?? 'مقدار الزكاة',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: cs.onSurface.withValues(alpha: 0.7),
-                ),
-              ),
-              const SizedBox(height: Spacing.xs),
-              Text(
-                money(result.zakatDue),
-                textAlign: TextAlign.center,
-                style: theme.textTheme.displaySmall?.copyWith(
-                  color: accent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ],
-            const SizedBox(height: Spacing.lg),
-            Divider(color: accent.withValues(alpha: 0.2), height: 1),
-            const SizedBox(height: Spacing.md),
             _row(
               context,
               l10n?.translate('zakat.total_assets') ?? 'إجمالي الأموال',

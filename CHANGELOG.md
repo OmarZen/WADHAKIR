@@ -5,6 +5,28 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0+20] - 2026-06-08
+
+### Added
+
+- **Zakat Calculator** — a self-contained, offline-first calculator. Enter cash/savings, gold and silver (grams + price per gram), other business assets, minus short-term debts, and it computes your zakat at **2.5%** of net wealth against the **Nisab** threshold. Choose the Nisab basis (gold 85 g or silver 595 g, silver by default as the more inclusive option) with an optional custom-gram override, set a currency label, and see a live gradient result with a full breakdown. Inputs are saved between sessions. Reachable from the home grid via a new money-bag tile.
+- **Verse / Dua of the Day** — a daily-rotating ayah, dua, or hadith surfaced in three places: a card on the home screen (with one-tap share), a **daily notification** at a time you choose, and a native **Android home-screen widget**. Pick which content type rotates (ayah / dua / hadith / mixed) from the settings page. All three surfaces stay in sync on the same day.
+- **Qibla AR (camera) mode** — point your phone and a marker overlays the direction of the Kaaba on the live camera feed, alongside the existing compass. Toggle it from the Qibla screen; it reuses the compass bearing and turns green when you're aligned, with a graceful fallback to the compass when the camera or magnetometer isn't available.
+- **Islamic Backgrounds (wallpaper maker)** — pick a background (gradient presets, a solid colour, a bundled mosque photo, or your own gallery photo), drop an Arabic phrase on it (your own text or a ready-made verse, app quote, or one of the 40 Nawawi hadith), drag to move and pinch/slider to resize, then **set it as your wallpaper**, **save it to the gallery**, or **share it** — exported as a full-bleed 9:16 image.
+- **Wird home-screen widget (Android)** — a compact, resizable widget with a native-drawn circular progress ring whose colour reflects your reading pace, plus a short status and a daily-rotating motivation line; the pace is recomputed natively so it stays fresh without opening the app. Now shows a proper preview in the widget picker.
+
+### Changed
+
+- **Daily Quran Reading (Wird) — progress that waits for the reader** — the "current wird" is now the **first incomplete day** and only moves forward when you mark it complete (no more silent calendar roll-forward). It shows whether you're "متأخر / متقدم بـ N أيام" or "على المسار", lets you **resume reading exactly where you stopped** ("متابعة القراءة"), makes each schedule day tappable to open the reader at that day, and celebrates a finished khatma.
+- **Customizable share cards** — the share-as-image background is now user-customizable across the app (azkar, daily verse/dua, 40 Hadith, fasting, etc.) via a shared picker (gradients / solid colour / mosque photos / your own photo) with a legibility scrim over photos; long Arabic text now sizes to fill the card instead of shrinking to a tiny block.
+- **Branding refresh on shared images** — share cards and the wallpaper-maker badge now show **only the app logo/icon** (smaller), dropping the "Wadhakir" wordmark and the "wadhakir.app" footer text so the design stays clean.
+
+### Version
+
+- App version bumped from `3.2.1+19` to `3.3.0+20`.
+- MSIX version bumped from `3.2.1.0` to `3.3.0.0`.
+- Updated the displayed app version in the Arabic and English settings strings.
+
 ## [3.2.1+19] - 2026-06-03
 
 ### Changed

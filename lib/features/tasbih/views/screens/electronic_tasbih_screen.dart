@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/widgets/celebration.dart';
 
 class ElectronicTasbihScreen extends StatefulWidget {
   const ElectronicTasbihScreen({super.key});
@@ -20,10 +21,8 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
   int _target = 33;
   bool _isPressed = false;
 
-  late AnimationController _pulseController;
   late AnimationController _beadController;
   late AnimationController _counterAnimController;
-  late Animation<double> _pulseAnimation;
   late Animation<double> _beadAnimation;
   late Animation<double> _counterScaleAnimation;
 
@@ -35,15 +34,6 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
   void initState() {
     super.initState();
     _loadCounters();
-
-    // Pulse animation for the counter button
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
 
     // Bead rotation animation
     _beadController = AnimationController(
@@ -63,13 +53,10 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
     _counterScaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _counterAnimController, curve: Curves.easeOut),
     );
-
-    _pulseController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
     _beadController.dispose();
     _counterAnimController.dispose();
     super.dispose();
@@ -137,6 +124,9 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
 
   void _showCompletionDialog() {
     final l10n = context.l10n;
+    // Reward hitting the tasbih target with a confetti burst alongside the
+    // existing celebration dialog.
+    Celebration.burst(context);
     showFDialog(
       context: context,
       builder: (context, style, animation) {
@@ -280,6 +270,14 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
 
     final progress = _target > 0 ? (_counter / _target).clamp(0.0, 1.0) : 0.0;
 
+    // Single hero counter sized off the smaller of width/height so it never
+    // dominates a wide screen or overflows a short one. Clamped to a calm range.
+    final double heroDiameter = <double>[
+      size.width * 0.66,
+      size.height * 0.40,
+      300.0,
+    ].reduce((a, b) => a < b ? a : b).clamp(220.0, 300.0).toDouble();
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -322,30 +320,36 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
             child: Column(
               children: [
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 12.0,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Prayer beads visualization
-                        _buildBeadCircle(theme, isDark, size),
-
-                        // Main counter display
-                        _buildCounterDisplay(theme, isDark),
-
-                        // Main tasbih button with progress
-                        _buildTasbihButton(theme, isDark, progress),
-
-                        // Statistics card
-                        _buildStatisticsCard(theme, l10n, isDark),
-
-                        // Extra spacing to prevent overlap with bottom buttons
-                        const SizedBox(height: 8),
-                      ],
-                    ),
+                  // One hero counter + a stats card, centered with generous
+                  // whitespace. Scrolls only if a short screen can't fit it.
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: IntrinsicHeight(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24.0,
+                                vertical: 16.0,
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  // Single hero: progress ring + count + tap
+                                  // target, framed by a subtle bead accent.
+                                  _buildHeroCounter(theme, progress, heroDiameter),
+                                  const SizedBox(height: 36),
+                                  _buildStatisticsCard(theme, l10n, isDark),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -359,200 +363,154 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
     );
   }
 
-  Widget _buildBeadCircle(ThemeData theme, bool isDark, Size size) {
-    return AnimatedBuilder(
-      animation: _beadAnimation,
-      builder: (context, child) {
-        return SizedBox(
-          width: size.width * 0.5,
-          height: size.width * 0.5,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Background circle with gradient
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      theme.colorScheme.primary.withValues(alpha: 0.05),
-                      theme.colorScheme.primary.withValues(alpha: 0.15),
+  /// The single focal element: a circular progress ring + a tappable inner
+  /// disc showing the live count, framed by a subtle rotating bead accent.
+  /// Replaces the old bead-circle + counter-pill + button stack so nothing
+  /// crowds or overlaps.
+  Widget _buildHeroCounter(ThemeData theme, double progress, double diameter) {
+    final cs = theme.colorScheme;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final ringSize = diameter * 0.88;
+    final innerSize = diameter * 0.64;
+
+    return SizedBox(
+      width: diameter,
+      height: diameter,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Subtle bead accent framing the ring (keeps the tasbih identity).
+          _buildBeadRing(theme, diameter),
+
+          // Progress toward the target.
+          SizedBox(
+            width: ringSize,
+            height: ringSize,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0, end: progress),
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => CircularProgressIndicator(
+                value: value,
+                strokeWidth: 9,
+                strokeCap: StrokeCap.round,
+                backgroundColor: cs.primary.withValues(alpha: 0.12),
+                valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
+              ),
+            ),
+          ),
+
+          // Tappable inner disc with the live count.
+          Semantics(
+            button: true,
+            label: context.l10n?.translate('tasbih.tap') ?? 'اضغط',
+            child: GestureDetector(
+              onTap: _incrementCounter,
+              child: AnimatedScale(
+                scale: _isPressed ? 0.96 : 1.0,
+                duration: const Duration(milliseconds: 110),
+                curve: Curves.easeOut,
+                child: Container(
+                  width: innerSize,
+                  height: innerSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [cs.primary, cs.primary.withValues(alpha: 0.82)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cs.primary.withValues(alpha: 0.35),
+                        blurRadius: 24,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 8),
+                      ),
                     ],
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ScaleTransition(
+                          scale: _counterScaleAnimation,
+                          child: Text(
+                            '$_counter',
+                            style: TextStyle(
+                              fontSize: diameter * 0.24,
+                              height: 1,
+                              fontWeight: FontWeight.bold,
+                              color: cs.onPrimary,
+                              fontFamily: 'Almarai',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '/ $_target',
+                          style: TextStyle(
+                            fontSize: diameter * 0.075,
+                            color: cs.onPrimary.withValues(alpha: 0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          context.l10n?.translate('tasbih.tap_to_count') ??
+                              'اضغط للتسبيح',
+                          style: TextStyle(
+                            fontSize: diameter * 0.05,
+                            color: cs.onPrimary.withValues(alpha: 0.65),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              // Prayer beads
-              ...List.generate(33, (index) {
-                final angle = (index * 360 / 33) * math.pi / 180;
-                final rotationOffset = _beadAnimation.value * 360 / 33;
-                final adjustedAngle = angle + (rotationOffset * math.pi / 180);
-                final radius = size.width * 0.21;
-                final beadSize = index == (_counter % 33) && _isPressed
-                    ? 10.0
-                    : index < (_counter % 33)
-                    ? 8.0
-                    : 6.0;
-
-                return Positioned(
-                  left:
-                      size.width * 0.25 +
-                      radius * math.cos(adjustedAngle) -
-                      beadSize / 2,
-                  top:
-                      size.width * 0.25 +
-                      radius * math.sin(adjustedAngle) -
-                      beadSize / 2,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: beadSize,
-                    height: beadSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: index < (_counter % 33)
-                            ? [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.primary.withValues(
-                                  alpha: 0.7,
-                                ),
-                              ]
-                            : [
-                                theme.colorScheme.primary.withValues(
-                                  alpha: 0.3,
-                                ),
-                                theme.colorScheme.primary.withValues(
-                                  alpha: 0.15,
-                                ),
-                              ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: index < (_counter % 33)
-                          ? [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.4,
-                                ),
-                                blurRadius: 4,
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : null,
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCounterDisplay(ThemeData theme, bool isDark) {
-    return ScaleTransition(
-      scale: _counterScaleAnimation,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.1),
-              theme.colorScheme.primary.withValues(alpha: 0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-            width: 2,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              '$_counter',
-              style: TextStyle(
-                fontSize: 56,
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
-                fontFamily: 'Almarai',
-              ),
             ),
-            Text(
-              ' / $_target',
-              style: TextStyle(
-                fontSize: 20,
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTasbihButton(ThemeData theme, bool isDark, double progress) {
+  /// Subtle ring of 33 small beads that rotates slightly on each tap — frames
+  /// the progress ring without competing with the count.
+  Widget _buildBeadRing(ThemeData theme, double diameter) {
+    final cs = theme.colorScheme;
+    final center = diameter / 2;
+    final radius = diameter / 2 - 5;
     return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: GestureDetector(
-            onTap: _incrementCounter,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    spreadRadius: 5,
+      animation: _beadAnimation,
+      builder: (context, _) {
+        final rotation = _beadAnimation.value * (2 * math.pi / 33);
+        return SizedBox(
+          width: diameter,
+          height: diameter,
+          child: Stack(
+            children: List.generate(33, (index) {
+              final angle = (index * 2 * math.pi / 33) + rotation;
+              final active = index < (_counter % 33);
+              final beadSize = active ? 5.0 : 4.0;
+              return Positioned(
+                left: center + radius * math.cos(angle) - beadSize / 2,
+                top: center + radius * math.sin(angle) - beadSize / 2,
+                child: Container(
+                  width: beadSize,
+                  height: beadSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cs.primary.withValues(alpha: active ? 0.55 : 0.18),
                   ),
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                    blurRadius: 40,
-                    spreadRadius: 10,
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.touch_app_outlined,
-                      size: 48,
-                      color: theme.colorScheme.onPrimary,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      context.l10n?.translate('tasbih.tap') ?? 'اضغط',
-                      style: TextStyle(
-                        color: theme.colorScheme.onPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ),
+              );
+            }),
           ),
         );
       },

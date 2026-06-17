@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import '../../core/localization/app_localizations.dart';
+import 'package:wadhakir/core/notifications/notification_router.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
 import 'package:wadhakir/features/onboarding/view/screens/onboarding_screen.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
@@ -127,6 +128,16 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
       if (_navigated || !mounted || _settingsReady) return;
       _navigated = true;
       _goTo(const ScaffoldWithNavBar());
+      _consumePendingNotification();
+    });
+  }
+
+  /// Route a notification tap that launched the app from a killed state, now
+  /// that the home shell is on the navigator. Only meaningful when we land on
+  /// the shell (a deep-link tap can't precede onboarding completion).
+  void _consumePendingNotification() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationRouter.consumePending();
     });
   }
 
@@ -146,6 +157,7 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
           ? const ScaffoldWithNavBar()
           : const OnboardingScreen(),
     );
+    if (_onboardingCompleted) _consumePendingNotification();
   }
 
   void _goTo(Widget destination) {

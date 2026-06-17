@@ -10,6 +10,10 @@ class Radii {
   static const double sm = 10.0;
   static const double md = 16.0;
   static const double lg = 22.0;
+
+  /// Hero radius — branded headers and bottom-sheet top corners.
+  static const double xl = 28.0;
+
   static const double pill = 999.0;
 
   static BorderRadius all(double value) => BorderRadius.circular(value);

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
+import 'package:wadhakir/core/widgets/celebration.dart';
 import 'package:wadhakir/data/models/azkar_item.dart';
 import 'package:wadhakir/data/models/azkar_category.dart';
 import 'package:wadhakir/features/azkar/cubit/azkar_cubit.dart';
@@ -115,12 +116,12 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
         curve: Curves.easeInOut,
       );
     } else {
-      showFToast(
-        context: context,
-        title: Text(
-          context.l10n?.translate('azkar.completed_all_azkar') ??
-              'أكملت جميع الأذكار',
-        ),
+      // Reward finishing a whole azkar set with a confetti burst + haptic.
+      Celebration.burst(
+        context,
+        message:
+            context.l10n?.translate('azkar.completed_all_azkar') ??
+            'أكملت جميع الأذكار',
       );
     }
   }

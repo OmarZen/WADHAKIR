@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
+import 'package:wadhakir/core/design/radii.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
@@ -24,7 +25,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    // This card only highlights which prayer is "next" — it shows no live
+    // countdown — so a per-minute tick is plenty (the per-second rebuild was
+    // pure waste on a scrolling list).
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (!mounted) return;
       setState(() => _now = DateTime.now());
     });
@@ -73,25 +77,14 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
               vertical: size.height * 0.01,
             ),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  isDark
-                      ? theme.colorScheme.primaryContainer.withValues(
-                          alpha: 0.1,
-                        )
-                      : theme.colorScheme.primary.withValues(alpha: 0.1),
-                  isDark
-                      ? theme.colorScheme.primary.withValues(alpha: 0.05)
-                      : theme.colorScheme.primaryContainer.withValues(
-                          alpha: 0.05,
-                        ),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              // Flat tinted surface (no gradient) so the header matches the
+              // app's tile/section vocabulary instead of inventing its own.
+              color: theme.colorScheme.primary.withValues(
+                alpha: isDark ? 0.16 : 0.08,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: Radii.all(Radii.md),
               border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.14),
                 width: 1,
               ),
             ),
@@ -103,24 +96,8 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.colorScheme.primary,
-                            theme.colorScheme.primary.withValues(alpha: 0.8),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.3,
-                            ),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        color: theme.colorScheme.primary,
+                        borderRadius: Radii.all(Radii.sm),
                       ),
                       child: Icon(
                         Icons.access_time_rounded,
@@ -155,24 +132,17 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                             AppConstants.prayerTimesRoute,
                           );
                         },
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: Radii.all(Radii.sm),
                         child: Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: size.width * 0.03,
                             vertical: size.height * 0.008,
                           ),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.colorScheme.primary.withValues(
-                                  alpha: 0.15,
-                                ),
-                                theme.colorScheme.primary.withValues(
-                                  alpha: 0.1,
-                                ),
-                              ],
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.12,
                             ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: Radii.all(Radii.sm),
                             border: Border.all(
                               color: theme.colorScheme.primary.withValues(
                                 alpha: 0.2,
@@ -213,7 +183,7 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                           final cubit = context.read<PrayerTimesCubit>();
                           PrayerSettingsDialog.show(context, cubit);
                         },
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: Radii.all(Radii.sm),
                         child: Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: size.width * 0.025,
@@ -227,7 +197,7 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                                 : theme.colorScheme.primary.withValues(
                                     alpha: 0.1,
                                   ),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: Radii.all(Radii.sm),
                             border: Border.all(
                               color: isDark
                                   ? theme.colorScheme.onSurface.withValues(
@@ -384,84 +354,9 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                   },
                 ];
 
-                // Compute live remaining time
-                // final remaining = nextPrayerTime.difference(now);
-                // final rh = remaining.isNegative ? 0 : remaining.inHours;
-                // final rm = remaining.isNegative ? 0 : remaining.inMinutes % 60;
-                // final rs = remaining.isNegative ? 0 : remaining.inSeconds % 60;
-
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Location and Countdown Timer in same row - simplified
-                    // Row(
-                    //   children: [
-                    //     // Location
-                    //     Expanded(
-                    //       child: _LocationNameWidget(
-                    //         theme: theme,
-                    //         size: size,
-                    //         isDark: theme.brightness == Brightness.dark,
-                    //       ),
-                    //     ),
-                    //     SizedBox(width: size.width * 0.02),
-                    //     // Countdown Timer - simplified
-                    //     Container(
-                    //       padding: EdgeInsets.symmetric(
-                    //         horizontal: size.width * 0.025,
-                    //         vertical: size.height * 0.008,
-                    //       ),
-                    //       decoration: BoxDecoration(
-                    //         color: isDark
-                    //             ? theme.colorScheme.primaryContainer.withValues(
-                    //                 alpha: 0.1,
-                    //               )
-                    //             : theme.colorScheme.primary.withValues(
-                    //                 alpha: 0.1,
-                    //               ),
-                    //         borderRadius: BorderRadius.circular(12),
-                    //         border: Border.all(
-                    //           color: theme.colorScheme.primary.withValues(
-                    //             alpha: 0.2,
-                    //           ),
-                    //           width: 1,
-                    //         ),
-                    //       ),
-                    //       child: Row(
-                    //         mainAxisSize: MainAxisSize.min,
-                    //         children: [
-                    //           Icon(
-                    //             Icons.timer_outlined,
-                    //             size: 16,
-                    //             color: isDark
-                    //                 ? theme.colorScheme.onSurface.withValues(
-                    //                     alpha: 0.65,
-                    //                   )
-                    //                 : theme.colorScheme.primary,
-                    //           ),
-                    //           const SizedBox(width: 6),
-                    //           Text(
-                    //             '${rh.toString().padLeft(2, '0')}:${rm.toString().padLeft(2, '0')}:${rs.toString().padLeft(2, '0')}',
-                    //             style: TextStyle(
-                    //               fontSize: 13,
-                    //               fontWeight: FontWeight.bold,
-                    //               color: isDark
-                    //                   ? theme.colorScheme.onSurface.withValues(
-                    //                       alpha: 0.65,
-                    //                     )
-                    //                   : theme.colorScheme.primary,
-                    //               letterSpacing: 0.5,
-                    //               fontFamily: 'Courier',
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
-
-                    // SizedBox(height: size.height * 0.015),
-
                     // Main prayer times row
                     Row(
                       children: [
@@ -589,12 +484,12 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                 padding: EdgeInsets.all(size.width * 0.04),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: Radii.all(Radii.md),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -605,7 +500,7 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                       height: 50,
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: Radii.all(Radii.sm),
                       ),
                       child: const Center(child: CircularProgressIndicator()),
                     ),
@@ -618,8 +513,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                             width: 100,
                             height: 16,
                             decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(8),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.08,
+                              ),
+                              borderRadius: Radii.all(Radii.xs),
                             ),
                           ),
                           SizedBox(height: 8),
@@ -627,8 +524,10 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                             width: 80,
                             height: 12,
                             decoration: BoxDecoration(
-                              color: Colors.grey[300],
-                              borderRadius: BorderRadius.circular(6),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.08,
+                              ),
+                              borderRadius: Radii.all(Radii.xs),
                             ),
                           ),
                         ],
@@ -683,7 +582,7 @@ class _PrayerTile extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isNext ? theme.colorScheme.primary : theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: Radii.all(Radii.sm),
           border: Border.all(
             color: isNext
                 ? theme.colorScheme.primary
@@ -693,8 +592,8 @@ class _PrayerTile extends StatelessWidget {
           boxShadow: isNext
               ? [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.18),
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ]
@@ -809,7 +708,7 @@ class _QiyamPrayerTile extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: isNext ? theme.colorScheme.primary : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: Radii.all(Radii.sm),
         border: Border.all(
           color: isNext
               ? isDark
@@ -883,91 +782,3 @@ class _QiyamPrayerTile extends StatelessWidget {
     );
   }
 }
-
-// // Location Name Widget - listens to BlocBuilder for location updates
-// class _LocationNameWidget extends StatelessWidget {
-//   final ThemeData theme;
-//   final Size size;
-//   final bool isDark;
-
-//   const _LocationNameWidget({
-//     required this.theme,
-//     required this.size,
-//     required this.isDark,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return BlocBuilder<PrayerTimesCubit, PrayerTimesState>(
-//       builder: (context, state) {
-//         // Only show location when prayer times are loaded
-//         if (state is! PrayerTimesLoaded) {
-//           return const SizedBox.shrink();
-//         }
-
-//         return FutureBuilder<String>(
-//           future: context.read<PrayerTimesCubit>().getCurrentLocationName(),
-//           builder: (context, snapshot) {
-//             // Don't show if loading or no data
-//             if (!snapshot.hasData || snapshot.data == null) {
-//               return const SizedBox.shrink();
-//             }
-
-//             final locationName = snapshot.data!;
-
-//             // Don't show if it's the default "location not specified" message
-//             if (locationName == 'موقع غير محدد') {
-//               return const SizedBox.shrink();
-//             }
-
-//             return Container(
-//               padding: EdgeInsets.symmetric(
-//                 horizontal: size.width * 0.025,
-//                 vertical: size.height * 0.008,
-//               ),
-//               decoration: BoxDecoration(
-//                 color: theme.colorScheme.primaryContainer.withValues(
-//                   alpha: 0.1,
-//                 ),
-//                 borderRadius: BorderRadius.circular(12),
-//                 border: Border.all(
-//                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
-//                   width: 1,
-//                 ),
-//               ),
-//               child: Row(
-//                 mainAxisSize: MainAxisSize.min,
-//                 children: [
-//                   Icon(
-//                     Icons.location_on_rounded,
-//                     size: 16,
-//                     color: isDark
-//                         ? theme.colorScheme.onSurface.withValues(alpha: 0.65)
-//                         : theme.colorScheme.primary,
-//                   ),
-//                   const SizedBox(width: 6),
-//                   Flexible(
-//                     child: Text(
-//                       locationName,
-//                       maxLines: 1,
-//                       overflow: TextOverflow.ellipsis,
-//                       style: theme.textTheme.bodySmall?.copyWith(
-//                         color: isDark
-//                             ? theme.colorScheme.onSurface.withValues(
-//                                 alpha: 0.65,
-//                               )
-//                             : theme.colorScheme.primary,
-//                         fontWeight: isDark ? FontWeight.w600 : FontWeight.w600,
-//                         fontSize: 13,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             );
-//           },
-//         );
-//       },
-//     );
-//   }
-// }

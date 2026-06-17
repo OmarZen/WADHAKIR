@@ -75,6 +75,10 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
         _sharedPreferences.getBool(AppConstants.onboardingCompletedKey) ??
         false;
 
+    // Get the user's name (empty string = not set)
+    final userName =
+        _sharedPreferences.getString(AppConstants.userNameKey) ?? '';
+
     _cachedSettings = AppSettingsModel(
       themeMode: themeMode,
       languageCode: languageCode,
@@ -82,6 +86,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       notificationSettings: notificationSettings,
       appLockSettings: appLockSettings,
       onboardingCompleted: onboardingCompleted,
+      userName: userName,
     );
 
     _settingsController.add(_cachedSettings!);
@@ -152,6 +157,15 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     final settings = await getSettings();
     _cachedSettings = settings.copyWith(onboardingCompleted: completed);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setUserName(String name) async {
+    await _sharedPreferences.setString(AppConstants.userNameKey, name);
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(userName: name);
     _settingsController.add(_cachedSettings!);
   }
 

@@ -54,3 +54,6 @@ app.*.map.json
 .agents/
 skills-lock.json
 .github/prompts/
+
+# Impeccable design-skill working artifacts
+.impeccable/

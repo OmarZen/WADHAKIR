@@ -8,6 +8,7 @@ import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/utils/widget_to_image.dart';
 import 'package:wadhakir/features/islamic_backgrounds/services/gallery_saver_service.dart';
 import 'package:wadhakir/features/islamic_backgrounds/services/wallpaper_service.dart';
+import 'package:wadhakir/features/feature_discovery/services/feature_discovery_service.dart';
 import 'package:wadhakir/features/islamic_backgrounds/views/widgets/background_text_sheet.dart';
 import 'package:wadhakir/features/islamic_backgrounds/views/widgets/islamic_canvas.dart';
 import 'package:wadhakir/features/share/models/share_background.dart';
@@ -101,6 +102,7 @@ class _IslamicBackgroundsScreenState extends State<IslamicBackgroundsScreen> {
         return;
       }
       final ok = await GallerySaverService.saveFile(file.path);
+      if (ok) await FeatureDiscoveryService.markBackgroundUsed();
       if (!mounted) return;
       _toast(
         ok
@@ -147,6 +149,7 @@ class _IslamicBackgroundsScreenState extends State<IslamicBackgroundsScreen> {
         return;
       }
       final ok = await WallpaperService.setFromFile(file.path, target);
+      if (ok) await FeatureDiscoveryService.markBackgroundUsed();
       if (!mounted) return;
       _toast(
         ok

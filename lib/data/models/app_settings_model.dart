@@ -11,6 +11,11 @@ class AppSettingsModel extends Equatable {
   final AppLockSettingsModel appLockSettings;
   final bool onboardingCompleted;
 
+  /// The user's first name, used to personalize the home greeting. Empty
+  /// string means "not set" (default for fresh installs and existing users
+  /// who haven't entered it yet).
+  final String userName;
+
   const AppSettingsModel({
     required this.themeMode,
     required this.languageCode,
@@ -18,6 +23,7 @@ class AppSettingsModel extends Equatable {
     required this.notificationSettings,
     required this.appLockSettings,
     this.onboardingCompleted = false,
+    this.userName = '',
   });
 
   factory AppSettingsModel.defaultSettings() {
@@ -28,6 +34,7 @@ class AppSettingsModel extends Equatable {
       notificationSettings: NotificationSettingsModel.defaultSettings(),
       appLockSettings: AppLockSettingsModel.defaultSettings(),
       onboardingCompleted: false,
+      userName: '',
     );
   }
 
@@ -38,6 +45,7 @@ class AppSettingsModel extends Equatable {
     NotificationSettingsModel? notificationSettings,
     AppLockSettingsModel? appLockSettings,
     bool? onboardingCompleted,
+    String? userName,
   }) {
     return AppSettingsModel(
       themeMode: themeMode ?? this.themeMode,
@@ -46,6 +54,7 @@ class AppSettingsModel extends Equatable {
       notificationSettings: notificationSettings ?? this.notificationSettings,
       appLockSettings: appLockSettings ?? this.appLockSettings,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      userName: userName ?? this.userName,
     );
   }
 
@@ -57,5 +66,6 @@ class AppSettingsModel extends Equatable {
     notificationSettings,
     appLockSettings,
     onboardingCompleted,
+    userName,
   ];
 }

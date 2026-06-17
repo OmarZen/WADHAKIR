@@ -10,6 +10,14 @@ import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/prayer_card.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/countdown_timer.dart';
+import 'package:wadhakir/features/azkar_reminders/views/widgets/after_prayer_reminder_tile.dart';
+import 'package:wadhakir/features/azkar_reminders/views/widgets/qiyam_reminder_tile.dart';
+import 'package:wadhakir/data/models/salah/salah_enums.dart';
+import 'package:wadhakir/features/salah_tracker/cubit/salah_tracker_cubit.dart';
+import 'package:wadhakir/features/salah_tracker/cubit/salah_tracker_state.dart';
+import 'package:wadhakir/features/salah_tracker/views/widgets/salah_fard_status_badge.dart';
+import 'package:wadhakir/features/salah_tracker/views/widgets/salah_status_sheet.dart';
+import 'package:wadhakir/features/salah_tracker/views/widgets/salah_status_ui.dart';
 
 class PrayerTimesContent extends StatelessWidget {
   final PrayerTimesLoaded state;
@@ -86,6 +94,10 @@ class PrayerTimesContent extends StatelessWidget {
 
                 // Qiyam times info card
                 _buildQiyamTimesInfo(context, theme),
+
+                // Contextual reminder toggles (after-prayer azkar + qiyam),
+                // placed here because they relate directly to the prayer times.
+                _buildRemindersSection(context, theme),
 
                 _buildCalculationMethodInfo(context, theme),
               ],
@@ -249,6 +261,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: fajrColor,
           animation: fadeAnimation,
           delay: 0.1,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.fajr))
+              ? () => _onFardTap(context, PrayerSlot.fajr)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.fajr,
+                  due: _due(prayerTimes, PrayerSlot.fajr),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -269,6 +290,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: dhuhrColor,
           animation: fadeAnimation,
           delay: 0.3,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.dhuhr))
+              ? () => _onFardTap(context, PrayerSlot.dhuhr)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.dhuhr,
+                  due: _due(prayerTimes, PrayerSlot.dhuhr),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -279,6 +309,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: asrColor,
           animation: fadeAnimation,
           delay: 0.4,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.asr))
+              ? () => _onFardTap(context, PrayerSlot.asr)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.asr,
+                  due: _due(prayerTimes, PrayerSlot.asr),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -289,6 +328,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: maghribColor,
           animation: fadeAnimation,
           delay: 0.5,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.maghrib))
+              ? () => _onFardTap(context, PrayerSlot.maghrib)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.maghrib,
+                  due: _due(prayerTimes, PrayerSlot.maghrib),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -299,6 +347,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: ishaColor,
           animation: fadeAnimation,
           delay: 0.6,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.isha))
+              ? () => _onFardTap(context, PrayerSlot.isha)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.isha,
+                  due: _due(prayerTimes, PrayerSlot.isha),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -362,6 +419,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: fajrColor,
           animation: fadeAnimation,
           delay: 0.1,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.fajr))
+              ? () => _onFardTap(context, PrayerSlot.fajr)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.fajr,
+                  due: _due(prayerTimes, PrayerSlot.fajr),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -382,6 +448,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: dhuhrColor,
           animation: fadeAnimation,
           delay: 0.3,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.dhuhr))
+              ? () => _onFardTap(context, PrayerSlot.dhuhr)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.dhuhr,
+                  due: _due(prayerTimes, PrayerSlot.dhuhr),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -392,6 +467,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: asrColor,
           animation: fadeAnimation,
           delay: 0.4,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.asr))
+              ? () => _onFardTap(context, PrayerSlot.asr)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.asr,
+                  due: _due(prayerTimes, PrayerSlot.asr),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -402,6 +486,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: maghribColor,
           animation: fadeAnimation,
           delay: 0.5,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.maghrib))
+              ? () => _onFardTap(context, PrayerSlot.maghrib)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.maghrib,
+                  due: _due(prayerTimes, PrayerSlot.maghrib),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -412,6 +505,15 @@ class PrayerTimesContent extends StatelessWidget {
           color: ishaColor,
           animation: fadeAnimation,
           delay: 0.6,
+          onLogTap: (isToday && _due(prayerTimes, PrayerSlot.isha))
+              ? () => _onFardTap(context, PrayerSlot.isha)
+              : null,
+          statusBadge: isToday
+              ? SalahFardStatusBadge(
+                  slot: PrayerSlot.isha,
+                  due: _due(prayerTimes, PrayerSlot.isha),
+                )
+              : null,
         ),
         PrayerCard(
           size: size,
@@ -440,6 +542,76 @@ class PrayerTimesContent extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Whether [slot]'s adhan time has entered (so it can be logged). A prayer
+  /// whose time hasn't arrived yet is shown inactive and is not loggable.
+  bool _due(dynamic prayerTimes, PrayerSlot slot) {
+    final DateTime t;
+    switch (slot) {
+      case PrayerSlot.fajr:
+        t = prayerTimes.fajr;
+      case PrayerSlot.dhuhr:
+        t = prayerTimes.dhuhr;
+      case PrayerSlot.asr:
+        t = prayerTimes.asr;
+      case PrayerSlot.maghrib:
+        t = prayerTimes.maghrib;
+      case PrayerSlot.isha:
+        t = prayerTimes.isha;
+    }
+    return !DateTime.now().isBefore(t);
+  }
+
+  /// Log a fard prayer from its prayer-times card. First tap on an unlogged
+  /// prayer auto-classifies it (on-time vs late) from the current window and
+  /// shows a snackbar to change it; tapping an already-logged prayer opens the
+  /// status sheet to edit/clear. Only wired for today's five fard cards.
+  Future<void> _onFardTap(BuildContext context, PrayerSlot slot) async {
+    final salahCubit = context.read<SalahTrackerCubit>();
+    final model = state.selectedPrayerTimes;
+    final sel = state.selectedDate;
+    final today = DateTime(sel.year, sel.month, sel.day);
+
+    final salahState = salahCubit.state;
+    final current = salahState is SalahTrackerLoaded
+        ? (salahState.todayStatuses[slot] ?? PrayerStatus.notLogged)
+        : PrayerStatus.notLogged;
+
+    if (current == PrayerStatus.notLogged && model != null) {
+      final auto = salahCubit.classify(model, slot, DateTime.now());
+      await salahCubit.logFard(today, slot, auto);
+      if (!context.mounted) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 3),
+          content: Text(
+            '${SalahStatusUi.slotLabel(context, slot)} • '
+            '${SalahStatusUi.statusLabel(context, auto)}',
+          ),
+          action: SnackBarAction(
+            label: context.l10n?.translate('salah_tracker.change') ?? 'تغيير',
+            onPressed: () async {
+              final chosen = await showSalahStatusSheet(
+                context,
+                slot: slot,
+                current: auto,
+              );
+              if (chosen != null) {
+                await salahCubit.logFard(today, slot, chosen);
+              }
+            },
+          ),
+        ),
+      );
+    } else {
+      final chosen = await showSalahStatusSheet(
+        context,
+        slot: slot,
+        current: current,
+      );
+      if (chosen != null) await salahCubit.logFard(today, slot, chosen);
+    }
   }
 
   Widget _buildCalculationMethodInfo(BuildContext context, ThemeData theme) {
@@ -494,6 +666,42 @@ class PrayerTimesContent extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  /// Contextual azkar reminder toggles shown on the prayer-times page so the
+  /// user can enable the after-prayer azkar and Qiyam reminders right where
+  /// they're relevant (these also live on the azkar settings page).
+  Widget _buildRemindersSection(BuildContext context, ThemeData theme) {
+    return Container(
+      margin: EdgeInsets.only(top: size.height * 0.02),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.notifications_active_outlined,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                context.l10n?.translate('azkar_reminders.title') ??
+                    'تذكيرات الأذكار',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const AfterPrayerReminderTile(),
+          const SizedBox(height: 8),
+          const QiyamReminderTile(),
+        ],
+      ),
     );
   }
 

@@ -20,7 +20,9 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
-          child: Padding(
+          // Scrollable so the dialog never overflows on short screens / large
+          // text scale — it takes the dialog's bounded height and scrolls.
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,

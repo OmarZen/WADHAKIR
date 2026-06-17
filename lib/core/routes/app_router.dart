@@ -14,8 +14,18 @@ import 'package:wadhakir/features/wird/views/screens/wird_screen.dart';
 import 'package:wadhakir/features/islamic_backgrounds/views/screens/islamic_backgrounds_screen.dart';
 import 'package:wadhakir/features/zakat/views/screens/zakat_screen.dart';
 import 'package:wadhakir/features/daily_inspiration/views/screens/daily_inspiration_settings_page.dart';
+import 'package:wadhakir/features/quran/views/screens/quran_screen.dart';
+import 'package:wadhakir/features/prayer_adhkar/views/prayer_adhkar_screen.dart';
+import 'package:wadhakir/features/azkar/views/screens/azkar_category_by_title_screen.dart';
+import 'package:wadhakir/features/azkar_reminders/views/screens/azkar_reminders_settings_page.dart';
+import 'package:wadhakir/features/salah_tracker/views/screens/salah_tracker_screen.dart';
 
 class AppRouter {
+  /// Root navigator key — lets notification taps (handled outside the widget
+  /// tree) drive in-app navigation via [NotificationRouter].
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case AppConstants.homeRoute:
@@ -60,6 +70,32 @@ class AppRouter {
       case AppConstants.dailyInspirationSettingsRoute:
         return MaterialPageRoute(
           builder: (_) => const DailyInspirationSettingsPage(),
+        );
+
+      case AppConstants.quranRoute:
+        return MaterialPageRoute(builder: (_) => const QuranScreen());
+
+      case AppConstants.afterPrayerAdhkarRoute:
+        return MaterialPageRoute(builder: (_) => const PrayerAdhkarScreen());
+
+      case AppConstants.azkarRemindersSettingsRoute:
+        return MaterialPageRoute(
+          builder: (_) => const AzkarRemindersSettingsPage(),
+        );
+
+      case AppConstants.salahTrackerRoute:
+        return MaterialPageRoute(builder: (_) => const SalahTrackerScreen());
+
+      case AppConstants.azkarCategoryDetailsRoute:
+        // Deep-link from azkar notifications: the argument is the category
+        // title (a String); resolve it to the full category.
+        final title = settings.arguments;
+        return MaterialPageRoute(
+          builder: (_) => AzkarCategoryByTitleScreen(
+            title: title is String
+                ? title
+                : AppConstants.azkarMorningEveningCategory,
+          ),
         );
 
       case AppConstants.shareRoute:

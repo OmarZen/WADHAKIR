@@ -1,7 +1,7 @@
 class AppConstants {
   // App Info
   static const String appName = 'Wadhakir';
-  static const String appVersion = '3.3.0';
+  static const String appVersion = '3.3.1';
 
   // Navigation Routes
   static const String homeRoute = '/';
@@ -24,6 +24,9 @@ class AppConstants {
   static const String zakatRoute = '/zakat';
   static const String dailyInspirationSettingsRoute =
       '/daily-inspiration-settings';
+  static const String afterPrayerAdhkarRoute = '/after-prayer-adhkar';
+  static const String azkarRemindersSettingsRoute = '/azkar-reminders-settings';
+  static const String salahTrackerRoute = '/salah-tracker';
 
   // External links — used by the branded share-image flow so the caption
   // and the on-card wordmark stay in sync no matter which screen invokes
@@ -39,8 +42,27 @@ class AppConstants {
   static const String notificationSettingsKey = 'notification_settings';
   static const String appLockSettingsKey = 'app_lock_settings';
   static const String onboardingCompletedKey = 'onboarding_completed';
+  static const String userNameKey = 'user_name';
+  // One-time gate for the existing-user name prompt (set true once the prompt
+  // has been shown or onboarding finished, so it never nags again).
+  static const String namePromptSeenKey = 'name_prompt_seen';
   static const String zakatSettingsKey = 'zakat_settings';
   static const String dailyInspirationSettingsKey = 'daily_inspiration_settings';
+  static const String azkarReminderSettingsKey = 'azkar_reminder_settings';
+  static const String salahTrackerLogKey = 'salah_tracker_log';
+
+  // Feature-discovery / re-engagement nudges
+  static const String featureNudgeEnabledKey = 'feature_nudge_enabled';
+  static const String featureNudgeLastShownKey = 'feature_nudge_last_shown';
+  static const String featureNudgeShownIdsKey = 'feature_nudge_shown_ids';
+
+  // First-use flags for features that lack another usage signal
+  static const String islamicBackgroundUsedKey = 'islamic_background_used';
+
+  // adhkar.json category titles — used as route arguments to deep-link into a
+  // specific azkar category from a notification.
+  static const String azkarMorningEveningCategory = 'أذكار الصباح والمساء';
+  static const String azkarSleepCategory = 'أذكار النوم';
 
   // Assets Paths
   static const String langPath = 'assets/lang/';

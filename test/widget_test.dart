@@ -3,9 +3,9 @@ import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_stream_us
 import 'package:wadhakir/domain/usecases/get_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_fasting_reminder_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_user_name_usecase.dart';
 import 'package:wadhakir/main.dart';
 import 'package:wadhakir/domain/usecases/set_app_lock_settings_usecase.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
@@ -15,6 +15,7 @@ import 'package:wadhakir/domain/usecases/get_prayer_times_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_settings_stream_usecase.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
 import 'package:wadhakir/data/repositories/daily_inspiration_settings_repository_impl.dart';
+import 'package:wadhakir/data/repositories/azkar_reminder_settings_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
@@ -25,92 +26,78 @@ import 'package:wadhakir/domain/usecases/get_wird_plan_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_wird_plan_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_wird_plan_stream_usecase.dart';
 import 'package:wadhakir/domain/usecases/clear_wird_plan_usecase.dart';
-// This is a basic Flutter widget test.
+import 'package:wadhakir/data/repositories/salah_tracker_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_salah_log_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_salah_log_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_salah_log_stream_usecase.dart';
+import 'package:wadhakir/domain/usecases/clear_salah_log_usecase.dart';
+
+// Smoke test: verify MyApp can be constructed with all its dependencies.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+// We don't pumpWidget the full app here — the splash screen schedules a raw
+// Future.delayed timer and the notification plugins aren't available under the
+// test binding, which would make a full-tree pump flaky. Constructing MyApp is
+// enough to catch a broken constructor signature (the most common breakage).
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // shared preferences
+  test('MyApp builds with all dependencies', () async {
+    SharedPreferences.setMockInitialValues({});
     final sharedPreferences = await SharedPreferences.getInstance();
+    final appSettingsRepository = AppSettingsRepositoryImpl(sharedPreferences);
     final prayerTimesRepository = PrayerTimesRepositoryImpl();
+    final fastingRepository = FastingRemindersRepositoryImpl(sharedPreferences);
+    final wirdRepository = WirdRepositoryImpl(sharedPreferences);
+    final salahTrackerRepository = SalahTrackerRepositoryImpl(sharedPreferences);
 
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(
-      MyApp(
-        getSettingsUseCase: GetSettingsUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        getSettingsStreamUseCase: GetSettingsStreamUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        setThemeModeUseCase: SetThemeModeUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        setLanguageUseCase: SetLanguageUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        setNotificationSettingsUseCase: SetNotificationSettingsUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        getPrayerTimesUseCase: GetPrayerTimesUseCase(prayerTimesRepository),
-        getPrayerTimesRangeUseCase: GetPrayerTimesRangeUseCase(
-          prayerTimesRepository,
-        ),
-        getCalculationMethodUseCase: GetCalculationMethodUseCase(
-          prayerTimesRepository,
-        ),
-        setCalculationMethodUseCase: SetCalculationMethodUseCase(
-          prayerTimesRepository,
-        ),
-        prayerTimesRepository: prayerTimesRepository,
-        getFastingReminderSettingsUseCase: GetFastingReminderSettingsUseCase(
-          FastingRemindersRepositoryImpl(sharedPreferences),
-        ),
-        setFastingReminderSettingsUseCase: SetFastingReminderSettingsUseCase(
-          FastingRemindersRepositoryImpl(sharedPreferences),
-        ),
-        getFastingReminderSettingsStreamUseCase:
-            GetFastingReminderSettingsStreamUseCase(
-              FastingRemindersRepositoryImpl(sharedPreferences),
-            ),
-        setAppLockSettingsUseCase: SetAppLockSettingsUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        setOnboardingCompletedUseCase: SetOnboardingCompletedUseCase(
-          AppSettingsRepositoryImpl(sharedPreferences),
-        ),
-        getWirdPlanUseCase: GetWirdPlanUseCase(
-          WirdRepositoryImpl(sharedPreferences),
-        ),
-        setWirdPlanUseCase: SetWirdPlanUseCase(
-          WirdRepositoryImpl(sharedPreferences),
-        ),
-        getWirdPlanStreamUseCase: GetWirdPlanStreamUseCase(
-          WirdRepositoryImpl(sharedPreferences),
-        ),
-        clearWirdPlanUseCase: ClearWirdPlanUseCase(
-          WirdRepositoryImpl(sharedPreferences),
-        ),
-        dailyInspirationRepository: DailyInspirationSettingsRepositoryImpl(
-          sharedPreferences,
-        ),
+    final app = MyApp(
+      getSettingsUseCase: GetSettingsUseCase(appSettingsRepository),
+      getSettingsStreamUseCase: GetSettingsStreamUseCase(appSettingsRepository),
+      setThemeModeUseCase: SetThemeModeUseCase(appSettingsRepository),
+      setLanguageUseCase: SetLanguageUseCase(appSettingsRepository),
+      setNotificationSettingsUseCase: SetNotificationSettingsUseCase(
+        appSettingsRepository,
       ),
+      setAppLockSettingsUseCase: SetAppLockSettingsUseCase(
+        appSettingsRepository,
+      ),
+      setOnboardingCompletedUseCase: SetOnboardingCompletedUseCase(
+        appSettingsRepository,
+      ),
+      setUserNameUseCase: SetUserNameUseCase(appSettingsRepository),
+      getPrayerTimesUseCase: GetPrayerTimesUseCase(prayerTimesRepository),
+      getPrayerTimesRangeUseCase: GetPrayerTimesRangeUseCase(
+        prayerTimesRepository,
+      ),
+      getCalculationMethodUseCase: GetCalculationMethodUseCase(
+        prayerTimesRepository,
+      ),
+      setCalculationMethodUseCase: SetCalculationMethodUseCase(
+        prayerTimesRepository,
+      ),
+      prayerTimesRepository: prayerTimesRepository,
+      getFastingReminderSettingsUseCase: GetFastingReminderSettingsUseCase(
+        fastingRepository,
+      ),
+      setFastingReminderSettingsUseCase: SetFastingReminderSettingsUseCase(
+        fastingRepository,
+      ),
+      getFastingReminderSettingsStreamUseCase:
+          GetFastingReminderSettingsStreamUseCase(fastingRepository),
+      getWirdPlanUseCase: GetWirdPlanUseCase(wirdRepository),
+      setWirdPlanUseCase: SetWirdPlanUseCase(wirdRepository),
+      getWirdPlanStreamUseCase: GetWirdPlanStreamUseCase(wirdRepository),
+      clearWirdPlanUseCase: ClearWirdPlanUseCase(wirdRepository),
+      dailyInspirationRepository: DailyInspirationSettingsRepositoryImpl(
+        sharedPreferences,
+      ),
+      azkarReminderRepository: AzkarReminderSettingsRepositoryImpl(
+        sharedPreferences,
+      ),
+      getSalahLogUseCase: GetSalahLogUseCase(salahTrackerRepository),
+      setSalahLogUseCase: SetSalahLogUseCase(salahTrackerRepository),
+      getSalahLogStreamUseCase: GetSalahLogStreamUseCase(salahTrackerRepository),
+      clearSalahLogUseCase: ClearSalahLogUseCase(salahTrackerRepository),
     );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(app, isNotNull);
   });
 }

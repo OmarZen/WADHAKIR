@@ -11,6 +11,8 @@ import 'grids/hadith_nawawi_grid_item.dart';
 import 'grids/raqia_grid_item.dart';
 import 'grids/tasbih_grid_item.dart';
 import 'grids/electronic_tasbih_grid_item.dart';
+import 'grids/azkar_reminders_grid_item.dart';
+import 'grids/salah_tracker_grid_item.dart';
 // Hadith library grid removed (hadith feature pruned)
 // Islamic history grid removed (data retained in assets/json_data/history.json
 // for future re-enable — see islamic_history feature, currently unreferenced)
@@ -47,6 +49,7 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
           icon: Icons.favorite_rounded,
           items: const [
             PrayAzkarGridItem(),
+            AzkarRemindersGridItem(),
             TasbihGridItem(),
             ElectronicTasbihGridItem(),
           ],
@@ -56,6 +59,7 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
           title: l10n?.translate('home.section_tools') ?? 'مواقيت وأدوات',
           icon: Icons.explore_rounded,
           items: const [
+            SalahTrackerGridItem(),
             FastingCalendarGridItem(),
             MoonPhasesGridItem(),
             ZakatGridItem(),

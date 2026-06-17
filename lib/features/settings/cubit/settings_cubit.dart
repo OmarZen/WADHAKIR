@@ -5,6 +5,7 @@ import 'package:wadhakir/domain/usecases/get_settings_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_user_name_usecase.dart';
 import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
@@ -21,6 +22,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SetNotificationSettingsUseCase _setNotificationSettingsUseCase;
   final SetAppLockSettingsUseCase _setAppLockSettingsUseCase;
   final SetOnboardingCompletedUseCase? _setOnboardingCompletedUseCase;
+  final SetUserNameUseCase? _setUserNameUseCase;
   final PrayerNotificationService _notificationService;
 
   StreamSubscription? _settingsSubscription;
@@ -33,6 +35,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     required this._setNotificationSettingsUseCase,
     required this._setAppLockSettingsUseCase,
     this._setOnboardingCompletedUseCase,
+    this._setUserNameUseCase,
     PrayerNotificationService? notificationService,
   }) : _notificationService =
            notificationService ?? PrayerNotificationService(),
@@ -45,6 +48,17 @@ class SettingsCubit extends Cubit<SettingsState> {
     if (_setOnboardingCompletedUseCase == null) return;
     try {
       await _setOnboardingCompletedUseCase.call(completed);
+    } catch (e) {
+      emit(SettingsError(e.toString()));
+    }
+  }
+
+  /// Persist the user's name. State re-emits via the settings stream listener,
+  /// so the home greeting and any name UI update reactively.
+  Future<void> setUserName(String name) async {
+    if (_setUserNameUseCase == null) return;
+    try {
+      await _setUserNameUseCase.call(name.trim());
     } catch (e) {
       emit(SettingsError(e.toString()));
     }

@@ -11,6 +11,8 @@ import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
+import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
+import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/features/home/views/widgets/about_developer_dialog.dart';
 import 'package:wadhakir/features/home/views/widgets/hijri_calendar_bottom_sheet.dart';
 
@@ -30,7 +32,10 @@ class WelcomeSectionWidget extends StatefulWidget {
 
 class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
   Timer? _timer;
-  DateTime _now = DateTime.now();
+  // A ValueNotifier so the per-second tick rebuilds ONLY the countdown subtree
+  // (via ValueListenableBuilder), not the whole hero — the mosque image,
+  // gradient, date card and quote no longer re-render every second.
+  final ValueNotifier<DateTime> _now = ValueNotifier<DateTime>(DateTime.now());
   late final IslamicQuote _quote;
 
   @override
@@ -39,20 +44,21 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
     _quote = IslamicQuotes.getRandomQuote();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      setState(() => _now = DateTime.now());
+      _now.value = DateTime.now();
     });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _now.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final now = _now;
+    final now = _now.value;
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isDesktop = PlatformUtils.isDesktop;
@@ -204,66 +210,61 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Gregorian Date
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
+              // Gregorian + Hijri date, wrapped so the visible date self-
+              // corrects at midnight even though the per-second tick no longer
+              // rebuilds the whole hero. Recomputes the Hijri date each tick
+              // rather than relying on the one-shot widget.hijriDate prop.
+              ValueListenableBuilder<DateTime>(
+                valueListenable: _now,
+                builder: (context, now, _) {
+                  final hijriNow = HijriDateTime.now();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: iconSize,
-                        color: Colors.white.withValues(alpha: 0.9),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: iconSize,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                          SizedBox(width: isDesktop ? 8 : 6),
+                          Text(
+                            '${now.day} ${AppDateUtils.getGregorianMonthName(now.month, l10n)}',
+                            style: TextStyle(
+                              fontSize: fontSize,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(width: isDesktop ? 8 : 6),
-                      Text(
-                        '${now.day} ${AppDateUtils.getGregorianMonthName(now.month, l10n)}',
-                        style: TextStyle(
-                          fontSize: fontSize,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.mosque,
+                            size: iconSize * 0.9,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                          SizedBox(width: isDesktop ? 8 : 6),
+                          Text(
+                            AppDateUtils.getShortFormattedHijriDate(
+                              hijriNow,
+                              l10n,
+                            ),
+                            style: TextStyle(
+                              fontSize: smallFontSize,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                  SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.mosque,
-                        size: iconSize * 0.9,
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                      SizedBox(width: isDesktop ? 8 : 6),
-                      Text(
-                        AppDateUtils.getShortFormattedHijriDate(
-                          widget.hijriDate,
-                          l10n,
-                        ),
-                        style: TextStyle(
-                          fontSize: smallFontSize,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(width: isDesktop ? 12 : 8),
-              // Click indicator
-              Container(
-                padding: EdgeInsets.all(isDesktop ? 8 : 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: iconSize * 0.7,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
+                  );
+                },
               ),
             ],
           ),
@@ -355,14 +356,61 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                 ),
               ),
 
-              // Welcome Text
-              Text(
-                l10n?.translate('home.welcome_message') ?? 'السلام عليكم',
-                style: TextStyle(
-                  fontSize: subtitleFontSize,
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontWeight: FontWeight.w500,
-                ),
+              // Welcome Text — personalized with the user's name when set.
+              // Scoped BlocBuilder so only this line rebuilds on a name change,
+              // leaving the mosque hero / per-second countdown subtree untouched.
+              BlocBuilder<SettingsCubit, SettingsState>(
+                buildWhen: (prev, curr) =>
+                    curr is SettingsLoaded &&
+                    (prev is! SettingsLoaded ||
+                        prev.settings.userName != curr.settings.userName),
+                builder: (context, state) {
+                  // Fixed "السلام عليكم" (personalized with the name when set),
+                  // followed on the same line by a softer, time-aware blessing
+                  // (صباح الخيرات الكثيرات / مساء الخيرات).
+                  final salam =
+                      l10n?.translate('home.welcome_message') ?? 'السلام عليكم';
+                  final name = state is SettingsLoaded
+                      ? state.settings.userName.trim()
+                      : '';
+                  final primary = name.isEmpty
+                      ? salam
+                      : (l10n?.translate('home.welcome_message_named') ??
+                                'السلام عليكم، {name}')
+                            .replaceAll('{name}', name);
+                  final hour = DateTime.now().hour;
+                  final blessing = (hour >= 4 && hour < 12)
+                      ? (l10n?.translate('home.blessing_morning') ??
+                            'صباح الخيرات الكثيرات')
+                      : (l10n?.translate('home.blessing_evening') ??
+                            'مساء الخيرات');
+                  return Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: primary,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        TextSpan(
+                          text: '  •  $blessing',
+                          style: TextStyle(
+                            fontSize: subtitleFontSize * 0.9,
+                            color: Colors.white.withValues(alpha: 0.72),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: subtitleFontSize,
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontWeight: FontWeight.w500,
+                      height: 1.35,
+                    ),
+                  );
+                },
               ),
               SizedBox(height: isDesktop ? 8 : 6),
               Text(
@@ -466,19 +514,6 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
           return const SizedBox.shrink();
         }
 
-        // Calculate live time difference using _now that updates every second
-        final nextPrayerTime = prayerTimes.nextPrayer;
-        final timeUntilNext = nextPrayerTime.difference(_now);
-        final totalInterval = prayerTimes.totalIntervalBetweenPrayers;
-        final progress =
-            1 - (timeUntilNext.inSeconds / totalInterval.inSeconds);
-
-        final hours = timeUntilNext.inHours;
-        final minutes = timeUntilNext.inMinutes.remainder(60);
-        final seconds = timeUntilNext.inSeconds.remainder(60);
-
-        final nextPrayerName = prayerTimes.nextPrayerName;
-
         // Compact responsive sizing
         final circleSize = isDesktop ? 110.0 : size.width * 0.24;
         final strokeWidth = isDesktop ? 6.0 : size.width * 0.015;
@@ -501,150 +536,181 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
         // Glass surface using the shared design tokens — keeps the next
         // prayer card consistent with the bottom nav's glass and any future
         // floating surfaces (overlay pill bar etc.).
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(Radii.lg),
-          child: BackdropFilter(
-            filter: GlassTokens.filterFor(GlassIntensity.medium),
-            child: Container(
-              padding: EdgeInsets.all(isDesktop ? Spacing.md : Spacing.sm + 2),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.20),
-                    Colors.white.withValues(alpha: 0.10),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(Radii.lg),
-                border: Border.all(
-                  color: Colors.white.withValues(
-                    alpha: GlassTokens.borderOpacity(GlassIntensity.medium),
+        //
+        // Only this countdown subtree listens to the per-second tick, so the
+        // mosque image / gradient / quote above don't rebuild every second.
+        return ValueListenableBuilder<DateTime>(
+          valueListenable: _now,
+          builder: (context, now, _) {
+            // Recompute the target each tick: PrayerTimesModel.nextPrayer /
+            // nextPrayerName / totalIntervalBetweenPrayers are all relative to
+            // DateTime.now(), so they must be re-read every second to roll over
+            // to the following prayer once an adhan time passes — otherwise the
+            // countdown would go negative and the name would stick on the prayer
+            // that just elapsed.
+            final nextPrayerTime = prayerTimes.nextPrayer;
+            final nextPrayerName = prayerTimes.nextPrayerName;
+            final totalInterval = prayerTimes.totalIntervalBetweenPrayers;
+            final timeUntilNext = nextPrayerTime.difference(now);
+            final progress =
+                1 - (timeUntilNext.inSeconds / totalInterval.inSeconds);
+            final hours = timeUntilNext.inHours;
+            final minutes = timeUntilNext.inMinutes.remainder(60);
+            final seconds = timeUntilNext.inSeconds.remainder(60);
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(Radii.lg),
+              child: BackdropFilter(
+                filter: GlassTokens.filterFor(GlassIntensity.medium),
+                child: Container(
+                  padding: EdgeInsets.all(
+                    isDesktop ? Spacing.md : Spacing.sm + 2,
                   ),
-                  width: GlassTokens.borderWidth,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Compact Header with Prayer Name
-                  Column(
-                    children: [
-                      Text(
-                        l10n?.translate('home.next_prayer') ?? 'الصلاة القادمة',
-                        style: TextStyle(
-                          fontSize: labelSize,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w500,
-                          fontFamily: 'Almarai',
-                          letterSpacing: 0.5,
-                        ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.20),
+                        Colors.white.withValues(alpha: 0.10),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(Radii.lg),
+                    border: Border.all(
+                      color: Colors.white.withValues(
+                        alpha: GlassTokens.borderOpacity(GlassIntensity.medium),
                       ),
-                      SizedBox(height: 4),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.mosque_rounded,
-                            color: Colors.white,
-                            size: prayerNameSize * 0.9,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            nextPrayerName,
-                            style: TextStyle(
-                              fontSize: prayerNameSize,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Almarai',
-                            ),
-                          ),
-                        ],
+                      width: GlassTokens.borderWidth,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-
-                  SizedBox(height: isDesktop ? 10 : 8),
-
-                  // Compact Circular Progress Indicator
-                  SizedBox(
-                    width: circleSize,
-                    height: circleSize,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Background Circle
-                        SizedBox(
-                          width: circleSize,
-                          height: circleSize,
-                          child: CircularProgressIndicator(
-                            value: 1.0,
-                            strokeWidth: strokeWidth,
-                            backgroundColor: Colors.transparent,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white.withValues(alpha: 0.2),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Compact Header with Prayer Name
+                      Column(
+                        children: [
+                          Text(
+                            l10n?.translate('home.next_prayer') ??
+                                'الصلاة القادمة',
+                            style: TextStyle(
+                              fontSize: labelSize,
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Almarai',
+                              letterSpacing: 0.5,
                             ),
                           ),
-                        ),
-                        // Progress Circle with gradient effect
-                        SizedBox(
-                          width: circleSize,
-                          height: circleSize,
-                          child: CircularProgressIndicator(
-                            value: progress.clamp(0.0, 1.0),
-                            strokeWidth: strokeWidth,
-                            backgroundColor: Colors.transparent,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                            strokeCap: StrokeCap.round,
-                          ),
-                        ),
-                        // Center Content - Minimalist Time Display
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Remaining Time - Always show H:MM:SS format
-                            Text(
-                              '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                fontSize: timeSize,
+                          SizedBox(height: 4),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.mosque_rounded,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Courier',
-                                height: 1.1,
-                                letterSpacing: 0.5,
+                                size: prayerNameSize * 0.9,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                nextPrayerName,
+                                style: TextStyle(
+                                  fontSize: prayerNameSize,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Almarai',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: isDesktop ? 10 : 8),
+
+                      // Compact Circular Progress Indicator
+                      SizedBox(
+                        width: circleSize,
+                        height: circleSize,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Background Circle
+                            SizedBox(
+                              width: circleSize,
+                              height: circleSize,
+                              child: CircularProgressIndicator(
+                                value: 1.0,
+                                strokeWidth: strokeWidth,
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white.withValues(alpha: 0.2),
+                                ),
                               ),
                             ),
-                            SizedBox(height: 2),
-                            // Time Unit Label - Very compact
-                            Text(
-                              l10n?.translate('home.remaining') ?? 'متبقي',
-                              style: TextStyle(
-                                fontSize: labelSize,
-                                color: Colors.white.withValues(alpha: 0.85),
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Almarai',
-                                letterSpacing: 0.3,
+                            // Progress Circle with gradient effect
+                            SizedBox(
+                              width: circleSize,
+                              height: circleSize,
+                              child: CircularProgressIndicator(
+                                value: progress.clamp(0.0, 1.0),
+                                strokeWidth: strokeWidth,
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                                strokeCap: StrokeCap.round,
                               ),
+                            ),
+                            // Center Content - Minimalist Time Display
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Remaining Time - Always show H:MM:SS format
+                                Text(
+                                  '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Almarai',
+                                    // Fixed-width digits so the countdown doesn't
+                                    // jitter each second (replaces the unbundled
+                                    // 'Courier' that fell back unpredictably).
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                    height: 1.1,
+                                    letterSpacing: 0.5,
+                                  ).copyWith(fontSize: timeSize),
+                                ),
+                                SizedBox(height: 2),
+                                // Time Unit Label - Very compact
+                                Text(
+                                  l10n?.translate('home.remaining') ?? 'متبقي',
+                                  style: TextStyle(
+                                    fontSize: labelSize,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: 'Almarai',
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -672,13 +738,11 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
     bool isDesktop, {
     double scale = 1.0,
   }) {
-    if (isDesktop) {
-      // Desktop: Fixed sizes with scale
-      final baseSize = 16.0;
-      return baseSize * scale;
-    }
-    // Mobile: Relative to width
-    return (width * 0.035) * scale;
+    // Fixed base with gentle width adaptation, then clamp the result so small
+    // scales (quote/source) never fall below a legible floor — the hero text
+    // must stay readable in sunlight and for older users (a stated priority).
+    final base = isDesktop ? 16.0 : (width * 0.038).clamp(13.0, 17.0);
+    return (base * scale).clamp(12.0, 64.0);
   }
 
   double _getResponsiveIconSize(
@@ -696,6 +760,14 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
     BuildContext context,
     UnsplashPhoto mosqueImage,
   ) {
+    // Cap the decode to the device's pixel width. The source mosque JPEGs are
+    // up to 4016×6016 (~96 MB decoded RGBA, vs Flutter's 100 MB image cache);
+    // this header is only a few hundred logical px tall, so decoding at native
+    // resolution thrashed the cache and risked OOM on low-end devices. Decoding
+    // at screen width drops it to ~10 MB with no visible quality loss.
+    final mq = MediaQuery.of(context);
+    final decodeWidth = (mq.size.width * mq.devicePixelRatio).round();
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 1200),
       switchInCurve: Curves.easeOutCubic,
@@ -715,6 +787,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
         mosqueImage.imageUrl,
         key: ValueKey(mosqueImage.id),
         fit: BoxFit.cover,
+        cacheWidth: decodeWidth,
         color: Colors.black.withValues(alpha: 0.1),
         colorBlendMode: BlendMode.darken,
         gaplessPlayback: true,

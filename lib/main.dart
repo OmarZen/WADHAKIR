@@ -6,7 +6,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:forui/forui.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:wadhakir/core/routes/app_router.dart';
+import 'package:wadhakir/core/notifications/app_notification_listeners.dart';
+import 'package:wadhakir/core/notifications/notification_router.dart';
+import 'package:wadhakir/core/notifications/pending_notification_action.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/app_theme/forui_theme.dart';
 import 'package:wadhakir/data/models/hive_adapters.dart';
@@ -23,6 +27,7 @@ import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/features/splash_screen/splash_screen.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_user_name_usecase.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/repositories/radio_repository_impl.dart';
@@ -51,12 +56,22 @@ import 'package:wadhakir/domain/usecases/set_wird_plan_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_wird_plan_stream_usecase.dart';
 import 'package:wadhakir/domain/usecases/clear_wird_plan_usecase.dart';
 import 'package:wadhakir/features/wird/cubit/wird_cubit.dart';
+import 'package:wadhakir/data/repositories/salah_tracker_repository_impl.dart';
+import 'package:wadhakir/domain/usecases/get_salah_log_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_salah_log_usecase.dart';
+import 'package:wadhakir/domain/usecases/get_salah_log_stream_usecase.dart';
+import 'package:wadhakir/domain/usecases/clear_salah_log_usecase.dart';
+import 'package:wadhakir/features/salah_tracker/cubit/salah_tracker_cubit.dart';
 import 'package:wadhakir/data/repositories/daily_inspiration_settings_repository_impl.dart';
 import 'package:wadhakir/features/daily_inspiration/cubit/daily_inspiration_cubit.dart';
+import 'package:wadhakir/data/repositories/azkar_reminder_settings_repository_impl.dart';
+import 'package:wadhakir/features/azkar_reminders/cubit/azkar_reminders_cubit.dart';
+import 'package:wadhakir/features/azkar_reminders/cubit/azkar_reminders_state.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_platform_service.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_prayer_window.dart';
 import 'package:wadhakir/features/floating_dhikr/service/floating_dhikr_overlay_entry.dart';
 import 'package:wadhakir/features/floating_dhikr/service/floating_dhikr_service.dart';
+import 'package:wadhakir/features/feature_discovery/services/feature_discovery_service.dart';
 
 /// Entry point used by `flutter_overlay_window` for the secondary engine
 /// that renders the floating adhkar pill bar over other apps. Delegates to
@@ -153,6 +168,24 @@ void main() async {
   await quranInitFuture;
   await notificationInitFuture;
 
+  // Register the single app-wide notification listener set (channels are ready
+  // now). This MUST be the only setListeners call — feature services no longer
+  // register their own, which would otherwise overwrite the router-aware one.
+  AppNotificationListeners.register();
+
+  // If a notification tap launched the app from a killed state, capture it so
+  // the splash can route to the right page once the navigator is mounted.
+  try {
+    final launchAction = await AwesomeNotifications()
+        .getInitialNotificationAction(removeFromActionEvents: true)
+        .timeout(const Duration(seconds: 2));
+    if (launchAction != null) {
+      PendingNotificationAction.capture(launchAction.payload);
+    }
+  } catch (e) {
+    debugPrint('getInitialNotificationAction failed (non-fatal): $e');
+  }
+
   // Create repositories
   final appSettingsRepository = AppSettingsRepositoryImpl(sharedPreferences);
   final prayerTimesRepository = PrayerTimesRepositoryImpl();
@@ -160,6 +193,7 @@ void main() async {
     sharedPreferences,
   );
   final wirdRepository = WirdRepositoryImpl(sharedPreferences);
+  final salahTrackerRepository = SalahTrackerRepositoryImpl(sharedPreferences);
 
   // Create settings use cases
   final getSettingsUseCase = GetSettingsUseCase(appSettingsRepository);
@@ -178,6 +212,7 @@ void main() async {
   final setOnboardingCompletedUseCase = SetOnboardingCompletedUseCase(
     appSettingsRepository,
   );
+  final setUserNameUseCase = SetUserNameUseCase(appSettingsRepository);
 
   // Create prayer times use cases
   final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
@@ -207,8 +242,23 @@ void main() async {
   final getWirdPlanStreamUseCase = GetWirdPlanStreamUseCase(wirdRepository);
   final clearWirdPlanUseCase = ClearWirdPlanUseCase(wirdRepository);
 
+  // Salah tracker use cases
+  final getSalahLogUseCase = GetSalahLogUseCase(salahTrackerRepository);
+  final setSalahLogUseCase = SetSalahLogUseCase(salahTrackerRepository);
+  final getSalahLogStreamUseCase = GetSalahLogStreamUseCase(
+    salahTrackerRepository,
+  );
+  final clearSalahLogUseCase = ClearSalahLogUseCase(salahTrackerRepository);
+
   // Daily inspiration (Verse/Dua of the Day) settings repository.
   final dailyInspirationRepository = DailyInspirationSettingsRepositoryImpl(
+    sharedPreferences,
+  );
+
+  // Daily azkar reminders settings repository. Shared between the eager
+  // AzkarRemindersCubit (repeating reminders) and PrayerTimesCubit (the
+  // prayer-time-driven reminders).
+  final azkarReminderRepository = AzkarReminderSettingsRepositoryImpl(
     sharedPreferences,
   );
 
@@ -225,6 +275,7 @@ void main() async {
       setNotificationSettingsUseCase: setNotificationSettingsUseCase,
       setAppLockSettingsUseCase: setAppLockSettingsUseCase,
       setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
+      setUserNameUseCase: setUserNameUseCase,
       // Quran
 
       // Prayer Times
@@ -245,6 +296,13 @@ void main() async {
       clearWirdPlanUseCase: clearWirdPlanUseCase,
       // Daily inspiration (Verse/Dua of the Day)
       dailyInspirationRepository: dailyInspirationRepository,
+      // Daily azkar reminders
+      azkarReminderRepository: azkarReminderRepository,
+      // Salah tracker
+      getSalahLogUseCase: getSalahLogUseCase,
+      setSalahLogUseCase: setSalahLogUseCase,
+      getSalahLogStreamUseCase: getSalahLogStreamUseCase,
+      clearSalahLogUseCase: clearSalahLogUseCase,
     ),
   );
 
@@ -253,6 +311,11 @@ void main() async {
   // inside bootstrap and a failure is silent.
   // ignore: unawaited_futures
   FloatingDhikrService.instance.bootstrap();
+
+  // Fire-and-forget: maybe schedule a feature-discovery nudge (rate-capped to
+  // once every few days inside the service). No await — failures are silent.
+  // ignore: unawaited_futures
+  FeatureDiscoveryService.instance.maybeScheduleNext(sharedPreferences);
 
   // The native splash is removed on the Dart splash's first frame
   // (see WadhakirSplashScreen) so the hand-off is seamless with no white flash.
@@ -267,6 +330,7 @@ class MyApp extends StatelessWidget {
   final SetNotificationSettingsUseCase setNotificationSettingsUseCase;
   final SetAppLockSettingsUseCase setAppLockSettingsUseCase;
   final SetOnboardingCompletedUseCase setOnboardingCompletedUseCase;
+  final SetUserNameUseCase setUserNameUseCase;
 
   // Quran
 
@@ -292,6 +356,15 @@ class MyApp extends StatelessWidget {
   // Daily inspiration (Verse/Dua of the Day)
   final DailyInspirationSettingsRepositoryImpl dailyInspirationRepository;
 
+  // Daily azkar reminders
+  final AzkarReminderSettingsRepositoryImpl azkarReminderRepository;
+
+  // Salah tracker
+  final GetSalahLogUseCase getSalahLogUseCase;
+  final SetSalahLogUseCase setSalahLogUseCase;
+  final GetSalahLogStreamUseCase getSalahLogStreamUseCase;
+  final ClearSalahLogUseCase clearSalahLogUseCase;
+
   final _appLockPrayerSync = _AppLockPrayerSync(const AppLockPlatformService());
 
   MyApp({
@@ -304,6 +377,7 @@ class MyApp extends StatelessWidget {
     required this.setNotificationSettingsUseCase,
     required this.setAppLockSettingsUseCase,
     required this.setOnboardingCompletedUseCase,
+    required this.setUserNameUseCase,
     // Quran
 
     // Prayer Times
@@ -323,6 +397,13 @@ class MyApp extends StatelessWidget {
     required this.clearWirdPlanUseCase,
     // Daily inspiration (Verse/Dua of the Day)
     required this.dailyInspirationRepository,
+    // Daily azkar reminders
+    required this.azkarReminderRepository,
+    // Salah tracker
+    required this.getSalahLogUseCase,
+    required this.setSalahLogUseCase,
+    required this.getSalahLogStreamUseCase,
+    required this.clearSalahLogUseCase,
   });
 
   @override
@@ -338,6 +419,7 @@ class MyApp extends StatelessWidget {
             setNotificationSettingsUseCase: setNotificationSettingsUseCase,
             setAppLockSettingsUseCase: setAppLockSettingsUseCase,
             setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
+            setUserNameUseCase: setUserNameUseCase,
           ),
           lazy: false,
         ),
@@ -352,6 +434,7 @@ class MyApp extends StatelessWidget {
             getCalculationMethodUseCase,
             setCalculationMethodUseCase,
             repository: prayerTimesRepository,
+            azkarReminderRepository: azkarReminderRepository,
           ),
           // Eager so prayer times load at cold start and the BlocListeners
           // schedule the adhan notifications without needing the user to open
@@ -386,6 +469,23 @@ class MyApp extends StatelessWidget {
           create: (_) => DailyInspirationCubit(dailyInspirationRepository),
           // Eager so today's notification is (re)scheduled and the home
           // widget is pushed at cold start.
+          lazy: false,
+        ),
+        BlocProvider<AzkarRemindersCubit>(
+          create: (_) => AzkarRemindersCubit(azkarReminderRepository),
+          // Eager so the repeating azkar reminders (morning/evening/etc.) are
+          // (re)scheduled at cold start without opening any screen.
+          lazy: false,
+        ),
+        BlocProvider<SalahTrackerCubit>(
+          create: (_) => SalahTrackerCubit(
+            getLogUseCase: getSalahLogUseCase,
+            setLogUseCase: setSalahLogUseCase,
+            getLogStreamUseCase: getSalahLogStreamUseCase,
+            clearLogUseCase: clearSalahLogUseCase,
+          ),
+          // Eager so the home card's today ring + streak are ready and the
+          // day-rollover refresh works without opening the tracker screen.
           lazy: false,
         ),
       ],
@@ -430,6 +530,17 @@ class MyApp extends StatelessWidget {
               }
             },
           ),
+          // When azkar reminder settings change, refresh the prayer-time-driven
+          // ones (after-prayer, Duha, last-third Qiyam) right away so toggles
+          // take effect without waiting for the next prayer-times refresh.
+          BlocListener<AzkarRemindersCubit, AzkarRemindersState>(
+            listenWhen: (previous, current) =>
+                previous.settings != current.settings,
+            listener: (context, state) {
+              // ignore: unawaited_futures
+              context.read<PrayerTimesCubit>().rescheduleAzkarPrayerDriven();
+            },
+          ),
         ],
         child: _GlassWidgetResumeRefresher(
           child: BlocBuilder<SettingsCubit, SettingsState>(
@@ -461,6 +572,7 @@ class MyApp extends StatelessWidget {
                 ],
                 supportedLocales: LanguageManager.supportedLocales,
                 locale: locale,
+                navigatorKey: AppRouter.navigatorKey,
                 onGenerateRoute: AppRouter.onGenerateRoute,
                 // Layer forui alongside Material: every route below gets an
                 // FTheme derived from the active Material theme, so forui
@@ -502,12 +614,26 @@ class _GlassWidgetResumeRefresherState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Warm taps (app alive): route the tapped notification once the frame is
+    // ready. Cold-start taps are consumed by the splash instead.
+    PendingNotificationAction.notifier.addListener(_onPendingNotification);
   }
 
   @override
   void dispose() {
+    PendingNotificationAction.notifier.removeListener(_onPendingNotification);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onPendingNotification() {
+    final payload = PendingNotificationAction.notifier.value;
+    if (payload == null) return;
+    // Clear the holder so a later cold-start consume can't double-dispatch.
+    PendingNotificationAction.consume();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationRouter.dispatch(payload);
+    });
   }
 
   @override
@@ -519,12 +645,23 @@ class _GlassWidgetResumeRefresherState
     // ignore: unawaited_futures
     context.read<DailyInspirationCubit>().refreshForToday();
 
+    // Feature-discovery: maybe schedule the next nudge (rate-capped inside the
+    // service, so this is a no-op until the cadence window opens).
+    // ignore: unawaited_futures
+    SharedPreferences.getInstance().then(
+      FeatureDiscoveryService.instance.maybeScheduleNext,
+    );
+
     final prayerCubit = context.read<PrayerTimesCubit>();
 
     // If the day rolled over while the app was backgrounded, silently recompute
     // (no spinner) so today's times, countdown and scheduled adhan are correct.
     // ignore: unawaited_futures
     prayerCubit.refreshIfStale();
+
+    // Re-anchor the Salah tracker's "today" so the streak + today rows roll
+    // over too (cheap no-op when the day hasn't changed).
+    context.read<SalahTrackerCubit>().refreshIfStale();
 
     final prayerState = prayerCubit.state;
     if (prayerState is! PrayerTimesLoaded) return;

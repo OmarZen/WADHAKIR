@@ -33,6 +33,16 @@ class BrandedHeader extends StatelessWidget {
           ],
         ),
         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+        // Soft branded elevation so the header separates cleanly from the
+        // scrolling content beneath it (consistent in light & dark mode).
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withValues(alpha: 0.28),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+            spreadRadius: -6,
+          ),
+        ],
       ),
       child: Row(
         children: [

@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
 import 'package:wadhakir/features/settings/view/widgets/app_lock_settings_widget.dart';
@@ -27,7 +29,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const int _pageCount = 5;
+  static const int _pageCount = 6;
 
   late final PageController _controller;
   // Continuous page offset (e.g. 1.32 while mid-swipe). Drives every smooth
@@ -79,6 +81,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final settingsCubit = context.read<SettingsCubit>();
     final navigator = Navigator.of(context);
     await settingsCubit.setOnboardingCompleted(true);
+    // New users were already offered the name field on the dedicated
+    // onboarding page, so suppress the existing-user name prompt for them.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.namePromptSeenKey, true);
     if (!mounted) return;
     navigator.pushReplacement(_homeRoute());
   }
@@ -202,6 +208,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       case 0:
         return _WelcomePage(palette: palette, fonts: fonts, l10n: l10n);
       case 1:
+        return _NamePage(palette: palette, fonts: fonts, l10n: l10n);
+      case 2:
         return _SetupPage(
           palette: palette,
           fonts: fonts,
@@ -223,14 +231,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             }
           },
         );
-      case 2:
+      case 3:
         return _AppLockPage(
           palette: palette,
           fonts: fonts,
           l10n: l10n,
           settingsState: settingsState,
         );
-      case 3:
+      case 4:
         return _PrayerPage(palette: palette, fonts: fonts, l10n: l10n);
       default:
         return _FloatingDhikrPage(
@@ -905,6 +913,93 @@ class _WelcomePage extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
                 fontFamily: fonts.bodyFontFamily,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Dedicated, optional name-collection page. Persists live so the name
+/// survives Skip / swiping back and forth, and the home greeting already
+/// reflects it by the time onboarding finishes.
+class _NamePage extends StatefulWidget {
+  const _NamePage({
+    required this.palette,
+    required this.fonts,
+    required this.l10n,
+  });
+
+  final _OnboardingPalette palette;
+  final _OnboardingFonts fonts;
+  final AppLocalizations? l10n;
+
+  @override
+  State<_NamePage> createState() => _NamePageState();
+}
+
+class _NamePageState extends State<_NamePage> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill if a name is already stored (e.g. re-running onboarding).
+    final state = context.read<SettingsCubit>().state;
+    if (state is SettingsLoaded && state.settings.userName.isNotEmpty) {
+      _controller.text = state.settings.userName;
+    }
+    _controller.addListener(_persist);
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeListener(_persist)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _persist() =>
+      context.read<SettingsCubit>().setUserName(_controller.text.trim());
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _PageHero(
+      icon: Icons.person_outline_rounded,
+      palette: widget.palette,
+      fonts: widget.fonts,
+      title: _t(widget.l10n, 'onboarding.name_title', 'What should we call you?'),
+      subtitle: _t(
+        widget.l10n,
+        'onboarding.name_subtitle',
+        "We'll greet you by name on the home screen. This is optional.",
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FTextField(
+              control: FTextFieldControl.managed(controller: _controller),
+              hint: _t(widget.l10n, 'onboarding.name_hint', 'Your first name'),
+              textInputAction: TextInputAction.done,
+              textCapitalization: TextCapitalization.words,
+              maxLines: 1,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _t(
+                widget.l10n,
+                'onboarding.name_optional_hint',
+                'You can skip this and add it later in Settings.',
+              ),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                fontFamily: widget.fonts.bodyFontFamily,
               ),
             ),
           ],

@@ -123,6 +123,12 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   // Must match `DailyInspirationNotificationService.channelKey`. Same reason as
   // wird — registered here so the eager cold-start initialize() doesn't wipe it.
   static const String _channelKeyDailyInspiration = 'daily_inspiration_channel';
+  // Must match `AzkarNotificationService.channelKey`. Registered here so the
+  // eager cold-start initialize() doesn't wipe the azkar reminders channel.
+  static const String _channelKeyAzkar = 'azkar_reminders_channel';
+  // Must match `FeatureDiscoveryService.channelKey`. Low-key re-engagement
+  // nudges — registered here for the same channel-replace reason.
+  static const String _channelKeyFeatureNudge = 'feature_nudge_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
   // Notification IDs for each prayer
@@ -301,6 +307,37 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
           onlyAlertOnce: true,
           icon: 'resource://drawable/ic_notification',
         ),
+        // Daily azkar reminders (morning/evening, after-prayer, qiyam, etc.).
+        NotificationChannel(
+          channelKey: _channelKeyAzkar,
+          channelName: 'تذكير الأذكار',
+          channelDescription:
+              'تذكيرات الأذكار اليومية (الصباح، المساء، بعد الصلاة، قيام الليل)',
+          importance: NotificationImportance.High,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
+        ),
+        // Feature-discovery / re-engagement nudges (low-key, spaced out).
+        NotificationChannel(
+          channelKey: _channelKeyFeatureNudge,
+          channelName: 'اكتشف ميزات التطبيق',
+          channelDescription: 'تذكير لطيف بميزات التطبيق التي لم تجرّبها بعد',
+          importance: NotificationImportance.Default,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
+        ),
       ],
       channelGroups: [
         NotificationChannelGroup(
@@ -389,6 +426,7 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
       body: '$formattedTime${location.isNotEmpty ? ' • $location' : ''}',
       notificationLayout: NotificationLayout.Default,
       payload: {
+        'type': 'prayer',
         'prayer': prayerName,
         'time': prayerTime.toIso8601String(),
         'soundPath': settings.customSoundPath ?? '',

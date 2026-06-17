@@ -5,6 +5,35 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1+21] - 2026-06-17
+
+### Added
+
+- **Prayer Tracker (سجل الصلاة)** — log each of the five daily prayers (on-time / late / qada / missed) with a quick-tap cycle, track your **current and best streak**, and review weekly summaries, a monthly heatmap, and qada (make-up) counters. Optional tracking of the Sunnah rawatib and Witr. Reachable from the home grid and surfaced on the home screen via the new streak banner.
+- **Azkar reminders (تذكيرات الأذكار)** — schedulable reminders for morning/evening adhkar, after-prayer adhkar (a chosen number of minutes after each prayer), and qiyam — managed from a dedicated settings page.
+- **Feature suggestions (re-engagement nudges)** — gentle, opt-out notifications that surface features you haven't tried yet, on a relaxed cadence, with deep-linking from the notification straight into the relevant screen.
+- **Celebration rewards (gamification)** — completing a meaningful daily act now fires a confetti burst, a heavy haptic, and a short congrats message, to make progress feel rewarding and lift daily retention. Triggers: marking the **daily wird** complete, logging **all five prayers** for the day, finishing an **azkar set**, and reaching a **tasbih target**. Rare milestones — a **finished khatma** and **7 / 30 / 100-day prayer streaks** — get a bigger gold-star burst plus a brief "achievement" card that scales in and fades out on its own. A shared `Celebration` helper (`lib/core/widgets/celebration.dart`) powers all of it via `flutter_confetti`; celebrations fire only on a genuine completion transition (never on re-opening an already-complete screen) and respect reduced-motion.
+- **Personal name & greeting** — the app can now greet you by name. New users enter it on a dedicated, optional onboarding page; users who already had the app installed get a one-time, gentle in-app prompt on the home screen (shown once, never nags); and anyone can set or change it later from a new **Profile** entry at the top of Settings. The name is stored locally through the existing settings repository/stream so the greeting updates reactively.
+- **Personalized, time-aware home greeting** — the welcome card keeps the fixed **"السلام عليكم"** (personalized with your name when set) and adds a softer, time-aware blessing on the same line — **"صباح الخيرات الكثيرات"** in the morning and **"مساء الخيرات"** later — laid out to wrap gracefully on small screens.
+- **Streak banner on home** — a compact, tappable card surfaces your **prayer streak (🔥)** and **today's prayer-completion ring** right on the home screen (the "don't break the chain" cue), with a spring "pop" when the streak grows and a gentle "ابدأ سلسلتك اليوم" prompt when there's no streak yet. Tapping opens the full prayer tracker.
+- New `confetti`/celebration localization strings, name-prompt/onboarding/settings name strings, and the streak/blessing strings in both Arabic and English.
+
+### Changed
+
+- **Electronic tasbih — redesigned** — the screen previously stacked an oversized bead ring, a counter pill, and a separate tap button that crowded and overlapped on smaller phones. It's now a single **hero counter**: one circular progress ring with a tappable inner disc showing the live count and target, framed by a subtle rotating bead accent. The hero is responsively sized (bounded by the smaller of screen width/height) so it never dominates wide screens or overflows short ones, the layout is centered with generous whitespace, and tapping gives a tactile press-scale plus the count "pop" (the old decorative continuous pulse was removed).
+- **Streak number pop** — the prayer-tracker streak number now animates with a small spring bounce whenever it increases (respecting reduced-motion).
+- Added `flutter_confetti: ^0.5.2`.
+
+### Fixed
+
+- **Tasbih layout overflow** — the tasbih content could overflow the bottom on shorter screens (`RenderFlex overflowed`); it now stays evenly composed when there's room and scrolls gracefully when space is tight.
+
+### Version
+
+- App version bumped from `3.3.0+20` to `3.3.1+21`.
+- MSIX version bumped from `3.3.0.0` to `3.3.1.0`.
+- Updated the displayed app version in the Arabic and English settings strings.
+
 ## [3.3.0+20] - 2026-06-08
 
 ### Added

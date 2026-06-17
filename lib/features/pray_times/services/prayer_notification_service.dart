@@ -1,7 +1,5 @@
 import 'dart:developer';
-import 'adhan_player_service.dart';
 import '../../../data/models/notification_settings_model.dart';
-import 'package:awesome_notifications/awesome_notifications.dart';
 import '../../../domain/repositories/notification_repository.dart';
 import '../../../data/repositories/notification_repository_impl.dart';
 
@@ -15,87 +13,16 @@ class PrayerNotificationService {
   final NotificationRepository _repository = NotificationRepositoryImpl();
   bool _isInitialized = false;
 
-  /// Initialize the notification service
+  /// Initialize the notification service.
+  ///
+  /// Notification action/display listeners are registered once, centrally, in
+  /// `AppNotificationListeners.register()` from `main()` — not here — because
+  /// `setListeners` only honours one registration (last caller wins).
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     await _repository.initialize();
-    await _setupListeners();
     _isInitialized = true;
-  }
-
-  /// Setup notification action listeners
-  Future<void> _setupListeners() async {
-    AwesomeNotifications().setListeners(
-      onActionReceivedMethod: _onActionReceivedMethod,
-      onNotificationCreatedMethod: _onNotificationCreatedMethod,
-      onNotificationDisplayedMethod: _onNotificationDisplayedMethod,
-      onDismissActionReceivedMethod: _onDismissActionReceivedMethod,
-    );
-  }
-
-  /// Called when a notification action is received
-  @pragma('vm:entry-point')
-  static Future<void> _onActionReceivedMethod(
-    ReceivedAction receivedAction,
-  ) async {
-    // Handle notification actions here
-    // For example: Mark prayer as done, snooze, etc.
-    log('Notification action received: ${receivedAction.actionType}');
-
-    // Stop adhan playback when any action is taken
-    AdhanPlayerService().stopAdhan();
-  }
-
-  /// Called when a notification is created
-  @pragma('vm:entry-point')
-  static Future<void> _onNotificationCreatedMethod(
-    ReceivedNotification receivedNotification,
-  ) async {
-    log('Notification created: ${receivedNotification.id}');
-  }
-
-  /// Called when a notification is displayed
-  @pragma('vm:entry-point')
-  static Future<void> _onNotificationDisplayedMethod(
-    ReceivedNotification receivedNotification,
-  ) async {
-    log('Notification displayed: ${receivedNotification.id}');
-
-    // Get sound settings from payload
-    final soundPath = receivedNotification.payload?['soundPath'];
-    final useCustomAdhan =
-        receivedNotification.payload?['useCustomAdhan'] == 'true';
-    final prayerName = receivedNotification.payload?['prayer'];
-
-    log(
-      'Notification for $prayerName - useCustomAdhan: $useCustomAdhan, soundPath: ${soundPath ?? "none"}',
-    );
-
-    // Only play custom adhan if explicitly using custom sound
-    // Default notification sound is handled by the channel itself
-    if (useCustomAdhan && soundPath != null && soundPath.isNotEmpty) {
-      log('Playing custom adhan for $prayerName');
-      AdhanPlayerService().playAdhan(
-        soundPath: soundPath,
-        onComplete: () {
-          log('Adhan playback completed for $prayerName');
-        },
-      );
-    } else {
-      log('Using default notification sound for $prayerName (no custom adhan)');
-    }
-  }
-
-  /// Called when a notification is dismissed
-  @pragma('vm:entry-point')
-  static Future<void> _onDismissActionReceivedMethod(
-    ReceivedAction receivedAction,
-  ) async {
-    log('Notification dismissed: ${receivedAction.id}');
-
-    // Stop adhan playback when notification is dismissed
-    AdhanPlayerService().stopAdhan();
   }
 
   /// Request notification permissions

@@ -13,6 +13,8 @@ import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/pray_times/services/persistent_notification_manager.dart';
+import 'package:wadhakir/data/repositories/azkar_reminder_settings_repository_impl.dart';
+import 'package:wadhakir/features/azkar_reminders/services/azkar_notification_service.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/hijri_calendar_home_widget.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/glass_prayer_home_widget.dart';
@@ -25,6 +27,10 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   final PrayerTimesRepository _repository;
   final PrayerNotificationService _notificationService;
   final PersistentNotificationManager _persistentManager;
+  // Optional: drives the prayer-time-dependent azkar reminders (after-prayer,
+  // Duha, last-third Qiyam). Null in contexts that don't wire it (e.g. tests).
+  final AzkarReminderSettingsRepositoryImpl? _azkarReminderRepository;
+  final AzkarNotificationService _azkarNotificationService;
 
   Timer? _prayerTimesTimer;
 
@@ -58,11 +64,16 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     required PrayerTimesRepository repository,
     PrayerNotificationService? notificationService,
     PersistentNotificationManager? persistentManager,
+    AzkarReminderSettingsRepositoryImpl? azkarReminderRepository,
+    AzkarNotificationService? azkarNotificationService,
   }) : _repository = repository,
        _notificationService =
            notificationService ?? PrayerNotificationService(),
        _persistentManager =
            persistentManager ?? PersistentNotificationManager(),
+       _azkarReminderRepository = azkarReminderRepository,
+       _azkarNotificationService =
+           azkarNotificationService ?? AzkarNotificationService(),
        super(const PrayerTimesInitial()) {
     // Load saved time adjustments
     _loadSavedTimeAdjustments();
@@ -188,16 +199,36 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     }
   }
 
-  /// Schedule notifications for today's prayer times
+  /// Schedule notifications for today's prayer times.
+  ///
+  /// The prayer adhan notifications themselves are scheduled via
+  /// [scheduleNotificationsWithSettings] (driven by SettingsCubit). Here we
+  /// (re)schedule the prayer-time-DRIVEN azkar reminders — after-each-prayer,
+  /// Duha, and last-third Qiyam — so their times always match the freshly
+  /// computed prayer times. Runs on every load/refresh/midnight rollover.
   Future<void> _scheduleNotificationsForToday(
     PrayerTimesModel prayerTimes,
   ) async {
+    final azkarRepo = _azkarReminderRepository;
+    if (azkarRepo == null) return;
     try {
-      // This method is called automatically when prayer times are loaded
-      // Actual scheduling happens through scheduleNotificationsWithSettings
-      debugPrint('Prayer times loaded, ready to schedule notifications');
+      final settings = await azkarRepo.getSettings();
+      await _azkarNotificationService.applyPrayerDriven(settings, prayerTimes);
     } catch (e) {
-      debugPrint('Error in _scheduleNotificationsForToday: $e');
+      debugPrint('Error scheduling azkar prayer-driven reminders: $e');
+    }
+  }
+
+  /// Re-schedule the prayer-time-driven azkar reminders using today's prayer
+  /// times. Called from main.dart when azkar settings change so the toggles
+  /// take effect immediately instead of waiting for the next prayer refresh.
+  Future<void> rescheduleAzkarPrayerDriven() async {
+    if (state is! PrayerTimesLoaded) return;
+    final now = DateTime.now();
+    final dateKey = DateTime(now.year, now.month, now.day);
+    final today = (state as PrayerTimesLoaded).prayerTimes[dateKey];
+    if (today != null) {
+      await _scheduleNotificationsForToday(today);
     }
   }
 

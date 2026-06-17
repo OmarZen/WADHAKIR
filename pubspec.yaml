@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.3.0+20
+version: 3.3.1+21
 
 environment:
   # Bumped for forui 0.22.x (requires Dart >=3.12 / Flutter >=3.44).
@@ -56,13 +56,13 @@ dependencies:
   
   # Qibla compass
   flutter_compass: ^0.8.1
-  geolocator: ^14.0.2
+  geolocator: ^14.0.3
   geocoding: ^4.0.0
   vector_math: ^2.1.4
   adhan_dart: ^2.0.1
-  syncfusion_flutter_datepicker: ^33.2.10
-  syncfusion_flutter_core: ^33.2.10
-  syncfusion_localizations: ^33.2.10
+  syncfusion_flutter_datepicker: ^33.2.12
+  syncfusion_flutter_core: ^33.2.12
+  syncfusion_localizations: ^33.2.12
   intl: ^0.20.2
   
   # Quran Library (pub.dev package)
@@ -77,13 +77,18 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
 
+  # Celebratory confetti for completion rewards (daily wird, full salah day,
+  # azkar/tasbih completion, streak & khatma milestones). Imperative overlay
+  # API (Confetti.launch) — no persistent controller needed.
+  flutter_confetti: ^0.5.2
+
   # UI Components
   just_audio: ^0.10.5
   audio_session: ^0.2.3
   flutter_volume_controller: ^2.0.1
   sensors_plus: ^7.0.0
   # Live camera preview behind the AR Qibla overlay (Feature: Qibla AR mode).
-  camera: ^0.11.2
+  camera: ^0.12.0
   flutter_native_splash: ^2.4.8
   url_launcher: ^6.3.2
   http: ^1.6.0
@@ -96,7 +101,7 @@ dependencies:
   # applies kotlin-android unconditionally like every other plugin and is
   # behaviorally identical here (Android sources byte-identical). Un-pin once the
   # whole plugin set supports built-in Kotlin and we can flip the flag to true.
-  home_widget: 0.9.1
+  home_widget: 0.9.3
   path_provider: ^2.1.5
   hugeicons: ^1.1.7
 
@@ -107,8 +112,8 @@ dependencies:
 
   # Islamic-backgrounds / share-card customization
   flutter_colorpicker: ^1.1.0    # color wheel for custom background colors
-  image_picker: ^1.1.2           # pick a background photo from the device
-  gal: ^2.3.1                    # save the rendered image to the gallery
+  image_picker: ^1.2.2           # pick a background photo from the device
+  gal: ^2.3.2                    # save the rendered image to the gallery
   # Set-as-wallpaper is done natively via WallpaperManager (a small
   # MethodChannel in MainActivity) — no third-party wallpaper plugin, which
   # keeps the manifest free of live-wallpaper services/foreground-service perms.
@@ -208,7 +213,7 @@ msix_config:
   publisher_display_name: Omar Waleed
   publisher: CN=DF776E6F-2B42-431A-B1DB-7378360B1BC1
   identity_name: OmarWaleed.Wadhakir
-  msix_version: 3.3.0.0
+  msix_version: 3.3.1.0
   capabilities: "internetClient,location"
   
   # Store submission settings

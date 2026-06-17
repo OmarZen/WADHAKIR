@@ -12,6 +12,15 @@ class PrayerCard extends StatelessWidget {
   final Animation<double> animation;
   final double delay;
 
+  /// Optional tap handler (e.g. log this prayer in the Salah tracker). When
+  /// null the card is non-interactive (the historical default for the
+  /// sunrise / Qiyam cards).
+  final VoidCallback? onLogTap;
+
+  /// Optional inline status widget shown before the time (the Salah-tracker
+  /// logged-status chip for the five fard cards).
+  final Widget? statusBadge;
+
   const PrayerCard({
     super.key,
     required this.size,
@@ -22,6 +31,8 @@ class PrayerCard extends StatelessWidget {
     required this.color,
     required this.animation,
     required this.delay,
+    this.onLogTap,
+    this.statusBadge,
   });
 
   @override
@@ -66,9 +77,7 @@ class PrayerCard extends StatelessWidget {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           child: InkWell(
-            onTap: () {
-              // Could be used for prayer details, notifications, etc.
-            },
+            onTap: onLogTap,
             borderRadius: BorderRadius.circular(20),
             splashColor: isNext
                 ? Colors.white.withValues(alpha: 0.1)
@@ -191,6 +200,12 @@ class PrayerCard extends StatelessWidget {
                           ],
                         ),
                       ),
+
+                      // Salah-tracker logged-status chip (fard cards only).
+                      if (statusBadge != null) ...[
+                        statusBadge!,
+                        SizedBox(width: size.width * 0.02),
+                      ],
 
                       // Time Display
                       Container(

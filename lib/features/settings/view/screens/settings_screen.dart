@@ -11,6 +11,8 @@ import 'package:wadhakir/features/settings/view/widgets/about_section_widgets.da
 import 'package:wadhakir/features/settings/view/screens/notification_settings_page.dart';
 import 'package:wadhakir/features/settings/view/screens/fasting_settings_page.dart';
 import 'package:wadhakir/features/settings/view/screens/app_lock_settings_page.dart';
+import 'package:wadhakir/features/azkar_reminders/views/screens/azkar_reminders_settings_page.dart';
+import 'package:wadhakir/features/feature_discovery/views/widgets/feature_nudge_toggle_tile.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -136,6 +138,31 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildAnimatedSection(
                 delay: 0,
                 child: SettingsSection(
+                  title: l10n?.translate('settings.profile') ?? 'الملف الشخصي',
+                  icon: Icons.person_outline,
+                  subtitle:
+                      l10n?.translate('settings.profile_subtitle') ??
+                      'اسمك في التطبيق',
+                  children: [
+                    FItem(
+                      prefix: const Icon(Icons.badge_outlined),
+                      title: Text(l10n?.translate('settings.your_name') ?? 'اسمك'),
+                      subtitle: Text(
+                        settings.userName.trim().isEmpty
+                            ? (l10n?.translate('settings.no_name') ??
+                                  'لم تُدخل اسماً بعد')
+                            : settings.userName,
+                      ),
+                      suffix: const Icon(Icons.edit_outlined),
+                      onPress: () =>
+                          _showEditNameDialog(context, cubit, settings.userName),
+                    ),
+                  ],
+                ),
+              ),
+              _buildAnimatedSection(
+                delay: 50,
+                child: SettingsSection(
                   title:
                       l10n?.translate('settings.appearance') ?? 'المظهر واللغة',
                   icon: Icons.palette_outlined,
@@ -228,6 +255,31 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               _buildAnimatedSection(
+                delay: 182,
+                child: SettingsSection(
+                  title:
+                      l10n?.translate('azkar_reminders.title') ??
+                      'تذكيرات الأذكار',
+                  icon: Icons.notifications_active_outlined,
+                  subtitle:
+                      l10n?.translate('azkar_reminders.subtitle') ??
+                      'الصباح والمساء، بعد الصلاة، قيام الليل وغيرها',
+                  children: [
+                    _buildNavTile(
+                      context,
+                      icon: Icons.notifications_active_outlined,
+                      title:
+                          l10n?.translate('azkar_reminders.title') ??
+                          'تذكيرات الأذكار',
+                      subtitle:
+                          l10n?.translate('azkar_reminders.subtitle') ??
+                          'الصباح والمساء، بعد الصلاة، قيام الليل وغيرها',
+                      page: const AzkarRemindersSettingsPage(),
+                    ),
+                  ],
+                ),
+              ),
+              _buildAnimatedSection(
                 delay: 188,
                 child: SettingsSection(
                   title:
@@ -268,6 +320,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                     ),
                   ],
+                ),
+              ),
+              _buildAnimatedSection(
+                delay: 194,
+                child: SettingsSection(
+                  title:
+                      l10n?.translate('feature_discovery.title') ??
+                      'اقتراحات الميزات',
+                  icon: Icons.lightbulb_outline,
+                  subtitle:
+                      l10n?.translate('feature_discovery.subtitle') ??
+                      'تذكير لطيف بميزات لم تجرّبها بعد',
+                  children: const [FeatureNudgeToggleTile()],
                 ),
               ),
               _buildAnimatedSection(
@@ -556,5 +621,50 @@ class _SettingsScreenState extends State<SettingsScreen>
       onPress: () =>
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => page)),
     );
+  }
+
+  /// Edit the user's name. Saving persists via [SettingsCubit.setUserName],
+  /// which re-emits settings so the home greeting updates reactively.
+  Future<void> _showEditNameDialog(
+    BuildContext context,
+    SettingsCubit cubit,
+    String currentName,
+  ) async {
+    final l10n = context.l10n;
+    final controller = TextEditingController(text: currentName);
+    await showFDialog(
+      context: context,
+      builder: (dialogContext, style, animation) {
+        return FDialog(
+          title: Text(l10n?.translate('settings.your_name') ?? 'اسمك'),
+          body: Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: FTextField(
+              control: FTextFieldControl.managed(controller: controller),
+              hint: l10n?.translate('name_prompt.hint') ?? 'اسمك الأول',
+              textInputAction: TextInputAction.done,
+              textCapitalization: TextCapitalization.words,
+              maxLines: 1,
+              autofocus: true,
+            ),
+          ),
+          actions: [
+            FButton(
+              variant: FButtonVariant.outline,
+              onPress: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n?.translate('common.cancel') ?? 'إلغاء'),
+            ),
+            FButton(
+              onPress: () {
+                cubit.setUserName(controller.text.trim());
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text(l10n?.translate('common.save') ?? 'حفظ'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
   }
 }

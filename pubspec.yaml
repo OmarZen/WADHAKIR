@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.3.1+21
+version: 3.3.2+22
 
 environment:
   # Bumped for forui 0.22.x (requires Dart >=3.12 / Flutter >=3.44).
@@ -83,10 +83,11 @@ dependencies:
   flutter_confetti: ^0.6.0
 
   # UI Components
+  # just_audio + audio_session: radio playback and the adhan sound preview.
+  # flutter_volume_controller: radio volume sync.
   just_audio: ^0.10.5
   audio_session: ^0.2.4
   flutter_volume_controller: ^2.0.1
-  sensors_plus: ^7.1.0
   # Live camera preview behind the AR Qibla overlay (Feature: Qibla AR mode).
   camera: ^0.12.0
   flutter_native_splash: ^2.4.8
@@ -117,6 +118,11 @@ dependencies:
   # Set-as-wallpaper is done natively via WallpaperManager (a small
   # MethodChannel in MainActivity) — no third-party wallpaper plugin, which
   # keeps the manifest free of live-wallpaper services/foreground-service perms.
+
+  # Reads the app version at runtime so the About screen shows whatever is in
+  # `version:` above — one source of truth, instead of a hand-copied string that
+  # silently goes stale on every release. Already forced to 10.x below.
+  package_info_plus: ^10.2.0
 
 dependency_overrides:
   # share_plus 13.x needs win32 ^6.x but geolocator_linux pins win32 ^5.x.
@@ -220,7 +226,7 @@ msix_config:
   publisher_display_name: Omar Waleed
   publisher: CN=DF776E6F-2B42-431A-B1DB-7378360B1BC1
   identity_name: OmarWaleed.Wadhakir
-  msix_version: 3.3.1.0
+  msix_version: 3.3.2.0
   capabilities: "internetClient,location"
   
   # Store submission settings

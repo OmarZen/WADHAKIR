@@ -32,7 +32,10 @@ jobs:
       - name: 🐦 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.6'
+          # Must satisfy pubspec.yaml's `sdk: '>=3.12.0'` / `flutter: '>=3.44.0'`
+          # (forui 0.23 needs Dart 3.12). 3.44.4 ships Dart 3.12.2. Keep this in
+          # step with pubspec.yaml or `pub get` fails version solving.
+          flutter-version: '3.44.4'
           channel: 'stable'
           cache: true
           
@@ -48,22 +51,14 @@ jobs:
       - name: 🎨 Check Code Formatting
         run: dart format --output=none --set-exit-if-changed .
 
-      # quran_library 4.2.0 (latest on pub.dev) ships an android/build.gradle
-      # that calls `getDefaultProguardFile('proguard-android.txt')`. AGP 9.x
-      # removed that file (it forced `-dontoptimize`) and now throws at
-      # script-evaluation time. Until the package ships a fix, swap the
-      # reference to `proguard-android-optimize.txt` in the pub-cache copy
-      # before Gradle reads it. No-op if the file ever stops existing.
+      # quran_library 4.2.x ships an android/build.gradle calling
+      # getDefaultProguardFile('proguard-android.txt'). AGP 9.x hard-errors on it
+      # at :quran_library CONFIGURATION time, so it kills debug builds too — not
+      # just minified release ones. Still unfixed as of 4.2.1.
+      # Must run AFTER `flutter pub get`, which restores the pristine pub-cache
+      # copy. Delete this step (and the script) once upstream ships a fix.
       - name: 🩹 Patch quran_library for AGP 9.x
-        run: |
-          PKG="$PUB_CACHE/hosted/pub.dev/quran_library-4.2.0/android/build.gradle"
-          if [ -f "$PKG" ]; then
-            sed -i "s/'proguard-android\.txt'/'proguard-android-optimize.txt'/g" "$PKG"
-            echo "Patched $PKG"
-            grep -n "proguard" "$PKG" || true
-          else
-            echo "Skipping patch — $PKG not found"
-          fi
+        run: bash android/fix_deps_proguard.sh
 
       - name: 🏗️ Build APK (Debug)
         run: flutter build apk --debug

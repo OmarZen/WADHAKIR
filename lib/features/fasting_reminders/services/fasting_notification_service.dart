@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:syncfusion_flutter_core/core.dart';
@@ -38,15 +39,26 @@ class FastingNotificationService {
   static const String _channelDescription =
       'Notifications for voluntary fasting days';
 
-  // Notification ID ranges (to avoid conflicts with prayer notifications)
+  // Notification ID ranges (to avoid conflicts with prayer notifications,
+  // which own 100–214; see NotificationRepository).
+  //
+  // Every base below is expanded by _scheduleNotificationForDay into THREE ids
+  // (base+1 eve, base+2 morning, base+3 advance), so consecutive bases overlap.
+  // 5003/5004/5005 did exactly that: Ashura{5004,5005,5006} collided with
+  // Tasua{5005,5006,5007}, and both fall in Muharram — Ashura scheduled second
+  // and silently destroyed Tasua's reminders. Keep >=10 apart.
   static const int _ayyamAlBidId = 5001;
   static const int _ninthTenthId = 5002;
-  static const int _ashuraId = 5003;
-  static const int _tasuaId = 5004;
-  static const int _arafahId = 5005;
+  static const int _ashuraId = 5010;
+  static const int _tasuaId = 5020;
+  static const int _arafahId = 5030;
   // Weekly fasting notification IDs
   static const int _mondayFastingId = 5100;
   static const int _thursdayFastingId = 5101;
+  // Offset applied to every base when pre-scheduling the NEXT Hijri month, so
+  // it cannot overwrite the current month's ids. Keeps everything inside
+  // 5001–5999 and clear of the weekly ids above.
+  static const int _nextMonthIdOffset = 400;
   // Reserved for future use:
   // static const int _eveReminderId = 5200;
   // static const int _morningReminderId = 5300;
@@ -402,27 +414,47 @@ class FastingNotificationService {
       month: currentMonth,
       year: currentYear,
       settings: settings,
+      idOffset: 0,
     );
 
-    // Schedule notifications for next month
-    final nextMonth = currentMonth == 12 ? 1 : currentMonth + 1;
-    final nextYear = currentMonth == 12 ? currentYear + 1 : currentYear;
-    log('\n📅 Scheduling for NEXT month: $nextMonth/$nextYear');
-    await _scheduleMonthNotifications(
-      month: nextMonth,
-      year: nextYear,
-      settings: settings,
-    );
+    // Pre-schedule next month too, so coverage survives a user who doesn't open
+    // the app for weeks.
+    //
+    // Not on iOS: it keeps only the 64 soonest-firing pending requests and
+    // silently discards the rest. These fire furthest out, so they are exactly
+    // what iOS drops first — they were largely fictional there already, and
+    // scheduling them only pressures the prayer notifications, which are the
+    // app's core purpose. scheduleAllFastingNotifications re-runs on every cold
+    // start, so iOS picks the next month up well before it arrives.
+    if (Platform.isIOS) {
+      log('\n⏭️  Skipping NEXT month pre-schedule on iOS (64-request cap)');
+    } else {
+      final nextMonth = currentMonth == 12 ? 1 : currentMonth + 1;
+      final nextYear = currentMonth == 12 ? currentYear + 1 : currentYear;
+      log('\n📅 Scheduling for NEXT month: $nextMonth/$nextYear');
+      await _scheduleMonthNotifications(
+        month: nextMonth,
+        year: nextYear,
+        settings: settings,
+        idOffset: _nextMonthIdOffset,
+      );
+    }
 
     log('\n✅ Hijri calendar notifications scheduling complete');
     log('');
   }
 
-  /// Schedule notifications for a specific month
+  /// Schedule notifications for a specific month.
+  ///
+  /// [idOffset] shifts every notification id so the next-month pass cannot
+  /// overwrite the current month's reminders — without it both passes reuse the
+  /// same bases, and a user on day 5 with Ayyam al-Bid enabled gets no reminders
+  /// for the current month at all.
   Future<void> _scheduleMonthNotifications({
     required int month,
     required int year,
     required FastingReminderSettings settings,
+    required int idOffset,
   }) async {
     final currentHijri = HijriDateTime.now();
     int notificationCount = 0;
@@ -449,7 +481,7 @@ class FastingNotificationService {
           hijriDay: 13,
           fastingDay: IslamicFastingDay.ayyamAlBid13(),
           settings: settings,
-          notificationIdBase: _ayyamAlBidId + 130,
+          notificationIdBase: _ayyamAlBidId + 130 + idOffset,
         );
         notificationCount++;
       }
@@ -460,7 +492,7 @@ class FastingNotificationService {
           hijriDay: 14,
           fastingDay: IslamicFastingDay.ayyamAlBid14(),
           settings: settings,
-          notificationIdBase: _ayyamAlBidId + 140,
+          notificationIdBase: _ayyamAlBidId + 140 + idOffset,
         );
         notificationCount++;
       }
@@ -471,7 +503,7 @@ class FastingNotificationService {
           hijriDay: 15,
           fastingDay: IslamicFastingDay.ayyamAlBid15(),
           settings: settings,
-          notificationIdBase: _ayyamAlBidId + 150,
+          notificationIdBase: _ayyamAlBidId + 150 + idOffset,
         );
         notificationCount++;
       }
@@ -489,7 +521,7 @@ class FastingNotificationService {
           hijriDay: 9,
           fastingDay: IslamicFastingDay.ninthOfMonth(),
           settings: settings,
-          notificationIdBase: _ninthTenthId + 90,
+          notificationIdBase: _ninthTenthId + 90 + idOffset,
         );
         notificationCount++;
       }
@@ -500,7 +532,7 @@ class FastingNotificationService {
           hijriDay: 10,
           fastingDay: IslamicFastingDay.tenthOfMonth(),
           settings: settings,
-          notificationIdBase: _ninthTenthId + 100,
+          notificationIdBase: _ninthTenthId + 100 + idOffset,
         );
         notificationCount++;
       }
@@ -521,7 +553,7 @@ class FastingNotificationService {
             hijriDay: 9,
             fastingDay: IslamicFastingDay.tasua(),
             settings: settings,
-            notificationIdBase: _tasuaId,
+            notificationIdBase: _tasuaId + idOffset,
             isSpecial: true,
           );
           notificationCount++;
@@ -533,7 +565,7 @@ class FastingNotificationService {
             hijriDay: 10,
             fastingDay: IslamicFastingDay.ashura(),
             settings: settings,
-            notificationIdBase: _ashuraId,
+            notificationIdBase: _ashuraId + idOffset,
             isSpecial: true,
           );
           notificationCount++;
@@ -550,7 +582,7 @@ class FastingNotificationService {
             hijriDay: 9,
             fastingDay: IslamicFastingDay.arafah(),
             settings: settings,
-            notificationIdBase: _arafahId,
+            notificationIdBase: _arafahId + idOffset,
             isSpecial: true,
           );
           notificationCount++;
@@ -717,8 +749,21 @@ class FastingNotificationService {
       }
     }
 
-    // Schedule advance reminder (X days before)
-    if (settings.daysBeforeNotification > 0) {
+    // Schedule advance reminder (X days before).
+    //
+    // `advanceReminder` is honoured here on purpose: it is persisted and has a
+    // live switch in the settings UI, but the service used to gate only on
+    // daysBeforeNotification — so turning the switch off did nothing at all.
+    //
+    // The redundancy check drops the advance reminder when it would land the
+    // same evening as the eve reminder: at the default daysBeforeNotification=1
+    // the advance fires at 20:00 and the eve fires at Maghrib (~18:00) on that
+    // same day, with the same message. Users who set 2+ days still get both.
+    final bool advanceIsRedundant =
+        settings.eveReminder && settings.daysBeforeNotification <= 1;
+    if (settings.advanceReminder &&
+        settings.daysBeforeNotification > 0 &&
+        !advanceIsRedundant) {
       final advanceDate = gregorianDate.subtract(
         Duration(days: settings.daysBeforeNotification),
       );
@@ -892,37 +937,13 @@ class FastingNotificationService {
     log('🗑️  Cancelled $dayName fasting notification #$notificationId');
   }
 
-  /// Cancel notifications for a specific day type
-  Future<void> cancelNotificationsForDayType(FastingDayType type) async {
-    int baseId;
-    String typeName;
-    switch (type) {
-      case FastingDayType.ayyamAlBid:
-        baseId = _ayyamAlBidId;
-        typeName = 'Ayyam al-Bid';
-        break;
-      case FastingDayType.ninthTenth:
-        baseId = _ninthTenthId;
-        typeName = '9th & 10th';
-        break;
-      case FastingDayType.special:
-        baseId = _ashuraId;
-        typeName = 'Special Days';
-        break;
-      case FastingDayType.weeklyFasting:
-        baseId = _mondayFastingId;
-        typeName = 'Weekly Fasting';
-        break;
-    }
-
-    log(
-      '🗑️  Cancelling $typeName notifications (ID range $baseId to ${baseId + 99})...',
-    );
-    for (int i = 0; i < 100; i++) {
-      await AwesomeNotifications().cancel(baseId + i);
-    }
-    log('   ✅ Cancelled 100 notification IDs for $typeName');
-  }
+  // A cancelNotificationsForDayType(FastingDayType) helper used to live here.
+  // It was removed: it had no callers, and its blind `baseId .. baseId+99`
+  // sweep never matched the real ids anyway (Ayyam al-Bid schedules at
+  // _ayyamAlBidId+130 = 5131+, outside the 5001–5100 it swept), so it would
+  // have silently under-cancelled. [cancelAllFastingNotifications] is the
+  // correct mechanism — it is channel-scoped and therefore id-agnostic, so it
+  // keeps working no matter how the id scheme changes.
 
   /// Fire a single test fasting reminder right now so the user can confirm
   /// the channel + permission flow without waiting for a real fast day.

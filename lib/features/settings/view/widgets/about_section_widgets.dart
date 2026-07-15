@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 
@@ -137,8 +138,8 @@ class AboutSectionWidgets extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Center(
-                    child: Text(
-                      l10n?.translate('settings.version') ?? 'الإصدار 3.0.0+15',
+                    child: _VersionText(
+                      label: l10n?.translate('settings.version') ?? 'الإصدار',
                       style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
                     ),
                   ),
@@ -444,5 +445,35 @@ class AboutSectionWidgets extends StatelessWidget {
         }
       }
     }
+  }
+}
+
+/// Renders `<label> <version>+<build>`, reading the version from the platform
+/// package info at runtime.
+///
+/// The number deliberately does NOT live in the l10n strings. It used to, which
+/// meant every release had to hand-copy it into pubspec.yaml, both lang files
+/// and a constant — and when one was missed the About screen quietly showed a
+/// stale version. pubspec.yaml's `version:` is now the single source of truth.
+class _VersionText extends StatelessWidget {
+  const _VersionText({required this.label, this.style});
+
+  final String label;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final info = snapshot.data;
+        // Bare label while the async read is in flight, and if it ever fails:
+        // showing no version beats showing a wrong one.
+        final version = info == null
+            ? ''
+            : ' ${info.version}+${info.buildNumber}';
+        return Text('$label$version', style: style);
+      },
+    );
   }
 }

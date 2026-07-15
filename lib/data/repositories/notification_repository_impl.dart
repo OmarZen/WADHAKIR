@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'notification_repository_impl_windows.dart';
 import '../models/notification_settings_model.dart';
@@ -693,6 +694,7 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
       }
     }
     debugPrint('✅ Scheduled prayer notifications across ${days.length} day(s)');
+    await debugAssertPrayerSchedulesSurvived(days.length);
   }
 
   /// Cancel only the multi-day prayer notification ids (base 100–104 +
@@ -708,6 +710,44 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
       for (var base = _fajrId; base <= _ishaId; base++) {
         await AwesomeNotifications().cancel(base + day * 10);
       }
+    }
+  }
+
+  /// Debug-only: verify iOS actually KEPT every prayer notification we asked for.
+  ///
+  /// iOS holds at most 64 pending notification requests and silently discards
+  /// the rest — the plugin surfaces no error at the limit, so an over-budget app
+  /// looks perfectly healthy right up until the adhan doesn't fire. This reads
+  /// back what iOS really retained and screams in debug if a prayer id is gone
+  /// or we are creeping toward the cap.
+  ///
+  /// Deliberately assert-only: never throw in release. A notification budget
+  /// problem must not become a crash in front of a user.
+  Future<void> debugAssertPrayerSchedulesSurvived(int expectedDays) async {
+    if (!kDebugMode || !Platform.isIOS) return;
+    try {
+      final pending = await AwesomeNotifications().listScheduledNotifications();
+      final ids = pending.map((n) => n.content?.id).whereType<int>().toSet();
+      final missing = <int>[];
+      for (var day = 0; day < expectedDays; day++) {
+        for (var base = _fajrId; base <= _ishaId; base++) {
+          final id = base + day * 10;
+          if (!ids.contains(id)) missing.add(id);
+        }
+      }
+      debugPrint('🔔 iOS pending notifications: ${pending.length}/64');
+      assert(
+        pending.length <= 55,
+        'iOS pending=${pending.length} (>55) — approaching the 64 cap; '
+        'iOS will start silently dropping notifications.',
+      );
+      assert(
+        missing.isEmpty,
+        'PRAYER NOTIFICATIONS EVICTED BY iOS: $missing '
+        '(total pending=${pending.length}/64).',
+      );
+    } catch (e) {
+      debugPrint('🔔 debugAssertPrayerSchedulesSurvived skipped: $e');
     }
   }
 

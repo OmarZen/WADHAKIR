@@ -5,6 +5,29 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.2+22] - 2026-07-15
+
+### Added
+
+- **Reliable adhan on Android** — each adhan now has its own notification channel with the sound baked in, so the OS plays the full adhan at prayer time even when the app has been killed.
+- **iOS support for the adhan** — bundled 29-second clips play as the notification sound in every app state, alongside the iOS project, app group, and widget extension setup.
+- **Multi-day scheduling** — prayer notifications are now armed several days ahead (7 on Android, 5 on iOS), so the adhan keeps firing even if the app isn't reopened.
+
+### Fixed
+
+- **The notifications master toggle no longer deletes your other reminders.** Turning it off cancelled every scheduled notification app-wide, silently wiping azkar, wird, fasting, and daily-inspiration reminders until each was re-armed. It now cancels prayer notifications only.
+- **iOS no longer plays two adhans at once** at prayer time.
+- **App Lock and Floating Dhikr** are no longer offered on desktop, where the Android-only APIs they need don't exist.
+- Notification channels are no longer deleted and recreated on every launch, which closed live notifications for no benefit.
+- Onboarding no longer overflows on the name step when the keyboard is open.
+
+### Changed
+
+- App version bumped from `3.3.1+21` to `3.3.2+22`.
+- MSIX version bumped from `3.3.1.0` to `3.3.2.0`.
+- iOS adhan clips are encoded mono @ 16kHz to match the source recordings exactly, cutting them from 63MB to 12MB of app size with no loss of fidelity.
+- CI now builds on Flutter 3.44.4 (Dart 3.12), matching the SDK constraint the app already required.
+
 ## [3.3.1+21] - 2026-06-17
 
 ### Added

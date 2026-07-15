@@ -1,7 +1,9 @@
 class AppConstants {
   // App Info
   static const String appName = 'Wadhakir';
-  static const String appVersion = '3.3.1';
+  // No appVersion here on purpose: it was never read, and a hand-maintained
+  // copy of the version only ever drifts from pubspec.yaml. Read it at runtime
+  // via PackageInfo.fromPlatform() instead (see AboutSectionWidgets).
 
   // Navigation Routes
   static const String homeRoute = '/';
@@ -47,7 +49,8 @@ class AppConstants {
   // has been shown or onboarding finished, so it never nags again).
   static const String namePromptSeenKey = 'name_prompt_seen';
   static const String zakatSettingsKey = 'zakat_settings';
-  static const String dailyInspirationSettingsKey = 'daily_inspiration_settings';
+  static const String dailyInspirationSettingsKey =
+      'daily_inspiration_settings';
   static const String azkarReminderSettingsKey = 'azkar_reminder_settings';
   static const String salahTrackerLogKey = 'salah_tracker_log';
 

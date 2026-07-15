@@ -7,7 +7,15 @@
   post any notification (test, adhan, fasting, wird) — the cause of "works in
   debug, fails in release". `shrinkMode="safe"` keeps normal shrinking for
   everything else.
+
+  @raw/adhan_* are the 13 adhan clips baked into the per-sound notification
+  channels. Nothing in Java/Kotlin/XML names them: the only reference is the
+  `resource://raw/<name>` string built from AdhanSounds.androidRawRes, which
+  awesome_notifications resolves at runtime via Resources.getIdentifier. They
+  are listed explicitly rather than left to `shrinkMode="safe"`'s
+  getIdentifier heuristic — if that heuristic ever misses, the adhan silently
+  degrades to no sound in release only, which is this app's worst failure mode.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/ic_notification,@mipmap/launcher_icon"
+    tools:keep="@drawable/ic_notification,@mipmap/launcher_icon,@raw/adhan_*"
     tools:shrinkMode="safe" />

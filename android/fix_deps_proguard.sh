@@ -20,8 +20,15 @@
 # lands). Track and remove this script when that happens.
 set -euo pipefail
 
+# Honour $PUB_CACHE (CI runners often relocate the cache) and fall back to the
+# default location. The glob covers quran_library-* rather than a pinned version
+# on purpose: a hardcoded `quran_library-4.2.0` path silently stopped matching
+# the moment the constraint moved to ^4.2.1, and a no-op patch step looks
+# identical to a working one until Gradle fails.
+PUB_CACHE_DIR="${PUB_CACHE:-$HOME/.pub-cache}"
+
 found=0
-for gradle in "$HOME"/.pub-cache/hosted/*/quran_library-*/android/build.gradle; do
+for gradle in "$PUB_CACHE_DIR"/hosted/*/quran_library-*/android/build.gradle; do
   [ -f "$gradle" ] || continue
   if grep -q "getDefaultProguardFile('proguard-android.txt')" "$gradle"; then
     sed -i.orig \

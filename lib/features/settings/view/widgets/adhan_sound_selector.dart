@@ -261,6 +261,7 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
                   final isSelected = widget.currentSoundPath == null;
                   return _buildSoundOption(
                     option: const AdhanSoundOption(
+                      key: 'default',
                       name: 'الصوت الافتراضي',
                       nameEn: 'Default Sound',
                       path: null,

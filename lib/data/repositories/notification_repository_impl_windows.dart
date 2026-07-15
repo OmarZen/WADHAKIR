@@ -203,6 +203,24 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
   }
 
   @override
+  Future<void> scheduleMultiDayPrayerNotifications({
+    required Map<DateTime, Map<String, DateTime>> prayerTimesByDay,
+    required NotificationSettingsModel settings,
+    String? locationName,
+  }) async {
+    // Windows toasts are scheduled with in-process Future.delayed and only fire
+    // while the app runs, so a multi-day horizon isn't meaningful here — arm the
+    // nearest day (today) whose times are still in the future.
+    if (prayerTimesByDay.isEmpty) return;
+    final today = prayerTimesByDay.keys.toList()..sort();
+    await scheduleAllPrayerNotifications(
+      prayerTimes: prayerTimesByDay[today.first]!,
+      settings: settings,
+      locationName: locationName,
+    );
+  }
+
+  @override
   Future<void> cancelPrayerNotification(String prayerName) async {
     final String notificationId = _getNotificationId(prayerName);
 
@@ -220,6 +238,23 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
       debugPrint('🗑️  Cancelled notification for $prayerName');
     } catch (e) {
       debugPrint('⚠️  Error cancelling notification for $prayerName: $e');
+    }
+  }
+
+  @override
+  Future<void> cancelPrayerSchedules() async {
+    // Windows toasts are tracked per-prayer in _scheduledNotifications and have
+    // no multi-day fan-out (see scheduleMultiDayPrayerNotifications), so
+    // cancelling the five prayer ids covers every prayer toast this repository
+    // owns — and leaves any other feature's entries alone.
+    for (final prayerName in const [
+      'Fajr',
+      'Dhuhr',
+      'Asr',
+      'Maghrib',
+      'Isha',
+    ]) {
+      await cancelPrayerNotification(prayerName);
     }
   }
 

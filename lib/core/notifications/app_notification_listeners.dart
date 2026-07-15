@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:wadhakir/core/notifications/pending_notification_action.dart';
-import 'package:wadhakir/features/pray_times/services/adhan_player_service.dart';
 
 /// The single `awesome_notifications` listener registration site for the whole
 /// app. `setListeners` only honours ONE set of handlers (last caller wins), so
@@ -10,8 +9,7 @@ import 'package:wadhakir/features/pray_times/services/adhan_player_service.dart'
 ///
 /// The handlers are static, top-level `@pragma('vm:entry-point')` callbacks:
 /// they may run in a context-less isolate, so they must not touch a
-/// `BuildContext`. Navigation is bridged through [PendingNotificationAction];
-/// adhan playback is handled inline (no UI needed).
+/// `BuildContext`. Navigation is bridged through [PendingNotificationAction].
 class AppNotificationListeners {
   AppNotificationListeners._();
 
@@ -24,12 +22,11 @@ class AppNotificationListeners {
     );
   }
 
-  /// A notification was tapped (or an action button pressed). Stop any adhan
-  /// playback and hand the payload to the router via the pending holder.
+  /// A notification was tapped (or an action button pressed). Hand the payload
+  /// to the router via the pending holder.
   @pragma('vm:entry-point')
   static Future<void> onActionReceived(ReceivedAction receivedAction) async {
     log('Notification action received: ${receivedAction.actionType}');
-    AdhanPlayerService().stopAdhan();
     PendingNotificationAction.capture(receivedAction.payload);
   }
 
@@ -38,28 +35,36 @@ class AppNotificationListeners {
     log('Notification created: ${received.id}');
   }
 
-  /// A notification was displayed. For prayer notifications configured with a
-  /// custom adhan, play it (the channel itself is silent in that mode).
+  /// A notification was displayed.
+  ///
+  /// There is deliberately no adhan playback here: the sound is owned by the
+  /// NOTIFICATION on both platforms.
+  ///  * Android bakes the full mp3 into the per-adhan channel, so the OS plays
+  ///    it even when the app is dead (see NotificationRepository).
+  ///  * iOS plays the bundled ≤30s .aiff via `customSound`, in every lifecycle
+  ///    including the foreground — AwnCore's `willPresent` returns
+  ///    [.alert, .badge, .sound] (AwesomeNotifications.swift:632).
+  ///
+  /// An in-app player was tried here for the FULL adhan on iOS foreground, but
+  /// it plays *on top of* the .aiff rather than instead of it: the plugin
+  /// exposes no way to suppress the notification sound alone (`playSound:false`
+  /// kills it when backgrounded too, and `displayOnForeground:false` also
+  /// suppresses the banner and its STOP button). iOS foreground therefore caps
+  /// at the 29s clip — a deliberate trade for a consistent, interruptible alert.
   @pragma('vm:entry-point')
   static Future<void> onDisplayed(ReceivedNotification received) async {
     log('Notification displayed: ${received.id}');
-
-    final soundPath = received.payload?['soundPath'];
-    final useCustomAdhan = received.payload?['useCustomAdhan'] == 'true';
-    final prayerName = received.payload?['prayer'];
-
-    if (useCustomAdhan && soundPath != null && soundPath.isNotEmpty) {
-      log('Playing custom adhan for $prayerName');
-      AdhanPlayerService().playAdhan(
-        soundPath: soundPath,
-        onComplete: () => log('Adhan playback completed for $prayerName'),
-      );
-    }
   }
 
+  /// A notification was dismissed (including via the STOP_ADHAN button).
+  ///
+  /// Stopping the sound needs no Dart work: the plugin's native dismiss path
+  /// cancels the notification (Android `NotificationActionReceiver` →
+  /// `StatusBarManager.dismissNotification` → `NotificationManager.cancel`),
+  /// and cancelling the notification that owns the in-flight channel sound
+  /// stops that sound.
   @pragma('vm:entry-point')
   static Future<void> onDismiss(ReceivedAction receivedAction) async {
     log('Notification dismissed: ${receivedAction.id}');
-    AdhanPlayerService().stopAdhan();
   }
 }

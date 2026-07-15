@@ -42,14 +42,18 @@ FThemeData buildForuiTheme(ThemeData theme) {
 
   final touch = !PlatformUtils.isDesktop;
 
+  // forui 0.23 moved the font family off FTypography.inherit and onto
+  // FTypeface. Build an Almarai typeface and use it for both display and body so
+  // the whole app keeps Almarai.
+  final typeface = FTypeface.inherit(
+    colors: colors,
+    touch: touch,
+    fontFamily: 'Almarai',
+  );
+
   return FThemeData(
     colors: colors,
     touch: touch,
-    // Match the rest of the app — keep Almarai everywhere.
-    typography: FTypography.inherit(
-      colors: colors,
-      touch: touch,
-      fontFamily: 'Almarai',
-    ),
+    typography: FTypography(display: typeface, body: typeface),
   );
 }

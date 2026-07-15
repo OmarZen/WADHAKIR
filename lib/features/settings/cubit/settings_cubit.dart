@@ -125,9 +125,13 @@ class SettingsCubit extends Cubit<SettingsState> {
 
       await setNotificationSettings(newNotificationSettings);
 
-      // Cancel all notifications if disabled
+      // Turning the PRAYER master toggle off must cancel prayer notifications
+      // only. cancelAllNotifications() would also wipe azkar/wird/fasting/
+      // daily-inspiration reminders, which live on the same plugin under their
+      // own ids and only re-arm on their own settings change or cold start —
+      // so the user would silently lose them for days.
       if (!enabled) {
-        await _notificationService.cancelAllNotifications();
+        await _notificationService.cancelPrayerSchedules();
       }
     }
   }

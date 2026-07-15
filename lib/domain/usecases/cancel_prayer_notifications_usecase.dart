@@ -6,8 +6,11 @@ class CancelPrayerNotificationsUseCase {
 
   CancelPrayerNotificationsUseCase(this.repository);
 
-  /// Cancel all scheduled prayer notifications
+  /// Cancel all scheduled prayer notifications — and only those. Deliberately
+  /// NOT cancelAllNotifications(), which would also wipe azkar/wird/fasting/
+  /// daily-inspiration reminders that this use case's name does not claim to
+  /// touch.
   Future<void> call() async {
-    await repository.cancelAllNotifications();
+    await repository.cancelPrayerSchedules();
   }
 }

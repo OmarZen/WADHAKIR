@@ -34,10 +34,33 @@ abstract class NotificationRepository {
     String? locationName,
   });
 
+  /// Schedule notifications across MULTIPLE days so the adhan keeps firing even
+  /// if the user doesn't reopen the app for several days.
+  /// [prayerTimesByDay] - Map of calendar-day → (prayer name → time). Each day
+  /// is scheduled with its own, non-colliding notification ids.
+  Future<void> scheduleMultiDayPrayerNotifications({
+    required Map<DateTime, Map<String, DateTime>> prayerTimesByDay,
+    required NotificationSettingsModel settings,
+    String? locationName,
+  });
+
   /// Cancel a specific prayer notification
   Future<void> cancelPrayerNotification(String prayerName);
 
-  /// Cancel all scheduled prayer notifications
+  /// Cancel every scheduled PRAYER notification (all prayers, all days) and
+  /// nothing else.
+  ///
+  /// Prefer this over [cancelAllNotifications] whenever the intent is "stop the
+  /// adhan": azkar, wird, fasting, daily-inspiration and feature-nudge
+  /// reminders are scheduled on the same plugin under their own ids, and they
+  /// only re-arm on their own settings change or cold start — so a global
+  /// cancel silently destroys them for days.
+  Future<void> cancelPrayerSchedules();
+
+  /// Cancel ALL scheduled notifications app-wide, across every feature.
+  ///
+  /// This is a blunt instrument — see [cancelPrayerSchedules] before reaching
+  /// for it.
   Future<void> cancelAllNotifications();
 
   /// Check if there are active notifications

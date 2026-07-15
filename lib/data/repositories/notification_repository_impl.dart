@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'notification_repository_impl_windows.dart';
 import '../models/notification_settings_model.dart';
+import '../../core/constants/adhan_sounds.dart';
 import '../../domain/repositories/notification_repository.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
@@ -68,8 +69,23 @@ class NotificationRepositoryImpl implements NotificationRepository {
   );
 
   @override
+  Future<void> scheduleMultiDayPrayerNotifications({
+    required Map<DateTime, Map<String, DateTime>> prayerTimesByDay,
+    required NotificationSettingsModel settings,
+    String? locationName,
+  }) => _platformRepository.scheduleMultiDayPrayerNotifications(
+    prayerTimesByDay: prayerTimesByDay,
+    settings: settings,
+    locationName: locationName,
+  );
+
+  @override
   Future<void> cancelPrayerNotification(String prayerName) =>
       _platformRepository.cancelPrayerNotification(prayerName);
+
+  @override
+  Future<void> cancelPrayerSchedules() =>
+      _platformRepository.cancelPrayerSchedules();
 
   @override
   Future<void> cancelAllNotifications() =>
@@ -163,6 +179,33 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     return etc;
   }
 
+  /// Build one notification channel per adhan sound, with the mp3 baked in as
+  /// `soundSource`. Channel keys are versioned (`_v1`) because Android channel
+  /// settings are immutable once created — to change a baked sound later, bump
+  /// the version and delete the old key.
+  List<NotificationChannel> _adhanSoundChannels() {
+    return AdhanSounds.all
+        .map(
+          (o) => NotificationChannel(
+            channelKey: 'adhan_${o.key}_v1',
+            channelName: 'أذان: ${o.name}',
+            channelDescription: 'تنبيه الصلاة بصوت "${o.name}"',
+            importance: NotificationImportance.Max,
+            defaultColor: const Color(0xFF20497D),
+            ledColor: const Color(0xFF20497D),
+            playSound: true,
+            soundSource: 'resource://raw/${o.androidRawRes}',
+            enableVibration: true,
+            vibrationPattern: highVibrationPattern,
+            channelShowBadge: true,
+            locked: false,
+            onlyAlertOnce: true,
+            icon: 'resource://drawable/ic_notification',
+          ),
+        )
+        .toList();
+  }
+
   @override
   Future<void> initialize() async {
     // Resolve and cache the local timezone before doing anything else with
@@ -170,12 +213,22 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     _localTimeZone = await _resolveTimeZone();
     debugPrint('NotificationRepository: timezone resolved to $_localTimeZone');
 
-    // First, remove old channels if they exist to force recreation
+    // Purge the two channels retired when adhan playback moved from the Dart
+    // player to per-sound channels. Android never garbage-collects a deleted
+    // channel, so without this they linger in the user's system notification
+    // settings forever on upgraded installs. Safe to run every launch: nothing
+    // schedules to these keys any more, so there are no live notifications for
+    // removeChannel to close.
+    //
+    // Deliberately NOT removing the in-use channels here. removeChannel "closes
+    // all current notifications on that channel" (plugin README), and
+    // delete-then-recreate cannot "force recreation" anyway: Android un-deletes
+    // a channel with all its previous settings when you recreate it with the
+    // same id (see NotificationManager.deleteNotificationChannel). The versioned
+    // key on the adhan channels below is the mechanism that actually works.
     try {
       await AwesomeNotifications().removeChannel(_channelKeyFajr);
       await AwesomeNotifications().removeChannel(_channelKeyPrayers);
-      await AwesomeNotifications().removeChannel(_channelKeyFajrDefault);
-      await AwesomeNotifications().removeChannel(_channelKeyPrayersDefault);
     } catch (e) {
       // Channels might not exist yet, ignore error
     }
@@ -183,38 +236,13 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     await AwesomeNotifications().initialize(
       'resource://drawable/ic_notification', // Use custom notification icon
       [
-        // Fajr channel - Custom adhan (no notification sound)
-        NotificationChannel(
-          channelKey: _channelKeyFajr,
-          channelName: 'صلاة الفجر (أذان)',
-          channelDescription: 'تنبيهات صلاة الفجر مع الأذان المخصص',
-          importance: NotificationImportance.Max,
-          defaultColor: const Color(0xFF20497D),
-          ledColor: const Color(0xFF20497D),
-          playSound: false,
-          soundSource: null,
-          enableVibration: true,
-          channelShowBadge: true,
-          locked: false,
-          onlyAlertOnce: true,
-          icon: 'resource://drawable/ic_notification',
-        ),
-        // Other prayers channel - Custom adhan (no notification sound)
-        NotificationChannel(
-          channelKey: _channelKeyPrayers,
-          channelName: 'أوقات الصلاة (أذان)',
-          channelDescription: 'تنبيهات الصلوات مع الأذان المخصص',
-          importance: NotificationImportance.High,
-          defaultColor: const Color(0xFF20497D),
-          ledColor: const Color(0xFF20497D),
-          playSound: false,
-          soundSource: null,
-          enableVibration: true,
-          channelShowBadge: true,
-          locked: false,
-          onlyAlertOnce: true,
-          icon: 'resource://drawable/ic_notification',
-        ),
+        // One channel per adhan sound, each with the mp3 BAKED IN as the
+        // channel sound (resource://raw/...). Android bakes the sound into the
+        // channel at creation, so the correct adhan plays reliably even when the
+        // app is killed — this is the core reliability fix. When the phone is on
+        // silent/vibrate, Android suppresses the sound and only the (strong)
+        // vibration fires. See AdhanSounds catalog for the key→raw mapping.
+        ..._adhanSoundChannels(),
         // Fajr channel - Default notification sound (short beep)
         NotificationChannel(
           channelKey: _channelKeyFajrDefault,
@@ -370,9 +398,27 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     required DateTime prayerTime,
     required PrayerNotificationSettings settings,
     String? locationName,
+  }) => _scheduleOne(
+    prayerName: prayerName,
+    prayerNameArabic: prayerNameArabic,
+    prayerTime: prayerTime,
+    settings: settings,
+    locationName: locationName,
+    dayIndex: 0,
+  );
+
+  /// Schedule a single prayer occurrence. [dayIndex] offsets the notification id
+  /// (base + dayIndex*10) so the same prayer on different days never collides.
+  Future<void> _scheduleOne({
+    required String prayerName,
+    required String prayerNameArabic,
+    required DateTime prayerTime,
+    required PrayerNotificationSettings settings,
+    String? locationName,
+    required int dayIndex,
   }) async {
     if (!settings.enabled) {
-      await cancelPrayerNotification(prayerName);
+      if (dayIndex == 0) await cancelPrayerNotification(prayerName);
       return;
     }
 
@@ -403,15 +449,19 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
       return;
     }
 
-    final int notificationId = _getNotificationId(prayerName);
+    final int notificationId = _getNotificationId(prayerName) + dayIndex * 10;
     final bool isFajr = prayerName.toLowerCase() == 'fajr';
-    final bool useCustomAdhan =
-        settings.customSoundPath != null &&
-        settings.customSoundPath!.isNotEmpty;
 
-    // Select channel based on sound preference
+    // Resolve the selected adhan → its per-sound channel (sound baked in), so
+    // the correct adhan plays even when the app is dead. A null/unknown sound
+    // (the "Default" option) falls back to the system-beep channel.
+    final AdhanSoundOption? adhan = AdhanSounds.byAssetPath(
+      settings.customSoundPath,
+    );
+    final bool useCustomAdhan = adhan?.androidRawRes != null;
+
     final String channelKey = useCustomAdhan
-        ? (isFajr ? _channelKeyFajr : _channelKeyPrayers)
+        ? 'adhan_${adhan!.key}_v1'
         : (isFajr ? _channelKeyFajrDefault : _channelKeyPrayersDefault);
 
     // Format time for display
@@ -429,17 +479,41 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
         'type': 'prayer',
         'prayer': prayerName,
         'time': prayerTime.toIso8601String(),
+        // The moment the notification actually fires (= prayerTime minus any
+        // "before X min" offset). The app-open replay guard compares against
+        // THIS, not 'time', so a valid on-fire adhan isn't wrongly suppressed
+        // when the user picked a before-prayer timing.
+        'fireTime': notificationTime.toIso8601String(),
         'soundPath': settings.customSoundPath ?? '',
         'useCustomAdhan': useCustomAdhan.toString(),
       },
       wakeUpScreen: true,
+      // iOS notification sound: the bundled ≤30s clip. awesome_notifications'
+      // iOS resolver strips the "raw/" segment and looks for
+      // "<androidRawRes>.aiff" in the app bundle (extension is hardcoded to
+      // .aiff in IosAwnCore AudioUtils.getSoundFromResource), so the clips live
+      // in ios/Runner/Sounds/*.aiff and are bundled with the Runner target. If a
+      // clip is missing, iOS falls back to the default sound (notification still
+      // shows) and the full adhan plays via the foreground Dart player. On
+      // Android the sound comes from the per-sound channel, so this stays null.
+      customSound: (Platform.isIOS && useCustomAdhan)
+          ? 'resource://raw/${adhan!.androidRawRes}'
+          : null,
       category: NotificationCategory.Reminder,
       criticalAlert: isFajr,
     );
+    // This button stops the adhan via the plugin's NATIVE dismiss path, not via
+    // any Dart handler: DismissAction broadcasts to NotificationActionReceiver,
+    // which calls StatusBarManager.dismissNotification -> NotificationManager
+    // .cancel(id), and cancelling the notification that owns the in-flight
+    // channel sound stops that sound. Best-effort: if another app's notification
+    // chimes first it takes ownership of the sound slot, so the card is
+    // cancelled but the audio may run on. A guaranteed stop needs
+    // foreground-service playback instead of a channel sound.
     final actionButtons = [
       NotificationActionButton(
-        key: 'DISMISS',
-        label: 'تم',
+        key: 'STOP_ADHAN',
+        label: 'إيقاف الأذان',
         actionType: ActionType.DismissAction,
       ),
     ];
@@ -574,6 +648,67 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
 
     debugPrint('\n✅ Notification scheduling completed successfully');
     debugPrint('🔔 ═══════════════════════════════════════════════════\n');
+  }
+
+  @override
+  Future<void> scheduleMultiDayPrayerNotifications({
+    required Map<DateTime, Map<String, DateTime>> prayerTimesByDay,
+    required NotificationSettingsModel settings,
+    String? locationName,
+  }) async {
+    // Cancel only the PRAYER notification ids, then re-arm — never a global
+    // cancelAll(), which would also wipe azkar/wird/fasting/daily-inspiration
+    // reminders (they schedule on the same plugin with different ids/channels
+    // and only re-arm on their own settings change / cold start).
+    await cancelPrayerSchedules();
+
+    if (!settings.masterEnabled) {
+      debugPrint('⚠️  Master notification toggle OFF — nothing scheduled');
+      return;
+    }
+
+    final prayerSettings = {
+      'Fajr': (settings.fajrSettings, 'الفجر'),
+      'Dhuhr': (settings.dhuhrSettings, 'الظهر'),
+      'Asr': (settings.asrSettings, 'العصر'),
+      'Maghrib': (settings.maghribSettings, 'المغرب'),
+      'Isha': (settings.ishaSettings, 'العشاء'),
+    };
+
+    // Deterministic day order → stable dayIndex → stable, non-colliding ids.
+    final days = prayerTimesByDay.keys.toList()..sort();
+    for (var dayIndex = 0; dayIndex < days.length; dayIndex++) {
+      final dayTimes = prayerTimesByDay[days[dayIndex]]!;
+      for (final entry in prayerSettings.entries) {
+        final prayerTime = dayTimes[entry.key];
+        if (prayerTime == null) continue;
+        await _scheduleOne(
+          prayerName: entry.key,
+          prayerNameArabic: entry.value.$2,
+          prayerTime: prayerTime,
+          settings: entry.value.$1,
+          locationName: locationName,
+          dayIndex: dayIndex,
+        );
+      }
+    }
+    debugPrint('✅ Scheduled prayer notifications across ${days.length} day(s)');
+  }
+
+  /// Cancel only the multi-day prayer notification ids (base 100–104 +
+  /// dayIndex*10, i.e. 100–214), leaving every other feature's reminders
+  /// untouched. Covers a generous day range so no stale prayer alarm survives a
+  /// horizon change.
+  ///
+  /// The 100–214 window is safe: every other feature schedules well clear of it
+  /// (persistent 999, fasting 5001–5999, wird 6001/6099, azkar 7100+).
+  @override
+  Future<void> cancelPrayerSchedules() async {
+    for (var day = 0; day < 12; day++) {
+      for (var base = _fajrId; base <= _ishaId; base++) {
+        await AwesomeNotifications().cancel(base + day * 10);
+      }
+    }
   }
 
   @override

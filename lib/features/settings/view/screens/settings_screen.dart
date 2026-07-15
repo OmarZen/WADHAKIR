@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
@@ -146,7 +147,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                   children: [
                     FItem(
                       prefix: const Icon(Icons.badge_outlined),
-                      title: Text(l10n?.translate('settings.your_name') ?? 'اسمك'),
+                      title: Text(
+                        l10n?.translate('settings.your_name') ?? 'اسمك',
+                      ),
                       subtitle: Text(
                         settings.userName.trim().isEmpty
                             ? (l10n?.translate('settings.no_name') ??
@@ -154,8 +157,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                             : settings.userName,
                       ),
                       suffix: const Icon(Icons.edit_outlined),
-                      onPress: () =>
-                          _showEditNameDialog(context, cubit, settings.userName),
+                      onPress: () => _showEditNameDialog(
+                        context,
+                        cubit,
+                        settings.userName,
+                      ),
                     ),
                   ],
                 ),
@@ -200,33 +206,38 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ],
                 ),
               ),
-              _buildAnimatedSection(
-                delay: 150,
-                child: SettingsSection(
-                  title:
-                      l10n?.translate('settings.app_lock') ??
-                      'قفل التطبيقات وقت الصلاة',
-                  icon: Icons.lock_outline,
-                  subtitle:
-                      l10n?.translate('settings.app_lock_subtitle') ??
-                      'قفل التطبيقات المختارة حتى إنهاء الصلاة',
-                  children: [
-                    _buildNavTile(
-                      context,
-                      icon: Icons.lock_outline,
-                      title:
-                          l10n?.translate('settings.app_lock') ??
-                          'قفل التطبيقات وقت الصلاة',
-                      subtitle: settings.appLockSettings.enabled
-                          ? (l10n?.translate('settings.notifications_on') ??
-                                'مفعّلة')
-                          : (l10n?.translate('settings.notifications_off') ??
-                                'متوقفة'),
-                      page: const AppLockSettingsPage(),
-                    ),
-                  ],
+              // App Lock relies on Android usage-stats + system overlay. Gate on
+              // Android specifically rather than "not iOS" — this app also ships
+              // desktop (see NotificationRepositoryImplWindows), and those
+              // targets have no such APIs either.
+              if (PlatformUtils.isAndroid)
+                _buildAnimatedSection(
+                  delay: 150,
+                  child: SettingsSection(
+                    title:
+                        l10n?.translate('settings.app_lock') ??
+                        'قفل التطبيقات وقت الصلاة',
+                    icon: Icons.lock_outline,
+                    subtitle:
+                        l10n?.translate('settings.app_lock_subtitle') ??
+                        'قفل التطبيقات المختارة حتى إنهاء الصلاة',
+                    children: [
+                      _buildNavTile(
+                        context,
+                        icon: Icons.lock_outline,
+                        title:
+                            l10n?.translate('settings.app_lock') ??
+                            'قفل التطبيقات وقت الصلاة',
+                        subtitle: settings.appLockSettings.enabled
+                            ? (l10n?.translate('settings.notifications_on') ??
+                                  'مفعّلة')
+                            : (l10n?.translate('settings.notifications_off') ??
+                                  'متوقفة'),
+                        page: const AppLockSettingsPage(),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               _buildAnimatedSection(
                 delay: 175,
                 child: SettingsSection(
@@ -279,49 +290,52 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ],
                 ),
               ),
-              _buildAnimatedSection(
-                delay: 188,
-                child: SettingsSection(
-                  title:
-                      l10n?.translate('floating_dhikr.settings_tile') ??
-                      'تذكير الأذكار العائم',
-                  icon: Icons.bubble_chart_outlined,
-                  subtitle:
-                      l10n?.translate(
-                        'floating_dhikr.settings_tile_subtitle',
-                      ) ??
-                      'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
-                  children: [
-                    // Material(transparency) guards against the "ListTile
-                    // background color or ink splashes may be invisible"
-                    // warning if any ancestor between the SettingsSection's
-                    // Material and this ListTile ever picks up a non-
-                    // transparent color.
-                    Material(
-                      type: MaterialType.transparency,
-                      child: ListTile(
-                        leading: const Icon(
-                          Icons.notifications_active_outlined,
+              // Floating Dhikr draws an overlay over other apps, which needs
+              // Android's SYSTEM_ALERT_WINDOW. No iOS or desktop equivalent.
+              if (PlatformUtils.isAndroid)
+                _buildAnimatedSection(
+                  delay: 188,
+                  child: SettingsSection(
+                    title:
+                        l10n?.translate('floating_dhikr.settings_tile') ??
+                        'تذكير الأذكار العائم',
+                    icon: Icons.bubble_chart_outlined,
+                    subtitle:
+                        l10n?.translate(
+                          'floating_dhikr.settings_tile_subtitle',
+                        ) ??
+                        'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
+                    children: [
+                      // Material(transparency) guards against the "ListTile
+                      // background color or ink splashes may be invisible"
+                      // warning if any ancestor between the SettingsSection's
+                      // Material and this ListTile ever picks up a non-
+                      // transparent color.
+                      Material(
+                        type: MaterialType.transparency,
+                        child: ListTile(
+                          leading: const Icon(
+                            Icons.notifications_active_outlined,
+                          ),
+                          title: Text(
+                            l10n?.translate('floating_dhikr.title') ??
+                                'تذكير الأذكار العائم',
+                          ),
+                          subtitle: Text(
+                            l10n?.translate(
+                                  'floating_dhikr.settings_tile_subtitle',
+                                ) ??
+                                'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () => Navigator.of(
+                            context,
+                          ).pushNamed(AppConstants.floatingDhikrSettingsRoute),
                         ),
-                        title: Text(
-                          l10n?.translate('floating_dhikr.title') ??
-                              'تذكير الأذكار العائم',
-                        ),
-                        subtitle: Text(
-                          l10n?.translate(
-                                'floating_dhikr.settings_tile_subtitle',
-                              ) ??
-                              'إظهار ذكر فوق التطبيقات الأخرى كل فترة',
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => Navigator.of(
-                          context,
-                        ).pushNamed(AppConstants.floatingDhikrSettingsRoute),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               _buildAnimatedSection(
                 delay: 194,
                 child: SettingsSection(

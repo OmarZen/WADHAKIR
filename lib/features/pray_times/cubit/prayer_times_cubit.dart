@@ -56,22 +56,42 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   // SharedPreferences keys
   static const String _prefsKeyTimeAdjustments = 'prayer_time_adjustments';
 
+  // How many days ahead of today prayer notifications are scheduled. Android
+  // has no cap; iOS keeps only the 64 soonest-firing pending requests and
+  // silently discards the rest (the plugin surfaces no error at the limit).
+  //
+  // The app is genuinely over that budget with every feature enabled — roughly:
+  //   prayers 5×5 = 25, azkar ≤12, wird 1, daily inspiration 1, feature nudge 1,
+  //   fasting up to 41  =>  ~81 worst case.
+  // The offender is the fasting service, not this horizon. Because prayer
+  // notifications all fire within 5 days they are the LAST to be discarded
+  // under iOS's soonest-first retention, so shrinking this horizon would not
+  // help: it would just free slots that far-future fasting requests immediately
+  // consume and then lose anyway — trading the app's most important alert for
+  // its least important. Fix the fasting fan-out instead.
+  int get _scheduleHorizonDays =>
+      defaultTargetPlatform == TargetPlatform.iOS ? 5 : 7;
+
+  // Signature of the last scheduled plan. Redundant reschedule requests with an
+  // identical plan are skipped so repeated listener fires don't churn the OS
+  // alarm table (a cancel+reschedule race could otherwise drop a notification
+  // firing at that exact minute).
+  String _lastScheduleSignature = '';
+
   PrayerTimesCubit(
     this._getPrayerTimesUseCase,
     this._getPrayerTimesRangeUseCase,
     this._getCalculationMethodUseCase,
     this._setCalculationMethodUseCase, {
-    required PrayerTimesRepository repository,
+    required this._repository,
     PrayerNotificationService? notificationService,
     PersistentNotificationManager? persistentManager,
-    AzkarReminderSettingsRepositoryImpl? azkarReminderRepository,
+    this._azkarReminderRepository,
     AzkarNotificationService? azkarNotificationService,
-  }) : _repository = repository,
-       _notificationService =
+  }) : _notificationService =
            notificationService ?? PrayerNotificationService(),
        _persistentManager =
            persistentManager ?? PersistentNotificationManager(),
-       _azkarReminderRepository = azkarReminderRepository,
        _azkarNotificationService =
            azkarNotificationService ?? AzkarNotificationService(),
        super(const PrayerTimesInitial()) {
@@ -144,7 +164,9 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       final today = DateTime.now();
       _loadedForDay = DateTime(today.year, today.month, today.day);
       final startDate = today.subtract(const Duration(days: 3));
-      final endDate = today.add(const Duration(days: 3));
+      // Load far enough ahead that the multi-day notification scheduler has all
+      // the future days it needs (see _scheduleHorizonDays).
+      final endDate = today.add(Duration(days: _scheduleHorizonDays));
 
       final prayerTimes = await _getPrayerTimesRangeUseCase(
         startDate: startDate,
@@ -232,8 +254,9 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     }
   }
 
-  /// Schedule notifications with current settings
-  /// This should be called from SettingsCubit when settings change
+  /// Schedule notifications with current settings.
+  /// This should be called from SettingsCubit when settings change and from the
+  /// prayer-times BlocListener when a genuine (re)load happens.
   Future<void> scheduleNotificationsWithSettings(
     NotificationSettingsModel settings,
   ) async {
@@ -244,43 +267,70 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       }
 
       final currentState = state as PrayerTimesLoaded;
-      final today = DateTime.now();
-      final dateKey = DateTime(today.year, today.month, today.day);
-      final todayPrayerTimes = currentState.prayerTimes[dateKey];
+      final now = DateTime.now();
+      final todayKey = DateTime(now.year, now.month, now.day);
+      final todayPrayerTimes = currentState.prayerTimes[todayKey];
 
-      if (todayPrayerTimes == null) {
-        debugPrint('Cannot schedule notifications: no prayer times for today');
+      // Build the multi-day map (today .. today+horizon) so the adhan keeps
+      // firing even if the app isn't reopened for several days.
+      final prayerTimesByDay = <DateTime, Map<String, DateTime>>{};
+      for (var i = 0; i < _scheduleHorizonDays; i++) {
+        final dayKey = DateTime(
+          todayKey.year,
+          todayKey.month,
+          todayKey.day + i,
+        );
+        final pt = currentState.prayerTimes[dayKey];
+        if (pt == null) continue;
+        prayerTimesByDay[dayKey] = {
+          'Fajr': pt.fajr,
+          'Dhuhr': pt.dhuhr,
+          'Asr': pt.asr,
+          'Maghrib': pt.maghrib,
+          'Isha': pt.isha,
+        };
+      }
+
+      if (prayerTimesByDay.isEmpty) {
+        debugPrint('Cannot schedule notifications: no prayer times in horizon');
         return;
       }
 
-      // Create prayer times map for notification service
-      final prayerTimesMap = {
-        'Fajr': todayPrayerTimes.fajr,
-        'Dhuhr': todayPrayerTimes.dhuhr,
-        'Asr': todayPrayerTimes.asr,
-        'Maghrib': todayPrayerTimes.maghrib,
-        'Isha': todayPrayerTimes.isha,
-      };
-
-      // Get current location name
       final locationName = await getCurrentLocationName();
 
-      debugPrint('\n🔄 Notification Settings Changed');
-      debugPrint('Master Enabled: ${settings.masterEnabled}');
-      debugPrint(
-        'Persistent Enabled: ${settings.persistentNotificationEnabled}',
+      // Skip a redundant cancel+reschedule when nothing about the plan changed.
+      final signature = _buildScheduleSignature(
+        settings,
+        prayerTimesByDay,
+        locationName,
       );
-      debugPrint('Location: $locationName');
+      if (signature == _lastScheduleSignature) {
+        debugPrint('⏭️  Notification plan unchanged — skipping reschedule');
+      } else {
+        debugPrint('\n🔄 Rescheduling notifications');
+        debugPrint('Master Enabled: ${settings.masterEnabled}');
+        debugPrint('Days scheduled: ${prayerTimesByDay.length}');
+        await _notificationService.schedulePrayerNotificationsMultiDay(
+          prayerTimesByDay: prayerTimesByDay,
+          settings: settings,
+          locationName: locationName,
+        );
+        // Only remember the plan as "done" AFTER it actually succeeds. If the
+        // await throws (e.g. permission denied, exact-alarm failure), the guard
+        // must NOT suppress the next attempt — otherwise a transient failure
+        // silently disables reminders for the whole session.
+        _lastScheduleSignature = signature;
+      }
 
-      // Schedule all prayer notifications
-      await _notificationService.schedulePrayerNotifications(
-        prayerTimes: prayerTimesMap,
-        settings: settings,
-        locationName: locationName,
-      );
-
-      // Manage persistent notification
-      if (settings.persistentNotificationEnabled) {
+      // Persistent "next prayer" notification is an Android-only ongoing
+      // notification concept — iOS can't pin one. It maintains its own live
+      // countdown, so we only start/stop it here, not on every reschedule.
+      final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+      if (isAndroid &&
+          settings.persistentNotificationEnabled &&
+          todayPrayerTimes != null) {
+        // start() already no-ops when it is running (see
+        // PersistentNotificationManager.start).
         await _persistentManager.start(
           prayerTimes: todayPrayerTimes,
           locationName: locationName,
@@ -291,6 +341,47 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     } catch (e) {
       debugPrint('❌ Error scheduling notifications: $e');
     }
+  }
+
+  /// A compact fingerprint of the scheduling plan: the master toggle, location,
+  /// each prayer's enabled/timing/sound, and every scheduled day's per-prayer
+  /// HH:mm. Identical fingerprint ⇒ nothing to reschedule.
+  String _buildScheduleSignature(
+    NotificationSettingsModel s,
+    Map<DateTime, Map<String, DateTime>> byDay,
+    String locationName,
+  ) {
+    // Deliberately excludes persistentNotificationEnabled: the persistent
+    // notification (id 999) is started/stopped separately by the caller and is
+    // not part of the prayer schedule, so folding it in here would force a full
+    // cancel + re-arm of every prayer notification on an unrelated toggle.
+    final buf = StringBuffer()
+      ..write(s.masterEnabled ? '1' : '0')
+      // Location appears in the notification body, so a location change must
+      // trigger a reschedule even when the prayer minutes are unchanged.
+      ..write('|loc:$locationName');
+    for (final entry in [
+      ('F', s.fajrSettings),
+      ('D', s.dhuhrSettings),
+      ('A', s.asrSettings),
+      ('M', s.maghribSettings),
+      ('I', s.ishaSettings),
+    ]) {
+      final ps = entry.$2;
+      buf.write(
+        '|${entry.$1}:${ps.enabled}:${ps.timing.index}:${ps.customSoundPath ?? ""}',
+      );
+    }
+    final days = byDay.keys.toList()..sort();
+    for (final d in days) {
+      final m = byDay[d]!;
+      buf.write('#${d.year}-${d.month}-${d.day}');
+      for (final k in ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']) {
+        final t = m[k];
+        if (t != null) buf.write('$k${t.hour}:${t.minute};');
+      }
+    }
+    return buf.toString();
   }
 
   // Apply time adjustments to all prayer times

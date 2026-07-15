@@ -2,3 +2,9 @@
 
 "CFBundleDisplayName" = "وذكّر";
 "CFBundleName" = "وذكّر";
+
+"NSLocationWhenInUseUsageDescription" = "يُستخدم موقعك لحساب أوقات الصلاة واتجاه القبلة بدقة.";
+"NSMotionUsageDescription" = "تُستخدم مستشعرات الحركة لتحديد اتجاه القبلة بالبوصلة وإيقاف الأذان عند قلب الهاتف.";
+"NSCameraUsageDescription" = "تُستخدم الكاميرا لعرض اتجاه القبلة فوق صورة الكاميرا في وضع الكاميرا.";
+"NSPhotoLibraryUsageDescription" = "اختر صورة من معرضك لاستخدامها كخلفية للتصميم.";
+"NSPhotoLibraryAddUsageDescription" = "حفظ التصميم في معرض الصور.";

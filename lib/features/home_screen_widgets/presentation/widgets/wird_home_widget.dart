@@ -76,8 +76,9 @@ class WirdHomeWidget {
       // Pre-built current-day line ("صفحات ٤٥ – ٤٨ • الجزء ٣"). Changes only
       // when completion changes (not with the date), so it's safe to push.
       final idx = status.currentDayIndex;
-      final current =
-          (idx >= 0 && idx < schedule.length) ? schedule[idx] : null;
+      final current = (idx >= 0 && idx < schedule.length)
+          ? schedule[idx]
+          : null;
       final currentLine = current == null
           ? ''
           : 'صفحات ${WirdFormat.toArabicDigits(current.startPage)} – '
@@ -95,6 +96,9 @@ class WirdHomeWidget {
     await HomeWidget.updateWidget(
       androidName: provider,
       qualifiedAndroidName: 'com.bloom.wadhakir.$provider',
+      // iOS requires a widget name; harmless no-op until the WidgetKit
+      // extension ships a widget of this kind.
+      iOSName: 'WirdProgressWidget',
     );
   }
 }

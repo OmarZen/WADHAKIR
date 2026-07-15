@@ -38,6 +38,7 @@ import 'package:wadhakir/core/localization/app_localizations_delegate.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/glass_prayer_home_widget.dart';
+import 'package:wadhakir/features/home_screen_widgets/presentation/widgets/prayer_times_home_widget.dart';
 import 'package:wadhakir/data/repositories/app_settings_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
@@ -185,6 +186,12 @@ void main() async {
   } catch (e) {
     debugPrint('getInitialNotificationAction failed (non-fatal): $e');
   }
+
+  // Set the home_widget App Group id ONCE, up front — BEFORE any cubit renders
+  // or saves widget data. Without it, iOS widget writes fail with "No groupId
+  // defined" / "AppGroupId not set" because the shared container can't be
+  // resolved. Also registers the interactivity callback. No-op on desktop.
+  await PrayerTimesHomeWidget.setupBackgroundCallback();
 
   // Create repositories
   final appSettingsRepository = AppSettingsRepositoryImpl(sharedPreferences);
@@ -510,8 +517,17 @@ class MyApp extends StatelessWidget {
               }
             },
           ),
-          // Listen to prayer times loaded and schedule notifications
+          // Listen to prayer times loaded and schedule notifications.
+          // Only react to a genuine (re)load — the cubit's countdown timer
+          // re-emits PrayerTimesLoaded every few seconds reusing the SAME
+          // prayerTimes map reference; skipping those prevents a wasteful
+          // cancel+reschedule churn (and a race at the exact prayer minute).
           BlocListener<PrayerTimesCubit, PrayerTimesState>(
+            listenWhen: (previous, current) {
+              if (current is! PrayerTimesLoaded) return false;
+              if (previous is! PrayerTimesLoaded) return true;
+              return !identical(previous.prayerTimes, current.prayerTimes);
+            },
             listener: (context, state) {
               if (state is PrayerTimesLoaded) {
                 final settingsCubit = context.read<SettingsCubit>();

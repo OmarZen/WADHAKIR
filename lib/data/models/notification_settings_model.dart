@@ -13,9 +13,13 @@ enum NotificationSound { defaultSound, adhan, silent }
 class PrayerNotificationSettings extends Equatable {
   final bool enabled;
   final NotificationTiming timing;
+  // NOTE: [customSoundPath] is the single source of truth for which adhan
+  // plays. This [sound] enum is retained only for JSON back-compat and is NOT
+  // consulted by the scheduler (which maps customSoundPath → a per-sound
+  // notification channel). See AdhanSounds / NotificationRepository.
   final NotificationSound sound;
   final bool vibration;
-  final String? customSoundPath; // Path to custom adhan sound file
+  final String? customSoundPath; // Flutter asset path of the selected adhan
 
   const PrayerNotificationSettings({
     required this.enabled,

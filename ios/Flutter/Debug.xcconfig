@@ -1,1 +1,17 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+
+// CocoaPods leaks BUILD_LIBRARY_FOR_DISTRIBUTION = YES from framework pods
+// (awesome_notifications / IosAwnCore) into Pods-Runner.xcconfig, which the
+// Runner app inherits. That makes Swift emit a module interface, and on Xcode 26
+// that's incompatible with the Runner's ObjC bridging header ("Using bridging
+// headers with module interfaces is unsupported"). Force it back off for the
+// app target (must come AFTER the Pods include above so it wins).
+BUILD_LIBRARY_FOR_DISTRIBUTION = NO
+SWIFT_ENABLE_EXPLICIT_MODULES = NO
+
+// App Group entitlement so home_widget's shared container resolves (needed for
+// the prayer/glass/daily-inspiration widget data + the future WidgetKit
+// extension). Works on the simulator; for a physical device add the App Groups
+// capability in Xcode so the provisioning profile includes it.
+CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements

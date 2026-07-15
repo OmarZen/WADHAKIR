@@ -2,3 +2,9 @@
 
 "CFBundleDisplayName" = "Wadhakir";
 "CFBundleName" = "Wadhakir";
+
+"NSLocationWhenInUseUsageDescription" = "Your location is used to calculate accurate prayer times and the Qibla direction.";
+"NSMotionUsageDescription" = "Motion sensors are used for the compass Qibla direction and to silence the adhan when you flip the phone over.";
+"NSCameraUsageDescription" = "The camera is used to show the Qibla direction over the live camera view in AR mode.";
+"NSPhotoLibraryUsageDescription" = "Pick a photo from your library to use as a design background.";
+"NSPhotoLibraryAddUsageDescription" = "Save the design to your photo library.";

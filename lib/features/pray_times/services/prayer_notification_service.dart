@@ -63,7 +63,45 @@ class PrayerNotificationService {
     );
   }
 
-  /// Cancel all prayer notifications
+  /// Schedule prayer notifications across several days so the adhan keeps firing
+  /// even if the user doesn't reopen the app. Each day gets its own ids.
+  Future<void> schedulePrayerNotificationsMultiDay({
+    required Map<DateTime, Map<String, DateTime>> prayerTimesByDay,
+    required NotificationSettingsModel settings,
+    String? locationName,
+  }) async {
+    if (!settings.masterEnabled) {
+      // Cancel ONLY the prayer ids. A global cancelAllNotifications() here would
+      // also destroy azkar/wird/fasting/daily-inspiration reminders, which are
+      // scheduled on the same plugin and only re-arm on their own settings
+      // change or cold start.
+      await cancelPrayerSchedules();
+      return;
+    }
+
+    final hasPermission = await hasPermissions();
+    if (!hasPermission) {
+      final granted = await requestPermissions();
+      if (!granted) {
+        throw Exception('Notification permissions not granted');
+      }
+    }
+
+    await _repository.scheduleMultiDayPrayerNotifications(
+      prayerTimesByDay: prayerTimesByDay,
+      settings: settings,
+      locationName: locationName,
+    );
+  }
+
+  /// Cancel every scheduled prayer notification (all prayers, all days) and
+  /// nothing else. Use this — not [cancelAllNotifications] — to mean "stop the
+  /// adhan"; see [NotificationRepository.cancelPrayerSchedules].
+  Future<void> cancelPrayerSchedules() async {
+    await _repository.cancelPrayerSchedules();
+  }
+
+  /// Cancel ALL notifications app-wide, across every feature. Blunt instrument.
   Future<void> cancelAllNotifications() async {
     await _repository.cancelAllNotifications();
   }

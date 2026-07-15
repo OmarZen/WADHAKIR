@@ -31,6 +31,9 @@ class DailyInspirationHomeWidget {
       await HomeWidget.updateWidget(
         androidName: provider,
         qualifiedAndroidName: 'com.bloom.wadhakir.$provider',
+        // iOS requires a widget name; harmless no-op until the WidgetKit
+        // extension ships a widget of this kind.
+        iOSName: 'DailyInspirationWidget',
       );
     } catch (e) {
       debugPrint('❌ DailyInspirationHomeWidget.update error: $e');

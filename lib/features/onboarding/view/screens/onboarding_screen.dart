@@ -713,25 +713,31 @@ class _PageHero extends StatelessWidget {
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _HeroIcon(icon: icon, palette: palette),
-              const SizedBox(height: 22),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: fonts.titleStyle?.copyWith(color: palette.primary),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: fonts.subtitleStyle,
-              ),
-              const SizedBox(height: 22),
-              Flexible(child: child),
-            ],
+          // Scroll the whole card (icon + title + subtitle + content) as one
+          // unit so nothing overflows when the keyboard shrinks the available
+          // height on the name-entry step. With loose constraints the card
+          // still sizes to its content and stays centered when space is ample.
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _HeroIcon(icon: icon, palette: palette),
+                const SizedBox(height: 22),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: fonts.titleStyle?.copyWith(color: palette.primary),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: fonts.subtitleStyle,
+                ),
+                const SizedBox(height: 22),
+                child,
+              ],
+            ),
           ),
         ),
       ),
@@ -856,67 +862,61 @@ class _WelcomePage extends StatelessWidget {
         'onboarding.welcome_subtitle',
         'A calm Islamic companion for prayer times, Quran, dhikr and daily reminders.',
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _HeroChip(
-              palette: palette,
-              icon: Icons.nights_stay_rounded,
-              label: _t(
-                l10n,
-                'onboarding.hero_label',
-                'Prayer • Quran • Azkar',
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _HeroChip(
+            palette: palette,
+            icon: Icons.nights_stay_rounded,
+            label: _t(l10n, 'onboarding.hero_label', 'Prayer • Quran • Azkar'),
+          ),
+          const SizedBox(height: 18),
+          _FeatureRow(
+            palette: palette,
+            icon: Icons.access_time_rounded,
+            title: _t(l10n, 'onboarding.feature_prayer', 'Prayer times'),
+            subtitle: _t(
+              l10n,
+              'onboarding.feature_prayer_subtitle',
+              'Accurate timings and reminders.',
             ),
-            const SizedBox(height: 18),
-            _FeatureRow(
-              palette: palette,
-              icon: Icons.access_time_rounded,
-              title: _t(l10n, 'onboarding.feature_prayer', 'Prayer times'),
-              subtitle: _t(
-                l10n,
-                'onboarding.feature_prayer_subtitle',
-                'Accurate timings and reminders.',
-              ),
+          ),
+          const SizedBox(height: 10),
+          _FeatureRow(
+            palette: palette,
+            icon: Icons.menu_book_rounded,
+            title: _t(l10n, 'onboarding.feature_quran', 'Quran'),
+            subtitle: _t(
+              l10n,
+              'onboarding.feature_quran_subtitle',
+              'A focused reading experience.',
             ),
-            const SizedBox(height: 10),
-            _FeatureRow(
-              palette: palette,
-              icon: Icons.menu_book_rounded,
-              title: _t(l10n, 'onboarding.feature_quran', 'Quran'),
-              subtitle: _t(
-                l10n,
-                'onboarding.feature_quran_subtitle',
-                'A focused reading experience.',
-              ),
+          ),
+          const SizedBox(height: 10),
+          _FeatureRow(
+            palette: palette,
+            icon: Icons.auto_awesome_rounded,
+            title: _t(l10n, 'onboarding.feature_azkar', 'Azkar'),
+            subtitle: _t(
+              l10n,
+              'onboarding.feature_azkar_subtitle',
+              'Easy daily remembrance and dhikr.',
             ),
-            const SizedBox(height: 10),
-            _FeatureRow(
-              palette: palette,
-              icon: Icons.auto_awesome_rounded,
-              title: _t(l10n, 'onboarding.feature_azkar', 'Azkar'),
-              subtitle: _t(
-                l10n,
-                'onboarding.feature_azkar_subtitle',
-                'Easy daily remembrance and dhikr.',
-              ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _t(
+              l10n,
+              'onboarding.intro_hint',
+              'We only ask for what helps the app work better for you.',
             ),
-            const SizedBox(height: 16),
-            Text(
-              _t(
-                l10n,
-                'onboarding.intro_hint',
-                'We only ask for what helps the app work better for you.',
-              ),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                fontFamily: fonts.bodyFontFamily,
-              ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontFamily: fonts.bodyFontFamily,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -972,38 +972,40 @@ class _NamePageState extends State<_NamePage> {
       icon: Icons.person_outline_rounded,
       palette: widget.palette,
       fonts: widget.fonts,
-      title: _t(widget.l10n, 'onboarding.name_title', 'What should we call you?'),
+      title: _t(
+        widget.l10n,
+        'onboarding.name_title',
+        'What should we call you?',
+      ),
       subtitle: _t(
         widget.l10n,
         'onboarding.name_subtitle',
         "We'll greet you by name on the home screen. This is optional.",
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            FTextField(
-              control: FTextFieldControl.managed(controller: _controller),
-              hint: _t(widget.l10n, 'onboarding.name_hint', 'Your first name'),
-              textInputAction: TextInputAction.done,
-              textCapitalization: TextCapitalization.words,
-              maxLines: 1,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FTextField(
+            control: FTextFieldControl.managed(controller: _controller),
+            hint: _t(widget.l10n, 'onboarding.name_hint', 'Your first name'),
+            textInputAction: TextInputAction.done,
+            textCapitalization: TextCapitalization.words,
+            maxLines: 1,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _t(
+              widget.l10n,
+              'onboarding.name_optional_hint',
+              'You can skip this and add it later in Settings.',
             ),
-            const SizedBox(height: 12),
-            Text(
-              _t(
-                widget.l10n,
-                'onboarding.name_optional_hint',
-                'You can skip this and add it later in Settings.',
-              ),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                fontFamily: widget.fonts.bodyFontFamily,
-              ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontFamily: widget.fonts.bodyFontFamily,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1037,67 +1039,61 @@ class _SetupPage extends StatelessWidget {
         'onboarding.setup_subtitle',
         'Turn on prayer notifications so we can gently remind you on time.',
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _SettingToggleCard(
-              palette: palette,
-              icon: Icons.notifications_active_rounded,
-              title: _t(
-                l10n,
-                'onboarding.notifications_title',
-                'Prayer notifications',
-              ),
-              subtitle: _t(
-                l10n,
-                'onboarding.notifications_subtitle',
-                'Turn reminders on for prayer times and daily alerts.',
-              ),
-              value: notificationsEnabled,
-              onChanged: onToggle,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _SettingToggleCard(
+            palette: palette,
+            icon: Icons.notifications_active_rounded,
+            title: _t(
+              l10n,
+              'onboarding.notifications_title',
+              'Prayer notifications',
             ),
-            const SizedBox(height: 18),
-            _InfoRow(
-              palette: palette,
-              icon: Icons.auto_awesome_rounded,
-              title: _t(l10n, 'onboarding.setup_benefit_1', 'Fast setup'),
-              subtitle: _t(
-                l10n,
-                'onboarding.setup_benefit_1_subtitle',
-                'You can change these preferences any time from Settings.',
-              ),
+            subtitle: _t(
+              l10n,
+              'onboarding.notifications_subtitle',
+              'Turn reminders on for prayer times and daily alerts.',
             ),
-            const SizedBox(height: 10),
-            _InfoRow(
-              palette: palette,
-              icon: Icons.verified_user_rounded,
-              title: _t(
-                l10n,
-                'onboarding.setup_benefit_2',
-                'Private by default',
-              ),
-              subtitle: _t(
-                l10n,
-                'onboarding.setup_benefit_2_subtitle',
-                'Only the essentials are asked during first launch.',
-              ),
+            value: notificationsEnabled,
+            onChanged: onToggle,
+          ),
+          const SizedBox(height: 18),
+          _InfoRow(
+            palette: palette,
+            icon: Icons.auto_awesome_rounded,
+            title: _t(l10n, 'onboarding.setup_benefit_1', 'Fast setup'),
+            subtitle: _t(
+              l10n,
+              'onboarding.setup_benefit_1_subtitle',
+              'You can change these preferences any time from Settings.',
             ),
-            const SizedBox(height: 14),
-            Text(
-              _t(
-                l10n,
-                'onboarding.setup_hint',
-                'Use the toggle above, then continue when you are ready.',
-              ),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                fontFamily: fonts.bodyFontFamily,
-              ),
+          ),
+          const SizedBox(height: 10),
+          _InfoRow(
+            palette: palette,
+            icon: Icons.verified_user_rounded,
+            title: _t(l10n, 'onboarding.setup_benefit_2', 'Private by default'),
+            subtitle: _t(
+              l10n,
+              'onboarding.setup_benefit_2_subtitle',
+              'Only the essentials are asked during first launch.',
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            _t(
+              l10n,
+              'onboarding.setup_hint',
+              'Use the toggle above, then continue when you are ready.',
+            ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontFamily: fonts.bodyFontFamily,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1128,29 +1124,27 @@ class _AppLockPage extends StatelessWidget {
         'onboarding.applock_setup_subtitle',
         'Pause distracting apps during prayer windows.',
       ),
-      child: SingleChildScrollView(
-        child: settingsState is SettingsLoaded
-            ? AppLockSettingsWidget(
-                settings: (settingsState as SettingsLoaded).settings,
-                cubit: context.read<SettingsCubit>(),
-              )
-            : Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(color: palette.primary),
-                      const SizedBox(height: 12),
-                      Text(
-                        _t(l10n, 'common.loading', 'Loading...'),
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
+      child: settingsState is SettingsLoaded
+          ? AppLockSettingsWidget(
+              settings: (settingsState as SettingsLoaded).settings,
+              cubit: context.read<SettingsCubit>(),
+            )
+          : Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: palette.primary),
+                    const SizedBox(height: 12),
+                    Text(
+                      _t(l10n, 'common.loading', 'Loading...'),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ],
                 ),
               ),
-      ),
+            ),
     );
   }
 }
@@ -1178,111 +1172,105 @@ class _PrayerPage extends StatelessWidget {
         'onboarding.prayer_settings_subtitle',
         'Choose calculation method, madhhab and location source.',
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _InfoRow(
-              palette: palette,
-              icon: Icons.location_on_rounded,
-              title: _t(
-                l10n,
-                'onboarding.prayer_loc',
-                'Location-based timings',
-              ),
-              subtitle: _t(
-                l10n,
-                'onboarding.prayer_loc_subtitle',
-                'Prayer times calculated from your current location.',
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _InfoRow(
+            palette: palette,
+            icon: Icons.location_on_rounded,
+            title: _t(l10n, 'onboarding.prayer_loc', 'Location-based timings'),
+            subtitle: _t(
+              l10n,
+              'onboarding.prayer_loc_subtitle',
+              'Prayer times calculated from your current location.',
             ),
-            const SizedBox(height: 10),
-            _InfoRow(
-              palette: palette,
-              icon: Icons.calculate_rounded,
-              title: _t(l10n, 'onboarding.prayer_method', 'Calculation method'),
-              subtitle: _t(
-                l10n,
-                'onboarding.prayer_method_subtitle',
-                'Pick the calculation method that matches your community.',
-              ),
+          ),
+          const SizedBox(height: 10),
+          _InfoRow(
+            palette: palette,
+            icon: Icons.calculate_rounded,
+            title: _t(l10n, 'onboarding.prayer_method', 'Calculation method'),
+            subtitle: _t(
+              l10n,
+              'onboarding.prayer_method_subtitle',
+              'Pick the calculation method that matches your community.',
             ),
-            const SizedBox(height: 18),
-            // The CTA replaces the old FilledButton.tonalIcon which inherited
-            // dark default colors. This one is keyed to the palette accent
-            // (warm amber on this page) so it never reads as black.
-            Material(
-              color: Colors.transparent,
-              child: Ink(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [palette.primary, palette.accent],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: palette.primary.withValues(alpha: 0.30),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+          ),
+          const SizedBox(height: 18),
+          // The CTA replaces the old FilledButton.tonalIcon which inherited
+          // dark default colors. This one is keyed to the palette accent
+          // (warm amber on this page) so it never reads as black.
+          Material(
+            color: Colors.transparent,
+            child: Ink(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [palette.primary, palette.accent],
                 ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  splashColor: Colors.white.withValues(alpha: 0.18),
-                  onTap: () => PrayerSettingsDialog.show(
-                    context,
-                    context.read<PrayerTimesCubit>(),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: palette.primary.withValues(alpha: 0.30),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.tune_rounded,
+                ],
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                splashColor: Colors.white.withValues(alpha: 0.18),
+                onTap: () => PrayerSettingsDialog.show(
+                  context,
+                  context.read<PrayerTimesCubit>(),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.tune_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        _t(
+                          l10n,
+                          'onboarding.open_prayer_settings',
+                          'Open prayer settings',
+                        ),
+                        style: const TextStyle(
                           color: Colors.white,
-                          size: 20,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
                         ),
-                        const SizedBox(width: 10),
-                        Text(
-                          _t(
-                            l10n,
-                            'onboarding.open_prayer_settings',
-                            'Open prayer settings',
-                          ),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-            Text(
-              _t(
-                l10n,
-                'onboarding.prayer_settings_hint',
-                'You can change these later from Settings.',
-              ),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                fontFamily: fonts.bodyFontFamily,
-              ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            _t(
+              l10n,
+              'onboarding.prayer_settings_hint',
+              'You can change these later from Settings.',
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontFamily: fonts.bodyFontFamily,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1396,161 +1384,157 @@ class _FloatingDhikrPageState extends State<_FloatingDhikrPage> {
         'onboarding.floating_dhikr_subtitle',
         'A gentle reminder slides over your other apps at a chosen interval.',
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    palette.primary.withValues(
-                      alpha: widget.isDark ? 0.28 : 0.10,
-                    ),
-                    palette.accent.withValues(
-                      alpha: widget.isDark ? 0.24 : 0.08,
-                    ),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: palette.primary.withValues(alpha: 0.16),
-                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  palette.primary.withValues(
+                    alpha: widget.isDark ? 0.28 : 0.10,
+                  ),
+                  palette.accent.withValues(alpha: widget.isDark ? 0.24 : 0.08),
+                ],
               ),
-              child: PillPreview(opacity: _settings.opacity),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: palette.primary.withValues(alpha: 0.16),
+              ),
             ),
-            const SizedBox(height: 14),
-            _InfoRow(
+            child: PillPreview(opacity: _settings.opacity),
+          ),
+          const SizedBox(height: 14),
+          _InfoRow(
+            palette: palette,
+            icon: Icons.refresh_rounded,
+            title: _tr(
+              'onboarding.floating_dhikr_benefit_1',
+              'Regular gentle reminders',
+            ),
+            subtitle: _tr(
+              'onboarding.floating_dhikr_benefit_1_subtitle',
+              'A dhikr appears over your other apps at a chosen interval.',
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _tr('floating_dhikr.interval', 'Interval'),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              fontFamily: widget.fonts.bodyFontFamily,
+              color: palette.primary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [5, 10, 15, 30, 60].map((m) {
+              final selected = _settings.interval.inMinutes == m;
+              return ChoiceChip(
+                label: Text('$m ${_tr('floating_dhikr.minutes', 'min')}'),
+                selected: selected,
+                selectedColor: palette.primary.withValues(alpha: 0.12),
+                side: BorderSide(
+                  color: palette.primary.withValues(
+                    alpha: selected ? 0.6 : 0.2,
+                  ),
+                ),
+                labelStyle: TextStyle(
+                  color: selected ? palette.primary : null,
+                  fontWeight: FontWeight.w700,
+                ),
+                onSelected: (_) => _setInterval(m),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+          if (isEnabled)
+            _SuccessBadge(
               palette: palette,
-              icon: Icons.refresh_rounded,
-              title: _tr(
-                'onboarding.floating_dhikr_benefit_1',
-                'Regular gentle reminders',
+              label: _tr(
+                'onboarding.floating_dhikr_enabled',
+                'Floating reminder enabled. You can fine-tune later from Settings.',
               ),
-              subtitle: _tr(
-                'onboarding.floating_dhikr_benefit_1_subtitle',
-                'A dhikr appears over your other apps at a chosen interval.',
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _tr('floating_dhikr.interval', 'Interval'),
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                fontFamily: widget.fonts.bodyFontFamily,
-                color: palette.primary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [5, 10, 15, 30, 60].map((m) {
-                final selected = _settings.interval.inMinutes == m;
-                return ChoiceChip(
-                  label: Text('$m ${_tr('floating_dhikr.minutes', 'min')}'),
-                  selected: selected,
-                  selectedColor: palette.primary.withValues(alpha: 0.12),
-                  side: BorderSide(
-                    color: palette.primary.withValues(
-                      alpha: selected ? 0.6 : 0.2,
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: Material(
+                color: Colors.transparent,
+                child: Ink(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [palette.primary, palette.accent],
                     ),
-                  ),
-                  labelStyle: TextStyle(
-                    color: selected ? palette.primary : null,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  onSelected: (_) => _setInterval(m),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            if (isEnabled)
-              _SuccessBadge(
-                palette: palette,
-                label: _tr(
-                  'onboarding.floating_dhikr_enabled',
-                  'Floating reminder enabled. You can fine-tune later from Settings.',
-                ),
-              )
-            else
-              SizedBox(
-                width: double.infinity,
-                child: Material(
-                  color: Colors.transparent,
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [palette.primary, palette.accent],
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: palette.primary.withValues(alpha: 0.28),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
                       ),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: palette.primary.withValues(alpha: 0.28),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(14),
-                      onTap: _busy ? null : _enable,
-                      splashColor: Colors.white.withValues(alpha: 0.18),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _busy
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.bubble_chart_rounded,
+                    ],
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: _busy ? null : _enable,
+                    splashColor: Colors.white.withValues(alpha: 0.18),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _busy
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
                                     color: Colors.white,
-                                    size: 18,
                                   ),
-                            const SizedBox(width: 10),
-                            Text(
-                              _tr(
-                                'onboarding.floating_dhikr_enable_cta',
-                                'Enable floating reminder',
-                              ),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
-                              ),
+                                )
+                              : const Icon(
+                                  Icons.bubble_chart_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                          const SizedBox(width: 10),
+                          Text(
+                            _tr(
+                              'onboarding.floating_dhikr_enable_cta',
+                              'Enable floating reminder',
                             ),
-                          ],
-                        ),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-            const SizedBox(height: 10),
-            Text(
-              _tr(
-                'onboarding.floating_dhikr_skip_hint',
-                'You can skip and enable this later from Settings → Floating dhikr reminder.',
-              ),
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                fontFamily: widget.fonts.bodyFontFamily,
-              ),
             ),
-          ],
-        ),
+          const SizedBox(height: 10),
+          Text(
+            _tr(
+              'onboarding.floating_dhikr_skip_hint',
+              'You can skip and enable this later from Settings → Floating dhikr reminder.',
+            ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontFamily: widget.fonts.bodyFontFamily,
+            ),
+          ),
+        ],
       ),
     );
   }

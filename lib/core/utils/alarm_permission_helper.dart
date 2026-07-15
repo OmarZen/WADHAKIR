@@ -120,11 +120,23 @@ class AlarmPermissionHelper {
     );
   }
 
-  /// Request POST_NOTIFICATIONS permission for Android 13+
+  /// Request notification permission.
+  ///
+  /// On iOS (and any non-Android platform) this triggers the SYSTEM notification
+  /// authorization prompt directly — previously it just returned `true` without
+  /// asking, so the master toggle "enabled" notifications while iOS never
+  /// granted permission and silently dropped every notification.
   static Future<bool> requestNotificationPermission(
     BuildContext context,
   ) async {
-    if (!Platform.isAndroid) return true;
+    if (!Platform.isAndroid) {
+      final current = await Permission.notification.status;
+      if (current.isGranted || current.isLimited || current.isProvisional) {
+        return true;
+      }
+      final status = await Permission.notification.request();
+      return status.isGranted || status.isLimited || status.isProvisional;
+    }
 
     final status = await Permission.notification.status;
     debugPrint('🔔 Current notification permission status: $status');

@@ -22,14 +22,11 @@ class FastingRemindersCubit extends Cubit<FastingRemindersState> {
 
   FastingRemindersCubit({
     HijriDateCalculatorService? hijriCalculator,
-    required GetFastingReminderSettingsUseCase getSettingsUseCase,
-    required SetFastingReminderSettingsUseCase setSettingsUseCase,
-    required GetFastingReminderSettingsStreamUseCase getSettingsStreamUseCase,
+    required this._getSettingsUseCase,
+    required this._setSettingsUseCase,
+    required this._getSettingsStreamUseCase,
     FastingNotificationService? notificationService,
   }) : _hijriCalculator = hijriCalculator ?? HijriDateCalculatorService(),
-       _getSettingsUseCase = getSettingsUseCase,
-       _setSettingsUseCase = setSettingsUseCase,
-       _getSettingsStreamUseCase = getSettingsStreamUseCase,
        _notificationService =
            notificationService ?? FastingNotificationService(),
        super(const FastingRemindersInitial()) {

@@ -53,7 +53,15 @@ android {
             if (keystorePropertiesFile.exists()) {
                 keyAlias = keystoreProperties["keyAlias"] as String?
                 keyPassword = keystoreProperties["keyPassword"] as String?
-                storeFile = keystoreProperties["storeFile"]?.let { File(it as String) }
+                // Gradle's project.file(), NOT java.io.File(): a raw File() with a
+                // relative path like "../upload-keystore.jks" resolves against the
+                // JVM's working directory — which is the Gradle daemon's dir, not
+                // this project — and fails with
+                //   Keystore file '/home/runner/.gradle/daemon/9.3.1/../upload-keystore.jks' not found
+                // project.file() resolves relative to android/app/, so
+                // "../upload-keystore.jks" correctly means android/upload-keystore.jks
+                // (where CI writes it). Absolute paths pass through unchanged.
+                storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
                 storePassword = keystoreProperties["storePassword"] as String?
             }
         }

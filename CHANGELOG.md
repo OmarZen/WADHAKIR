@@ -7,26 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.3.2+22] - 2026-07-15
 
+A reliability release. The headline is that the adhan now actually plays at
+prayer time on Android even when the app has been killed — and that iOS is
+supported for the first time. It also fixes several bugs that were silently
+deleting reminders you had set.
+
 ### Added
 
-- **Reliable adhan on Android** — each adhan now has its own notification channel with the sound baked in, so the OS plays the full adhan at prayer time even when the app has been killed.
-- **iOS support for the adhan** — bundled 29-second clips play as the notification sound in every app state, alongside the iOS project, app group, and widget extension setup.
-- **Multi-day scheduling** — prayer notifications are now armed several days ahead (7 on Android, 5 on iOS), so the adhan keeps firing even if the app isn't reopened.
+- **The adhan now plays reliably on Android, even when the app is closed.** Each adhan has its own notification channel with the sound baked into it, so the system plays it at prayer time — no longer dependent on the app being alive to start playback.
+- **iOS support for prayer notifications and the adhan.** A bundled 29-second clip plays as the notification sound whether the app is open, backgrounded, or closed. Ships with the iOS project, app group, and home-screen widget extension.
+- **Prayer notifications are scheduled several days ahead** (7 on Android, 5 on iOS), so the adhan keeps firing even if you don't open the app for a while.
+- **A "stop the adhan" button on the prayer notification**, so you can silence it without opening the app.
 
 ### Fixed
 
-- **The notifications master toggle no longer deletes your other reminders.** Turning it off cancelled every scheduled notification app-wide, silently wiping azkar, wird, fasting, and daily-inspiration reminders until each was re-armed. It now cancels prayer notifications only.
-- **iOS no longer plays two adhans at once** at prayer time.
+- **Turning off the notifications master switch no longer deletes your other reminders.** It cancelled *every* scheduled notification app-wide — silently wiping your azkar, wird, fasting, and daily-inspiration reminders, which then stayed gone until each was re-armed. It now cancels prayer notifications only.
+- **Tasu'a fasting reminders never arrived.** Tasu'a and Ashura were assigned overlapping notification IDs, and because both fall in Muharram, Ashura overwrote Tasu'a every time.
+- **Fasting reminders for the current month could vanish entirely.** The next Hijri month was scheduled using the same IDs as the current one and overwrote it — so, for example, opening the app on the 5th with Ayyam al-Bid enabled left you with no reminders for that month at all.
+- **The "advance reminder" switch in fasting settings did nothing.** It was saved and displayed, but the scheduler never read it, so turning it off had no effect.
+- **iOS played two adhans at once** at prayer time.
+- **The adhan could have gone silent in the released app.** The adhan files are only ever referenced from Dart, so Android's release-build resource shrinker had no visible reference to them and kept them only by heuristic. They are now pinned explicitly.
 - **App Lock and Floating Dhikr** are no longer offered on desktop, where the Android-only APIs they need don't exist.
 - Notification channels are no longer deleted and recreated on every launch, which closed live notifications for no benefit.
 - Onboarding no longer overflows on the name step when the keyboard is open.
+- The About screen showed a stale, hand-typed version number; it now reads the real app version at runtime.
 
 ### Changed
 
-- App version bumped from `3.3.1+21` to `3.3.2+22`.
-- MSIX version bumped from `3.3.1.0` to `3.3.2.0`.
-- iOS adhan clips are encoded mono @ 16kHz to match the source recordings exactly, cutting them from 63MB to 12MB of app size with no loss of fidelity.
-- CI now builds on Flutter 3.44.4 (Dart 3.12), matching the SDK constraint the app already required.
+- App version `3.3.1+21` → `3.3.2+22`; MSIX version `3.3.1.0` → `3.3.2.0`.
+- **Smaller download.** The iOS adhan clips are encoded to match the source recordings exactly (mono, 16kHz) instead of being upsampled to stereo 44.1kHz — 63MB down to 12MB, with no audible difference.
+- On iOS, fasting reminders for the *next* Hijri month are no longer pre-scheduled. iOS only keeps the 64 soonest notifications, so those were being discarded anyway while crowding out prayer notifications. They are scheduled as the month approaches instead.
+- Releases now ship Android (APK + AAB), Windows (MSIX), and iOS (unsigned IPA) artifacts, with these release notes attached automatically.
+
+### Internal
+
+- CI builds on Flutter 3.44.4 (Dart 3.12), matching the SDK constraint the app already required — it had been failing on every run since June.
+- Release notes are now extracted from this file correctly (the version's `+` was being parsed as a regular-expression operator, so every previous release shipped a generic placeholder body).
+- Removed the now-unused in-app adhan player and the `sensors_plus` dependency.
 
 ## [3.3.1+21] - 2026-06-17
 

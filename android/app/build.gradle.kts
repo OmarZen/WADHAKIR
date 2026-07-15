@@ -43,18 +43,52 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String?
-            keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { File(it as String) }
-            storePassword = keystoreProperties["storePassword"] as String?
+            // Only populate when key.properties exists. Assigning nulls here and
+            // then wiring this config into the release build type produces
+            // spectacularly unhelpful errors: `assembleRelease` fails with
+            // `SigningConfig "release" is missing required property "storeFile"`,
+            // and `bundleRelease` fails with a bare
+            // `java.lang.NullPointerException (no error message)` from
+            // FinalizeBundleTask — neither of which says "you have no keystore".
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String?
+                keyPassword = keystoreProperties["keyPassword"] as String?
+                storeFile = keystoreProperties["storeFile"]?.let { File(it as String) }
+                storePassword = keystoreProperties["storePassword"] as String?
+            }
         }
     }
 
     buildTypes {
         release {
-            // Signing configuration for release builds
-            signingConfig = signingConfigs.getByName("release")
-            
+            // Sign with the real upload key when android/key.properties is
+            // present (CI writes it from secrets before a tagged build; see
+            // .github/workflows/build-and-release.yml). Otherwise fall back to
+            // debug signing so `flutter build apk/appbundle --release` still
+            // works locally for size checks and R8/shrinker verification.
+            //
+            // A debug-signed artifact CANNOT be uploaded to Google Play — Play
+            // rejects it because the signature does not match the upload key. To
+            // produce an uploadable build locally you need android/key.properties
+            // (both it and *.jks are gitignored):
+            //
+            //     storePassword=<KEYSTORE_STORE_PASSWORD>
+            //     keyPassword=<KEYSTORE_KEY_PASSWORD>
+            //     keyAlias=<KEYSTORE_KEY_ALIAS>
+            //     storeFile=../upload-keystore.jks
+            //
+            // Easier: push a `v*` tag and let CI build the signed AAB.
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                logger.warn(
+                    "⚠️  android/key.properties not found — signing the release " +
+                    "build with the DEBUG key. This artifact is fine for local " +
+                    "testing but Google Play WILL reject it."
+                )
+                signingConfigs.getByName("debug")
+            }
+
             // Enable code shrinking, obfuscation, and optimization
             isMinifyEnabled = true
             isShrinkResources = true

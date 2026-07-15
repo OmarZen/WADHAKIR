@@ -191,7 +191,8 @@ class _ZakatScreenState extends State<ZakatScreen> {
                     icon: Icons.account_balance_wallet_rounded,
                     children: [
                       ZakatInputRow(
-                        label: l10n?.translate('zakat.cash') ?? 'النقد والمدخرات',
+                        label:
+                            l10n?.translate('zakat.cash') ?? 'النقد والمدخرات',
                         controller: _cash,
                         onChanged: _onChanged,
                         suffix: cur,
@@ -199,8 +200,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                       ),
                       ZakatInputRow(
                         label:
-                            l10n?.translate('zakat.gold_grams') ??
-                            'وزن الذهب',
+                            l10n?.translate('zakat.gold_grams') ?? 'وزن الذهب',
                         controller: _goldGrams,
                         onChanged: _onChanged,
                         suffix: grams,
@@ -269,8 +269,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                       Padding(
                         padding: const EdgeInsets.only(bottom: Spacing.sm),
                         child: Text(
-                          l10n?.translate('zakat.nisab_basis') ??
-                              'أساس النصاب',
+                          l10n?.translate('zakat.nisab_basis') ?? 'أساس النصاب',
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -322,9 +321,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
 
                   // ---- Hawl note ----
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Spacing.lg,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
                     child: Text(
                       l10n?.translate('zakat.hawl_note') ??
                           'تُخرَج الزكاة بشرط بلوغ النصاب ومرور عام هجري كامل على المال.',
@@ -337,13 +334,13 @@ class _ZakatScreenState extends State<ZakatScreen> {
                   ),
                   const SizedBox(height: Spacing.lg),
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Spacing.lg,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
                     child: FButton(
                       onPress: _reset,
                       variant: FButtonVariant.outline,
-                      child: Text(l10n?.translate('zakat.reset') ?? 'إعادة تعيين'),
+                      child: Text(
+                        l10n?.translate('zakat.reset') ?? 'إعادة تعيين',
+                      ),
                     ),
                   ),
                 ],

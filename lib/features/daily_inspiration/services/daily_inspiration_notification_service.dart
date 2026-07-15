@@ -24,7 +24,8 @@ class DailyInspirationNotificationService {
   // Must match `_MobileNotificationRepositoryImpl._channelKeyDailyInspiration`.
   static const String channelKey = 'daily_inspiration_channel';
   static const String _channelName = 'Daily Inspiration';
-  static const String _channelDescription = 'Daily ayah / dua / hadith reminder';
+  static const String _channelDescription =
+      'Daily ayah / dua / hadith reminder';
 
   // Fresh id range (prayers 100-104, persistent 999, fasting 5xxx, wird 60xx).
   static const int _reminderId = 7000;

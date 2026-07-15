@@ -136,7 +136,9 @@ class _Marker extends StatelessWidget {
         if (outOfFov) ...[
           const SizedBox(height: 6),
           Icon(
-            turnRight ? Icons.chevron_right_rounded : Icons.chevron_left_rounded,
+            turnRight
+                ? Icons.chevron_right_rounded
+                : Icons.chevron_left_rounded,
             color: color,
             size: 34,
           ),

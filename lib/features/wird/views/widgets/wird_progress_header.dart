@@ -100,7 +100,10 @@ class WirdProgressHeader extends StatelessWidget {
     if (state.pace == WirdPace.notStarted) return const [];
 
     final (String emoji, String text) = switch (state.pace) {
-      WirdPace.finished => ('🎉', l10n?.translate('wird.finished_short') ?? 'تمت الختمة'),
+      WirdPace.finished => (
+        '🎉',
+        l10n?.translate('wird.finished_short') ?? 'تمت الختمة',
+      ),
       WirdPace.behind => (
         '😔',
         '${l10n?.translate('wird.behind_by') ?? 'أنت متأخر بـ'} '

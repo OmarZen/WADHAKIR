@@ -62,34 +62,40 @@ void main() {
     expect(state.totalMakeUp, 0);
   });
 
-  test('cycleFard walks notLogged -> auto -> qada -> missed -> notLogged',
-      () async {
-    // notLogged -> onTime (auto-classified passed in)
-    await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
-    await _settle();
-    expect((cubit.state as SalahTrackerLoaded).todayStatuses[PrayerSlot.dhuhr],
-        PrayerStatus.onTime);
+  test(
+    'cycleFard walks notLogged -> auto -> qada -> missed -> notLogged',
+    () async {
+      // notLogged -> onTime (auto-classified passed in)
+      await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
+      await _settle();
+      expect(
+        (cubit.state as SalahTrackerLoaded).todayStatuses[PrayerSlot.dhuhr],
+        PrayerStatus.onTime,
+      );
 
-    // onTime -> qada
-    await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
-    await _settle();
-    expect((cubit.state as SalahTrackerLoaded).todayStatuses[PrayerSlot.dhuhr],
-        PrayerStatus.qada);
+      // onTime -> qada
+      await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
+      await _settle();
+      expect(
+        (cubit.state as SalahTrackerLoaded).todayStatuses[PrayerSlot.dhuhr],
+        PrayerStatus.qada,
+      );
 
-    // qada -> missed (make-up +1)
-    await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
-    await _settle();
-    var state = cubit.state as SalahTrackerLoaded;
-    expect(state.todayStatuses[PrayerSlot.dhuhr], PrayerStatus.missed);
-    expect(state.log.makeUpFor(PrayerSlot.dhuhr), 1);
+      // qada -> missed (make-up +1)
+      await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
+      await _settle();
+      var state = cubit.state as SalahTrackerLoaded;
+      expect(state.todayStatuses[PrayerSlot.dhuhr], PrayerStatus.missed);
+      expect(state.log.makeUpFor(PrayerSlot.dhuhr), 1);
 
-    // missed -> notLogged (make-up -1)
-    await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
-    await _settle();
-    state = cubit.state as SalahTrackerLoaded;
-    expect(state.todayStatuses[PrayerSlot.dhuhr], PrayerStatus.notLogged);
-    expect(state.log.makeUpFor(PrayerSlot.dhuhr), 0);
-  });
+      // missed -> notLogged (make-up -1)
+      await cubit.cycleFard(today, PrayerSlot.dhuhr, PrayerStatus.onTime);
+      await _settle();
+      state = cubit.state as SalahTrackerLoaded;
+      expect(state.todayStatuses[PrayerSlot.dhuhr], PrayerStatus.notLogged);
+      expect(state.log.makeUpFor(PrayerSlot.dhuhr), 0);
+    },
+  );
 
   test('completing all five fard today yields a streak of 1', () async {
     for (final slot in PrayerSlot.values) {
@@ -104,17 +110,26 @@ void main() {
   test('makeUpOne pays down only existing debt (never negative)', () async {
     await cubit.adjustMakeUp(PrayerSlot.asr, 3);
     await _settle();
-    expect((cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.asr), 3);
+    expect(
+      (cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.asr),
+      3,
+    );
 
     await cubit.makeUpOne(PrayerSlot.asr);
     await _settle();
-    expect((cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.asr), 2);
+    expect(
+      (cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.asr),
+      2,
+    );
 
     // Drain past zero — stays at 0.
     for (var i = 0; i < 5; i++) {
       await cubit.makeUpOne(PrayerSlot.asr);
       await _settle();
     }
-    expect((cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.asr), 0);
+    expect(
+      (cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.asr),
+      0,
+    );
   });
 }

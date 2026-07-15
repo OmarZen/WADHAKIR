@@ -57,10 +57,8 @@ class DailyInspirationSettingsModel extends Equatable {
       enabled: json['enabled'] as bool? ?? false,
       hour: json['hour'] as int? ?? 8,
       minute: json['minute'] as int? ?? 0,
-      contentType: DailyContentType.values[typeIndex.clamp(
-        0,
-        DailyContentType.values.length - 1,
-      )],
+      contentType: DailyContentType
+          .values[typeIndex.clamp(0, DailyContentType.values.length - 1)],
     );
   }
 

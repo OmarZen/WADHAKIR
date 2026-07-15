@@ -73,7 +73,10 @@ class ShareBackground {
     ShareBackground.gradient([Color(0xFF8E2DE2), Color(0xFF4A00E0)]), // violet
     ShareBackground.gradient([Color(0xFFB06AB3), Color(0xFF4568DC)]), // dusk
     ShareBackground.gradient([Color(0xFF6D4C41), Color(0xFFC79081)]), // sand
-    ShareBackground.gradient([Color(0xFF232526), Color(0xFF414345)]), // charcoal
+    ShareBackground.gradient([
+      Color(0xFF232526),
+      Color(0xFF414345),
+    ]), // charcoal
   ];
 
   /// Quick solid-color swatches (the picker covers everything else).

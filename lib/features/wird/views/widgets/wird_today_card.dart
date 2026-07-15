@@ -150,31 +150,31 @@ class _PaceBanner extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    final ({String emoji, String text, Color color, List<String> bucket})
-    info = switch (state.pace) {
-      WirdPace.behind => (
-        emoji: '😔',
-        text:
-            '${l10n?.translate('wird.behind_by') ?? 'أنت متأخر بـ'} '
-            '${WirdFormat.daysLabel(state.daysLate)}',
-        color: theme.colorScheme.error,
-        bucket: WirdMotivations.behind,
-      ),
-      WirdPace.ahead => (
-        emoji: '🌟',
-        text:
-            '${l10n?.translate('wird.ahead_by') ?? 'أنت متقدم بـ'} '
-            '${WirdFormat.daysLabel(state.daysAhead)}',
-        color: theme.colorScheme.primary,
-        bucket: WirdMotivations.ahead,
-      ),
-      _ => (
-        emoji: '📖',
-        text: l10n?.translate('wird.on_track') ?? 'أنت على المسار',
-        color: theme.colorScheme.primary,
-        bucket: WirdMotivations.onTrack,
-      ),
-    };
+    final ({String emoji, String text, Color color, List<String> bucket}) info =
+        switch (state.pace) {
+          WirdPace.behind => (
+            emoji: '😔',
+            text:
+                '${l10n?.translate('wird.behind_by') ?? 'أنت متأخر بـ'} '
+                '${WirdFormat.daysLabel(state.daysLate)}',
+            color: theme.colorScheme.error,
+            bucket: WirdMotivations.behind,
+          ),
+          WirdPace.ahead => (
+            emoji: '🌟',
+            text:
+                '${l10n?.translate('wird.ahead_by') ?? 'أنت متقدم بـ'} '
+                '${WirdFormat.daysLabel(state.daysAhead)}',
+            color: theme.colorScheme.primary,
+            bucket: WirdMotivations.ahead,
+          ),
+          _ => (
+            emoji: '📖',
+            text: l10n?.translate('wird.on_track') ?? 'أنت على المسار',
+            color: theme.colorScheme.primary,
+            bucket: WirdMotivations.onTrack,
+          ),
+        };
 
     return Container(
       padding: const EdgeInsets.symmetric(

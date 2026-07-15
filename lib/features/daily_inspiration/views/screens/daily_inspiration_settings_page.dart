@@ -84,17 +84,18 @@ class DailyInspirationSettingsPage extends StatelessWidget {
                     child: Column(
                       children: [
                         FItem(
-                          prefix: const Icon(Icons.notifications_active_outlined),
+                          prefix: const Icon(
+                            Icons.notifications_active_outlined,
+                          ),
                           title: Text(
                             l10n?.translate('daily_inspiration.enable') ??
                                 'تفعيل التذكير اليومي',
                           ),
                           suffix: FSwitch(
                             value: state.settings.enabled,
-                            onChange: (v) =>
-                                context.read<DailyInspirationCubit>().setEnabled(
-                                  v,
-                                ),
+                            onChange: (v) => context
+                                .read<DailyInspirationCubit>()
+                                .setEnabled(v),
                           ),
                         ),
                         const Divider(height: 1),

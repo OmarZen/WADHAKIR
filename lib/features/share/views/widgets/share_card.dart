@@ -47,7 +47,8 @@ class ShareCard extends StatelessWidget {
               ),
             ),
             // Orbs only over flat backgrounds; photos get the scrim instead.
-            if (!background.isImage) const Positioned.fill(child: _DecorativeOrbs()),
+            if (!background.isImage)
+              const Positioned.fill(child: _DecorativeOrbs()),
             _PassageForeground(payload: payload),
           ],
         ),
@@ -396,11 +397,8 @@ class _Footer extends StatelessWidget {
             fit: BoxFit.contain,
             // If the asset is missing the share still renders — a generic
             // mosque glyph keeps the card branded.
-            errorBuilder: (_, __, ___) => const Icon(
-              Icons.mosque_rounded,
-              color: Colors.white,
-              size: 22,
-            ),
+            errorBuilder: (_, __, ___) =>
+                const Icon(Icons.mosque_rounded, color: Colors.white, size: 22),
           ),
         ),
       ],

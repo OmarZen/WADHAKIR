@@ -66,7 +66,9 @@ class WirdCubit extends Cubit<WirdState> {
           isFinished: false,
         ),
       );
-      unawaited(WirdHomeWidget.update(plan, const [], WirdProgressStatus.notStarted));
+      unawaited(
+        WirdHomeWidget.update(plan, const [], WirdProgressStatus.notStarted),
+      );
       return;
     }
 
@@ -159,8 +161,7 @@ class WirdCubit extends Cubit<WirdState> {
   Future<void> toggleDayComplete(int dayIndex) async {
     final plan = _currentPlan;
     if (plan == null || !plan.isActive) return;
-    final wasCurrent =
-        _scheduleService.currentDayIndex(plan) == dayIndex;
+    final wasCurrent = _scheduleService.currentDayIndex(plan) == dayIndex;
     final updated = Set<int>.from(plan.completedDayIndices);
     final isCompleting = !updated.contains(dayIndex);
     if (isCompleting) {

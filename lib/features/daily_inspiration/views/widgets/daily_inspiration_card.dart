@@ -111,11 +111,13 @@ class DailyInspirationCard extends StatelessWidget {
                         visualDensity: VisualDensity.compact,
                         icon: const Icon(Icons.tune_rounded, size: 20),
                         tooltip:
-                            l10n?.translate('daily_inspiration.settings_title') ??
+                            l10n?.translate(
+                              'daily_inspiration.settings_title',
+                            ) ??
                             'إعدادات التذكير',
-                        onPressed: () => Navigator.of(context).pushNamed(
-                          AppConstants.dailyInspirationSettingsRoute,
-                        ),
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pushNamed(AppConstants.dailyInspirationSettingsRoute),
                       ),
                     ],
                   ),

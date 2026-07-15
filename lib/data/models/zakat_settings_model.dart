@@ -106,10 +106,8 @@ class ZakatSettingsModel extends Equatable {
       silverPricePerGram: d(json['silverPricePerGram']),
       otherAssets: d(json['otherAssets']),
       liabilities: d(json['liabilities']),
-      nisabBasis: NisabBasis.values[basisIndex.clamp(
-        0,
-        NisabBasis.values.length - 1,
-      )],
+      nisabBasis:
+          NisabBasis.values[basisIndex.clamp(0, NisabBasis.values.length - 1)],
       customNisabGrams: (json['customNisabGrams'] as num?)?.toDouble(),
       currencyLabel: json['currencyLabel'] as String? ?? '',
     );

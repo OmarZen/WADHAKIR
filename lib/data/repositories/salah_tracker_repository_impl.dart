@@ -33,7 +33,9 @@ class SalahTrackerRepositoryImpl implements SalahTrackerRepository {
       return _cachedLog!;
     }
     try {
-      _cachedLog = SalahLogModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      _cachedLog = SalahLogModel.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
     } catch (_) {
       _cachedLog = SalahLogModel.defaultSettings();
     }
@@ -44,8 +46,9 @@ class SalahTrackerRepositoryImpl implements SalahTrackerRepository {
     final raw = _sharedPreferences.getString(_logKey);
     if (raw != null && raw.isNotEmpty) {
       try {
-        _cachedLog =
-            SalahLogModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+        _cachedLog = SalahLogModel.fromJson(
+          jsonDecode(raw) as Map<String, dynamic>,
+        );
       } catch (_) {
         // Corrupted data — drop it and fall back to the empty default.
         _sharedPreferences.remove(_logKey);

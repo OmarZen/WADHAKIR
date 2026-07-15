@@ -35,7 +35,10 @@ class GallerySaverService {
   }
 
   /// Save raw PNG bytes to the gallery. Returns true on success.
-  static Future<bool> saveBytes(Uint8List bytes, {String name = 'wadhakir'}) async {
+  static Future<bool> saveBytes(
+    Uint8List bytes, {
+    String name = 'wadhakir',
+  }) async {
     if (!await _ensureAccess()) return false;
     try {
       await Gal.putImageBytes(bytes, album: _album, name: name);

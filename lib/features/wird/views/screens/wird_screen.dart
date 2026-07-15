@@ -28,7 +28,8 @@ class WirdScreen extends StatelessWidget {
         // on screen entry — no celebration for an already-complete day.
         listenWhen: (prev, curr) {
           if (prev is! WirdLoaded || curr is! WirdLoaded) return false;
-          final grew = curr.plan.completedDayIndices.length >
+          final grew =
+              curr.plan.completedDayIndices.length >
               prev.plan.completedDayIndices.length;
           final justFinished = curr.isFinished && !prev.isFinished;
           return grew || justFinished;

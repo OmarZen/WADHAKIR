@@ -138,9 +138,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
 
           if (!cameraReady && !_initializing) _buildFallback(context),
           if (_initializing)
-            const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
+            const Center(child: CircularProgressIndicator(color: Colors.white)),
 
           // Top bar.
           SafeArea(child: _buildTopBar(context)),
@@ -254,7 +252,9 @@ class _QiblaArScreenState extends State<QiblaArScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                aligned ? Icons.check_circle_rounded : Icons.my_location_rounded,
+                aligned
+                    ? Icons.check_circle_rounded
+                    : Icons.my_location_rounded,
                 color: Colors.white,
                 size: 20,
               ),
@@ -296,7 +296,9 @@ class _QiblaArScreenState extends State<QiblaArScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              noCamera ? Icons.videocam_off_rounded : Icons.no_photography_rounded,
+              noCamera
+                  ? Icons.videocam_off_rounded
+                  : Icons.no_photography_rounded,
               color: Colors.white70,
               size: 64,
             ),
@@ -309,9 +311,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
             const SizedBox(height: 24),
             if (!noCamera)
               ElevatedButton.icon(
-                onPressed: permanently
-                    ? () => openAppSettings()
-                    : _initCamera,
+                onPressed: permanently ? () => openAppSettings() : _initCamera,
                 icon: Icon(permanently ? Icons.settings : Icons.refresh),
                 label: Text(
                   permanently

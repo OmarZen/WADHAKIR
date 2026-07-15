@@ -137,9 +137,7 @@ class ZakatResultCard extends StatelessWidget {
     final cs = theme.colorScheme;
     final style = theme.textTheme.bodyMedium?.copyWith(
       fontWeight: emphasize ? FontWeight.bold : FontWeight.w500,
-      color: emphasize
-          ? cs.onSurface
-          : cs.onSurface.withValues(alpha: 0.8),
+      color: emphasize ? cs.onSurface : cs.onSurface.withValues(alpha: 0.8),
     );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Spacing.xs),
@@ -148,11 +146,7 @@ class ZakatResultCard extends StatelessWidget {
         children: [
           Flexible(child: Text(label, style: style)),
           const SizedBox(width: Spacing.md),
-          Text(
-            value,
-            textDirection: TextDirection.ltr,
-            style: style,
-          ),
+          Text(value, textDirection: TextDirection.ltr, style: style),
         ],
       ),
     );

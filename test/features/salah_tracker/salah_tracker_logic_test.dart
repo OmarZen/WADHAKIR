@@ -8,8 +8,10 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
 
 /// Build a log where each listed day has ALL five fard set to [status].
-SalahLogModel _logWithCompleteDays(List<DateTime> days,
-    {PrayerStatus status = PrayerStatus.onTime}) {
+SalahLogModel _logWithCompleteDays(
+  List<DateTime> days, {
+  PrayerStatus status = PrayerStatus.onTime,
+}) {
   var log = SalahLogModel.defaultSettings();
   for (final day in days) {
     final key = SalahLogModel.dateKey(day);
@@ -30,8 +32,9 @@ PrayerTimesModel _prayerTimesFor(DateTime day) {
     maghrib: at(18, 0),
     isha: at(19, 30),
     date: DateTime(day.year, day.month, day.day),
-    calculationParameters:
-        CalculationMethodMapper.getParameters('muslim_world_league'),
+    calculationParameters: CalculationMethodMapper.getParameters(
+      'muslim_world_league',
+    ),
     coordinates: const Coordinates(0, 0),
     middleOfTheNight: at(0, 0),
     lastThirdOfTheNight: at(2, 0),
@@ -44,8 +47,11 @@ void main() {
   group('SalahLogModel', () {
     test('setFard with notLogged removes the entry and empty day', () {
       final key = SalahLogModel.dateKey(DateTime(2026, 6, 15));
-      var log = SalahLogModel.defaultSettings()
-          .setFard(key, PrayerSlot.fajr, PrayerStatus.onTime);
+      var log = SalahLogModel.defaultSettings().setFard(
+        key,
+        PrayerSlot.fajr,
+        PrayerStatus.onTime,
+      );
       expect(log.fardStatus(key, PrayerSlot.fajr), PrayerStatus.onTime);
       log = log.setFard(key, PrayerSlot.fajr, PrayerStatus.notLogged);
       expect(log.fardStatus(key, PrayerSlot.fajr), PrayerStatus.notLogged);
@@ -81,30 +87,37 @@ void main() {
       expect(decoded.trackNawafil, isTrue);
     });
 
-    test('fromJson migrates legacy per-prayer sunnah names to rawatib units', () {
-      // Pre-3.4 logs stored a bare PrayerSlot name per prayer whose sunnah was
-      // done. These must expand to that prayer's rawatib units on read.
-      final decoded = SalahLogModel.fromJson({
-        'sunnah': {
-          '2026-06-15': ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'],
-        },
-      });
-      const key = '2026-06-15';
-      expect(decoded.rawatibDone(key, RawatibUnit.fajrBefore), isTrue);
-      expect(decoded.rawatibDone(key, RawatibUnit.dhuhrBefore), isTrue);
-      expect(decoded.rawatibDone(key, RawatibUnit.dhuhrAfter), isTrue);
-      expect(decoded.rawatibDone(key, RawatibUnit.maghribAfter), isTrue);
-      expect(decoded.rawatibDone(key, RawatibUnit.ishaAfter), isTrue);
-      // 'asr' had no muʾakkadah rawatib -> migrates to nothing.
-      expect(decoded.rawatibDoneCount(key, PrayerSlot.asr), 0);
-    });
+    test(
+      'fromJson migrates legacy per-prayer sunnah names to rawatib units',
+      () {
+        // Pre-3.4 logs stored a bare PrayerSlot name per prayer whose sunnah was
+        // done. These must expand to that prayer's rawatib units on read.
+        final decoded = SalahLogModel.fromJson({
+          'sunnah': {
+            '2026-06-15': ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'],
+          },
+        });
+        const key = '2026-06-15';
+        expect(decoded.rawatibDone(key, RawatibUnit.fajrBefore), isTrue);
+        expect(decoded.rawatibDone(key, RawatibUnit.dhuhrBefore), isTrue);
+        expect(decoded.rawatibDone(key, RawatibUnit.dhuhrAfter), isTrue);
+        expect(decoded.rawatibDone(key, RawatibUnit.maghribAfter), isTrue);
+        expect(decoded.rawatibDone(key, RawatibUnit.ishaAfter), isTrue);
+        // 'asr' had no muʾakkadah rawatib -> migrates to nothing.
+        expect(decoded.rawatibDoneCount(key, PrayerSlot.asr), 0);
+      },
+    );
 
     test('RawatibUnit.forSlot returns the 12-rakaah structure', () {
       expect(RawatibUnit.forSlot(PrayerSlot.fajr), [RawatibUnit.fajrBefore]);
-      expect(RawatibUnit.forSlot(PrayerSlot.dhuhr),
-          [RawatibUnit.dhuhrBefore, RawatibUnit.dhuhrAfter]);
+      expect(RawatibUnit.forSlot(PrayerSlot.dhuhr), [
+        RawatibUnit.dhuhrBefore,
+        RawatibUnit.dhuhrAfter,
+      ]);
       expect(RawatibUnit.forSlot(PrayerSlot.asr), isEmpty);
-      expect(RawatibUnit.forSlot(PrayerSlot.maghrib), [RawatibUnit.maghribAfter]);
+      expect(RawatibUnit.forSlot(PrayerSlot.maghrib), [
+        RawatibUnit.maghribAfter,
+      ]);
       expect(RawatibUnit.forSlot(PrayerSlot.isha), [RawatibUnit.ishaAfter]);
       // The confirmed rawatib total is 12 rakʿah.
       final total = RawatibUnit.values.fold<int>(0, (s, u) => s + u.rakat);
@@ -112,8 +125,9 @@ void main() {
     });
 
     test('makeUp is floored at zero', () {
-      final log =
-          SalahLogModel.defaultSettings().setMakeUp(PrayerSlot.fajr, 2).adjustMakeUp(PrayerSlot.fajr, -5);
+      final log = SalahLogModel.defaultSettings()
+          .setMakeUp(PrayerSlot.fajr, 2)
+          .adjustMakeUp(PrayerSlot.fajr, -5);
       expect(log.makeUpFor(PrayerSlot.fajr), 0);
       expect(log.makeUp.containsKey(PrayerSlot.fajr), isFalse);
     });
@@ -226,26 +240,35 @@ void main() {
     test('within the window is on-time', () {
       // Dhuhr 12:00, Asr 15:30 -> 13:00 is on-time.
       final now = DateTime(2026, 6, 15, 13, 0);
-      expect(stats.classifyFard(model, PrayerSlot.dhuhr, now),
-          PrayerStatus.onTime);
+      expect(
+        stats.classifyFard(model, PrayerSlot.dhuhr, now),
+        PrayerStatus.onTime,
+      );
     });
 
     test('after the next prayer entered is late', () {
       // 16:00 is after Asr 15:30 -> Dhuhr logged then is late.
       final now = DateTime(2026, 6, 15, 16, 0);
       expect(
-          stats.classifyFard(model, PrayerSlot.dhuhr, now), PrayerStatus.late);
+        stats.classifyFard(model, PrayerSlot.dhuhr, now),
+        PrayerStatus.late,
+      );
     });
 
     test('Isha is on-time any time the same calendar day', () {
       final now = DateTime(2026, 6, 15, 23, 30);
       expect(
-          stats.classifyFard(model, PrayerSlot.isha, now), PrayerStatus.onTime);
+        stats.classifyFard(model, PrayerSlot.isha, now),
+        PrayerStatus.onTime,
+      );
     });
 
     test('Isha after midnight is late', () {
       final now = DateTime(2026, 6, 16, 0, 30);
-      expect(stats.classifyFard(model, PrayerSlot.isha, now), PrayerStatus.late);
+      expect(
+        stats.classifyFard(model, PrayerSlot.isha, now),
+        PrayerStatus.late,
+      );
     });
   });
 }

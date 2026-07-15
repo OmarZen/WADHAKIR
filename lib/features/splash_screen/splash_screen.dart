@@ -326,7 +326,11 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
             fontFamily: 'Cairo',
             fontWeight: FontWeight.w900,
             shadows: [
-              Shadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 2)),
+              Shadow(
+                color: Colors.black26,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
             ],
           ),
         ),

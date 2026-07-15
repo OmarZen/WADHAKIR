@@ -55,7 +55,8 @@ class _BackgroundTextSheetState extends State<BackgroundTextSheet> {
   void _selectTab(int tab, [QuoteSource? source]) {
     setState(() {
       _tab = tab;
-      if (source != null && (_quotesFuture == null || _loadedSource != source)) {
+      if (source != null &&
+          (_quotesFuture == null || _loadedSource != source)) {
         _loadedSource = source;
         _quotesFuture = _service.forSource(source);
       }

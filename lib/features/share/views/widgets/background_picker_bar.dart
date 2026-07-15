@@ -89,8 +89,13 @@ class BackgroundPickerBar extends StatelessWidget {
       builder: (ctx) {
         return Dialog(
           backgroundColor: theme.colorScheme.surface,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 28,
+            vertical: 24,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28),
+          ),
           clipBehavior: Clip.antiAlias,
           child: StatefulBuilder(
             builder: (ctx, setLocal) {
@@ -122,7 +127,9 @@ class BackgroundPickerBar extends StatelessWidget {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              l10n?.translate('islamic_backgrounds.pick_color') ??
+                              l10n?.translate(
+                                    'islamic_backgrounds.pick_color',
+                                  ) ??
                                   'اختر لوناً',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -207,7 +214,9 @@ class BackgroundPickerBar extends StatelessWidget {
                             child: OutlinedButton(
                               onPressed: () => Navigator.pop(ctx),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
@@ -222,12 +231,16 @@ class BackgroundPickerBar extends StatelessWidget {
                             child: FilledButton(
                               onPressed: () => Navigator.pop(ctx, temp),
                               style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
-                              child: Text(l10n?.translate('common.ok') ?? 'موافق'),
+                              child: Text(
+                                l10n?.translate('common.ok') ?? 'موافق',
+                              ),
                             ),
                           ),
                         ],

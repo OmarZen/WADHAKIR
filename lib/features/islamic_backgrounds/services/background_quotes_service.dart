@@ -14,7 +14,8 @@ class BackgroundQuotesService {
     HadithNawawiRepository? hadithRepository,
     AppLockHadithQuotesService? appQuotesService,
   }) : _hadithRepository = hadithRepository ?? HadithNawawiRepository(),
-       _appQuotesService = appQuotesService ?? const AppLockHadithQuotesService();
+       _appQuotesService =
+           appQuotesService ?? const AppLockHadithQuotesService();
 
   final HadithNawawiRepository _hadithRepository;
   final AppLockHadithQuotesService _appQuotesService;
@@ -25,10 +26,12 @@ class BackgroundQuotesService {
     final quotes = await _appQuotesService.getAllQuotes(useArabic: true);
     return quotes
         .where((q) => q.message.trim().isNotEmpty)
-        .map((q) => BackgroundQuote(
-              q.message.trim(),
-              q.reference.isEmpty ? null : q.reference,
-            ))
+        .map(
+          (q) => BackgroundQuote(
+            q.message.trim(),
+            q.reference.isEmpty ? null : q.reference,
+          ),
+        )
         .toList();
   }
 

@@ -150,11 +150,8 @@ class _LogoBadge extends StatelessWidget {
         child: Image.asset(
           'assets/logo.png',
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const Icon(
-            Icons.mosque_rounded,
-            size: 12,
-            color: Colors.white,
-          ),
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.mosque_rounded, size: 12, color: Colors.white),
         ),
       ),
     );

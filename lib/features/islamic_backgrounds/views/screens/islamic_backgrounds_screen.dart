@@ -98,7 +98,10 @@ class _IslamicBackgroundsScreenState extends State<IslamicBackgroundsScreen> {
       final file = await _capture();
       if (file == null) {
         if (!mounted) return;
-        _toast(_tr('islamic_backgrounds.failed', 'تعذّر إنشاء الصورة'), bad: true);
+        _toast(
+          _tr('islamic_backgrounds.failed', 'تعذّر إنشاء الصورة'),
+          bad: true,
+        );
         return;
       }
       final ok = await GallerySaverService.saveFile(file.path);
@@ -123,7 +126,10 @@ class _IslamicBackgroundsScreenState extends State<IslamicBackgroundsScreen> {
       final file = await _capture();
       if (file == null) {
         if (!mounted) return;
-        _toast(_tr('islamic_backgrounds.failed', 'تعذّر إنشاء الصورة'), bad: true);
+        _toast(
+          _tr('islamic_backgrounds.failed', 'تعذّر إنشاء الصورة'),
+          bad: true,
+        );
         return;
       }
       await SharePlus.instance.share(
@@ -145,7 +151,10 @@ class _IslamicBackgroundsScreenState extends State<IslamicBackgroundsScreen> {
       final file = await _capture();
       if (file == null) {
         if (!mounted) return;
-        _toast(_tr('islamic_backgrounds.failed', 'تعذّر إنشاء الصورة'), bad: true);
+        _toast(
+          _tr('islamic_backgrounds.failed', 'تعذّر إنشاء الصورة'),
+          bad: true,
+        );
         return;
       }
       final ok = await WallpaperService.setFromFile(file.path, target);
@@ -289,7 +298,9 @@ class _IslamicBackgroundsScreenState extends State<IslamicBackgroundsScreen> {
                 width: 42,
                 height: 42,
                 child: Icon(
-                  isRtl ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded,
+                  isRtl
+                      ? Icons.arrow_forward_rounded
+                      : Icons.arrow_back_rounded,
                   size: 22,
                   color: onSurface.withValues(alpha: 0.8),
                 ),
@@ -311,10 +322,7 @@ class _IslamicBackgroundsScreenState extends State<IslamicBackgroundsScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  _tr(
-                    'islamic_backgrounds.subtitle',
-                    'صمّم خلفية واجعلها لك',
-                  ),
+                  _tr('islamic_backgrounds.subtitle', 'صمّم خلفية واجعلها لك'),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: onSurface.withValues(alpha: 0.6),
                   ),

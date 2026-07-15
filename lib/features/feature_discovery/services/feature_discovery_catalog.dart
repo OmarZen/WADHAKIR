@@ -26,11 +26,8 @@ class FeatureDiscoveryCatalog {
       titleAr: 'مواقيت الصلاة',
       bodyAr: 'فعّل تذكير مواقيت الصلاة ليصلك التنبيه في وقته',
       target: 'open_prayer_settings',
-      isEligible: (p) => !_jsonBool(
-        p,
-        AppConstants.notificationSettingsKey,
-        'masterEnabled',
-      ),
+      isEligible: (p) =>
+          !_jsonBool(p, AppConstants.notificationSettingsKey, 'masterEnabled'),
     ),
     FeatureNudge(
       id: 'wird',

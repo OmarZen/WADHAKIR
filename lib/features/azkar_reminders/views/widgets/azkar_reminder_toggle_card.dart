@@ -15,7 +15,9 @@ Future<void> requestAzkarEnable(
     onDisable();
     return;
   }
-  final permissions = await AlarmPermissionHelper.requestAllPermissions(context);
+  final permissions = await AlarmPermissionHelper.requestAllPermissions(
+    context,
+  );
   if (permissions['notifications'] == true) {
     onGranted();
   }

@@ -86,7 +86,8 @@ class FeatureDiscoveryService {
       final lastMs = prefs.getInt(AppConstants.featureNudgeLastShownKey) ?? 0;
       if (now.millisecondsSinceEpoch - lastMs < _cadence.inMilliseconds) return;
 
-      var shown = prefs.getStringList(AppConstants.featureNudgeShownIdsKey) ?? [];
+      var shown =
+          prefs.getStringList(AppConstants.featureNudgeShownIdsKey) ?? [];
       var eligible = FeatureDiscoveryCatalog.nudges
           .where((n) => n.isEligible(prefs) && !shown.contains(n.id))
           .toList();

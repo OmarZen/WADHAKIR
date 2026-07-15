@@ -34,10 +34,8 @@ class NamePromptSheet {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => BlocProvider.value(
-        value: cubit,
-        child: const _NamePromptBody(),
-      ),
+      builder: (_) =>
+          BlocProvider.value(value: cubit, child: const _NamePromptBody()),
     );
   }
 }

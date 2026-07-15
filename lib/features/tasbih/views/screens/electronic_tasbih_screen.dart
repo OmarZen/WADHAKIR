@@ -340,7 +340,11 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                                 children: [
                                   // Single hero: progress ring + count + tap
                                   // target, framed by a subtle bead accent.
-                                  _buildHeroCounter(theme, progress, heroDiameter),
+                                  _buildHeroCounter(
+                                    theme,
+                                    progress,
+                                    heroDiameter,
+                                  ),
                                   const SizedBox(height: 36),
                                   _buildStatisticsCard(theme, l10n, isDark),
                                 ],

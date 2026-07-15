@@ -46,7 +46,9 @@ void main() {
     final prayerTimesRepository = PrayerTimesRepositoryImpl();
     final fastingRepository = FastingRemindersRepositoryImpl(sharedPreferences);
     final wirdRepository = WirdRepositoryImpl(sharedPreferences);
-    final salahTrackerRepository = SalahTrackerRepositoryImpl(sharedPreferences);
+    final salahTrackerRepository = SalahTrackerRepositoryImpl(
+      sharedPreferences,
+    );
 
     final app = MyApp(
       getSettingsUseCase: GetSettingsUseCase(appSettingsRepository),
@@ -94,7 +96,9 @@ void main() {
       ),
       getSalahLogUseCase: GetSalahLogUseCase(salahTrackerRepository),
       setSalahLogUseCase: SetSalahLogUseCase(salahTrackerRepository),
-      getSalahLogStreamUseCase: GetSalahLogStreamUseCase(salahTrackerRepository),
+      getSalahLogStreamUseCase: GetSalahLogStreamUseCase(
+        salahTrackerRepository,
+      ),
       clearSalahLogUseCase: ClearSalahLogUseCase(salahTrackerRepository),
     );
 

@@ -217,10 +217,8 @@ class AzkarReminderSettingsModel extends Equatable {
       afterPrayerDelayMinutes:
           json['afterPrayerDelayMinutes'] as int? ?? d.afterPrayerDelayMinutes,
       qiyamEnabled: json['qiyamEnabled'] as bool? ?? d.qiyamEnabled,
-      qiyamMode: QiyamMode.values[modeIndex.clamp(
-        0,
-        QiyamMode.values.length - 1,
-      )],
+      qiyamMode:
+          QiyamMode.values[modeIndex.clamp(0, QiyamMode.values.length - 1)],
       qiyamHour: json['qiyamHour'] as int? ?? d.qiyamHour,
       qiyamMinute: json['qiyamMinute'] as int? ?? d.qiyamMinute,
       fridayKahfEnabled:

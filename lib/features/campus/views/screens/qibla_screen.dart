@@ -386,10 +386,8 @@ class _QiblaScreenState extends State<QiblaScreen>
     if (!qiblaRepository.isCompassAvailable) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: qiblaCubit,
-          child: const QiblaArScreen(),
-        ),
+        builder: (_) =>
+            BlocProvider.value(value: qiblaCubit, child: const QiblaArScreen()),
       ),
     );
   }

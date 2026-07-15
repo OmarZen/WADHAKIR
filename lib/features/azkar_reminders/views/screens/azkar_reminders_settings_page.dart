@@ -21,7 +21,8 @@ class AzkarRemindersSettingsPage extends StatelessWidget {
       body: Column(
         children: [
           BrandedHeader(
-            title: l10n?.translate('azkar_reminders.title') ?? 'تذكيرات الأذكار',
+            title:
+                l10n?.translate('azkar_reminders.title') ?? 'تذكيرات الأذكار',
             subtitle:
                 l10n?.translate('azkar_reminders.subtitle') ??
                 'الصباح والمساء، بعد الصلاة، قيام الليل وغيرها',
@@ -148,7 +149,8 @@ class AzkarRemindersSettingsBody extends StatelessWidget {
 
             const SizedBox(height: 16),
             _SectionLabel(
-              l10n?.translate('azkar_reminders.section_nawafil') ?? 'نوافل وسنن',
+              l10n?.translate('azkar_reminders.section_nawafil') ??
+                  'نوافل وسنن',
             ),
             const SizedBox(height: 8),
             AzkarReminderToggleCard(

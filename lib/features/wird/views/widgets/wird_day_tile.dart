@@ -190,10 +190,7 @@ class _StateChip extends StatelessWidget {
     if (info == null) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.sm,
-        vertical: 1,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: Spacing.sm, vertical: 1),
       decoration: BoxDecoration(
         color: info.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(Radii.pill),

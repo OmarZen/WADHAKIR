@@ -12,7 +12,16 @@
 .swiftpm/
 migrate_working_dir/
 # .env - now tracked with safe placeholder values
-uploads-keystore.jks
+
+# Signing material — NEVER commit. This rule used to read
+# "uploads-keystore.jks" (note the stray "s"), which matched nothing: the real
+# file is upload-keystore.jks, so it sat tracked at the repo root of a PUBLIC
+# repository from v1.0.0 onward. Match by extension so a typo can't silently
+# expose a key again. android/.gitignore also covers **/*.jks, but only for
+# paths under android/ — this catches the rest of the tree.
+*.jks
+*.keystore
+key.properties
 android/key.properties
 
 # IntelliJ related

@@ -20,6 +20,50 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// An .aab exists for exactly one purpose: uploading to Google Play. Play checks
+// the signature and rejects anything not signed with the upload key, so a
+// debug-signed bundle is not just useless — it wastes a round trip through the
+// Play Console to find out. An APK is different: a debug-signed release APK is
+// genuinely useful locally for size checks and R8/shrinker verification, so that
+// path falls back to the debug key with a warning (see buildTypes.release).
+//
+// Fail here, before the ~10 minute build, with an error that says what to do.
+if (!keystorePropertiesFile.exists() &&
+    gradle.startParameter.taskNames.any { it.contains("bundleRelease", ignoreCase = true) }
+) {
+    throw GradleException(
+        """
+
+        ┌───────────────────────────────────────────────────────────────────────┐
+        │ Cannot build a release App Bundle: no signing key.                    │
+        └───────────────────────────────────────────────────────────────────────┘
+
+        android/key.properties is missing, so this .aab could only be signed with
+        the DEBUG key — and Google Play will reject it with:
+
+            "Your Android App Bundle is signed with the wrong key."
+
+        Pick one:
+
+        1. Let CI build it (recommended — the upload key lives in GitHub secrets,
+           not on any laptop):
+               git tag -a v<version> -m "..." && git push origin v<version>
+           then download the `android-aab` artifact from the run, or take the
+           .aab attached to the GitHub release.
+
+        2. Sign locally. Create android/key.properties (gitignored) with:
+               storePassword=<KEYSTORE_STORE_PASSWORD>
+               keyPassword=<KEYSTORE_KEY_PASSWORD>
+               keyAlias=<KEYSTORE_KEY_ALIAS>
+               storeFile=/absolute/path/to/upload-keystore.jks
+           Keep the .jks OUTSIDE this repository.
+
+        To build an unsigned APK for local testing instead, use:
+            flutter build apk --release
+        """.trimIndent()
+    )
+}
+
 android {
     namespace = "com.bloom.wadhakir"
     compileSdk = 37

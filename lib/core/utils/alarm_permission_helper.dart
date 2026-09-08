@@ -135,10 +135,19 @@ class AlarmPermissionHelper {
   /// `openAppSettings()`, which meant a fresh install never saw the one-tap
   /// `POST_NOTIFICATIONS` system prompt at all — the single cheapest grant in
   /// the flow was replaced by a trip through Settings, and every user who did
-  /// not complete that trip ended up with notifications silently off. The
-  /// settings route still exists, but only where it is the only thing that
-  /// works: after a permanent denial, when Android refuses to show the prompt
-  /// again.
+  /// not complete that trip ended up with notifications silently off.
+  ///
+  /// The Settings route is still offered whenever the permission is not
+  /// granted afterwards, and that breadth is deliberate. Android 12 and below
+  /// have no runtime POST_NOTIFICATIONS at all: `status` reads `denied` when
+  /// the user has switched notifications off in system settings, `request()`
+  /// cannot prompt and returns the same `denied`, and it never reports
+  /// `permanentlyDenied`. Gating the Settings route on `permanentlyDenied`
+  /// therefore left every pre-13 device with no way back at all — notifications
+  /// could be turned off and never turned on again from inside the app. The
+  /// cost of asking broadly is one dismissible dialog for an Android 13+ user
+  /// who has just declined; the cost of asking narrowly was a whole platform
+  /// version that could not re-enable the app's core feature.
   static Future<bool> requestNotificationPermission(
     BuildContext context,
   ) async {
@@ -159,15 +168,19 @@ class AlarmPermissionHelper {
       return true;
     }
 
-    // Not permanently denied → the OS will still show its own prompt. Ask for
-    // it directly; no dialog of ours can do better than one tap.
+    // Ask the OS first, while it can still prompt. On Android 13+ this is the
+    // one-tap system dialog; on 12 and below it is a no-op that returns the
+    // current setting. Wrapped because it is a platform-channel call on a path
+    // reached from a settings toggle — an escaping PlatformException would
+    // surface as a red screen instead of a declined permission.
     if (!status.isPermanentlyDenied) {
-      final requested = await Permission.notification.request();
-      debugPrint('🔔 Native POST_NOTIFICATIONS result: $requested');
-      if (requested.isGranted) return true;
-      // Falls through: a denial here may have been the permanent one, in
-      // which case Settings is the only remaining route.
-      if (!requested.isPermanentlyDenied) return false;
+      try {
+        final requested = await Permission.notification.request();
+        debugPrint('🔔 Native POST_NOTIFICATIONS result: $requested');
+        if (requested.isGranted) return true;
+      } catch (e) {
+        debugPrint('🔔 POST_NOTIFICATIONS request failed: $e');
+      }
     }
 
     if (!context.mounted) return false;
@@ -189,14 +202,22 @@ class AlarmPermissionHelper {
 
     // Directly open app settings page for user to enable notifications manually
     debugPrint('🔔 Opening app settings for manual permission grant...');
-    await openAppSettings();
+    final opened = await openAppSettings();
 
-    // `openAppSettings()` completes when the settings screen has been
-    // LAUNCHED, not when the user comes back, so reading the status right
-    // after it is a race the app usually loses — it reported "still denied"
-    // for a user who had just granted it. Wait for this app to be resumed
-    // before believing anything.
-    await _awaitResume();
+    if (opened) {
+      // `openAppSettings()` completes when the settings screen has been
+      // LAUNCHED, not when the user comes back, so reading the status right
+      // after it is a race the app usually loses — it reported "still denied"
+      // for a user who had just granted it. Wait for this app to be resumed
+      // before believing anything.
+      //
+      // Guarded on `opened`: if the screen never launched, this app was never
+      // backgrounded, so no resume is coming and the wait would just block for
+      // the full timeout before reading a status that has not moved.
+      await _awaitResume();
+    } else {
+      debugPrint('🔔 Could not open app settings');
+    }
 
     final newStatus = await Permission.notification.status;
     debugPrint('🔔 Permission status after settings: $newStatus');
@@ -301,7 +322,23 @@ class AlarmPermissionHelper {
 
   /// Set once the exemption has actually been granted. Nothing re-asks after
   /// that.
-  static const String batteryPromptedKey = 'battery_opt_prompted';
+  ///
+  /// A NEW key, deliberately. The obvious move was to keep using
+  /// `battery_opt_prompted`, and it would have made this whole fix a no-op:
+  /// the buggy code wrote that key to `true` before showing the dialog, for
+  /// every user who ever reached the permissions flow, whatever they then
+  /// answered. Reading it back as "already granted" would mean every existing
+  /// install stays silenced forever — the exact bug being fixed, now
+  /// undetectable because the code looks right.
+  static const String batteryGrantedKey = 'battery_opt_granted';
+
+  /// The old flag. Its real meaning is "the dialog was shown at least once,
+  /// answer unknown" — see [batteryGrantedKey].
+  ///
+  /// Treated as a single deferral rather than a grant, so an existing install
+  /// is asked exactly once more and then follows the normal cooling-off
+  /// schedule. Kept only for that migration; nothing writes it any more.
+  static const String legacyBatteryPromptedKey = 'battery_opt_prompted';
 
   /// Epoch millis of the last time the user declined. Drives [_batteryCooldown].
   static const String batteryDeferredAtKey = 'battery_opt_deferred_at';
@@ -349,23 +386,29 @@ class AlarmPermissionHelper {
     final at = now ?? DateTime.now();
 
     if (!shouldPromptBatteryOptimization(
-      alreadyGranted: prefs.getBool(batteryPromptedKey) ?? false,
+      alreadyGranted: prefs.getBool(batteryGrantedKey) ?? false,
       deferredAtMillis: prefs.getInt(batteryDeferredAtKey),
       now: at,
     )) {
       return;
     }
 
+    // Ask only while there is a live screen to ask on. Returning WITHOUT
+    // recording a deferral matters: writing one here would start a two-week
+    // silence for a prompt the user was never actually shown.
     if (!context.mounted) return;
 
     // The flag is written AFTER the user answers, and only records what they
     // actually did. That ordering is the whole fix.
     final granted = await requestIgnoreBatteryOptimizations(context);
     if (granted) {
-      await prefs.setBool(batteryPromptedKey, true);
+      await prefs.setBool(batteryGrantedKey, true);
       await prefs.remove(batteryDeferredAtKey);
+      await prefs.remove(legacyBatteryPromptedKey);
     } else {
       await prefs.setInt(batteryDeferredAtKey, at.millisecondsSinceEpoch);
+      // Consume the legacy flag so the migration ask happens exactly once.
+      await prefs.remove(legacyBatteryPromptedKey);
     }
   }
 }

@@ -161,6 +161,31 @@ void main() {
       expect(gateway.armed, hasLength(13));
     });
 
+    test(
+      'a changed location re-arms even when every minute is identical',
+      () async {
+        // The location is rendered into the notification body. Without it in the
+        // signature, moving city while the prayer minutes happened to match
+        // would leave the old city's name on every armed adhan, and the guard
+        // would call that "unchanged".
+        await scheduler.reschedule(
+          prayerTimesByDay: _horizon(3),
+          settings: _settings(),
+          locationName: 'القاهرة',
+        );
+        gateway.calls.clear();
+
+        await scheduler.reschedule(
+          prayerTimesByDay: _horizon(3),
+          settings: _settings(),
+          locationName: 'الرياض',
+        );
+
+        expect(gateway.calls.first, 'cancel');
+        expect(gateway.calls.where((c) => c.startsWith('arm:')), hasLength(15));
+      },
+    );
+
     test('force re-arms even when nothing changed', () async {
       // What a reboot or a timezone change needs: the app's intent is
       // unchanged but the OS alarm table is not.

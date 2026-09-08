@@ -275,7 +275,16 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       // Build the multi-day map (today .. today+horizon) so the adhan keeps
       // firing even if the app isn't reopened for several days.
       final prayerTimesByDay = <DateTime, Map<String, DateTime>>{};
-      for (var i = 0; i < _scheduleHorizonDays; i++) {
+      // Starts at YESTERDAY, not today. An Isha computed for yesterday can fall
+      // after midnight — routinely at high latitudes, and in the last third of
+      // Ramadan — so at the ~00:05 day rollover it is still pending. A
+      // reschedule wipes the whole prayer id window and rebuilds it, and a
+      // horizon that began at today would drop that Isha on the floor: the
+      // alarm is cancelled and never re-armed, and the adhan simply never
+      // sounds. Yesterday's already-past prayers cost nothing to include —
+      // PrayerSchedulePlanner discards every instant that is not still in the
+      // future.
+      for (var i = -1; i < _scheduleHorizonDays; i++) {
         final dayKey = DateTime(
           todayKey.year,
           todayKey.month,

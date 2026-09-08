@@ -152,11 +152,8 @@ class _MobileNotificationRepositoryImpl
   static const String _channelKeyFeatureNudge = 'feature_nudge_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
-  // The prayer id space (100..214) now lives in [PrayerSchedulePlanner], which
-  // is the one place that allocates it. These aliases remain only for the
-  // debug read-back below.
-  static const int _fajrId = PrayerSchedulePlanner.fajrId;
-  static const int _ishaId = _fajrId + 4;
+  // The prayer id space (100..214) lives in [PrayerSchedulePlanner], which is
+  // now the only place that allocates it.
   static const int _persistentId = 999; // ID for persistent notification
 
   /// The immediate "does this work?" notification from Settings.
@@ -190,7 +187,17 @@ class _MobileNotificationRepositoryImpl
   @override
   Future<void> cancelIds(Iterable<int> ids) async {
     for (final id in ids) {
-      await AwesomeNotifications().cancel(id);
+      // cancelSchedule, NOT cancel. The plugin's own contract: cancelSchedule
+      // "has no effect on the currently active notification", while cancel()
+      // dismisses it — and dismissing the notification that owns the in-flight
+      // channel sound is what stops that sound.
+      //
+      // This sweep runs on every reschedule, and one of the most common
+      // moments to reschedule is the user opening the app because they just
+      // heard the adhan. With cancel() that tap silenced it. Removing only the
+      // pending schedules leaves a sounding adhan alone, which is the whole
+      // point of the app.
+      await AwesomeNotifications().cancelSchedule(id);
     }
   }
 
@@ -800,7 +807,15 @@ class _MobileNotificationRepositoryImpl
       '✅ Scheduled ${result.planned.length} prayer notification(s) '
       'across ${result.dayCount} day(s)',
     );
-    await debugAssertPrayerSchedulesSurvived(result.dayCount);
+    // The exact ids that were armed, not a day count. The diagnostic used to
+    // take a count and walk `day < expectedDays`, which assumes the armed ids
+    // are a contiguous prefix — false as soon as any prayer is disabled, any
+    // day is missing from the horizon, or a past prayer is skipped. It then
+    // reported ids as "evicted by iOS" that were never scheduled in the first
+    // place.
+    await debugAssertPrayerSchedulesSurvived(
+      result.planned.map((p) => p.id).toList(),
+    );
   }
 
   /// Cancel only the multi-day prayer notification ids (base 100–104 +
@@ -828,18 +843,12 @@ class _MobileNotificationRepositoryImpl
   ///
   /// Deliberately assert-only: never throw in release. A notification budget
   /// problem must not become a crash in front of a user.
-  Future<void> debugAssertPrayerSchedulesSurvived(int expectedDays) async {
+  Future<void> debugAssertPrayerSchedulesSurvived(List<int> expectedIds) async {
     if (!kDebugMode || !Platform.isIOS) return;
     try {
       final pending = await AwesomeNotifications().listScheduledNotifications();
       final ids = pending.map((n) => n.content?.id).whereType<int>().toSet();
-      final missing = <int>[];
-      for (var day = 0; day < expectedDays; day++) {
-        for (var base = _fajrId; base <= _ishaId; base++) {
-          final id = base + day * 10;
-          if (!ids.contains(id)) missing.add(id);
-        }
-      }
+      final missing = expectedIds.where((id) => !ids.contains(id)).toList();
       debugPrint('🔔 iOS pending notifications: ${pending.length}/64');
       assert(
         pending.length <= 55,

@@ -55,6 +55,30 @@ void main() {
       );
     });
 
+    test('the legacy flag is not read as a grant', () {
+      // The trap that made the whole fix a no-op. The buggy code wrote
+      // `battery_opt_prompted = true` BEFORE showing the dialog, for every
+      // user who ever reached the permissions flow, whatever they answered.
+      // Reusing that key as "already granted" would leave every existing
+      // install silenced forever — the exact bug being fixed, now invisible
+      // because the code reads correctly.
+      expect(
+        AlarmPermissionHelper.batteryGrantedKey,
+        isNot(AlarmPermissionHelper.legacyBatteryPromptedKey),
+      );
+
+      // An install carrying only the legacy flag is treated as never granted,
+      // so it gets asked once more.
+      expect(
+        AlarmPermissionHelper.shouldPromptBatteryOptimization(
+          alreadyGranted: false,
+          deferredAtMillis: null,
+          now: _now,
+        ),
+        isTrue,
+      );
+    });
+
     test('once granted it is never asked again', () {
       expect(
         AlarmPermissionHelper.shouldPromptBatteryOptimization(
@@ -97,11 +121,13 @@ void main() {
       // and `battery_opt_deferred_at` imports a cooling-off period it has not
       // earned. Both keep every scheduled reminder exposed to Doze.
       expect(BackupKeys.specFor('battery_opt_prompted'), isNull);
+      expect(BackupKeys.specFor('battery_opt_granted'), isNull);
       expect(BackupKeys.specFor('battery_opt_deferred_at'), isNull);
       expect(
         BackupKeys.denyKeys,
         containsAll(<String>[
           'battery_opt_prompted',
+          'battery_opt_granted',
           'battery_opt_deferred_at',
         ]),
       );
@@ -112,7 +138,11 @@ void main() {
       // rename in the helper that leaves the deny list pointing at nothing.
       expect(
         BackupKeys.denyKeys,
-        contains(AlarmPermissionHelper.batteryPromptedKey),
+        contains(AlarmPermissionHelper.batteryGrantedKey),
+      );
+      expect(
+        BackupKeys.denyKeys,
+        contains(AlarmPermissionHelper.legacyBatteryPromptedKey),
       );
       expect(
         BackupKeys.denyKeys,

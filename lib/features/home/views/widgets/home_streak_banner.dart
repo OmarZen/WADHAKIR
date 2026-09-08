@@ -89,12 +89,11 @@ class HomeStreakBanner extends StatelessWidget {
         // looked at 0.004 and the label rounded it is the exact failure this
         // widget exists to prevent.
         final percent = (ratio * 100).round();
-        final sinceLastLog = _stats.daysSinceLastLog(state.log, state.today);
         final mood = _moodFor(
           log: state.log,
           today: state.today,
           percent: percent,
-          sinceLastLog: sinceLastLog,
+          sinceLastLog: _stats.daysSinceLastLog(state.log, state.today),
         );
 
         final title = _title(l10n, mood, percent, isArabic);
@@ -223,11 +222,36 @@ class HomeStreakBanner extends StatelessWidget {
   }) {
     if (log.isExcusedDay(today)) return _Mood.paused;
     if (sinceLastLog == null) return _Mood.begin;
-    if (sinceLastLog >= _lapseDays) return _Mood.returning;
+    if (_owedDaysSinceLastLog(log, today, sinceLastLog) >= _lapseDays) {
+      return _Mood.returning;
+    }
     // Reachable without a lapse: a log full of days marked missed, or a window
     // where every non-excused day was left empty while today was touched.
     if (percent <= 0) return _Mood.returning;
     return _Mood.steady;
+  }
+
+  /// Days since the last logged prayer that anything was actually **owed** on.
+  ///
+  /// `SalahStatsService.daysSinceLastLog` counts calendar days, which is the
+  /// right answer to a different question. Using it to detect a lapse means a
+  /// woman who paused for hayd is told she has been away — on the very day her
+  /// excuse ends, when the pause is lifted and the banner starts measuring
+  /// again. That is the exact reproach أيام العذر exists to prevent, arriving
+  /// from the one screen she sees on every app open.
+  ///
+  /// Excused days are not a lapse. They are days on which nothing was due.
+  static int _owedDaysSinceLastLog(
+    SalahLogModel log,
+    DateTime today,
+    int sinceLastLog,
+  ) {
+    var owed = 0;
+    // today, today-1, … back to the day after the last logged one.
+    for (var i = 0; i < sinceLastLog; i++) {
+      if (!log.isExcusedDay(today.subtract(Duration(days: i)))) owed++;
+    }
+    return owed;
   }
 
   String _title(

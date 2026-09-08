@@ -108,7 +108,11 @@ class PrayerScheduler {
       prayerTimesByDay: prayerTimesByDay,
       settings: settings,
     );
-    final signature = _planner.signature(plan);
+    // The location is part of the signature because it is rendered into the
+    // notification body. Without it, moving city while every prayer minute
+    // happened to stay identical would leave the old city's name on every
+    // armed adhan, and this guard would call that "unchanged".
+    final signature = '${_planner.signature(plan)}|loc:${locationName ?? ''}';
 
     if (!force && signature == _lastSignature) {
       return PrayerScheduleResult(planned: plan, signature: signature);

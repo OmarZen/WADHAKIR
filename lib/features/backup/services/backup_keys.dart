@@ -311,6 +311,7 @@ class BackupKeys {
     // adhan and every reminder — the app's core promise — with no UI anywhere
     // to recover. The new device must ask for itself.
     _batteryOptPromptedKey,
+    _batteryOptGrantedKey,
 
     // The other half of the same gate: when this device last asked and was
     // declined. Carrying it across would import a cooling-off period the new
@@ -367,6 +368,7 @@ class BackupKeys {
   // pure data with no Flutter dependency, and the deny list is a contract
   // about strings on disk, not about which class writes them.
   static const String _batteryOptPromptedKey = 'battery_opt_prompted';
+  static const String _batteryOptGrantedKey = 'battery_opt_granted';
   static const String _batteryOptDeferredAtKey = 'battery_opt_deferred_at';
 
   /// The calculation-method slug, and the denied flag that guards its

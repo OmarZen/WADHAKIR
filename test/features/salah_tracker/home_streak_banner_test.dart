@@ -188,6 +188,43 @@ void main() {
       expect(find.text('٠/٥'), findsNothing);
       expect(find.text('اليوم'), findsNothing);
     });
+
+    testWidgets('an excused stretch is not a lapse when the pause lifts', (
+      tester,
+    ) async {
+      // The day her excuse ends, the pause is lifted and the banner starts
+      // measuring again. daysSinceLastLog counts calendar days, so it reads
+      // "7 days away" and the banner would tell a woman who was excused that
+      // she had lapsed — the exact reproach أيام العذر exists to prevent,
+      // arriving from the one screen she sees on every app open.
+      //
+      // Prayed a solid month up to 8 days ago, then 7 excused days that ended
+      // yesterday. Nothing was owed in the gap, so nothing was missed.
+      final log =
+          _log(
+            prayedDaysAgo: List.generate(22, (i) => i + 8),
+            excusedSinceDaysAgo: 7,
+          ).copyWith(
+            // The pause has been lifted: excusedDays still records the stretch,
+            // but today is no longer one of them.
+            excusedDays: {
+              for (var ago = 7; ago >= 1; ago--)
+                SalahLogModel.dateKey(_today.subtract(Duration(days: ago))),
+            },
+            clearExcusedSince: true,
+          );
+
+      await _pump(tester, log);
+
+      expect(find.text('ما فات يُدرَك — ابدأ الآن ولو بصلاة'), findsNothing);
+      expect(find.textContaining('المداومة'), findsOneWidget);
+    });
+
+    testWidgets('a real lapse still shows the welcome', (tester) async {
+      // Same shape, but the empty days were never excused.
+      await _pump(tester, _log(prayedDaysAgo: List.generate(22, (i) => i + 8)));
+      expect(find.text('ما فات يُدرَك — ابدأ الآن ولو بصلاة'), findsOneWidget);
+    });
   });
 
   group('numerals follow the locale', () {

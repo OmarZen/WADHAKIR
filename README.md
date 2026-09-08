@@ -82,8 +82,20 @@ assets/
 git clone https://github.com/OmarZen/WADHAKIR.git
 cd WADHAKIR
 flutter pub get
+bash android/fix_deps_proguard.sh   # required — see below
 flutter run
 ```
+
+> **`android/fix_deps_proguard.sh` must be re-run after EVERY `flutter pub get`.**
+>
+> It patches `quran_library` inside the pub cache so the project builds on
+> AGP 9.x. `flutter pub get` restores the pristine copy from the cache, which
+> silently undoes the patch — so anything that resolves dependencies
+> (`pub get`, `pub upgrade`, `pub add`, switching branches with a different
+> `pubspec.lock`) needs the script run again afterwards.
+>
+> Skipping it produces a Gradle **configuration** failure with no hint that a
+> patch is missing. Both CI workflows run it; nothing runs it for you locally.
 
 ## Build and verify
 

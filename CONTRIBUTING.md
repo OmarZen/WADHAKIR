@@ -10,9 +10,26 @@ Thank you for helping improve Wadhakir. This guide explains the rules we follow 
 
 ```bash
 flutter pub get
+bash android/fix_deps_proguard.sh
 ```
 
-4. Read the README and the workflow guide so you understand the current app structure.
+   **Re-run `android/fix_deps_proguard.sh` after every `flutter pub get`.** It
+   patches `quran_library` in the pub cache for AGP 9.x, and `pub get` restores
+   the pristine copy each time — so the patch has to be re-applied after any
+   command that resolves dependencies. Without it the Android build fails
+   during Gradle configuration with no indication that a patch is missing.
+
+4. *(Optional)* Install the local git hooks, which run format, analyze and
+   tests before each commit and lint the commit message:
+
+```bash
+npm install
+```
+
+   The hooks live in `.husky/`. They are a convenience, not the gate — CI runs
+   the same checks on every pull request.
+
+5. Read the README and the workflow guide so you understand the current app structure.
 
 ## Branching rules
 

@@ -110,8 +110,8 @@ class AppRouter {
           );
         }
         return PageRouteBuilder(
-          pageBuilder: (_, __, ___) => ShareScreen(payload: args),
-          transitionsBuilder: (_, animation, __, child) => FadeTransition(
+          pageBuilder: (_, _, _) => ShareScreen(payload: args),
+          transitionsBuilder: (_, animation, _, child) => FadeTransition(
             opacity: CurvedAnimation(
               parent: animation,
               curve: Curves.easeOutCubic,

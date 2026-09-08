@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 // Primary color palette
 const Color _primaryColor = Color(0xFF20497D); // Primary blue
 const Color _secondaryColor = Color(0xFF0D1122); // Deep dark blue/black
-const Color _neutralGray = Color(0xFF9A9BA8); // Medium gray
 const Color _lightGray = Color(0xFFCECACA); // Light gray
 // const Color _white = Color(0xFFFFFFFF); // White
 
@@ -12,7 +11,23 @@ const Color _lightGray = Color(0xFFCECACA); // Light gray
 const Color _backgroundColor = Color(0xFFF9F9F9);
 const Color _cardColor = Colors.white;
 const Color _textColor = Color(0xFF0D1122);
-const Color _secondaryTextColor = Color(0xFF9A9BA8);
+
+/// Secondary/body text on light surfaces.
+///
+/// Was `0xFF9A9BA8`, which measures **2.61:1** against the `0xFFF9F9F9`
+/// scaffold and 2.75:1 against white — well under the WCAG AA 4.5:1 floor for
+/// body text, and this is `bodyMedium`, so it styled secondary text app-wide.
+/// PRODUCT.md names outdoor legibility as non-negotiable and flags this exact
+/// value as a known risk.
+///
+/// `0xFF5B6070` measures **5.95:1** on the scaffold and 6.27:1 on white. It is
+/// deliberately the same cool-neutral hue family, so nothing else in the
+/// palette shifts — only the lightness drops far enough to be readable in sun.
+///
+/// The dark theme is NOT changed: its greys already measure 6.06:1
+/// (`0xFF9A9BA8` icons on `0xFF1E1E1E`) and 10.26:1 (`0xFFCECACA` body text),
+/// so they already pass and darkening them would only hurt.
+const Color _secondaryTextColor = Color(0xFF5B6070);
 
 // Category colors - harmonized with primary palette
 const Color morningAzkarColor = Color(0xFF3498DB); // Bright blue
@@ -52,6 +67,25 @@ const Color darkLastThirdPrayerColor = Color(
 ); // Brighter indigo for last third
 
 // Typography settings
+//
+// WEIGHTS THAT ACTUALLY EXIST — check this table before writing a fontWeight.
+// Flutter silently resolves a requested weight to the nearest bundled one, so
+// asking for a weight a family does not ship is not an error, it is a lie in
+// the source: the code says one thing and the screen shows another.
+//
+//   Almarai          400, 700   (300 + 800 exist on disk but are NOT declared
+//                                in pubspec, so they do not ship)
+//   Jomhuria         400        ← one weight only
+//   ScheherazadeNew  400, 700
+//   ArefRuqaa        400, 700
+//
+// None of them ship a 500 or a 600. The codebase previously asked for w500 in
+// ~90 places and w600 in ~35, all of which rendered as 400 and 700 anyway —
+// and the app-bar title asked Jomhuria for w600, which rendered as its only
+// weight, 400. Those were normalised to what they actually render.
+//
+// If a genuine mid-weight is ever needed, declare Almarai-ExtraBold.ttf
+// (already in assets/fonts/Almarai/) as weight 800 in pubspec first.
 const String _primaryFont = 'Almarai';
 const String _religiousFont = 'Jomhuria';
 
@@ -151,7 +185,7 @@ final ThemeData lightTheme = ThemeData(
     titleTextStyle: const TextStyle(
       fontFamily: _religiousFont,
       fontSize: 36,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
     systemOverlayStyle: kOverlayStyleLightIcons,
@@ -186,7 +220,13 @@ final ThemeData lightTheme = ThemeData(
   colorScheme: ColorScheme.light(
     primary: _primaryColor,
     secondary: _secondaryColor,
-    tertiary: _neutralGray,
+    // `tertiary` is read as a TEXT colour in 8 places — including
+    // prayer_times_content.dart:48 and prayer_times_header.dart:69, i.e. the
+    // exact "prayer times outdoors in bright sunlight" case PRODUCT.md calls
+    // non-negotiable. It previously pointed at a separate `_neutralGray`
+    // constant that held the same failing 0xFF9A9BA8 value, so fixing only
+    // `bodyMedium` would have left this half of the problem in place.
+    tertiary: _secondaryTextColor,
     surface: _cardColor,
     onPrimary: Colors.white,
     onSecondary: Colors.white,
@@ -264,7 +304,7 @@ final ThemeData darkTheme = ThemeData(
     titleTextStyle: const TextStyle(
       fontFamily: _religiousFont,
       fontSize: 36,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
     systemOverlayStyle: kOverlayStyleLightIcons,

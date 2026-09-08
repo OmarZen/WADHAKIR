@@ -8,6 +8,7 @@ import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_cubi
 import 'package:wadhakir/features/fasting_reminders/cubit/fasting_reminders_state.dart';
 import 'package:wadhakir/features/fasting_reminders/views/screens/fasting_calendar_screen.dart';
 import 'package:wadhakir/features/fasting_reminders/services/fasting_notification_service.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 /// Settings widget for fasting reminders configuration
 /// To be integrated into the settings screen
@@ -65,7 +66,7 @@ class FastingReminderSettingsWidget extends StatelessWidget {
                             'تعذّر تحميل إعدادات الصيام',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.error,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
@@ -617,7 +618,7 @@ class FastingReminderSettingsWidget extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       fontSize: 13,
                       color: value
                           ? theme.colorScheme.onSurface
@@ -726,11 +727,11 @@ class FastingReminderSettingsWidget extends StatelessWidget {
           style: isDark
               ? theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onPrimary.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 )
               : theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
         ),
       ),
@@ -776,7 +777,7 @@ class _AdvanceReminderDialogState extends State<_AdvanceReminderDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return FDialog(
+    return AppDialog(
       title: Row(
         children: [
           Icon(
@@ -822,7 +823,7 @@ class _AdvanceReminderDialogState extends State<_AdvanceReminderDialog> {
                           ? 'عدد الأيام قبل الصيام'
                           : 'Days before fasting'),
                   style: widget.theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
                 ),
@@ -892,7 +893,7 @@ class _AdvanceReminderDialogState extends State<_AdvanceReminderDialog> {
                           ? 'وقت التذكير'
                           : 'Reminder Time'),
                   style: widget.theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
                 ),
@@ -1032,7 +1033,7 @@ class _FastingTestButton extends StatelessWidget {
                         'إرسال تذكير تجريبي للصيام',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

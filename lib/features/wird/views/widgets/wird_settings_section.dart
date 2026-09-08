@@ -5,6 +5,7 @@ import 'package:wadhakir/core/design/spacing.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/models/wird/wird_plan_model.dart';
 import 'package:wadhakir/features/wird/cubit/wird_cubit.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 /// Settings block on the progress screen: reminder time + enable toggle +
 /// reset plan.
@@ -40,7 +41,7 @@ class WirdSettingsSection extends StatelessWidget {
     final cubit = context.read<WirdCubit>();
     final confirmed = await showFDialog<bool>(
       context: context,
-      builder: (ctx, style, animation) => FDialog(
+      builder: (ctx, style, animation) => AppDialog(
         title: Text(l10n?.translate('wird.reset_plan') ?? 'إعادة ضبط الختمة؟'),
         body: Text(
           l10n?.translate('wird.reset_confirm') ??
@@ -69,7 +70,7 @@ class WirdSettingsSection extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    return FCard.raw(
+    return FCard(
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: Spacing.md,

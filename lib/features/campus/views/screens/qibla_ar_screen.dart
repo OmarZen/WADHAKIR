@@ -265,7 +265,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontFamily: 'Almarai',
                   ),
                 ),

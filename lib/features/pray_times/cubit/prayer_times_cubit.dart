@@ -11,6 +11,8 @@ import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 import 'package:wadhakir/domain/usecases/get_calculation_method_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
+import 'package:wadhakir/core/time/clock.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_schedule_planner.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/pray_times/services/persistent_notification_manager.dart';
 import 'package:wadhakir/data/repositories/azkar_reminder_settings_repository_impl.dart';
@@ -56,27 +58,26 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   // SharedPreferences keys
   static const String _prefsKeyTimeAdjustments = 'prayer_time_adjustments';
 
-  // How many days ahead of today prayer notifications are scheduled. Android
-  // has no cap; iOS keeps only the 64 soonest-firing pending requests and
-  // silently discards the rest (the plugin surfaces no error at the limit).
-  //
-  // The app is genuinely over that budget with every feature enabled — roughly:
-  //   prayers 5×5 = 25, azkar ≤12, wird 1, daily inspiration 1, feature nudge 1,
-  //   fasting up to 41  =>  ~81 worst case.
-  // The offender is the fasting service, not this horizon. Because prayer
-  // notifications all fire within 5 days they are the LAST to be discarded
-  // under iOS's soonest-first retention, so shrinking this horizon would not
-  // help: it would just free slots that far-future fasting requests immediately
-  // consume and then lose anyway — trading the app's most important alert for
-  // its least important. Fix the fasting fan-out instead.
-  int get _scheduleHorizonDays =>
-      defaultTargetPlatform == TargetPlatform.iOS ? 5 : 7;
+  // Owned by PrayerSchedulePlanner, which documents why iOS is shorter. Read
+  // through rather than duplicated: this used to be a private copy, and a
+  // horizon that disagreed with the planner's would arm days the cancel sweep
+  // did not expect.
+  int get _scheduleHorizonDays => PrayerSchedulePlanner.horizonDays(
+    isIOS: defaultTargetPlatform == TargetPlatform.iOS,
+  );
 
   // Signature of the last scheduled plan. Redundant reschedule requests with an
   // identical plan are skipped so repeated listener fires don't churn the OS
   // alarm table (a cancel+reschedule race could otherwise drop a notification
   // firing at that exact minute).
   String _lastScheduleSignature = '';
+
+  /// Where "today" and "now" come from on the scheduling path.
+  ///
+  /// Injected so the horizon this cubit builds — and therefore the ids the
+  /// planner allocates — can be pinned to an awkward instant in a test: the
+  /// minute before Fajr, a day rollover, the night the clocks change.
+  final Clock _clock;
 
   PrayerTimesCubit(
     this._getPrayerTimesUseCase,
@@ -88,6 +89,9 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     PersistentNotificationManager? persistentManager,
     this._azkarReminderRepository,
     AzkarNotificationService? azkarNotificationService,
+    // An initializing formal, unlike the three below: it needs no
+    // null-coalescing fallback, so the lint's preferred form actually works.
+    this._clock = systemClock,
   }) : _notificationService =
            notificationService ?? PrayerNotificationService(),
        _persistentManager =
@@ -246,9 +250,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   /// take effect immediately instead of waiting for the next prayer refresh.
   Future<void> rescheduleAzkarPrayerDriven() async {
     if (state is! PrayerTimesLoaded) return;
-    final now = DateTime.now();
-    final dateKey = DateTime(now.year, now.month, now.day);
-    final today = (state as PrayerTimesLoaded).prayerTimes[dateKey];
+    final today = (state as PrayerTimesLoaded).prayerTimes[_clock.today()];
     if (today != null) {
       await _scheduleNotificationsForToday(today);
     }
@@ -267,8 +269,7 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
       }
 
       final currentState = state as PrayerTimesLoaded;
-      final now = DateTime.now();
-      final todayKey = DateTime(now.year, now.month, now.day);
+      final todayKey = _clock.today();
       final todayPrayerTimes = currentState.prayerTimes[todayKey];
 
       // Build the multi-day map (today .. today+horizon) so the adhan keeps
@@ -351,6 +352,16 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     Map<DateTime, Map<String, DateTime>> byDay,
     String locationName,
   ) {
+    // Signs the INPUTS (settings, times, location), not the resulting plan.
+    //
+    // PrayerScheduler has its own signature over the plan, and the two are
+    // deliberately different. A plan shrinks as the day passes — an entry
+    // drops out the moment its prayer fires — so a plan-based guard here would
+    // re-arm the whole window roughly once per prayer, and every re-arm is a
+    // cancel-then-add with a gap a notification due at that minute can fall
+    // into. Signing the inputs makes this layer ask "did anything the user
+    // controls change?", which is the question it is actually answering.
+    //
     // Deliberately excludes persistentNotificationEnabled: the persistent
     // notification (id 999) is started/stopped separately by the caller and is
     // not part of the prayer schedule, so folding it in here would force a full

@@ -159,7 +159,7 @@ class _StatusTile extends StatelessWidget {
                   child: Text(
                     SalahStatusUi.statusLabel(context, status),
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: selected ? FontWeight.bold : FontWeight.w400,
                     ),
                   ),
                 ),

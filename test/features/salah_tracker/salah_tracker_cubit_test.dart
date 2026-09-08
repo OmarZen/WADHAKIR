@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/data/models/salah/salah_enums.dart';
+import 'package:wadhakir/data/models/salah/salah_log_model.dart';
 import 'package:wadhakir/data/repositories/salah_tracker_repository_impl.dart';
 import 'package:wadhakir/domain/usecases/clear_salah_log_usecase.dart';
 import 'package:wadhakir/domain/usecases/get_salah_log_stream_usecase.dart';
@@ -131,5 +132,98 @@ void main() {
       (cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.asr),
       0,
     );
+  });
+
+  group('pause (excused days)', () {
+    test('startPause excuses today and sets the anchor', () async {
+      await cubit.startPause();
+      await _settle();
+      final log = (cubit.state as SalahTrackerLoaded).log;
+      expect(log.isExcusedDay(today), isTrue);
+      expect(log.excusedSince, SalahLogModel.dateKey(today));
+    });
+
+    test(
+      'logging a fard on an excused day accrues no qada — the core bug',
+      () async {
+        await cubit.startPause();
+        await _settle();
+        await cubit.logFard(today, PrayerSlot.fajr, PrayerStatus.missed);
+        await _settle();
+        final log = (cubit.state as SalahTrackerLoaded).log;
+        expect(log.totalMakeUp, 0);
+        expect(log.makeUpFor(PrayerSlot.fajr), 0);
+      },
+    );
+
+    test('pausing unwinds qada already accrued for that day', () async {
+      await cubit.logFard(today, PrayerSlot.fajr, PrayerStatus.missed);
+      await _settle();
+      expect(
+        (cubit.state as SalahTrackerLoaded).log.makeUpFor(PrayerSlot.fajr),
+        1,
+      );
+
+      await cubit.startPause();
+      await _settle();
+      final log = (cubit.state as SalahTrackerLoaded).log;
+      expect(log.makeUpFor(PrayerSlot.fajr), 0);
+      expect(log.totalMakeUp, 0);
+    });
+
+    test('endPause clears the anchor but keeps the historical days', () async {
+      await cubit.startPause();
+      await _settle();
+      await cubit.endPause();
+      await _settle();
+      final log = (cubit.state as SalahTrackerLoaded).log;
+      expect(log.excusedSince, isNull);
+      // The day it covered stays on the record.
+      expect(log.isExcusedDay(today), isTrue);
+    });
+
+    test('syncPause fills forward from an anchor set days ago', () async {
+      // Simulate a pause started 3 days ago that the app never saw roll over.
+      final start = today.subtract(const Duration(days: 3));
+      final seeded = SalahLogModel.defaultSettings().copyWith(
+        excusedSince: SalahLogModel.dateKey(start),
+      );
+      await repo.setLog(seeded);
+      await _settle();
+
+      await cubit.syncPause();
+      await _settle();
+
+      final log = (cubit.state as SalahTrackerLoaded).log;
+      for (var i = 0; i <= 3; i++) {
+        expect(
+          log.isExcusedDay(today.subtract(Duration(days: i))),
+          isTrue,
+          reason: 'day -$i should have been filled in',
+        );
+      }
+      expect(
+        log.isExcusedDay(today.subtract(const Duration(days: 4))),
+        isFalse,
+      );
+    });
+
+    test('syncPause is a no-op when not paused', () async {
+      await cubit.syncPause();
+      await _settle();
+      expect((cubit.state as SalahTrackerLoaded).log.excusedDays, isEmpty);
+    });
+
+    test('an unparseable anchor is dropped rather than looping', () async {
+      final seeded = SalahLogModel.defaultSettings().copyWith(
+        excusedSince: 'not-a-date',
+      );
+      await repo.setLog(seeded);
+      await _settle();
+
+      await cubit.syncPause();
+      await _settle();
+      expect((cubit.state as SalahTrackerLoaded).log.excusedSince, isNull);
+    });
   });
 }

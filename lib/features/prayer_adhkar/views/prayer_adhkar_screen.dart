@@ -147,7 +147,7 @@ class _ProgressSummary extends StatelessWidget {
     final l10n = context.l10n;
     final frac = total == 0 ? 0.0 : done / total;
 
-    return FCard.raw(
+    return FCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -215,7 +215,7 @@ class _DhikrCard extends StatelessWidget {
 
     return FTappable(
       onPress: onTap,
-      child: FCard.raw(
+      child: FCard(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

@@ -291,7 +291,7 @@ class _RadioScreenState extends State<RadioScreen> {
                                 color: selected
                                     ? Colors.white
                                     : theme.colorScheme.onSurface,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 13,
                               ),
                               backgroundColor: theme.colorScheme.surface,
@@ -432,7 +432,7 @@ class _RadioScreenState extends State<RadioScreen> {
           vertical: size.height * 0.01,
         ),
         itemCount: filtered.length,
-        separatorBuilder: (_, __) => SizedBox(height: size.height * 0.012),
+        separatorBuilder: (_, _) => SizedBox(height: size.height * 0.012),
         itemBuilder: (_, i) {
           final station = filtered[i];
           final isCurrentStation = state.current?.id == station.id;
@@ -654,7 +654,7 @@ class _CustomRadioAppBar extends StatelessWidget
                                         'البث المباشر',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: onPrimary.withValues(alpha: 0.9),
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       fontSize: 13,
                                     ),
                                   ),

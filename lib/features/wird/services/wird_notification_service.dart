@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:wadhakir/data/models/wird/wird_plan_model.dart';
+import 'package:wadhakir/data/models/wird/wird_enums.dart';
 
 /// Schedules the daily Quran-wird reminder notification.
 ///
@@ -70,6 +71,22 @@ class WirdNotificationService {
     }
   }
 
+  /// The reminder body. When the khatma carries a dedication, the reminder
+  /// names it — «وردك اليوم — إهداءً إلى والدك» reads as an act of loyalty to
+  /// someone, which is a categorically different motivation from «أنت متأخر
+  /// بيومين». That difference is the whole point of the feature.
+  ///
+  /// Static and pure so it can be tested without the plugin.
+  static String reminderBody(WirdPlanModel plan) {
+    final dedication = plan.dedication?.trim();
+    if (plan.intention == WirdIntention.none ||
+        dedication == null ||
+        dedication.isEmpty) {
+      return 'حان وقت وردك اليومي من القرآن الكريم';
+    }
+    return 'وردك اليوم — إهداءً إلى $dedication';
+  }
+
   /// (Re)schedule the daily reminder based on [plan]. Cancels the existing
   /// reminder first, then schedules a daily-repeating notification when the
   /// plan is active and the reminder is enabled.
@@ -96,7 +113,7 @@ class WirdNotificationService {
           id: _reminderId,
           channelKey: _channelKey,
           title: 'ورد القرآن اليومي',
-          body: 'حان وقت وردك اليومي من القرآن الكريم',
+          body: reminderBody(plan),
           category: NotificationCategory.Reminder,
           wakeUpScreen: true,
           autoDismissible: true,
@@ -109,6 +126,10 @@ class WirdNotificationService {
           millisecond: 0,
           repeats: true,
           timeZone: _localTimeZone,
+          // The user picked a specific time for their wird; the plugin default
+          // (false) lets Doze defer it indefinitely. Not preciseAlarm — the
+          // catch below logs and gives up, so a throw would drop the reminder.
+          allowWhileIdle: true,
         ),
       );
       log(

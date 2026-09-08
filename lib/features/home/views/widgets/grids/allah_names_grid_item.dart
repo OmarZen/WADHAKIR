@@ -101,7 +101,7 @@ class AllahNamesGridItem extends StatelessWidget {
                       16 + MediaQuery.of(context).viewPadding.bottom,
                     ),
                     itemCount: items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = items[index];
                       return Container(

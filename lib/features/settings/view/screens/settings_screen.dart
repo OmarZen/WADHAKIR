@@ -13,8 +13,10 @@ import 'package:wadhakir/features/settings/view/screens/notification_settings_pa
 import 'package:wadhakir/features/settings/view/screens/fasting_settings_page.dart';
 import 'package:wadhakir/features/settings/view/screens/app_lock_settings_page.dart';
 import 'package:wadhakir/features/azkar_reminders/views/screens/azkar_reminders_settings_page.dart';
+import 'package:wadhakir/features/backup/views/screens/backup_screen.dart';
 import 'package:wadhakir/features/feature_discovery/views/widgets/feature_nudge_toggle_tile.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -350,6 +352,29 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               _buildAnimatedSection(
+                delay: 197,
+                child: SettingsSection(
+                  title: l10n?.translate('backup.title') ?? 'النسخ الاحتياطي',
+                  icon: Icons.backup_outlined,
+                  subtitle:
+                      l10n?.translate('backup.settings_tile_subtitle') ??
+                      'ملف واحد تحفظه لنفسك، ويعيد كل شيء على جهاز جديد',
+                  children: [
+                    _buildNavTile(
+                      context,
+                      icon: Icons.save_outlined,
+                      title:
+                          l10n?.translate('backup.settings_tile') ??
+                          'نسخة احتياطية من بياناتك',
+                      subtitle:
+                          l10n?.translate('backup.settings_tile_action') ??
+                          'حفظ نسخة أو استعادة واحدة',
+                      page: const BackupPage(),
+                    ),
+                  ],
+                ),
+              ),
+              _buildAnimatedSection(
                 delay: 200,
                 child: SettingsSection(
                   title: l10n?.translate('settings.about_app') ?? 'حول التطبيق',
@@ -649,7 +674,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     await showFDialog(
       context: context,
       builder: (dialogContext, style, animation) {
-        return FDialog(
+        return AppDialog(
           title: Text(l10n?.translate('settings.your_name') ?? 'اسمك'),
           body: Padding(
             padding: const EdgeInsets.only(top: 12),

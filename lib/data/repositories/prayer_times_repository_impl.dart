@@ -17,6 +17,13 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
   static const String _calcMethodAutoDetectedKey =
       'prayer_times_calc_method_auto_detected';
 
+  /// geocoding 5.0 removed the top-level `placemarkFromCoordinates()` function
+  /// in favour of an instance on a `Geocoding` object. Held as a single lazy
+  /// static rather than constructed per call, because each construction spins
+  /// up a platform-interface instance and both call sites below are on the
+  /// location-refresh path.
+  static final Geocoding _geocoding = Geocoding();
+
   Coordinates? _coordinates;
 
   @override
@@ -267,7 +274,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
       // Skip geocoding on desktop platforms where it's not supported
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
         try {
-          final placemarks = await placemarkFromCoordinates(
+          final placemarks = await _geocoding.placemarkFromCoordinates(
             coordinates.latitude,
             coordinates.longitude,
           );
@@ -375,7 +382,7 @@ class PrayerTimesRepositoryImpl implements PrayerTimesRepository {
         if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
           try {
             // Try to get fresh location name from geocoding
-            final placemarks = await placemarkFromCoordinates(
+            final placemarks = await _geocoding.placemarkFromCoordinates(
               coordinates.latitude,
               coordinates.longitude,
             );

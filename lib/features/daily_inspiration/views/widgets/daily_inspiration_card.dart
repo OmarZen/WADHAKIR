@@ -139,7 +139,7 @@ class DailyInspirationCard extends StatelessWidget {
                       textDirection: TextDirection.rtl,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: cs.primary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],

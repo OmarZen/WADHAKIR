@@ -82,7 +82,7 @@ class SettingsSection extends StatelessWidget {
             ),
           ),
           // Themed forui card surface holding the section children.
-          FCard.raw(child: Column(children: children)),
+          FCard(child: Column(children: children)),
         ],
       ),
     );

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/widgets/celebration.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 class ElectronicTasbihScreen extends StatefulWidget {
   const ElectronicTasbihScreen({super.key});
@@ -131,7 +132,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
       context: context,
       builder: (context, style, animation) {
         final theme = Theme.of(context);
-        return FDialog(
+        return AppDialog(
           title: Row(
             children: [
               Icon(
@@ -171,7 +172,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
         int tempTarget = _target;
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return FDialog(
+            return AppDialog(
               title: Text(
                 l10n?.translate('tasbih.change_target') ?? 'تغيير الهدف',
               ),
@@ -291,7 +292,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
             onPressed: () {
               showFDialog(
                 context: context,
-                builder: (context, style, animation) => FDialog(
+                builder: (context, style, animation) => AppDialog(
                   title: Text(
                     l10n?.translate('tasbih.about_title') ?? 'عن المسبحة',
                   ),
@@ -459,7 +460,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                           style: TextStyle(
                             fontSize: diameter * 0.075,
                             color: cs.onPrimary.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -469,7 +470,7 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
                           style: TextStyle(
                             fontSize: diameter * 0.05,
                             color: cs.onPrimary.withValues(alpha: 0.65),
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],

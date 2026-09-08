@@ -117,11 +117,11 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
                 unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                 labelStyle: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
                 unselectedLabelStyle: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
@@ -241,7 +241,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
                       _formatGregorianDate(_selectedGregorianDate!, l10n),
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: isDark
                             ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
                             : theme.colorScheme.primary,
@@ -302,7 +302,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
             viewHeaderStyle: DateRangePickerViewHeaderStyle(
               textStyle: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: isDark
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
                     : theme.colorScheme.primary.withValues(alpha: 0.7),
@@ -380,7 +380,7 @@ class _HijriCalendarBottomSheetState extends State<HijriCalendarBottomSheet>
             viewHeaderStyle: DateRangePickerViewHeaderStyle(
               textStyle: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: isDark
                     ? theme.colorScheme.onSurface.withValues(alpha: 0.7)
                     : theme.colorScheme.primary.withValues(alpha: 0.7),

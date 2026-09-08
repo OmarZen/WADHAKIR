@@ -197,7 +197,7 @@ class _DateChip extends StatelessWidget {
             style: TextStyle(
               color: color,
               fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               letterSpacing: 1,
             ),
           ),
@@ -207,7 +207,7 @@ class _DateChip extends StatelessWidget {
             style: TextStyle(
               color: color,
               fontSize: 14,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
           const SizedBox(height: 4),
@@ -377,7 +377,7 @@ class _InfoRow extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

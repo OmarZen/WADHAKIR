@@ -33,7 +33,7 @@ class AboutSectionWidgets extends StatelessWidget {
       title: Text(
         l10n?.translate('settings.about_app') ?? 'حول التطبيق',
         style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           fontSize: 14,
         ),
       ),
@@ -173,7 +173,7 @@ class AboutSectionWidgets extends StatelessWidget {
                     l10n?.translate('settings.close') ?? 'إغلاق',
                     style: TextStyle(
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -205,7 +205,7 @@ class AboutSectionWidgets extends StatelessWidget {
       title: Text(
         l10n?.translate('settings.feedback') ?? 'إرسال تعليق',
         style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           fontSize: 14,
         ),
       ),
@@ -270,7 +270,7 @@ class AboutSectionWidgets extends StatelessWidget {
       title: Text(
         l10n?.translate('settings.website') ?? 'موقع التطبيق',
         style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           fontSize: 14,
         ),
       ),
@@ -335,7 +335,7 @@ class AboutSectionWidgets extends StatelessWidget {
       title: Text(
         l10n?.translate('settings.privacy') ?? 'سياسة الخصوصية',
         style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           fontSize: 14,
         ),
       ),
@@ -400,7 +400,7 @@ class AboutSectionWidgets extends StatelessWidget {
       title: Text(
         l10n?.translate('settings.rate_app') ?? 'قيّم التطبيق',
         style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           fontSize: 14,
         ),
       ),

@@ -52,8 +52,27 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <!-- SCHEDULE_EXACT_ALARM for precise prayer time notifications (runtime permission on Android 14+) -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Exact alarms for the adhan. Two permissions, split by API level — this is
+         Google's documented pattern for alarm-clock-class apps.
+
+         SCHEDULE_EXACT_ALARM is capped at API 32 because from API 33 it is no
+         longer pre-granted: on Android 14+ it is DENIED by default for a fresh
+         install (and denied again after a backup-restore onto a new device),
+         and can only be recovered by sending the user to a settings screen.
+         When it is missing, _scheduleOne() catches the failure and retries with
+         preciseAlarm:false — so the adhan silently degrades to an inexact,
+         Doze-deferrable alarm for a large share of the install base.
+
+         USE_EXACT_ALARM (API 33+) is auto-granted and non-revocable, and Play
+         explicitly permits it for apps whose core function is alarms/clocks or
+         calendar reminders. A prayer-time adhan is exactly that: the user asks
+         to be alerted at a precise astronomical time, and a late adhan is a
+         failed product. This must be declared in the Play Console's
+         "Exact alarm permission" declaration at submission time. -->
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />

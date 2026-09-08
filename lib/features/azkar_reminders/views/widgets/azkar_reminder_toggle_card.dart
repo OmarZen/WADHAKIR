@@ -108,7 +108,7 @@ class AzkarReminderToggleCard extends StatelessWidget {
                     Text(
                       title,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                     ),
@@ -178,7 +178,7 @@ class _TimeChip extends StatelessWidget {
               label,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],

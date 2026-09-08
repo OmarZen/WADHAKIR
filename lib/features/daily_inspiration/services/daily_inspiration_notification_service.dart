@@ -104,6 +104,11 @@ class DailyInspirationNotificationService {
           millisecond: 0,
           repeats: true,
           timeZone: _localTimeZone,
+          // Plugin default is false, which lets Doze defer this past the day it
+          // belongs to — and the body is today's ayah/dua, so a deferred
+          // delivery is also a WRONG delivery. Not preciseAlarm: the catch
+          // below logs and gives up, so a throw would drop the reminder.
+          allowWhileIdle: true,
         ),
       );
       log(

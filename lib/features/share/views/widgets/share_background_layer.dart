@@ -86,8 +86,7 @@ class ShareBackgroundLayer extends StatelessWidget {
           fit: BoxFit.cover,
           cacheWidth: imageCacheWidth,
           gaplessPlayback: true,
-          errorBuilder: (_, __, ___) =>
-              const ColoredBox(color: Color(0xFF20497D)),
+          errorBuilder: (_, _, _) => const ColoredBox(color: Color(0xFF20497D)),
         );
       case ShareBackgroundKind.file:
         return Image.file(
@@ -95,8 +94,7 @@ class ShareBackgroundLayer extends StatelessWidget {
           fit: BoxFit.cover,
           cacheWidth: imageCacheWidth,
           gaplessPlayback: true,
-          errorBuilder: (_, __, ___) =>
-              const ColoredBox(color: Color(0xFF20497D)),
+          errorBuilder: (_, _, _) => const ColoredBox(color: Color(0xFF20497D)),
         );
     }
   }

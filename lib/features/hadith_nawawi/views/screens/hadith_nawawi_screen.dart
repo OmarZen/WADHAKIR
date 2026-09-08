@@ -10,6 +10,7 @@ import 'package:wadhakir/data/repositories/hadith_nawawi_repository_impl.dart';
 import 'package:wadhakir/features/hadith_nawawi/cubit/hadith_nawawi_cubit.dart';
 import 'package:wadhakir/features/hadith_nawawi/cubit/hadith_nawawi_state.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 /// Lists Imam an-Nawawi's Forty Hadith from the bundled JSON asset.
 class HadithNawawiScreen extends StatelessWidget {
@@ -64,7 +65,7 @@ class HadithNawawiScreen extends StatelessWidget {
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.all(16),
                       itemCount: state.hadiths.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, i) =>
                           _HadithCard(hadith: state.hadiths[i]),
                     );
@@ -148,7 +149,7 @@ class _HadithCard extends StatelessWidget {
     }
     await showFDialog<void>(
       context: context,
-      builder: (dialogContext, style, animation) => FDialog(
+      builder: (dialogContext, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('hadith_nawawi.share_lang') ?? 'لغة المشاركة',
         ),
@@ -184,7 +185,7 @@ class _HadithCard extends StatelessWidget {
     final l10n = context.l10n;
     final hasEnglish = hadith.englishText.isNotEmpty;
 
-    return FCard.raw(
+    return FCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

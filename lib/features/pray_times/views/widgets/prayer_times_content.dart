@@ -167,7 +167,7 @@ class PrayerTimesContent extends StatelessWidget {
                         style: TextStyle(
                           fontSize: size.width * 0.04,
                           color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -658,7 +658,7 @@ class PrayerTimesContent extends StatelessWidget {
                   style: TextStyle(
                     fontSize: size.width * 0.032,
                     color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),

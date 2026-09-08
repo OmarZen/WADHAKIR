@@ -104,7 +104,7 @@ class _PassageForeground extends StatelessWidget {
               fontFamily: payload.headlineRtl ? 'ScheherazadeNew' : 'Almarai',
               fontSize: payload.headlineRtl ? 23 : 17,
               height: payload.headlineRtl ? 1.95 : 1.6,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               shadows: const [
                 Shadow(
                   color: Color(0x33000000),
@@ -252,7 +252,7 @@ class _BrandStrip extends StatelessWidget {
                 fit: BoxFit.contain,
                 // If the asset is missing the share still renders — a
                 // generic mosque glyph keeps the card meaningful.
-                errorBuilder: (_, __, ___) => const Icon(
+                errorBuilder: (_, _, _) => const Icon(
                   Icons.mosque_rounded,
                   color: ShareCard._ink,
                   size: 13,
@@ -322,7 +322,7 @@ class _Headline extends StatelessWidget {
                   fontFamily: rtl ? 'ScheherazadeNew' : 'Almarai',
                   fontSize: base,
                   height: 1.7,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   shadows: const [
                     Shadow(
                       color: Color(0x40000000),
@@ -397,7 +397,7 @@ class _Footer extends StatelessWidget {
             fit: BoxFit.contain,
             // If the asset is missing the share still renders — a generic
             // mosque glyph keeps the card branded.
-            errorBuilder: (_, __, ___) =>
+            errorBuilder: (_, _, _) =>
                 const Icon(Icons.mosque_rounded, color: Colors.white, size: 22),
           ),
         ),

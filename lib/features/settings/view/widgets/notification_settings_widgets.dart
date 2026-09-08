@@ -90,7 +90,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
                     l10n?.translate('settings.enable_notifications') ??
                         'تفعيل التنبيهات',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
                   ),
@@ -206,7 +206,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
                 l10n?.translate('settings.persistent_notification') ??
                     'إشعار دائم للصلاة القادمة',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   fontSize: 14,
                 ),
               ),
@@ -305,7 +305,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
             title: Text(
               l10n?.translate('settings.notification_timing') ?? 'وقت التنبيه',
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),
             ),
@@ -457,7 +457,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
                     l10n?.translate('common.close') ?? 'إغلاق',
                     style: TextStyle(
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -543,7 +543,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
               child: Text(
                 title,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
                   color: isSelected
                       ? theme.colorScheme.onSurface
                       : theme.colorScheme.onSurface,
@@ -598,7 +598,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
             title: Text(
               l10n?.translate('settings.customize_prayers') ?? 'تخصيص كل صلاة',
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),
             ),
@@ -759,7 +759,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
                     l10n?.translate('common.close') ?? 'إغلاق',
                     style: TextStyle(
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -826,7 +826,7 @@ class NotificationSettingsWidgets extends StatelessWidget {
               label: Text(
                 displayName,
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                   fontSize: 14,
                 ),
               ),
@@ -881,7 +881,7 @@ class _NotificationTestRow extends StatelessWidget {
                     label,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),

@@ -235,7 +235,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                             style: TextStyle(
                               fontSize: fontSize,
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -256,7 +256,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                             ),
                             style: TextStyle(
                               fontSize: smallFontSize,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w400,
                               color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
@@ -406,7 +406,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                     style: TextStyle(
                       fontSize: subtitleFontSize,
                       color: Colors.white.withValues(alpha: 0.92),
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w400,
                       height: 1.35,
                     ),
                   );
@@ -472,7 +472,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.75),
                                 fontSize: sourceFontSize,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w400,
                                 fontFamily: languageCode == 'en'
                                     ? null
                                     : 'Almarai',
@@ -601,7 +601,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                             style: TextStyle(
                               fontSize: labelSize,
                               color: Colors.white.withValues(alpha: 0.8),
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w400,
                               fontFamily: 'Almarai',
                               letterSpacing: 0.5,
                             ),
@@ -695,7 +695,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
                                   style: TextStyle(
                                     fontSize: labelSize,
                                     color: Colors.white.withValues(alpha: 0.85),
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w700,
                                     fontFamily: 'Almarai',
                                     letterSpacing: 0.3,
                                   ),
@@ -774,7 +774,7 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
       switchOutCurve: Curves.easeInCubic,
       layoutBuilder: (currentChild, previousChildren) => Stack(
         fit: StackFit.expand,
-        children: [...previousChildren, if (currentChild != null) currentChild],
+        children: [...previousChildren, ?currentChild],
       ),
       transitionBuilder: (child, animation) {
         final scale = Tween<double>(begin: 1.03, end: 1.0).animate(animation);
@@ -928,7 +928,7 @@ class _LocationNameWidget extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: isDesktop ? 13 : 11,
                       ),
                     ),

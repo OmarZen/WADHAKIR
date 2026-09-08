@@ -1130,7 +1130,7 @@ class _Banner extends StatelessWidget {
                   text,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontFamily: 'Almarai',
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 if (actionLabel != null && onAction != null) ...[

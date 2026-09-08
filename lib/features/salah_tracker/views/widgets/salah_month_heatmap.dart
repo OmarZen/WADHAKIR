@@ -114,6 +114,9 @@ class SalahMonthHeatmap extends StatelessWidget {
                         0,
                     isToday: cell == today.day,
                     isFuture: cell > today.day,
+                    isExcused: log.isExcusedDay(
+                      DateTime(today.year, today.month, cell),
+                    ),
                     green: green,
                   ),
             ],
@@ -129,6 +132,7 @@ class _DayCell extends StatelessWidget {
   final int prayed; // 0..5
   final bool isToday;
   final bool isFuture;
+  final bool isExcused;
   final Color green;
 
   const _DayCell({
@@ -136,6 +140,7 @@ class _DayCell extends StatelessWidget {
     required this.prayed,
     required this.isToday,
     required this.isFuture,
+    required this.isExcused,
     required this.green,
   });
 
@@ -145,13 +150,18 @@ class _DayCell extends StatelessWidget {
     final cs = theme.colorScheme;
 
     final Color fill;
-    if (isFuture || prayed == 0) {
+    if (isExcused) {
+      // Neutral, not empty. An excused day rendered as an empty cell would read
+      // as a day she failed — which is precisely the guilt this feature exists
+      // to remove. A soft neutral tint says "this day was set aside" instead.
+      fill = cs.onSurface.withValues(alpha: 0.13);
+    } else if (isFuture || prayed == 0) {
       fill = cs.onSurface.withValues(alpha: 0.06);
     } else {
       // 1..5 -> alpha 0.30 .. 1.0
       fill = green.withValues(alpha: 0.30 + 0.70 * (prayed / 5));
     }
-    final onFill = (!isFuture && prayed >= 3)
+    final onFill = (!isFuture && !isExcused && prayed >= 3)
         ? Colors.white
         : cs.onSurface.withValues(alpha: isFuture ? 0.4 : 0.8);
 
@@ -159,7 +169,11 @@ class _DayCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: fill,
         borderRadius: Radii.all(Radii.sm),
-        border: isToday ? Border.all(color: cs.primary, width: 1.6) : null,
+        border: isToday
+            ? Border.all(color: cs.primary, width: 1.6)
+            : isExcused
+            ? Border.all(color: cs.onSurface.withValues(alpha: 0.18))
+            : null,
       ),
       alignment: Alignment.center,
       child: Text(

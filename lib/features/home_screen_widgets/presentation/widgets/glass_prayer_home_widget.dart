@@ -214,7 +214,7 @@ const _accent = Color(0xFF8FB8E0);
 
 TextStyle _ts(
   double size, {
-  FontWeight weight = FontWeight.w500,
+  FontWeight weight = FontWeight.w400,
   double alpha = 1.0,
   double? height,
 }) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
+import 'package:wadhakir/features/settings/view/widgets/text_size_selector.dart';
 
 /// Compact appearance widget showing theme and language side by side
 /// Each opens a popup dialog for selection
@@ -22,14 +23,20 @@ class AppearanceSettingsWidget extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          // Theme Card
-          Expanded(child: _buildThemeCard(context, theme, isDark)),
-          const SizedBox(width: 12),
-          // Language Card
-          Expanded(child: _buildLanguageCard(context, theme, isDark)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Theme Card
+              Expanded(child: _buildThemeCard(context, theme, isDark)),
+              const SizedBox(width: 12),
+              // Language Card
+              Expanded(child: _buildLanguageCard(context, theme, isDark)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextSizeSelector(settings: settings, cubit: cubit),
         ],
       ),
     );
@@ -86,7 +93,7 @@ class AppearanceSettingsWidget extends StatelessWidget {
                         Text(
                           l10n?.translate('settings.theme') ?? 'السمة',
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             fontSize: 16,
                           ),
                           maxLines: 1,
@@ -177,7 +184,7 @@ class AppearanceSettingsWidget extends StatelessWidget {
                         Text(
                           l10n?.translate('settings.language') ?? 'اللغة',
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             fontSize: 16,
                           ),
                           maxLines: 1,
@@ -361,7 +368,7 @@ class AppearanceSettingsWidget extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
                     fontSize: 14,
                   ),
                 ),
@@ -511,7 +518,7 @@ class AppearanceSettingsWidget extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
                     fontSize: 14,
                   ),
                 ),

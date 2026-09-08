@@ -85,7 +85,7 @@ class _MakeUpRow extends StatelessWidget {
             child: Text(
               SalahStatusUi.slotLabel(context, slot),
               style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: hasDebt ? null : cs.onSurface.withValues(alpha: 0.55),
               ),
             ),

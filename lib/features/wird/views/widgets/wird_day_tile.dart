@@ -53,7 +53,7 @@ class WirdDayTile extends StatelessWidget {
         ? error
         : theme.colorScheme.onSurface.withValues(alpha: 0.4);
 
-    final card = FCard.raw(
+    final card = FCard(
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: Spacing.md,

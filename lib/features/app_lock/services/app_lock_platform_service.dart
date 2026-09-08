@@ -67,8 +67,8 @@ class AppLockPlatformService {
       'lockedPackages': lockedPackages,
       'overlayMessage': overlayMessage,
       'overlayTexts': overlayTexts,
-      if (overlayMessages != null) 'overlayMessages': overlayMessages,
-      if (overlayReferences != null) 'overlayReferences': overlayReferences,
+      'overlayMessages': ?overlayMessages,
+      'overlayReferences': ?overlayReferences,
       'lockDurationMinutes': lockDurationMinutes,
       'emergencyBypassEnabled': emergencyBypassEnabled,
       'overlayIsDark': overlayIsDark,
@@ -100,9 +100,9 @@ class AppLockPlatformService {
   }) async {
     await _channel.invokeMethod('updateMonitorConfig', <String, dynamic>{
       'lockedPackages': lockedPackages,
-      if (overlayTexts != null) 'overlayTexts': overlayTexts,
-      if (overlayMessages != null) 'overlayMessages': overlayMessages,
-      if (overlayReferences != null) 'overlayReferences': overlayReferences,
+      'overlayTexts': ?overlayTexts,
+      'overlayMessages': ?overlayMessages,
+      'overlayReferences': ?overlayReferences,
       'lockDurationMinutes': lockDurationMinutes,
       'emergencyBypassEnabled': emergencyBypassEnabled,
       'overlayIsDark': overlayIsDark,

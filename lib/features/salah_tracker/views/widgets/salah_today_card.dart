@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:wadhakir/core/design/spacing.dart';
 import 'package:wadhakir/core/design/radii.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 import 'package:wadhakir/data/models/salah/salah_enums.dart';
 import 'package:wadhakir/data/models/salah/salah_log_model.dart';
@@ -45,6 +47,10 @@ class SalahTodayCard extends StatelessWidget {
     final dayKey = SalahLogModel.dateKey(state.today);
     final now = DateTime.now();
 
+    // Paused (open-ended) OR this specific day marked excused.
+    final isExcused =
+        state.log.isExcused(dayKey) || state.log.excusedSince != null;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: Spacing.lg),
       decoration: BoxDecoration(
@@ -52,27 +58,35 @@ class SalahTodayCard extends StatelessWidget {
         borderRadius: Radii.all(Radii.md),
         border: Border.all(color: cs.primary.withValues(alpha: 0.14)),
       ),
-      child: Column(
-        children: [
-          for (final slot in PrayerSlot.values)
-            _FardRow(
-              slot: slot,
-              status: state.todayStatuses[slot] ?? PrayerStatus.notLogged,
-              time: _timeFor(slot),
-              today: state.today,
-              // Not active until its adhan time has entered (today only). When
-              // the time is unknown (prayer times not loaded) allow logging.
-              isDue: _isDue(_timeFor(slot), now),
-              trackNawafil: state.log.trackNawafil,
-              log: state.log,
-              dayKey: dayKey,
+      child: isExcused
+          ? _ExcusedPanel(today: state.today, log: state.log)
+          : Column(
+              children: [
+                for (final slot in PrayerSlot.values)
+                  _FardRow(
+                    slot: slot,
+                    status: state.todayStatuses[slot] ?? PrayerStatus.notLogged,
+                    time: _timeFor(slot),
+                    today: state.today,
+                    // Not active until its adhan time has entered (today only).
+                    // When the time is unknown (prayer times not loaded) allow
+                    // logging.
+                    isDue: _isDue(_timeFor(slot), now),
+                    trackNawafil: state.log.trackNawafil,
+                    log: state.log,
+                    dayKey: dayKey,
+                  ),
+                if (state.log.trackNawafil) ...[
+                  const Divider(height: 1),
+                  _WitrRow(
+                    done: state.log.witrDone(dayKey),
+                    today: state.today,
+                  ),
+                ],
+                const Divider(height: 1),
+                _PauseRow(today: state.today),
+              ],
             ),
-          if (state.log.trackNawafil) ...[
-            const Divider(height: 1),
-            _WitrRow(done: state.log.witrDone(dayKey), today: state.today),
-          ],
-        ],
-      ),
     );
   }
 
@@ -148,7 +162,7 @@ class _FardRow extends StatelessWidget {
                       Text(
                         SalahStatusUi.slotLabel(context, slot),
                         style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: isDue ? null : mutedText,
                         ),
                       ),
@@ -347,7 +361,7 @@ class _RawatibTag extends StatelessWidget {
         label,
         style: theme.textTheme.labelSmall?.copyWith(
           color: color,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -389,7 +403,7 @@ class _WitrRow extends StatelessWidget {
               child: Text(
                 SalahStatusUi.witrLabel(context),
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: done ? null : cs.onSurface.withValues(alpha: 0.7),
                 ),
               ),
@@ -402,6 +416,155 @@ class _WitrRow extends StatelessWidget {
               style: theme.textTheme.labelSmall?.copyWith(color: color),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown in place of the five fard rows when today is marked excused.
+///
+/// Deliberately states what is NOT happening — no prayers owed, no qada, streak
+/// intact — because the anxiety this feature removes is exactly the fear that
+/// the app is silently counting something against her.
+class _ExcusedPanel extends StatelessWidget {
+  final DateTime today;
+  final SalahLogModel log;
+
+  const _ExcusedPanel({required this.today, required this.log});
+
+  /// Days elapsed since the pause began, inclusive of today. Null when this is
+  /// a one-off excused day rather than an active pause.
+  int? get _pausedDays {
+    final since = log.excusedSince;
+    if (since == null) return null;
+    final start = DateTime.tryParse(since);
+    if (start == null) return null;
+    return today
+            .difference(DateTime(start.year, start.month, start.day))
+            .inDays +
+        1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final l10n = context.l10n;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.lg,
+        vertical: Spacing.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n?.translate('salah_tracker.excused_today') ?? 'يوم عذر',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: cs.onSurface,
+            ),
+          ),
+          const SizedBox(height: Spacing.xs),
+          Text(
+            l10n?.translate('salah_tracker.excused_today_body') ??
+                'لا صلوات مستحقة اليوم، ولا قضاء. سلسلتك محفوظة كما هي.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          if (_pausedDays case final days?) ...[
+            const SizedBox(height: Spacing.xs),
+            // Surfacing the duration is the safety valve for an open-ended
+            // pause: a forgotten pause stays visible instead of quietly
+            // hiding weeks, and the way to end it is right underneath.
+            Text(
+              '${l10n?.translate('salah_tracker.excused_since') ?? 'موقوف منذ'} '
+              '$days ${l10n?.translate('salah_tracker.days_unit') ?? 'يوم'}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+          const SizedBox(height: Spacing.md),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton(
+              onPressed: () {
+                final cubit = context.read<SalahTrackerCubit>();
+                if (log.excusedSince != null) {
+                  cubit.endPause();
+                } else {
+                  cubit.setExcused(today, false);
+                }
+              },
+              child: Text(
+                l10n?.translate('salah_tracker.excused_resume') ??
+                    'استئناف التسجيل',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The discreet entry point to pausing. Kept as a quiet text row at the bottom
+/// of the card rather than a prominent control — it is a rarely-used setting,
+/// not a primary action.
+class _PauseRow extends StatelessWidget {
+  final DateTime today;
+
+  const _PauseRow({required this.today});
+
+  Future<void> _confirm(BuildContext context) async {
+    final l10n = context.l10n;
+    final cubit = context.read<SalahTrackerCubit>();
+    final confirmed = await showFDialog<bool>(
+      context: context,
+      builder: (ctx, style, animation) => AppDialog(
+        title: Text(
+          l10n?.translate('salah_tracker.excused_confirm_title') ??
+              'إيقاف التسجيل مؤقتًا؟',
+        ),
+        body: Text(
+          l10n?.translate('salah_tracker.excused_confirm_body') ??
+              'أيام العذر لا تُحتسب فوائت ولا تقطع المداومة. تقدر تستأنف في أي وقت.',
+        ),
+        actions: [
+          FButton(
+            onPress: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n?.translate('salah_tracker.excused_confirm_cta') ??
+                  'أوقف مؤقتًا',
+            ),
+          ),
+          FButton(
+            onPress: () => Navigator.pop(ctx, false),
+            variant: FButtonVariant.outline,
+            child: Text(l10n?.translate('salah_tracker.cancel') ?? 'إلغاء'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await cubit.startPause();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: TextButton(
+        onPressed: () => _confirm(context),
+        child: Text(
+          l10n?.translate('salah_tracker.excused_pause') ?? 'إيقاف مؤقت',
+          style: theme.textTheme.bodyMedium,
         ),
       ),
     );

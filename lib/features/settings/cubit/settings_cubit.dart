@@ -6,6 +6,7 @@ import 'package:wadhakir/domain/usecases/set_language_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_user_name_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_text_scale_usecase.dart';
 import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/models/notification_settings_model.dart';
@@ -23,6 +24,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SetAppLockSettingsUseCase _setAppLockSettingsUseCase;
   final SetOnboardingCompletedUseCase? _setOnboardingCompletedUseCase;
   final SetUserNameUseCase? _setUserNameUseCase;
+  final SetTextScaleUseCase? _setTextScaleUseCase;
   final PrayerNotificationService _notificationService;
 
   StreamSubscription? _settingsSubscription;
@@ -36,6 +38,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     required this._setAppLockSettingsUseCase,
     this._setOnboardingCompletedUseCase,
     this._setUserNameUseCase,
+    this._setTextScaleUseCase,
     PrayerNotificationService? notificationService,
   }) : _notificationService =
            notificationService ?? PrayerNotificationService(),
@@ -59,6 +62,17 @@ class SettingsCubit extends Cubit<SettingsState> {
     if (_setUserNameUseCase == null) return;
     try {
       await _setUserNameUseCase.call(name.trim());
+    } catch (e) {
+      emit(SettingsError(e.toString()));
+    }
+  }
+
+  /// Persist the user's text scale. Nullable use case mirrors the other
+  /// optional mutations here, so tests can build the cubit without it.
+  Future<void> setTextScale(double scale) async {
+    if (_setTextScaleUseCase == null) return;
+    try {
+      await _setTextScaleUseCase.call(scale);
     } catch (e) {
       emit(SettingsError(e.toString()));
     }

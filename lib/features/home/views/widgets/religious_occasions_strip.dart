@@ -49,7 +49,7 @@ class ReligiousOccasionsStrip extends StatelessWidget {
               padding: EdgeInsets.zero,
               physics: const BouncingScrollPhysics(),
               itemCount: days.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
               itemBuilder: (context, i) => _OccasionCard(
                 day: days[i],
                 onTap: () => _openCalendar(context),
@@ -77,7 +77,7 @@ class _OccasionCard extends StatelessWidget {
       onPress: onTap,
       child: SizedBox(
         width: 220,
-        child: FCard.raw(
+        child: FCard(
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Column(

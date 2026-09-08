@@ -211,7 +211,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
                         l10n?.translate('home.nearest_mosques') ??
                             'أقرب المساجد',
                         style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       if (!_isLoading && _mosques != null)
@@ -247,7 +247,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
                         child: ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: _mosques!.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: 10),
                           itemBuilder: (context, index) {
                             final mosque = _mosques![index];
@@ -286,7 +286,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
                                 'المزيد من المساجد',
                             style: const TextStyle(
                               fontSize: 15,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -345,7 +345,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
             l10n?.translate('home.searching_nearby') ??
                 'البحث عن مساجد قريبة...',
             style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -433,7 +433,7 @@ class _MosqueListBottomSheetState extends State<MosqueListBottomSheet>
                 l10n?.translate('home.search_on_maps') ?? 'البحث في الخرائط',
                 style: const TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
@@ -573,7 +573,7 @@ class _MosqueCard extends StatelessWidget {
                         Text(
                           mosque.name,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -605,7 +605,7 @@ class _MosqueCard extends StatelessWidget {
                                     : '${distance.toStringAsFixed(1)} ${l10n?.translate('home.kilometers') ?? 'km'}',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w400,
                                   fontSize: 11,
                                 ),
                               ),

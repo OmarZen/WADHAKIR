@@ -364,7 +364,7 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
                         Expanded(
                           child: ListView.separated(
                             itemCount: visible.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               final app = visible[index];

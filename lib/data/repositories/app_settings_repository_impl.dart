@@ -79,6 +79,14 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     final userName =
         _sharedPreferences.getString(AppConstants.userNameKey) ?? '';
 
+    // Clamp on read: a value written by a future build with wider bounds, or a
+    // hand-edited prefs file, must never be able to render the UI unusable.
+    final textScale =
+        (_sharedPreferences.getDouble(AppConstants.textScaleKey) ?? 1.0).clamp(
+          AppSettingsModel.minTextScale,
+          AppSettingsModel.maxTextScale,
+        );
+
     _cachedSettings = AppSettingsModel(
       themeMode: themeMode,
       languageCode: languageCode,
@@ -87,6 +95,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       appLockSettings: appLockSettings,
       onboardingCompleted: onboardingCompleted,
       userName: userName,
+      textScale: textScale,
     );
 
     _settingsController.add(_cachedSettings!);
@@ -166,6 +175,19 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     final settings = await getSettings();
     _cachedSettings = settings.copyWith(userName: name);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setTextScale(double scale) async {
+    final clamped = scale.clamp(
+      AppSettingsModel.minTextScale,
+      AppSettingsModel.maxTextScale,
+    );
+    await _sharedPreferences.setDouble(AppConstants.textScaleKey, clamped);
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(textScale: clamped);
     _settingsController.add(_cachedSettings!);
   }
 

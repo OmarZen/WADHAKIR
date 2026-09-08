@@ -329,7 +329,7 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                       child: Text(
                         '${gregorianDate.day} ${AppDateUtils.getGregorianMonthName(gregorianDate.month, l10n)} • ${AppDateUtils.getShortFormattedHijriDate(_selectedDate!, l10n)}',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: theme.colorScheme.primary,
                         ),
                       ),
@@ -388,7 +388,7 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                 child: Text(
                   '${gregorianDate.day} ${AppDateUtils.getGregorianMonthName(gregorianDate.month, l10n)} • ${AppDateUtils.getShortFormattedHijriDate(_selectedDate!, l10n)}',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: theme.colorScheme.primary,
                   ),
                 ),
@@ -462,7 +462,7 @@ class _FastingCalendarScreenState extends State<FastingCalendarScreen> {
                           ? fastingDay.nameAr
                           : fastingDay.nameEn,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 2),

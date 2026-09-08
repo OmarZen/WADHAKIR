@@ -62,7 +62,7 @@ class PillPreview extends StatelessWidget {
                   fontFamily: 'Almarai',
                   fontSize: 15,
                   height: 1.4,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

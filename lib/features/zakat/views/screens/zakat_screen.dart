@@ -271,7 +271,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                         child: Text(
                           l10n?.translate('zakat.nisab_basis') ?? 'أساس النصاب',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
@@ -470,7 +470,7 @@ class _BasisSelector extends StatelessWidget {
         child: Text(
           label,
           style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            fontWeight: selected ? FontWeight.bold : FontWeight.w400,
             color: selected ? primary : theme.colorScheme.onSurface,
           ),
         ),

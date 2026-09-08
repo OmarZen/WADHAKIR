@@ -98,7 +98,7 @@ class ZakatHeroCard extends StatelessWidget {
                                 'مقدار الزكاة',
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: Colors.white.withValues(alpha: 0.92),
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),

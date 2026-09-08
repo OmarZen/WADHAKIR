@@ -54,7 +54,7 @@ class LanguageSelectorWidget extends StatelessWidget {
                     Text(
                       l10n?.translate('settings.language') ?? 'اللغة',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                     ),
@@ -214,7 +214,7 @@ class LanguageSelectorWidget extends StatelessWidget {
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: isSelected
                             ? FontWeight.bold
-                            : FontWeight.w500,
+                            : FontWeight.w400,
                         fontSize: 14,
                       ),
                     ),

@@ -75,7 +75,7 @@ class DailyInspirationSettingsPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: Spacing.md),
-                FCard.raw(
+                FCard(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: Spacing.md,
@@ -196,7 +196,7 @@ class _ContentTypeSelector extends StatelessWidget {
             child: Text(
               label(t),
               style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
                 color: isSelected ? primary : theme.colorScheme.onSurface,
               ),
             ),

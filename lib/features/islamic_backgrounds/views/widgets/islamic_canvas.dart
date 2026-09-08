@@ -83,7 +83,7 @@ class IslamicCanvas extends StatelessWidget {
                             fontFamily: fontFamily,
                             fontSize: fontSize,
                             height: 1.7,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             shadows: const [
                               Shadow(
                                 color: Color(0x73000000),
@@ -150,7 +150,7 @@ class _LogoBadge extends StatelessWidget {
         child: Image.asset(
           'assets/logo.png',
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) =>
+          errorBuilder: (_, _, _) =>
               const Icon(Icons.mosque_rounded, size: 12, color: Colors.white),
         ),
       ),

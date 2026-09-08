@@ -14,8 +14,13 @@ class SalahRangeStats {
   /// Days in the range where all five fard are prayed.
   final int completeDays;
 
-  /// Total days in the range.
+  /// Total calendar days in the range (including excused ones).
   final int totalDays;
+
+  /// Days in the range the user marked excused. Excluded from [totalSlots] and
+  /// from [completeDays], so a week with two excused days reads "5 of 5", not
+  /// "5 of 7".
+  final int excusedDays;
 
   /// Prayed (onTime/late/qada) fard count over the range.
   final int prayedCount;
@@ -31,7 +36,11 @@ class SalahRangeStats {
     required this.totalDays,
     required this.prayedCount,
     required this.totalSlots,
+    this.excusedDays = 0,
   });
+
+  /// Calendar days in the range on which prayers were actually owed.
+  int get owedDays => totalDays - excusedDays;
 
   int countOf(PrayerStatus s) => statusCounts[s] ?? 0;
 
@@ -76,14 +85,28 @@ class SalahStatsService {
   /// complete day, provided that day is today or yesterday (otherwise the
   /// streak is considered broken → 0). Today being incomplete does NOT break
   /// the streak until the day ends — it just isn't counted yet.
+  ///
+  /// Excused days ([SalahLogModel.excusedDays]) are **transparent**: they are
+  /// stepped over without counting toward the streak and without breaking it.
+  /// A woman who pauses for her period resumes on the same chain she left.
   int currentStreak(SalahLogModel log, DateTime today) {
     final t = normalize(today);
-    var cursor = isDayComplete(log, t)
-        ? t
-        : t.subtract(const Duration(days: 1));
-    if (!isDayComplete(log, cursor)) return 0;
+    var cursor = t;
+
+    // Walk back past anything that must not end the streak: excused days, and
+    // an incomplete TODAY (the day isn't over yet, so it isn't a failure).
+    while (log.isExcusedDay(cursor) ||
+        (cursor == t && !isDayComplete(log, cursor))) {
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+
     var streak = 0;
-    while (isDayComplete(log, cursor)) {
+    while (true) {
+      if (log.isExcusedDay(cursor)) {
+        cursor = cursor.subtract(const Duration(days: 1));
+        continue;
+      }
+      if (!isDayComplete(log, cursor)) break;
       streak++;
       cursor = cursor.subtract(const Duration(days: 1));
     }
@@ -91,6 +114,9 @@ class SalahStatsService {
   }
 
   /// Longest run of consecutive complete calendar days anywhere in the log.
+  ///
+  /// A gap composed entirely of excused days does not end a run — the days on
+  /// either side are treated as adjacent.
   int bestStreak(SalahLogModel log) {
     final completeDays = <DateTime>[];
     for (final dayKey in log.days.keys) {
@@ -106,7 +132,8 @@ class SalahStatsService {
     for (var i = 1; i < completeDays.length; i++) {
       final prev = completeDays[i - 1];
       final cur = completeDays[i];
-      if (cur.difference(prev).inDays == 1) {
+      if (cur.difference(prev).inDays == 1 ||
+          _bridgedByExcused(log, prev, cur)) {
         run++;
         if (run > best) best = run;
       } else {
@@ -114,6 +141,54 @@ class SalahStatsService {
       }
     }
     return best;
+  }
+
+  /// True when every calendar day strictly between [prev] and [cur] is excused
+  /// (and there is at least one such day). Used to bridge streak runs.
+  bool _bridgedByExcused(SalahLogModel log, DateTime prev, DateTime cur) {
+    var cursor = prev.add(const Duration(days: 1));
+    if (!cursor.isBefore(cur)) return false;
+    while (cursor.isBefore(cur)) {
+      if (!log.isExcusedDay(cursor)) return false;
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    return true;
+  }
+
+  /// Steadfastness over the trailing [window] days: prayed fard ÷ fard actually
+  /// owed, with excused days removed from the denominator. 0..1.
+  ///
+  /// This is the measure that replaces an all-or-nothing streak on the home
+  /// screen. It never resets to zero for a single missed day, so a lapse costs
+  /// a few percent rather than everything — which is the difference between a
+  /// user who returns and one who deletes the app.
+  double istiqamah(SalahLogModel log, DateTime today, {int window = 30}) {
+    final end = normalize(today);
+    var owed = 0;
+    var prayed = 0;
+    for (var i = 0; i < window; i++) {
+      final day = end.subtract(Duration(days: i));
+      if (log.isExcusedDay(day)) continue;
+      owed += PrayerSlot.values.length;
+      prayed += prayedCount(log, day);
+    }
+    return owed == 0 ? 0 : prayed / owed;
+  }
+
+  /// Days since the most recent day with any logged fard. `null` when the log
+  /// is empty. Drives the "welcome back" copy after a lapse.
+  int? daysSinceLastLog(SalahLogModel log, DateTime today) {
+    final t = normalize(today);
+    DateTime? latest;
+    for (final dayKey in log.days.keys) {
+      final parsed = DateTime.tryParse(dayKey);
+      if (parsed == null) continue;
+      final day = normalize(parsed);
+      if (day.isAfter(t)) continue;
+      if (latest == null || day.isAfter(latest)) latest = day;
+    }
+    if (latest == null) return null;
+    return t.difference(latest).inDays;
   }
 
   /// Aggregate stats over the inclusive day range [start]..[end].
@@ -124,9 +199,18 @@ class SalahStatsService {
     var completeDays = 0;
     var prayed = 0;
     var totalDays = 0;
+    var excused = 0;
     var cursor = s;
     while (!cursor.isAfter(e)) {
       totalDays++;
+      // An excused day is skipped entirely: it contributes no status counts,
+      // no prayed count, and no slots to the denominator. Counting it would
+      // report a shortfall against prayers that were never owed.
+      if (log.isExcusedDay(cursor)) {
+        excused++;
+        cursor = cursor.add(const Duration(days: 1));
+        continue;
+      }
       final key = SalahLogModel.dateKey(cursor);
       var dayPrayed = 0;
       for (final slot in PrayerSlot.values) {
@@ -146,8 +230,9 @@ class SalahStatsService {
       statusCounts: counts,
       completeDays: completeDays,
       totalDays: totalDays,
+      excusedDays: excused,
       prayedCount: prayed,
-      totalSlots: totalDays * PrayerSlot.values.length,
+      totalSlots: (totalDays - excused) * PrayerSlot.values.length,
     );
   }
 

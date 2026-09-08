@@ -39,6 +39,15 @@ class SalahLogModel extends Equatable {
   /// Day keys on which the Witr prayer was performed.
   final Set<String> witrDays;
 
+  /// Day keys the user marked as excused — days on which the fard prayers are
+  /// not owed at all (most commonly hayd/nifas).
+  ///
+  /// These are NOT "missed" days and must never be treated as such: they do not
+  /// break a streak, they are not counted in completion ratios, and they never
+  /// accrue qada debt. The app records only that a day was excused; it never
+  /// records or asks why.
+  final Set<String> excusedDays;
+
   /// Outstanding qada debt per fard prayer (>= 0). Legacy debt entered by the
   /// user plus auto-increments when a day's prayer is marked missed.
   final Map<PrayerSlot, int> makeUp;
@@ -46,12 +55,23 @@ class SalahLogModel extends Equatable {
   /// Whether the optional Sunnah/Witr rows are shown and tracked.
   final bool trackNawafil;
 
+  /// Day key the current pause began on, or null when not paused.
+  ///
+  /// A pause is a STATE, not a per-day flag. Asking the user to pick an end
+  /// date up front would ask her to predict something she cannot know, and
+  /// making her tap "excused" every morning is worse still. So: one tap starts
+  /// the pause, one tap ends it, and every day in between is filled into
+  /// [excusedDays] as it arrives (see `SalahTrackerCubit.syncPause`).
+  final String? excusedSince;
+
   const SalahLogModel({
     required this.days,
     required this.rawatib,
     required this.witrDays,
     required this.makeUp,
     required this.trackNawafil,
+    this.excusedDays = const {},
+    this.excusedSince,
   });
 
   factory SalahLogModel.defaultSettings() => const SalahLogModel(
@@ -60,6 +80,8 @@ class SalahLogModel extends Equatable {
     witrDays: {},
     makeUp: {},
     trackNawafil: false,
+    excusedDays: {},
+    excusedSince: null,
   );
 
   // ── Date key helper ───────────────────────────────────────────────────────
@@ -92,6 +114,14 @@ class SalahLogModel extends Equatable {
 
   /// Whether the Witr prayer was performed on [dayKey].
   bool witrDone(String dayKey) => witrDays.contains(dayKey);
+
+  /// Whether [dayKey] was marked excused (no fard owed).
+  bool isExcused(String dayKey) => excusedDays.contains(dayKey);
+
+  /// Whether [date] was marked excused. Convenience over [isExcused] for the
+  /// many call sites that hold a [DateTime] rather than a key.
+  bool isExcusedDay(DateTime date) =>
+      excusedDays.contains(dateKey(DateTime(date.year, date.month, date.day)));
 
   int makeUpFor(PrayerSlot slot) => makeUp[slot] ?? 0;
 
@@ -148,6 +178,42 @@ class SalahLogModel extends Equatable {
     return copyWith(witrDays: newWitr);
   }
 
+  /// Returns a copy with [dayKey] marked excused (or not).
+  ///
+  /// Marking a day excused also CLEARS any fard statuses logged for it: the
+  /// day is not owed, so a stray "missed" left behind would keep dragging the
+  /// completion ratio down and would look like a debt the user does not have.
+  /// (The caller is responsible for unwinding any qada already accrued — see
+  /// `SalahTrackerCubit.setExcused`.)
+  SalahLogModel setExcused(String dayKey, bool excused) {
+    final newExcused = Set<String>.of(excusedDays);
+    if (excused) {
+      newExcused.add(dayKey);
+    } else {
+      newExcused.remove(dayKey);
+    }
+    if (!excused) return copyWith(excusedDays: newExcused);
+
+    final newDays = {
+      for (final e in days.entries)
+        if (e.key != dayKey) e.key: Map<PrayerSlot, PrayerStatus>.of(e.value),
+    };
+    return copyWith(days: newDays, excusedDays: newExcused);
+  }
+
+  /// Returns a copy with every day in the inclusive range [from]..[to] marked
+  /// excused (or not). Used by the "pause" flow, where a period spans days.
+  SalahLogModel setExcusedRange(DateTime from, DateTime to, bool excused) {
+    var out = this;
+    var cursor = DateTime(from.year, from.month, from.day);
+    final end = DateTime(to.year, to.month, to.day);
+    while (!cursor.isAfter(end)) {
+      out = out.setExcused(dateKey(cursor), excused);
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    return out;
+  }
+
   /// Returns a copy with the qada debt of [slot] set to [value] (floored at 0).
   SalahLogModel setMakeUp(PrayerSlot slot, int value) {
     final newMakeUp = Map<PrayerSlot, int>.of(makeUp);
@@ -170,6 +236,9 @@ class SalahLogModel extends Equatable {
     Set<String>? witrDays,
     Map<PrayerSlot, int>? makeUp,
     bool? trackNawafil,
+    Set<String>? excusedDays,
+    String? excusedSince,
+    bool clearExcusedSince = false,
   }) {
     return SalahLogModel(
       days: days ?? this.days,
@@ -177,6 +246,10 @@ class SalahLogModel extends Equatable {
       witrDays: witrDays ?? this.witrDays,
       makeUp: makeUp ?? this.makeUp,
       trackNawafil: trackNawafil ?? this.trackNawafil,
+      excusedDays: excusedDays ?? this.excusedDays,
+      excusedSince: clearExcusedSince
+          ? null
+          : (excusedSince ?? this.excusedSince),
     );
   }
 
@@ -199,6 +272,8 @@ class SalahLogModel extends Equatable {
           day.key: day.value.map((u) => u.name).toList(),
     },
     'witr': witrDays.toList(),
+    'excused': excusedDays.toList(),
+    if (excusedSince != null) 'excusedSince': excusedSince,
     'makeUp': {
       for (final e in makeUp.entries)
         if (e.value > 0) e.key.name: e.value,
@@ -250,6 +325,20 @@ class SalahLogModel extends Equatable {
         if (d is String) d,
     };
 
+    // Tolerant read, same shape as `witr` above: a log written before excused
+    // days existed simply has no key here and decodes to an empty set, so no
+    // migration is needed and an older build reading a newer log ignores it.
+    final rawExcused = (json['excused'] as List?) ?? const [];
+    final excusedDays = <String>{
+      for (final d in rawExcused)
+        if (d is String) d,
+    };
+
+    final rawSince = json['excusedSince'];
+    final excusedSince = rawSince is String && rawSince.isNotEmpty
+        ? rawSince
+        : null;
+
     final rawMakeUp = (json['makeUp'] as Map?) ?? const {};
     final makeUp = <PrayerSlot, int>{};
     rawMakeUp.forEach((slotName, count) {
@@ -263,6 +352,8 @@ class SalahLogModel extends Equatable {
       days: days,
       rawatib: rawatib,
       witrDays: witrDays,
+      excusedDays: excusedDays,
+      excusedSince: excusedSince,
       makeUp: makeUp,
       // Tolerant read: a wrong-typed value falls back instead of throwing, so
       // one bad field never discards the whole log.
@@ -280,7 +371,15 @@ class SalahLogModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [days, rawatib, witrDays, makeUp, trackNawafil];
+  List<Object?> get props => [
+    days,
+    rawatib,
+    witrDays,
+    excusedDays,
+    excusedSince,
+    makeUp,
+    trackNawafil,
+  ];
 
   @override
   String toString() =>

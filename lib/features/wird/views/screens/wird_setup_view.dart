@@ -34,6 +34,11 @@ class _WirdSetupViewState extends State<WirdSetupView> {
   late final TextEditingController _amountController = TextEditingController(
     text: '$_amountPerDay',
   );
+
+  /// Optional dedication (إهداء). Empty means the khatma carries no intention,
+  /// which is the default and is never presented as a missing field.
+  final TextEditingController _dedicationController = TextEditingController();
+
   late final TextEditingController _startPageController = TextEditingController(
     text: '$_startPage',
   );
@@ -42,6 +47,7 @@ class _WirdSetupViewState extends State<WirdSetupView> {
   void dispose() {
     _amountController.dispose();
     _startPageController.dispose();
+    _dedicationController.dispose();
     super.dispose();
   }
 
@@ -60,6 +66,12 @@ class _WirdSetupViewState extends State<WirdSetupView> {
       reminderEnabled: true,
       completedDayIndices: const <int>{},
       planStartDate: DateTime.now(),
+      intention: _dedicationController.text.trim().isEmpty
+          ? WirdIntention.none
+          : WirdIntention.custom,
+      dedication: _dedicationController.text.trim().isEmpty
+          ? null
+          : _dedicationController.text.trim(),
     );
   }
 
@@ -160,6 +172,26 @@ class _WirdSetupViewState extends State<WirdSetupView> {
           ),
         ),
 
+        // Dedication — optional, and deliberately last: it is an invitation,
+        // not a required step, so it never stands between the user and
+        // starting to read.
+        _Section(
+          title: l10n?.translate('wird.dedication') ?? 'نية الختمة (اختياري)',
+          child: TextField(
+            controller: _dedicationController,
+            maxLength: WirdPlanModel.maxDedicationLength,
+            textInputAction: TextInputAction.done,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText:
+                  l10n?.translate('wird.dedication_hint') ??
+                  'مثال: إلى روح والدي',
+              border: const OutlineInputBorder(),
+              counterText: '',
+            ),
+          ),
+        ),
+
         const SizedBox(height: Spacing.sm),
 
         // Expected completion (live)
@@ -257,7 +289,7 @@ class _Section extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: Spacing.md),
-      child: FCard.raw(
+      child: FCard(
         child: Padding(
           padding: const EdgeInsets.all(Spacing.md),
           child: Column(

@@ -284,7 +284,7 @@ class _IslamicHistoryScreenContentState
                                 '${state.totalCount} ${state.totalCount == 1 ? 'حدث' : 'أحداث'}',
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ],
@@ -585,7 +585,7 @@ class _IslamicHistoryScreenContentState
                                           ?.copyWith(
                                             color: theme.colorScheme.primary,
                                             fontSize: size.width * 0.028,
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.w700,
                                           ),
                                     ),
                                   ],
@@ -638,7 +638,7 @@ class _IslamicHistoryScreenContentState
                           style: TextStyle(
                             color: theme.colorScheme.primary,
                             fontSize: size.width * 0.032,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],
@@ -826,7 +826,7 @@ class _IslamicHistoryScreenContentState
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
                                                 fontFamily: 'Almarai',
-                                                fontWeight: FontWeight.w500,
+                                                fontWeight: FontWeight.w400,
                                               ),
                                         ),
                                       ),
@@ -869,7 +869,7 @@ class _IslamicHistoryScreenContentState
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
                                                 fontFamily: 'Almarai',
-                                                fontWeight: FontWeight.w600,
+                                                fontWeight: FontWeight.w700,
                                                 color:
                                                     theme.colorScheme.primary,
                                               ),
@@ -901,7 +901,7 @@ class _IslamicHistoryScreenContentState
                                           style: theme.textTheme.bodyLarge
                                               ?.copyWith(
                                                 fontFamily: 'Almarai',
-                                                fontWeight: FontWeight.w500,
+                                                fontWeight: FontWeight.w400,
                                               ),
                                         ),
                                       ),

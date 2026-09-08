@@ -363,7 +363,7 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
         title: Text(
           displayName,
           style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
             color: isSelected
                 ? isDark
                       ? theme.colorScheme.onPrimary
@@ -495,7 +495,7 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
                     child: Text(
                       widget.title,
                       style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                         color: widget.enabled
                             ? theme.colorScheme.onSurface
@@ -552,7 +552,7 @@ class _AdhanSoundSelectorState extends State<AdhanSoundSelector> {
                                   alpha: 0.8,
                                 )
                               : theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           fontSize: 11,
                         ),
                         maxLines: 1,

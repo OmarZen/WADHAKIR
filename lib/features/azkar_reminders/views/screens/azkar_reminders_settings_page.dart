@@ -264,7 +264,7 @@ class _AzkarTestButton extends StatelessWidget {
                       'إرسال تذكير تجريبي',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),

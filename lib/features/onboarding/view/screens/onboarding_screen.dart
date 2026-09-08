@@ -91,8 +91,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   PageRouteBuilder _homeRoute() {
     return PageRouteBuilder(
-      pageBuilder: (_, __, ___) => const ScaffoldWithNavBar(),
-      transitionsBuilder: (_, animation, __, child) => FadeTransition(
+      pageBuilder: (_, _, _) => const ScaffoldWithNavBar(),
+      transitionsBuilder: (_, animation, _, child) => FadeTransition(
         opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
         child: child,
       ),
@@ -779,7 +779,7 @@ class _HeroIconState extends State<_HeroIcon>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) {
+      builder: (_, _) {
         final angle = _ctrl.value * 2 * math.pi;
         return SizedBox(
           width: 128,

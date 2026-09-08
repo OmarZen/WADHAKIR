@@ -124,7 +124,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
                 label,
                 style: TextStyle(
                   color: activeColor,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],

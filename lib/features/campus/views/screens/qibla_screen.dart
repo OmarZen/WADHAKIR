@@ -12,6 +12,7 @@ import 'package:wadhakir/domain/usecases/request_qibla_permissions_usecase.dart'
 import 'package:wadhakir/features/campus/views/widgets/qibla_compass_widget.dart';
 import 'package:wadhakir/features/campus/views/screens/qibla_ar_screen.dart';
 import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 // Modern color scheme for Qibla screen that matches the app theme
 const Color qiblaBaseColor = Color(0xFF20497D); // Primary blue
@@ -120,7 +121,7 @@ class _QiblaScreenState extends State<QiblaScreen>
     final l10n = context.l10n;
     showFDialog(
       context: context,
-      builder: (context, style, animation) => FDialog(
+      builder: (context, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('campus.location_service_disabled') ??
               'خدمة الموقع معطلة',
@@ -151,7 +152,7 @@ class _QiblaScreenState extends State<QiblaScreen>
     final l10n = context.l10n;
     showFDialog(
       context: context,
-      builder: (context, style, animation) => FDialog(
+      builder: (context, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('campus.permission_required') ?? 'الإذن مطلوب',
         ),
@@ -183,7 +184,7 @@ class _QiblaScreenState extends State<QiblaScreen>
     final l10n = context.l10n;
     showFDialog(
       context: context,
-      builder: (context, style, animation) => FDialog(
+      builder: (context, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('campus.permission_denied') ?? 'تم رفض الإذن',
         ),
@@ -487,7 +488,7 @@ class _QiblaScreenState extends State<QiblaScreen>
                       'متجه نحو القبلة',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
                 ),
@@ -624,7 +625,7 @@ class _QiblaScreenState extends State<QiblaScreen>
               accuracyText,
               style: TextStyle(
                 color: indicatorColor,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 fontSize: isDesktop ? 14.0 : size.width * 0.035,
               ),
             ),

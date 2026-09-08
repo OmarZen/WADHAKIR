@@ -159,7 +159,7 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                                   color: isDark
                                       ? theme.colorScheme.onSurface
                                       : theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 13,
                                 ),
                               ),
@@ -410,7 +410,7 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
                                         alpha: 0.6,
                                       )
                                     : theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 11,
                               ),
                             ),
@@ -644,7 +644,7 @@ class _PrayerTile extends StatelessWidget {
                     : isDark
                     ? theme.colorScheme.onSurface
                     : theme.colorScheme.onSurface,
-                fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
+                fontWeight: isNext ? FontWeight.bold : FontWeight.w700,
                 fontSize: 11,
               ),
             ),
@@ -745,7 +745,7 @@ class _QiyamPrayerTile extends StatelessWidget {
                     : isDark
                     ? theme.colorScheme.onSurface
                     : theme.colorScheme.primary,
-                fontWeight: isNext ? FontWeight.bold : FontWeight.w600,
+                fontWeight: isNext ? FontWeight.bold : FontWeight.w700,
                 fontSize: 12,
               ),
             ),

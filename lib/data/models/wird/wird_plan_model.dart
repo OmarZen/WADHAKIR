@@ -51,6 +51,16 @@ class WirdPlanModel extends Equatable {
   /// day is marked complete (so the next day resumes at its own start page).
   final int? lastReadPage;
 
+  /// Who or what this khatma is dedicated to. [WirdIntention.none] by default.
+  final WirdIntention intention;
+
+  /// Free text accompanying [intention] — a name, usually. Null or empty when
+  /// the user did not write one. Capped at [maxDedicationLength] on write so it
+  /// always fits the reminder body and the completion card.
+  final String? dedication;
+
+  static const int maxDedicationLength = 60;
+
   const WirdPlanModel({
     required this.isActive,
     required this.goalMode,
@@ -63,6 +73,8 @@ class WirdPlanModel extends Equatable {
     this.planStartDate,
     this.targetDate,
     this.lastReadPage,
+    this.intention = WirdIntention.none,
+    this.dedication,
   });
 
   /// Default (inactive) plan — the setup screen is shown.
@@ -94,6 +106,8 @@ class WirdPlanModel extends Equatable {
     Object? planStartDate = _undefined,
     Object? targetDate = _undefined,
     Object? lastReadPage = _undefined,
+    WirdIntention? intention,
+    Object? dedication = _undefined,
   }) {
     return WirdPlanModel(
       isActive: isActive ?? this.isActive,
@@ -113,6 +127,10 @@ class WirdPlanModel extends Equatable {
       lastReadPage: lastReadPage == _undefined
           ? this.lastReadPage
           : lastReadPage as int?,
+      intention: intention ?? this.intention,
+      dedication: dedication == _undefined
+          ? this.dedication
+          : dedication as String?,
     );
   }
 
@@ -129,6 +147,11 @@ class WirdPlanModel extends Equatable {
       'planStartDate': planStartDate?.toIso8601String(),
       'targetDate': targetDate?.toIso8601String(),
       'lastReadPage': lastReadPage,
+      // Both omitted when unset, so an existing stored plan is byte-identical
+      // until the user actually dedicates a khatma.
+      if (intention != WirdIntention.none) 'intention': intention.index,
+      if (dedication != null && dedication!.isNotEmpty)
+        'dedication': dedication,
     };
   }
 
@@ -161,6 +184,16 @@ class WirdPlanModel extends Equatable {
           ? DateTime.tryParse(json['targetDate'] as String)
           : null,
       lastReadPage: json['lastReadPage'] as int?,
+      // Tolerant read: a plan stored before dedications existed simply has
+      // neither key, so no migration is needed.
+      intention:
+          WirdIntention.values[(json['intention'] as int? ?? 0).clamp(
+            0,
+            WirdIntention.values.length - 1,
+          )],
+      dedication: json['dedication'] is String
+          ? (json['dedication'] as String)
+          : null,
     );
   }
 
@@ -177,6 +210,8 @@ class WirdPlanModel extends Equatable {
     planStartDate,
     targetDate,
     lastReadPage,
+    intention,
+    dedication,
   ];
 
   @override

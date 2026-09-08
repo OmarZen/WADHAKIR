@@ -51,6 +51,18 @@ jobs:
       - name: 🎨 Check Code Formatting
         run: dart format --output=none --set-exit-if-changed .
 
+      # `build-and-release.yml` already has an `analyze` job that runs both of
+      # these — but its `on:` block is `push` + `workflow_dispatch` only, and
+      # this is the ONLY workflow triggered by `pull_request`. So until now the
+      # analyzer and the test suite ran at exactly one moment in the lifecycle:
+      # after a release tag had already been pushed. README.md and package.json
+      # both tell contributors these gate a PR; now they actually do.
+      - name: 🔬 Analyze
+        run: flutter analyze
+
+      - name: 🧪 Test
+        run: flutter test
+
       # quran_library 4.2.x ships an android/build.gradle calling
       # getDefaultProguardFile('proguard-android.txt'). AGP 9.x hard-errors on it
       # at :quran_library CONFIGURATION time, so it kills debug builds too — not

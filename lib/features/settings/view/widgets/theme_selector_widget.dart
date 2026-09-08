@@ -60,7 +60,7 @@ class ThemeSelectorWidget extends StatelessWidget {
                     Text(
                       l10n?.translate('settings.theme') ?? 'السمة',
                       style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                     ),
@@ -242,7 +242,7 @@ class ThemeSelectorWidget extends StatelessWidget {
                 child: Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
                     fontSize: 14,
                   ),
                 ),

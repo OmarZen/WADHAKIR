@@ -38,7 +38,7 @@ class WirdTodayCard extends StatelessWidget {
     final completed = state.plan.completedDayIndices.contains(day.dayIndex);
     final hasResume = cubit.hasResumePoint;
 
-    return FCard.raw(
+    return FCard(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.lg),
         child: Column(
@@ -76,6 +76,23 @@ class WirdTodayCard extends StatelessWidget {
                           color: theme.colorScheme.primary,
                         ),
                       ),
+                      // One muted line, every day. The dedication is why this
+                      // khatma is being read, so it belongs on the card the
+                      // user actually looks at — not buried in setup.
+                      if (state.plan.dedication case final d?
+                          when d.trim().isNotEmpty) ...[
+                        const SizedBox(height: Spacing.xxs),
+                        Text(
+                          '${l10n?.translate('wird.dedicated_to') ?? 'إهداءً إلى'} '
+                          '${d.trim()}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -230,7 +247,7 @@ class _FinishedCard extends StatelessWidget {
     final l10n = context.l10n;
     final cubit = context.read<WirdCubit>();
 
-    return FCard.raw(
+    return FCard(
       child: Padding(
         padding: const EdgeInsets.all(Spacing.lg),
         child: Column(

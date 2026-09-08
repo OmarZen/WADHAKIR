@@ -149,7 +149,7 @@ class LocationDisabledDialog extends StatelessWidget {
                                 'مكة المكرمة (21.42°, 39.83°)',
                             style: TextStyle(
                               fontSize: size.width * 0.035,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                               color: theme.colorScheme.primary,
                               fontFamily: 'Almarai',
                             ),

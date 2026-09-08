@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:forui/forui.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:wadhakir/core/app/restart_required.dart';
 import 'package:wadhakir/core/routes/app_router.dart';
 import 'package:wadhakir/core/notifications/app_notification_listeners.dart';
 import 'package:wadhakir/core/notifications/notification_router.dart';
@@ -28,6 +28,8 @@ import 'package:wadhakir/features/splash_screen/splash_screen.dart';
 import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_user_name_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_text_scale_usecase.dart';
+import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/data/repositories/radio_repository_impl.dart';
@@ -127,14 +129,6 @@ void main() async {
   // Defer home widgets and notification initialization for faster cold start
   // These will be initialized lazily when features are first accessed
 
-  // Load environment variables
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (e) {
-    // Silently continue without .env file - hardcoded values will be used as fallback
-    // This is expected in CI/CD environments and for developers who haven't set up .env yet
-  }
-
   // Initialize Hive
   await Hive.initFlutter();
 
@@ -220,6 +214,7 @@ void main() async {
     appSettingsRepository,
   );
   final setUserNameUseCase = SetUserNameUseCase(appSettingsRepository);
+  final setTextScaleUseCase = SetTextScaleUseCase(appSettingsRepository);
 
   // Create prayer times use cases
   final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
@@ -283,6 +278,7 @@ void main() async {
       setAppLockSettingsUseCase: setAppLockSettingsUseCase,
       setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
       setUserNameUseCase: setUserNameUseCase,
+      setTextScaleUseCase: setTextScaleUseCase,
       // Quran
 
       // Prayer Times
@@ -338,6 +334,7 @@ class MyApp extends StatelessWidget {
   final SetAppLockSettingsUseCase setAppLockSettingsUseCase;
   final SetOnboardingCompletedUseCase setOnboardingCompletedUseCase;
   final SetUserNameUseCase setUserNameUseCase;
+  final SetTextScaleUseCase setTextScaleUseCase;
 
   // Quran
 
@@ -385,6 +382,7 @@ class MyApp extends StatelessWidget {
     required this.setAppLockSettingsUseCase,
     required this.setOnboardingCompletedUseCase,
     required this.setUserNameUseCase,
+    required this.setTextScaleUseCase,
     // Quran
 
     // Prayer Times
@@ -427,6 +425,7 @@ class MyApp extends StatelessWidget {
             setAppLockSettingsUseCase: setAppLockSettingsUseCase,
             setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
             setUserNameUseCase: setUserNameUseCase,
+            setTextScaleUseCase: setTextScaleUseCase,
           ),
           lazy: false,
         ),
@@ -566,11 +565,13 @@ class MyApp extends StatelessWidget {
               // Default settings if not loaded yet
               var themeMode = ThemeMode.light;
               var locale = const Locale('ar');
+              var textScale = 1.0;
 
               // Update with loaded settings if available
               if (state is SettingsLoaded) {
                 themeMode = state.settings.themeMode;
                 locale = Locale(state.settings.languageCode);
+                textScale = state.settings.textScale;
               }
 
               return MaterialApp(
@@ -594,12 +595,30 @@ class MyApp extends StatelessWidget {
                 // FTheme derived from the active Material theme, so forui
                 // components match the app's brand colors + light/dark mode.
                 // Material widgets (Quran reader, syncfusion pickers) ignore it.
-                builder: (context, child) => FTheme(
-                  data: buildForuiTheme(Theme.of(context)),
-                  // FToaster provides the overlay host for forui toasts so any
-                  // screen can call showFToast(...) with the unified styling.
-                  child: FToaster(child: child ?? const SizedBox.shrink()),
-                ),
+                builder: (context, child) {
+                  // Compose the user's in-app scale ON TOP of whatever the OS
+                  // is already asking for, rather than replacing it — someone
+                  // who has enlarged text system-wide should not have that
+                  // silently undone by opening this app. The product of the two
+                  // is clamped so the combination can't reach a size where the
+                  // fixed-height cards clip.
+                  final osScaler = MediaQuery.textScalerOf(context);
+                  final effective = (osScaler.scale(1.0) * textScale).clamp(
+                    AppSettingsModel.minTextScale,
+                    AppSettingsModel.maxTextScale,
+                  );
+                  return MediaQuery.withClampedTextScaling(
+                    minScaleFactor: effective,
+                    maxScaleFactor: effective,
+                    child: FTheme(
+                      data: buildForuiTheme(Theme.of(context)),
+                      // FToaster provides the overlay host for forui toasts so
+                      // any screen can call showFToast(...) with the unified
+                      // styling.
+                      child: FToaster(child: child ?? const SizedBox.shrink()),
+                    ),
+                  );
+                },
                 home: const WadhakirSplashScreen(),
               );
             },
@@ -655,6 +674,14 @@ class _GlassWidgetResumeRefresherState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
+
+    // Everything below is day-rollover housekeeping that writes through
+    // cache-first repositories. After a backup restore those caches hold the
+    // data that was just replaced, so running any of it would quietly undo the
+    // restore — SalahTrackerCubit.refreshIfStale() reaches syncPause(), which
+    // persists from the stale log. The app is waiting to be restarted at that
+    // point and none of this housekeeping matters. See RestartRequired.
+    if (RestartRequired.isLatched) return;
 
     // Daily inspiration: if the day rolled over while backgrounded, advance to
     // today's item and reschedule the notification with the new body.

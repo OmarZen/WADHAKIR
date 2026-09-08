@@ -348,6 +348,11 @@ class FastingNotificationService {
           millisecond: 0,
           repeats: true,
           timeZone: _localTimeZone,
+          // A fasting reminder is time-critical in a way most reminders are
+          // not: it tells the user to eat before fajr or that today is a fast
+          // day. The plugin default (false) lets Doze defer it past the window
+          // in which it can be acted on at all.
+          allowWhileIdle: true,
         ),
       );
       log('   ✅ Successfully scheduled $dayName recurring notification');
@@ -842,6 +847,10 @@ class FastingNotificationService {
           minute: scheduledDate.minute,
           second: scheduledDate.second,
           timeZone: _localTimeZone,
+          // These are the eve-of-fast / pre-fajr suhoor reminders — the most
+          // time-critical notifications in the app after the adhan itself.
+          // Doze-deferring a suhoor reminder past fajr makes it worthless.
+          allowWhileIdle: true,
         ),
       );
 

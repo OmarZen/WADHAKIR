@@ -136,7 +136,7 @@ class ZakatResultCard extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final style = theme.textTheme.bodyMedium?.copyWith(
-      fontWeight: emphasize ? FontWeight.bold : FontWeight.w500,
+      fontWeight: emphasize ? FontWeight.bold : FontWeight.w400,
       color: emphasize ? cs.onSurface : cs.onSurface.withValues(alpha: 0.8),
     );
     return Padding(

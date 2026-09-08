@@ -5,6 +5,9 @@ import 'notification_repository_impl_windows.dart';
 import '../models/notification_settings_model.dart';
 import '../../core/constants/adhan_sounds.dart';
 import '../../domain/repositories/notification_repository.dart';
+import '../../core/time/clock.dart';
+import '../../features/pray_times/services/prayer_schedule_planner.dart';
+import '../../features/pray_times/services/prayer_scheduler.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 
 /// Factory class to return the appropriate notification repository implementation
@@ -120,7 +123,8 @@ class NotificationRepositoryImpl implements NotificationRepository {
 
 /// Mobile implementation using awesome_notifications
 /// This is the original implementation moved into a private class
-class _MobileNotificationRepositoryImpl implements NotificationRepository {
+class _MobileNotificationRepositoryImpl
+    implements NotificationRepository, PrayerAlarmGateway {
   static const String _channelKeyFajr = 'fajr_channel';
   static const String _channelKeyPrayers = 'prayers_channel';
   static const String _channelKeyFajrDefault = 'fajr_channel_default_sound';
@@ -148,13 +152,51 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   static const String _channelKeyFeatureNudge = 'feature_nudge_channel';
   static const String _channelGroupKey = 'prayer_notifications';
 
-  // Notification IDs for each prayer
-  static const int _fajrId = 100;
-  static const int _dhuhrId = 101;
-  static const int _asrId = 102;
-  static const int _maghribId = 103;
-  static const int _ishaId = 104;
+  // The prayer id space (100..214) now lives in [PrayerSchedulePlanner], which
+  // is the one place that allocates it. These aliases remain only for the
+  // debug read-back below.
+  static const int _fajrId = PrayerSchedulePlanner.fajrId;
+  static const int _ishaId = _fajrId + 4;
   static const int _persistentId = 999; // ID for persistent notification
+
+  /// The immediate "does this work?" notification from Settings.
+  ///
+  /// It used to resolve through the prayer-name id map, whose `default:` arm
+  /// returned **0** — an id outside the documented 100..214 window, owned by
+  /// nothing, and therefore never cleared by [cancelPrayerSchedules]. Giving
+  /// it a real id of its own puts it back inside a range somebody owns.
+  static const int _testNotificationId = 998;
+
+  /// The single place `now` comes from on this class's own scheduling path.
+  ///
+  /// Not a constructor seam: this class is private, constructed in exactly one
+  /// place, and welded to the awesome_notifications singleton — a test could
+  /// not reach it anyway. The seam that matters is [PrayerScheduler], which
+  /// takes a [Clock] and a [PrayerAlarmGateway] and is where the sequencing
+  /// actually lives.
+  final Clock _clock = systemClock;
+
+  /// Cancels and re-arms the prayer id window from a freshly planned schedule.
+  /// This class is its own [PrayerAlarmGateway] — the scheduler decides, the
+  /// methods below render.
+  late final PrayerScheduler _scheduler = PrayerScheduler(
+    this,
+    const PrayerSchedulePlanner(),
+    _clock,
+  );
+
+  // --- PrayerAlarmGateway ---------------------------------------------------
+
+  @override
+  Future<void> cancelIds(Iterable<int> ids) async {
+    for (final id in ids) {
+      await AwesomeNotifications().cancel(id);
+    }
+  }
+
+  @override
+  Future<void> arm(PlannedPrayerNotification planned, {String? locationName}) =>
+      _scheduleOne(planned, locationName: locationName);
 
   // Cached local timezone identifier. awesome_notifications reads
   // `TimeZone.getDefault().getID()` on Android, which on some OEM builds
@@ -392,6 +434,19 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     return await AwesomeNotifications().isNotificationAllowed();
   }
 
+  /// Schedule a single occurrence, today.
+  ///
+  /// Two callers, and they want different things:
+  ///   * a real prayer, which must land on the id the planner would give it so
+  ///     a later reschedule can cancel it;
+  ///   * the Settings screen's "does this work?" probe, which is not a prayer
+  ///     at all.
+  ///
+  /// The probe used to resolve through the prayer-name id map, whose
+  /// `default:` arm returned **0** — an id outside the documented 100..214
+  /// window that [cancelPrayerSchedules] never cleared, so a stray test
+  /// notification could sit in the tray with nothing able to cancel it. It now
+  /// gets [_testNotificationId] of its own.
   @override
   Future<void> schedulePrayerNotification({
     required String prayerName,
@@ -399,59 +454,91 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     required DateTime prayerTime,
     required PrayerNotificationSettings settings,
     String? locationName,
-  }) => _scheduleOne(
-    prayerName: prayerName,
-    prayerNameArabic: prayerNameArabic,
-    prayerTime: prayerTime,
-    settings: settings,
+  }) async {
+    if (!settings.enabled) return;
+
+    final prayer = PlannedPrayer.byKey(prayerName);
+    if (prayer == null) {
+      // The diagnostic probe: fires as soon as it is asked to, with no lead
+      // time and no past-time check — the caller has already put it a couple
+      // of seconds out precisely so the user sees it immediately.
+      await _render(
+        id: _testNotificationId,
+        prayerName: prayerName,
+        prayerNameArabic: prayerNameArabic,
+        prayerTime: prayerTime,
+        fireTime: prayerTime,
+        leadTime: Duration.zero,
+        isFajr: false,
+        settings: settings,
+        locationName: locationName,
+      );
+      return;
+    }
+
+    final fireTime = prayerTime.subtract(
+      PrayerSchedulePlanner.leadTimeFor(settings.timing),
+    );
+    if (!fireTime.isAfter(_clock.now())) return;
+
+    await _scheduleOne(
+      PlannedPrayerNotification(
+        id: PrayerSchedulePlanner.idFor(prayer, 0),
+        prayer: prayer,
+        day: DateTime(prayerTime.year, prayerTime.month, prayerTime.day),
+        dayIndex: 0,
+        prayerTime: prayerTime,
+        fireTime: fireTime,
+        settings: settings,
+      ),
+      locationName: locationName,
+    );
+  }
+
+  /// Render one already-decided [PlannedPrayerNotification] into the plugin.
+  ///
+  /// Every decision — which id, which instant, whether it is still in the
+  /// future, whether the prayer is enabled at all — was made by
+  /// [PrayerSchedulePlanner]. This method deliberately makes none of them: a
+  /// second opinion here is how the id map and the lead-time arithmetic
+  /// drifted apart from the cubit's horizon logic in the first place.
+  Future<void> _scheduleOne(
+    PlannedPrayerNotification planned, {
+    String? locationName,
+  }) => _render(
+    id: planned.id,
+    prayerName: planned.prayer.key,
+    prayerNameArabic: planned.prayer.arabicName,
+    prayerTime: planned.prayerTime,
+    fireTime: planned.fireTime,
+    leadTime: planned.leadTime,
+    isFajr: planned.prayer.isFajr,
+    settings: planned.settings,
     locationName: locationName,
-    dayIndex: 0,
   );
 
-  /// Schedule a single prayer occurrence. [dayIndex] offsets the notification id
-  /// (base + dayIndex*10) so the same prayer on different days never collides.
-  Future<void> _scheduleOne({
+  /// Turns one decision into an awesome_notifications request. Makes no
+  /// scheduling decisions of its own — see [_scheduleOne].
+  Future<void> _render({
+    required int id,
     required String prayerName,
     required String prayerNameArabic,
     required DateTime prayerTime,
+    required DateTime fireTime,
+    required Duration leadTime,
+    required bool isFajr,
     required PrayerNotificationSettings settings,
     String? locationName,
-    required int dayIndex,
   }) async {
-    if (!settings.enabled) {
-      if (dayIndex == 0) await cancelPrayerNotification(prayerName);
-      return;
-    }
+    final notificationTime = fireTime;
+    final notificationId = id;
 
-    // Calculate notification time based on timing setting
-    DateTime notificationTime = prayerTime;
-    String timingText = '';
-
-    switch (settings.timing) {
-      case NotificationTiming.before5Min:
-        notificationTime = prayerTime.subtract(const Duration(minutes: 5));
-        timingText = ' (بعد 5 دقائق)';
-        break;
-      case NotificationTiming.before10Min:
-        notificationTime = prayerTime.subtract(const Duration(minutes: 10));
-        timingText = ' (بعد 10 دقائق)';
-        break;
-      case NotificationTiming.before15Min:
-        notificationTime = prayerTime.subtract(const Duration(minutes: 15));
-        timingText = ' (بعد 15 دقيقة)';
-        break;
-      case NotificationTiming.onTime:
-        timingText = '';
-        break;
-    }
-
-    // Skip if notification time is in the past
-    if (notificationTime.isBefore(DateTime.now())) {
-      return;
-    }
-
-    final int notificationId = _getNotificationId(prayerName) + dayIndex * 10;
-    final bool isFajr = prayerName.toLowerCase() == 'fajr';
+    // Arabic copy for the lead time, derived from the planned duration rather
+    // than re-switching on the enum.
+    final leadMinutes = leadTime.inMinutes;
+    final timingText = leadMinutes == 0
+        ? ''
+        : (leadMinutes == 15 ? ' (بعد 15 دقيقة)' : ' (بعد $leadMinutes دقائق)');
 
     // Resolve the selected adhan → its per-sound channel (sound baked in), so
     // the correct adhan plays even when the app is dead. A null/unknown sound
@@ -501,7 +588,27 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
           ? 'resource://raw/${adhan!.androidRawRes}'
           : null,
       category: NotificationCategory.Reminder,
-      criticalAlert: isFajr,
+      // `criticalAlert: isFajr` used to sit here. awesome_notifications 0.12
+      // removed it from NotificationContent — critical alerts are now declared
+      // per-CHANNEL via NotificationChannel.criticalAlerts.
+      //
+      // Nothing is lost by dropping it, because it was already inert on BOTH
+      // platforms:
+      //   iOS     — needs the Apple-granted
+      //             `com.apple.developer.usernotifications.critical-alerts`
+      //             entitlement; ios/Runner/Runner.entitlements has only the
+      //             App Group.
+      //   Android — a channel only bypasses DND when
+      //             NotificationManager.isNotificationPolicyAccessGranted() is
+      //             true, which requires ACCESS_NOTIFICATION_POLICY (declared
+      //             in neither this manifest nor the plugin's) AND an explicit
+      //             user grant.
+      //
+      // It is deliberately NOT re-added at channel level here: the adhan
+      // channels are keyed per SOUND (`adhan_<key>_v1`) and shared by all five
+      // prayers, so setting criticalAlerts there would make every prayer a
+      // critical alert, not just Fajr. Doing this properly needs a Fajr-specific
+      // channel plus the permission opt-in flow.
     );
     // This button stops the adhan via the plugin's NATIVE dismiss path, not via
     // any Dart handler: DismissAction broadcasts to NotificationActionReceiver,
@@ -661,40 +768,39 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     // cancelAll(), which would also wipe azkar/wird/fasting/daily-inspiration
     // reminders (they schedule on the same plugin with different ids/channels
     // and only re-arm on their own settings change / cold start).
-    await cancelPrayerSchedules();
+    // WHAT to schedule is decided by PrayerSchedulePlanner — a pure function
+    // of the settings, the prayer times and the clock, tested on its own.
+    // PrayerScheduler owns the sequencing (cancel the whole prayer id window,
+    // then arm). Everything in THIS class is rendering: turning each decision
+    // into an awesome_notifications payload. Keeping those apart is what makes
+    // "which alarms would this app arm at 04:12 on a DST night?" an assertion
+    // rather than a field report.
+    //
+    // force: this method is the explicit "reschedule now" entry point, and its
+    // callers already suppress redundant work upstream. Skipping here on an
+    // unchanged signature would also skip the cancel sweep, which is the one
+    // thing a caller reaching for this method after a reboot actually wants.
+    final result = await _scheduler.reschedule(
+      prayerTimesByDay: prayerTimesByDay,
+      settings: settings,
+      locationName: locationName,
+      force: true,
+    );
 
-    if (!settings.masterEnabled) {
-      debugPrint('⚠️  Master notification toggle OFF — nothing scheduled');
+    if (result.isEmpty) {
+      debugPrint(
+        settings.masterEnabled
+            ? '⚠️  Nothing left to schedule in the horizon'
+            : '⚠️  Master notification toggle OFF — nothing scheduled',
+      );
       return;
     }
 
-    final prayerSettings = {
-      'Fajr': (settings.fajrSettings, 'الفجر'),
-      'Dhuhr': (settings.dhuhrSettings, 'الظهر'),
-      'Asr': (settings.asrSettings, 'العصر'),
-      'Maghrib': (settings.maghribSettings, 'المغرب'),
-      'Isha': (settings.ishaSettings, 'العشاء'),
-    };
-
-    // Deterministic day order → stable dayIndex → stable, non-colliding ids.
-    final days = prayerTimesByDay.keys.toList()..sort();
-    for (var dayIndex = 0; dayIndex < days.length; dayIndex++) {
-      final dayTimes = prayerTimesByDay[days[dayIndex]]!;
-      for (final entry in prayerSettings.entries) {
-        final prayerTime = dayTimes[entry.key];
-        if (prayerTime == null) continue;
-        await _scheduleOne(
-          prayerName: entry.key,
-          prayerNameArabic: entry.value.$2,
-          prayerTime: prayerTime,
-          settings: entry.value.$1,
-          locationName: locationName,
-          dayIndex: dayIndex,
-        );
-      }
-    }
-    debugPrint('✅ Scheduled prayer notifications across ${days.length} day(s)');
-    await debugAssertPrayerSchedulesSurvived(days.length);
+    debugPrint(
+      '✅ Scheduled ${result.planned.length} prayer notification(s) '
+      'across ${result.dayCount} day(s)',
+    );
+    await debugAssertPrayerSchedulesSurvived(result.dayCount);
   }
 
   /// Cancel only the multi-day prayer notification ids (base 100–104 +
@@ -706,11 +812,10 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
   /// (persistent 999, fasting 5001–5999, wird 6001/6099, azkar 7100+).
   @override
   Future<void> cancelPrayerSchedules() async {
-    for (var day = 0; day < 12; day++) {
-      for (var base = _fajrId; base <= _ishaId; base++) {
-        await AwesomeNotifications().cancel(base + day * 10);
-      }
-    }
+    await cancelIds(PrayerSchedulePlanner.cancellableIds);
+    // The next reschedule must actually re-arm: the OS table is now empty, so
+    // an unchanged plan is no longer an unchanged reality.
+    _scheduler.invalidate();
   }
 
   /// Debug-only: verify iOS actually KEPT every prayer notification we asked for.
@@ -753,8 +858,14 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
 
   @override
   Future<void> cancelPrayerNotification(String prayerName) async {
-    final notificationId = _getNotificationId(prayerName);
-    await AwesomeNotifications().cancel(notificationId);
+    // Only today's occurrence. A caller that means "stop the adhan entirely"
+    // wants cancelPrayerSchedules(), which sweeps the whole id window.
+    final prayer = PlannedPrayer.byKey(prayerName);
+    await AwesomeNotifications().cancel(
+      prayer == null
+          ? _testNotificationId
+          : PrayerSchedulePlanner.idFor(prayer, 0),
+    );
   }
 
   @override
@@ -774,29 +885,6 @@ class _MobileNotificationRepositoryImpl implements NotificationRepository {
     final scheduledNotifications = await AwesomeNotifications()
         .listScheduledNotifications();
     return scheduledNotifications.map((n) => n.content!.id!).toList();
-  }
-
-  // Helper method to get notification ID for a prayer
-  int _getNotificationId(String prayerName) {
-    switch (prayerName.toLowerCase()) {
-      case 'fajr':
-      case 'الفجر':
-        return _fajrId;
-      case 'dhuhr':
-      case 'الظهر':
-        return _dhuhrId;
-      case 'asr':
-      case 'العصر':
-        return _asrId;
-      case 'maghrib':
-      case 'المغرب':
-        return _maghribId;
-      case 'isha':
-      case 'العشاء':
-        return _ishaId;
-      default:
-        return 0;
-    }
   }
 
   // Helper method to format time for display
@@ -874,7 +962,10 @@ $timeRemaining$locationText''';
         ticker: 'الصلاة القادمة: $nextPrayerNameArabic - $timeRemaining',
         showWhen: true,
         customSound: null,
-        criticalAlert: false,
+        // `criticalAlert: false` removed — the parameter no longer exists on
+        // NotificationContent in awesome_notifications 0.12 (see the prayer
+        // notification above). It was explicitly false here anyway, which is
+        // also the default, so this is a pure no-op removal.
       ),
     );
   }

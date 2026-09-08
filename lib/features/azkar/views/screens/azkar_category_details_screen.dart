@@ -357,7 +357,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: theme.colorScheme.primary,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                 ],
@@ -453,7 +453,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                   style: theme.textTheme.bodyLarge?.copyWith(
                     fontSize: 22,
                     height: 2.0,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                   ),
                   textAlign: TextAlign.right,
                   textDirection: TextDirection.rtl,
@@ -672,7 +672,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
               style: TextStyle(
                 fontSize: 12,
                 color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -760,7 +760,7 @@ class _AdhkarSourceRowState extends State<_AdhkarSourceRow> {
                     l10n?.translate('azkar.source_label') ?? 'المصدر',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: muted,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(width: 2),

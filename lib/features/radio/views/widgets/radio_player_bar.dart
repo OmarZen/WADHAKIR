@@ -76,7 +76,7 @@ class RadioPlayerBar extends StatelessWidget {
                                   ? 11.0
                                   : size.width * 0.028,
                               color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                           Text(
@@ -122,7 +122,7 @@ class RadioPlayerBar extends StatelessWidget {
                                 : (l10n?.translate('radio.play') ?? 'Play'),
                             style: TextStyle(
                               fontSize: PlatformUtils.isDesktop ? 13.0 : 13.0,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         );
@@ -292,7 +292,7 @@ class _NowPlayingSheet extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: isDesktop ? 14.0 : size.width * 0.035,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                         SizedBox(height: isDesktop ? 20.0 : size.height * 0.02),
@@ -474,7 +474,7 @@ class _WaveformBarsState extends State<_WaveformBars>
       height: 40,
       child: AnimatedBuilder(
         animation: _controller,
-        builder: (_, __) {
+        builder: (_, _) {
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(12, (i) {

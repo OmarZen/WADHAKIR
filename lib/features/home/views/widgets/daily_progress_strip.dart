@@ -117,7 +117,7 @@ class _ProgressCard extends StatelessWidget {
 
     return FTappable(
       onPress: onTap,
-      child: FCard.raw(
+      child: FCard(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
           child: Row(
@@ -153,7 +153,7 @@ class _ProgressCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         height: 1.2,
                       ),
                     ),

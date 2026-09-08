@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/home/views/widgets/grids/feature_grid_card.dart';
 import 'package:wadhakir/features/home/views/widgets/mosque_list_bottom_sheet.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 class NearestMosqueGridItem extends StatelessWidget {
   const NearestMosqueGridItem({super.key});
@@ -90,7 +91,7 @@ class NearestMosqueGridItem extends StatelessWidget {
 
     showFDialog(
       context: context,
-      builder: (context, style, animation) => FDialog(
+      builder: (context, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('home.location_services_disabled') ??
               'خدمات الموقع معطلة',
@@ -127,7 +128,7 @@ class NearestMosqueGridItem extends StatelessWidget {
 
     showFDialog(
       context: context,
-      builder: (context, style, animation) => FDialog(
+      builder: (context, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('home.location_permission_denied') ??
               'تم رفض إذن الموقع',
@@ -154,7 +155,7 @@ class NearestMosqueGridItem extends StatelessWidget {
 
     showFDialog(
       context: context,
-      builder: (context, style, animation) => FDialog(
+      builder: (context, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('home.location_permission_denied_permanently') ??
               'تم رفض إذن الموقع بشكل دائم',

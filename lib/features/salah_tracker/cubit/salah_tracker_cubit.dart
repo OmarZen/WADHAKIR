@@ -74,6 +74,9 @@ class SalahTrackerCubit extends Cubit<SalahTrackerState> {
     try {
       final log = await _getLogUseCase();
       _emitWithLog(log);
+      // Catch up any days that passed while the app was closed during a pause.
+      // ignore: unawaited_futures
+      syncPause();
     } catch (e, st) {
       developer.log('🟥 SalahTrackerCubit.loadLog: $e\n$st');
       emit(SalahTrackerError(e.toString()));
@@ -110,6 +113,12 @@ class SalahTrackerCubit extends Cubit<SalahTrackerState> {
   ) async {
     final current = await _ensureLog();
     final key = SalahLogModel.dateKey(_normalize(date));
+
+    // An excused day owes nothing, so nothing can be logged against it and no
+    // qada can accrue from it. Without this guard the branch below charges a
+    // make-up debt for prayers that were never obligatory.
+    if (current.isExcused(key)) return;
+
     final old = current.fardStatus(key, slot);
     if (old == status) return;
 
@@ -119,6 +128,109 @@ class SalahTrackerCubit extends Cubit<SalahTrackerState> {
     } else if (old == PrayerStatus.missed && status != PrayerStatus.missed) {
       next = next.adjustMakeUp(slot, -1);
     }
+    await _persist(next);
+  }
+
+  /// Mark [date] excused, or lift it. See [SalahLogModel.excusedDays].
+  ///
+  /// Marking a day excused unwinds any qada that day had already accrued —
+  /// otherwise a user who logs a missed Fajr and *then* pauses would be left
+  /// owing a prayer the ruling does not require of her.
+  Future<void> setExcused(DateTime date, bool excused) async {
+    final current = await _ensureLog();
+    await _persist(_applyExcused(current, _normalize(date), excused));
+  }
+
+  /// Pure helper shared by [setExcused], [startPause] and [syncPause].
+  SalahLogModel _applyExcused(SalahLogModel log, DateTime day, bool excused) {
+    final key = SalahLogModel.dateKey(day);
+    if (log.isExcused(key) == excused) return log;
+    var next = log;
+    if (excused) {
+      for (final slot in PrayerSlot.values) {
+        if (log.fardStatus(key, slot) == PrayerStatus.missed) {
+          next = next.adjustMakeUp(slot, -1);
+        }
+      }
+    }
+    // setExcused clears the day's statuses itself, so run it after the debt
+    // above has been read off the pre-change log.
+    return next.setExcused(key, excused);
+  }
+
+  /// Begin an open-ended pause starting today.
+  ///
+  /// One tap in, one tap out — the user is never asked to predict how long the
+  /// pause will last. [syncPause] fills each subsequent day in as it arrives.
+  Future<void> startPause() async {
+    final current = await _ensureLog();
+    if (current.excusedSince != null) return;
+    final today = _normalizedNow();
+    final next = _applyExcused(
+      current,
+      today,
+      true,
+    ).copyWith(excusedSince: SalahLogModel.dateKey(today));
+    await _persist(next);
+  }
+
+  /// End the current pause. Days already marked excused stay excused — they are
+  /// the historical record; only the open-ended state ends.
+  Future<void> endPause() async {
+    final current = await _ensureLog();
+    if (current.excusedSince == null) return;
+    await _persist(current.copyWith(clearExcusedSince: true));
+  }
+
+  /// While a pause is active, mark every day from its start through today as
+  /// excused. Idempotent, and a no-op when not paused.
+  ///
+  /// Called on load and on day rollover, so a pause that spans midnight (or a
+  /// week of the app not being opened) is filled in without the user tapping
+  /// anything.
+  Future<void> syncPause() async {
+    final current = await _ensureLog();
+    final since = current.excusedSince;
+    if (since == null) return;
+    final start = DateTime.tryParse(since);
+    if (start == null) {
+      // Unparseable anchor — drop it rather than loop forever.
+      await _persist(current.copyWith(clearExcusedSince: true));
+      return;
+    }
+    final today = _normalizedNow();
+    var next = current;
+    var cursor = _normalize(start);
+    while (!cursor.isAfter(today)) {
+      next = _applyExcused(next, cursor, true);
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    if (next == current) return;
+    await _persist(next);
+  }
+
+  /// Mark the inclusive range [from]..[to] excused, or lift it. Same qada
+  /// unwinding as [setExcused], applied per day.
+  Future<void> setExcusedRange(DateTime from, DateTime to, bool excused) async {
+    final current = await _ensureLog();
+    var next = current;
+    var cursor = _normalize(from);
+    final end = _normalize(to);
+    while (!cursor.isAfter(end)) {
+      final key = SalahLogModel.dateKey(cursor);
+      if (next.isExcused(key) != excused) {
+        if (excused) {
+          for (final slot in PrayerSlot.values) {
+            if (next.fardStatus(key, slot) == PrayerStatus.missed) {
+              next = next.adjustMakeUp(slot, -1);
+            }
+          }
+        }
+        next = next.setExcused(key, excused);
+      }
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    if (next == current) return;
     await _persist(next);
   }
 
@@ -204,6 +316,10 @@ class SalahTrackerCubit extends Cubit<SalahTrackerState> {
       _today = now;
       final log = _currentLog;
       if (log != null) _emitWithLog(log);
+      // A pause that spanned midnight must cover the new day too, otherwise
+      // today would silently start owing prayers again.
+      // ignore: unawaited_futures
+      syncPause();
     }
   }
 

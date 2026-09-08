@@ -282,6 +282,13 @@ class AzkarNotificationService {
           millisecond: 0,
           repeats: true,
           timeZone: _localTimeZone,
+          // Without this the plugin default (false) applies and Doze defers the
+          // reminder until the device next wakes — "أذكار الصباح" can arrive at
+          // noon, which is a broken feature rather than a late one.
+          // Deliberately NOT preciseAlarm: that can throw when the exact-alarm
+          // permission is absent, and the catch below simply logs and gives up,
+          // so the reminder would be lost entirely instead of merely delayed.
+          allowWhileIdle: true,
         ),
       );
     } catch (e) {
@@ -322,6 +329,9 @@ class AzkarNotificationService {
           millisecond: 0,
           repeats: true,
           timeZone: _localTimeZone,
+          // See _scheduleDaily — Doze would otherwise defer the Friday
+          // Al-Kahf reminder past the point where it is useful.
+          allowWhileIdle: true,
         ),
       );
     } catch (e) {

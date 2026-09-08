@@ -155,7 +155,7 @@ Future<void> showAboutDeveloperDialog(BuildContext context) async {
                       'دعم المطور',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -314,7 +314,7 @@ Widget _supportChip(
             style: TextStyle(
               color: theme.colorScheme.primary,
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

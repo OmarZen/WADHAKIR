@@ -63,7 +63,7 @@ class QiyamReminderTile extends StatelessWidget {
                     child: Text(
                       l10n?.translate('azkar_reminders.qiyam') ?? 'قيام الليل',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                     ),
@@ -177,7 +177,7 @@ class _ModeChip extends StatelessWidget {
               child: Text(
                 label,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                   color: selected
                       ? theme.colorScheme.primary
                       : theme.colorScheme.onSurface.withValues(alpha: 0.75),

@@ -18,5 +18,9 @@ abstract class AppSettingsRepository {
   Future<void> setOnboardingCompleted(bool completed);
   Future<void> setUserName(String name);
 
+  /// Persist the user's text scale. Implementations clamp to
+  /// [AppSettingsModel.minTextScale]..[AppSettingsModel.maxTextScale].
+  Future<void> setTextScale(double scale);
+
   Stream<AppSettingsModel> get settingsStream;
 }

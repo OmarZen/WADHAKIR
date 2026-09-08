@@ -503,7 +503,7 @@ class PrayerSettingsDialog extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: size.width * 0.03,
                                 color: Colors.grey[600],
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                             SizedBox(height: 4),

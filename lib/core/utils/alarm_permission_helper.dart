@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wadhakir/core/widgets/app_dialog.dart';
 
 /// Helper class to handle SCHEDULE_EXACT_ALARM permission
 /// Required for Android 14+ to schedule exact alarms for prayer times
@@ -89,7 +91,7 @@ class AlarmPermissionHelper {
 
     await showFDialog(
       context: context,
-      builder: (context, style, animation) => FDialog(
+      builder: (context, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('settings.permission_required_title') ??
               'الإذن مطلوب',
@@ -126,6 +128,17 @@ class AlarmPermissionHelper {
   /// authorization prompt directly — previously it just returned `true` without
   /// asking, so the master toggle "enabled" notifications while iOS never
   /// granted permission and silently dropped every notification.
+  ///
+  /// On Android 13+ it now asks the OS **first**.
+  ///
+  /// It used to show a custom dialog and then send the user to
+  /// `openAppSettings()`, which meant a fresh install never saw the one-tap
+  /// `POST_NOTIFICATIONS` system prompt at all — the single cheapest grant in
+  /// the flow was replaced by a trip through Settings, and every user who did
+  /// not complete that trip ended up with notifications silently off. The
+  /// settings route still exists, but only where it is the only thing that
+  /// works: after a permanent denial, when Android refuses to show the prompt
+  /// again.
   static Future<bool> requestNotificationPermission(
     BuildContext context,
   ) async {
@@ -144,6 +157,17 @@ class AlarmPermissionHelper {
     if (status.isGranted) {
       debugPrint('🔔 Notification permission already granted');
       return true;
+    }
+
+    // Not permanently denied → the OS will still show its own prompt. Ask for
+    // it directly; no dialog of ours can do better than one tap.
+    if (!status.isPermanentlyDenied) {
+      final requested = await Permission.notification.request();
+      debugPrint('🔔 Native POST_NOTIFICATIONS result: $requested');
+      if (requested.isGranted) return true;
+      // Falls through: a denial here may have been the permanent one, in
+      // which case Settings is the only remaining route.
+      if (!requested.isPermanentlyDenied) return false;
     }
 
     if (!context.mounted) return false;
@@ -167,13 +191,39 @@ class AlarmPermissionHelper {
     debugPrint('🔔 Opening app settings for manual permission grant...');
     await openAppSettings();
 
-    // Check permission status after user returns
+    // `openAppSettings()` completes when the settings screen has been
+    // LAUNCHED, not when the user comes back, so reading the status right
+    // after it is a race the app usually loses — it reported "still denied"
+    // for a user who had just granted it. Wait for this app to be resumed
+    // before believing anything.
+    await _awaitResume();
+
     final newStatus = await Permission.notification.status;
     debugPrint('🔔 Permission status after settings: $newStatus');
-    debugPrint('🔔 Is granted: ${newStatus.isGranted}');
 
     return newStatus.isGranted;
   }
+
+  /// Completes the next time the app returns to the foreground.
+  ///
+  /// Bounded, because the user may never come back: the wait is abandoned
+  /// after [_resumeTimeout] and the caller simply re-reads whatever the status
+  /// is then, which is no worse than the racy read this replaced.
+  static Future<void> _awaitResume() {
+    final completer = Completer<void>();
+    late final AppLifecycleListener listener;
+
+    void finish() {
+      if (completer.isCompleted) return;
+      completer.complete();
+      listener.dispose();
+    }
+
+    listener = AppLifecycleListener(onResume: finish);
+    return completer.future.timeout(_resumeTimeout, onTimeout: finish);
+  }
+
+  static const Duration _resumeTimeout = Duration(minutes: 2);
 
   /// Request all required permissions at once
   /// Call this when user enables notifications in settings
@@ -197,7 +247,7 @@ class AlarmPermissionHelper {
     // 3. One-time battery-optimization exemption prompt (improves on-time
     //    delivery on aggressive OEMs / deep Doze).
     if (context.mounted) {
-      await maybePromptBatteryOptimizationsOnce(context);
+      await maybePromptBatteryOptimizations(context);
     }
 
     return results;
@@ -217,7 +267,7 @@ class AlarmPermissionHelper {
     final l10n = context.l10n;
     final proceed = await showFDialog<bool>(
       context: context,
-      builder: (ctx, style, animation) => FDialog(
+      builder: (ctx, style, animation) => AppDialog(
         title: Text(
           l10n?.translate('settings.battery_opt_title') ?? 'تحسين البطارية',
         ),
@@ -249,17 +299,74 @@ class AlarmPermissionHelper {
     }
   }
 
-  /// Prompt for the battery-optimization exemption at most once (persisted via
-  /// SharedPreferences) so the user isn't nagged on every enable.
-  static Future<void> maybePromptBatteryOptimizationsOnce(
-    BuildContext context,
-  ) async {
+  /// Set once the exemption has actually been granted. Nothing re-asks after
+  /// that.
+  static const String batteryPromptedKey = 'battery_opt_prompted';
+
+  /// Epoch millis of the last time the user declined. Drives [_batteryCooldown].
+  static const String batteryDeferredAtKey = 'battery_opt_deferred_at';
+
+  /// How long to leave someone alone after they decline.
+  ///
+  /// The old code wrote "prompted" *before* showing the dialog, so a single
+  /// tap on "لاحقاً" silenced the prompt permanently — and this is the
+  /// exemption that keeps the adhan firing under Doze on aggressive OEM ROMs,
+  /// so silencing it permanently silences the app's core promise. Asking again
+  /// every time would be nagging; two weeks is long enough not to be, and
+  /// short enough that a user who was busy the first time gets another chance.
+  static const Duration _batteryCooldown = Duration(days: 14);
+
+  /// Whether the battery-optimization prompt is due.
+  ///
+  /// Pure and separate from the dialog so the decision can be tested without a
+  /// widget tree — the ordering bug this replaces was invisible precisely
+  /// because it lived inside an un-testable method.
+  @visibleForTesting
+  static bool shouldPromptBatteryOptimization({
+    required bool alreadyGranted,
+    required int? deferredAtMillis,
+    required DateTime now,
+  }) {
+    if (alreadyGranted) return false;
+    if (deferredAtMillis == null) return true;
+    final deferredAt = DateTime.fromMillisecondsSinceEpoch(deferredAtMillis);
+    // A timestamp in the future means the device clock moved backwards. Treat
+    // it as due rather than trusting it, so a clock change cannot suppress the
+    // prompt indefinitely.
+    if (deferredAt.isAfter(now)) return true;
+    return now.difference(deferredAt) >= _batteryCooldown;
+  }
+
+  /// Prompt for the battery-optimization exemption, at most once per
+  /// [_batteryCooldown] while the user keeps declining, and never again once
+  /// it is granted.
+  static Future<void> maybePromptBatteryOptimizations(
+    BuildContext context, {
+    DateTime? now,
+  }) async {
     if (!Platform.isAndroid) return;
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('battery_opt_prompted') ?? false) return;
-    await prefs.setBool('battery_opt_prompted', true);
+    final at = now ?? DateTime.now();
+
+    if (!shouldPromptBatteryOptimization(
+      alreadyGranted: prefs.getBool(batteryPromptedKey) ?? false,
+      deferredAtMillis: prefs.getInt(batteryDeferredAtKey),
+      now: at,
+    )) {
+      return;
+    }
+
     if (!context.mounted) return;
-    await requestIgnoreBatteryOptimizations(context);
+
+    // The flag is written AFTER the user answers, and only records what they
+    // actually did. That ordering is the whole fix.
+    final granted = await requestIgnoreBatteryOptimizations(context);
+    if (granted) {
+      await prefs.setBool(batteryPromptedKey, true);
+      await prefs.remove(batteryDeferredAtKey);
+    } else {
+      await prefs.setInt(batteryDeferredAtKey, at.millisecondsSinceEpoch);
+    }
   }
 }
 

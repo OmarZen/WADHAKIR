@@ -696,6 +696,12 @@ class _GlassWidgetResumeRefresherState
     // ignore: unawaited_futures
     NativePrayerTap.drain();
 
+    // If the device changed timezone while the app was closed, the native path
+    // kept the old schedule ringing and marked it stale. This is where that
+    // debt is paid: a real location fix and a full re-plan.
+    // ignore: unawaited_futures
+    context.read<PrayerTimesCubit>().replanIfScheduleWentStale();
+
     // Daily inspiration: if the day rolled over while backgrounded, advance to
     // today's item and reschedule the notification with the new body.
     // ignore: unawaited_futures

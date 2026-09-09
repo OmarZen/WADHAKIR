@@ -13,6 +13,7 @@ import 'package:wadhakir/domain/usecases/get_prayer_times_range_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_calculation_method_usecase.dart';
 import 'package:wadhakir/core/time/clock.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_schedule_planner.dart';
+import 'package:wadhakir/core/notifications/native_prayer_tap.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/features/pray_times/services/persistent_notification_manager.dart';
 import 'package:wadhakir/data/repositories/azkar_reminder_settings_repository_impl.dart';
@@ -128,6 +129,10 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     _initialLoadClaimed = false;
     await loadPrayerTimes(silent: !isFirstRun);
 
+    // Before the ordinary background refresh below, which is throttled and
+    // would happily keep the fix from the city they flew out of.
+    await replanIfScheduleWentStale();
+
     try {
       final locationChanged = await _repository.refreshLocation();
       if (locationChanged) {
@@ -142,6 +147,51 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   /// in-app refreshes (location/method/madhab/adjustment changes, app resume,
   /// date rollover) so the user never sees a spinner once times are loaded.
   Future<void> refreshSilently() => loadPrayerTimes(silent: true);
+
+  /// Repays the debt left by a timezone change that happened while the app was
+  /// closed.
+  ///
+  /// The native alarm path cannot recompute prayer times on its own, so when
+  /// the device changes zone it keeps the old schedule armed — never silent —
+  /// marks it stale and tells the user once. This is the other half: on the
+  /// next launch or resume the location is re-fetched for real and the whole
+  /// plan is rebuilt against it.
+  ///
+  /// A no-op on every ordinary launch: the flag is only ever set by
+  /// `PrayerSystemEventsReceiver`.
+  ///
+  /// The flag is NOT cleared here. It is cleared in
+  /// [scheduleNotificationsWithSettings], the one place that actually rewrites
+  /// the native ledger — so a fix that never arrives, or a reschedule that gets
+  /// skipped, costs a retry on the next resume instead of leaving the user on
+  /// the wrong city's times with nothing left to tell anyone.
+  Future<void> replanIfScheduleWentStale() async {
+    // Cheap re-entrancy guard: a cold start runs _initialLoad and the first
+    // resume within a second of each other, and a doubled location fix is a
+    // doubled GPS wake.
+    if (_replanningAfterZoneChange) return;
+    if (!await NativePrayerScheduleStale.isSet()) return;
+
+    _replanningAfterZoneChange = true;
+    debugPrint('🔔 Timezone changed while closed — re-planning on a fresh fix');
+    try {
+      try {
+        // forceLocationUpdate, not refreshLocation: the cached fix is the city
+        // they flew out of, and the throttled refresh would happily keep it.
+        await _repository.forceLocationUpdate();
+      } catch (e) {
+        // No fix available — permission revoked, GPS off, still on the plane.
+        // Re-plan anyway: the zone is at least right now, which is closer than
+        // the old plan, and the flag survives for the next attempt.
+        debugPrint('Could not get a fresh location after the zone change: $e');
+      }
+      await refreshPrayerTimes();
+    } finally {
+      _replanningAfterZoneChange = false;
+    }
+  }
+
+  bool _replanningAfterZoneChange = false;
 
   /// Silently recompute only if the calendar day changed since the last load
   /// (e.g. the app was backgrounded across midnight). No-op otherwise — cheap
@@ -336,6 +386,15 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
         // silently disables reminders for the whole session.
         _lastScheduleSignature = signature;
       }
+
+      // The native ledger now reflects the current plan — whether it was just
+      // rewritten or was already identical — so a timezone change no longer has
+      // an unpaid debt against it. Cleared HERE rather than where the flag is
+      // read, because everything between the two can fail: no location fix, a
+      // reschedule skipped because settings had not loaded. Anything that goes
+      // wrong before this line simply leaves the flag set for the next resume.
+      // ignore: unawaited_futures
+      NativePrayerScheduleStale.clear();
 
       // Persistent "next prayer" notification is an Android-only ongoing
       // notification concept — iOS can't pin one. It maintains its own live

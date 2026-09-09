@@ -95,6 +95,24 @@ object PrayerAlarmBridge {
 
                 "consumePendingTap" -> result.success(PrayerAlarmStore.consumePendingTap(appContext))
 
+                // Deliberately a peek, not a consume. Reading and clearing in
+                // one call would drop the flag the moment Dart ASKS, and the
+                // re-plan that answers it can still fail — no location fix, the
+                // reschedule listener skipping because settings had not loaded
+                // yet. The flag is cleared by "clearLocationStale" instead,
+                // once the ledger has actually been rewritten, so anything that
+                // goes wrong in between just means the next resume tries again.
+                "isLocationStale" -> result.success(PrayerAlarmStore.isLocationStale(appContext))
+
+                "clearLocationStale" -> {
+                    PrayerAlarmStore.setLocationStale(appContext, false)
+                    // The notice and the flag have one lifetime between them.
+                    // Leaving the card up after the times were fixed tells the
+                    // user to do something they have already done.
+                    PrayerNotifier.cancelLocationNotice(appContext)
+                    result.success(null)
+                }
+
                 else -> result.notImplemented()
             }
         }

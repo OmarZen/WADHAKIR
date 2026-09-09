@@ -2,6 +2,7 @@ package com.bloom.wadhakir
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import org.json.JSONObject
 
 /**
@@ -26,13 +27,52 @@ import org.json.JSONObject
  * running.
  */
 object PrayerAlarmStore {
+    private const val TAG = "PrayerAlarms"
+
     private const val PREFS_NAME = "wadhakir_prayer_alarms"
     private const val KEY_LEDGER = "ledger"
     private const val KEY_ARMED_IDS = "armed_ids"
     private const val KEY_PENDING_TAP = "pending_tap"
+    private const val KEY_LOCATION_STALE = "location_stale"
 
-    private fun prefs(context: Context): SharedPreferences =
-        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    /** Whether this process has already tried the one-time migration. */
+    @Volatile
+    private var migrated = false
+
+    /**
+     * Device-protected storage, so the ledger is readable **before the user
+     * unlocks the phone**.
+     *
+     * Normal app storage is credential-encrypted: after a reboot it cannot be
+     * opened until the first unlock. That is why re-arming used to have to wait
+     * for `BOOT_COMPLETED`, and why a prayer falling between the reboot and the
+     * unlock was simply missed. From here, `LOCKED_BOOT_COMPLETED` can re-arm
+     * the whole window while the lock screen is still up.
+     *
+     * The trade was made deliberately: this file holds prayer instants and the
+     * Arabic notification copy. It stays app-private either way, but before the
+     * first unlock it is not encrypted with the user's credential — and prayer
+     * times do imply an approximate location. Nothing else about the user is in
+     * here, and no other feature's data was moved.
+     */
+    private fun prefs(context: Context): SharedPreferences {
+        val app = context.applicationContext
+        val protected = app.createDeviceProtectedStorageContext()
+
+        if (!migrated) {
+            migrated = true
+            try {
+                // A no-op when there is nothing to move, which is every launch
+                // after the first. Must happen before either copy is opened in
+                // this process, hence the flag rather than a lazy field.
+                protected.moveSharedPreferencesFrom(app, PREFS_NAME)
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not migrate the alarm ledger to device-protected storage", e)
+            }
+        }
+
+        return protected.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
 
     /** The whole plan Dart last handed over, earliest first. */
     fun all(context: Context): List<PrayerAlarm> =
@@ -95,6 +135,25 @@ object PrayerAlarmStore {
             .putString(KEY_PENDING_TAP, JSONObject(payload as Map<*, *>).toString())
             .apply()
     }
+
+    /**
+     * Set when the device's timezone changes under an armed schedule.
+     *
+     * The alarms stay armed — going silent on a traveller is the failure this
+     * whole release exists to prevent — but their instants were computed for
+     * wherever the user was before, and no broadcast receiver can fix that:
+     * prayer times are geodetic as well as zone-dependent, `adhan_dart` lives
+     * in Dart, and the cached location is now the wrong city.
+     *
+     * So the flag says "the plan is stale", the user is told once, and Dart
+     * re-plans against a fresh location the next time the app is opened.
+     */
+    fun setLocationStale(context: Context, stale: Boolean) {
+        prefs(context).edit().putBoolean(KEY_LOCATION_STALE, stale).apply()
+    }
+
+    fun isLocationStale(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_LOCATION_STALE, false)
 
     fun consumePendingTap(context: Context): Map<String, String>? {
         val raw = prefs(context).getString(KEY_PENDING_TAP, null) ?: return null

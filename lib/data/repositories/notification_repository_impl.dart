@@ -8,6 +8,7 @@ import '../../domain/repositories/notification_repository.dart';
 import '../../core/time/clock.dart';
 import '../../core/constants/app_constants.dart';
 import '../../features/pray_times/services/prayer_schedule_planner.dart';
+import '../../features/pray_times/services/prayer_notification_content.dart';
 import '../../features/pray_times/services/prayer_scheduler.dart';
 import '../../features/pray_times/services/native_prayer_alarm_gateway.dart';
 import '../../features/pray_times/services/fallback_prayer_alarm_gateway.dart';
@@ -423,6 +424,26 @@ class _MobileNotificationRepositoryImpl
           channelKey: _channelKeyFeatureNudge,
           channelName: 'اكتشف ميزات التطبيق',
           channelDescription: 'تذكير لطيف بميزات التطبيق التي لم تجرّبها بعد',
+          importance: NotificationImportance.Default,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          enableVibration: true,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
+        ),
+        // Declared here but POSTED FROM KOTLIN — the "your timezone changed,
+        // open the app to update prayer times" notice, which is raised from a
+        // broadcast receiver with no Flutter engine alive. It has to be in this
+        // list anyway: `initialize()` REPLACES the whole channel set, so a
+        // channel only Kotlin creates would be deleted at the next cold start
+        // and the notice silently dropped for having no channel.
+        NotificationChannel(
+          channelKey: PrayerNotificationContent.locationNoticeChannelKey,
+          channelName: 'تنبيهات مواقيت الصلاة',
+          channelDescription: 'تنبيه عند تغيّر المنطقة الزمنية أو الموقع',
           importance: NotificationImportance.Default,
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),

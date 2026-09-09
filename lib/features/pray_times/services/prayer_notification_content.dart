@@ -30,6 +30,16 @@ class PrayerNotificationContent {
   /// The notification group all five prayers share.
   static const String groupKey = 'prayer_notifications';
 
+  /// The channel for the "your timezone changed" notice.
+  ///
+  /// **Must match `PrayerNotifier.NOTICE_CHANNEL_ID` in Kotlin.** That notice is
+  /// posted from a broadcast receiver with no Flutter engine alive, but the
+  /// channel has to be declared on the Dart side too: `initialize()` replaces
+  /// the entire channel set at every cold start, so one only Kotlin created
+  /// would be deleted and the notice dropped for having no channel.
+  static const String locationNoticeChannelKey =
+      'prayer_location_notice_channel';
+
   final int id;
 
   /// The Android channel that owns this notification's sound. For a chosen

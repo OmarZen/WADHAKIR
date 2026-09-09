@@ -6,16 +6,17 @@ import android.content.Intent
 import android.os.Build
 
 /**
- * Re-establishes everything the OS drops on a reboot or an app update.
+ * Restarts the native floating-dhikr foreground service after a device reboot
+ * or an app update, if the user had it enabled.
  *
- * Two jobs, in order of importance:
+ * The prayer alarms are NOT re-armed here. They belong to
+ * [PrayerSystemEventsReceiver], which is `directBootAware` and can run before
+ * the first unlock — this one cannot, because the check below reads ordinary
+ * app storage. Two receivers re-arming the same window would be harmless
+ * (`rearmWindow` is idempotent) but it would leave nobody obviously in charge.
  *
- *  1. **The prayer alarms.** AlarmManager forgets every alarm across a reboot,
- *     and `MY_PACKAGE_REPLACED` covers the case that used to lose them
- *     silently on every Play update. The ledger survives in SharedPreferences,
- *     so re-arming is just replaying it. Fasting/wird/azkar reminders are still
- *     rescheduled by awesome_notifications' own boot receiver.
- *  2. The floating-dhikr foreground service, if the user had it enabled.
+ * Fasting/wird/azkar reminders are still rescheduled by awesome_notifications'
+ * own boot receiver.
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -24,23 +25,6 @@ class BootReceiver : BroadcastReceiver() {
             action == "android.intent.action.QUICKBOOT_POWERON" ||
             action == Intent.ACTION_MY_PACKAGE_REPLACED
         if (!isBoot) return
-
-        // Before the floating-dhikr check below, which returns early for the
-        // vast majority of users who never enabled it — and used to take the
-        // whole receiver with it.
-        val pending = goAsync()
-        val appContext = context.applicationContext
-        Thread {
-            try {
-                PrayerAlarmScheduler.rearmWindow(appContext, System.currentTimeMillis())
-                PrayerAlarmReconcileWorker.enqueue(appContext)
-            } catch (_: Exception) {
-                // Nothing to recover here; the next app open re-plans.
-            } finally {
-                pending.finish()
-            }
-        }.start()
-
         if (!FloatingDhikrService.isEnabled(context)) return
 
         val service = Intent(context, FloatingDhikrService::class.java).apply {

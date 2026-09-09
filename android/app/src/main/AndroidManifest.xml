@@ -157,15 +157,49 @@
 
              It handles three actions, all defined in PrayerAlarmReceiver:
              the alarm itself, the 00:05 anchor that rebuilds the armed window,
-             and the notification's stop button. -->
+             and the notification's stop button.
+
+             directBootAware is NOT optional here, and its absence is invisible.
+             While the user is locked, the OS resolves broadcast targets with
+             MATCH_DIRECT_BOOT_AWARE only — so a receiver without it is not a
+             valid target even for an explicit intent. AlarmManager still counts
+             the alarm as delivered and forgets it; there is no redelivery at
+             unlock. Every alarm the direct-boot re-arm sets up would fire into
+             nothing, while logcat cheerfully reports them armed. -->
         <receiver
             android:name=".PrayerAlarmReceiver"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:directBootAware="true" />
 
-        <!-- Restarts the floating-dhikr service after reboot / app update, and
-             re-arms the prayer alarms — the OS drops every alarm on reboot, and
-             MY_PACKAGE_REPLACED covers the Play update that used to wipe them. -->
+        <!-- Every system event that can invalidate the armed prayer schedule.
+             directBootAware because the ledger now lives in device-protected
+             storage: LOCKED_BOOT_COMPLETED re-arms the whole window while the
+             lock screen is still up, so a prayer falling between a reboot and
+             the first unlock is no longer missed.
+
+             MY_PACKAGE_REPLACED is the one that used to lose every alarm
+             silently on each Play update. TIMEZONE_CHANGED cannot fix the
+             instants on its own — see PrayerSystemEventsReceiver. -->
+        <receiver
+            android:name=".PrayerSystemEventsReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Restarts the floating-dhikr service after reboot / app update.
+             Prayer alarms are handled above, not here. -->
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

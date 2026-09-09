@@ -167,7 +167,12 @@ flutter {
 dependencies {
     // Required for edge-to-edge support on Android 15 (API 35)
     implementation("androidx.core:core-ktx:1.13.1")
-    
+
+    // Reconciles the prayer alarm window every six hours. Repair only — the
+    // adhan itself is delivered by AlarmManager.setAlarmClock, because periodic
+    // work is the first thing OEM power managers defer.
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+
     // Google Play feature delivery (Android 14 compatible)
     implementation("com.google.android.play:feature-delivery:2.1.0")
     implementation("com.google.android.play:feature-delivery-ktx:2.1.0")

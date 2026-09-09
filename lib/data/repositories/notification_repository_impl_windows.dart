@@ -10,6 +10,10 @@ class NotificationRepositoryImplWindows implements NotificationRepository {
   late final WindowsNotification _winNotifyPlugin;
   bool _isInitialized = false;
 
+  /// There is no `AlarmManager` on Windows. See [NotificationRepository].
+  @override
+  bool get usesNativeAlarms => false;
+
   // Track scheduled notifications
   final Map<int, Map<String, dynamic>> _scheduledNotifications = {};
 

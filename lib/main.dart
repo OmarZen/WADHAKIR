@@ -10,6 +10,7 @@ import 'package:wadhakir/core/app/restart_required.dart';
 import 'package:wadhakir/core/routes/app_router.dart';
 import 'package:wadhakir/core/notifications/app_notification_listeners.dart';
 import 'package:wadhakir/core/notifications/notification_router.dart';
+import 'package:wadhakir/core/notifications/native_prayer_tap.dart';
 import 'package:wadhakir/core/notifications/pending_notification_action.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/app_theme/forui_theme.dart';
@@ -180,6 +181,11 @@ void main() async {
   } catch (e) {
     debugPrint('getInitialNotificationAction failed (non-fatal): $e');
   }
+
+  // The same thing for an adhan posted by the native alarm path. That
+  // notification never passes through the plugin, so the call above cannot see
+  // it — its payload waits in the Kotlin side's own storage instead.
+  await NativePrayerTap.drain();
 
   // Set the home_widget App Group id ONCE, up front — BEFORE any cubit renders
   // or saves widget data. Without it, iOS widget writes fail with "No groupId
@@ -682,6 +688,13 @@ class _GlassWidgetResumeRefresherState
     // persists from the stale log. The app is waiting to be restarted at that
     // point and none of this housekeeping matters. See RestartRequired.
     if (RestartRequired.isLatched) return;
+
+    // A tap on a natively-posted adhan resumes the app rather than delivering a
+    // plugin action, so this is where a warm tap is collected. Placed after the
+    // restart latch on purpose: the native side only clears the payload when it
+    // hands it over, so it keeps until a resume that can actually route it.
+    // ignore: unawaited_futures
+    NativePrayerTap.drain();
 
     // Daily inspiration: if the day rolled over while backgrounded, advance to
     // today's item and reschedule the notification with the new body.

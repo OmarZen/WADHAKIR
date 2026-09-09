@@ -37,6 +37,35 @@ class _FakeGateway implements PrayerAlarmGateway {
   }
 }
 
+/// A gateway that batches, like the native `AlarmManager` bridge.
+class _BatchingFakeGateway extends _FakeGateway
+    implements BatchingPrayerAlarmGateway {
+  Object? commitThrows;
+
+  /// Forces a real async gap inside every arm, so two overlapping reschedules
+  /// would genuinely interleave if the scheduler let them.
+  bool slowArm = false;
+
+  @override
+  Future<void> arm(
+    PlannedPrayerNotification planned, {
+    String? locationName,
+  }) async {
+    if (slowArm) await Future<void>.delayed(Duration.zero);
+    return super.arm(planned, locationName: locationName);
+  }
+
+  @override
+  Future<void> commit() async {
+    calls.add('commit');
+    final failure = commitThrows;
+    if (failure != null) throw failure;
+  }
+
+  @override
+  Future<void> abandon() async => calls.add('abandon');
+}
+
 const _cairoTimes = {
   'Fajr': (4, 41),
   'Dhuhr': (11, 58),
@@ -291,6 +320,143 @@ void main() {
       expect(result.planned, hasLength(20));
       expect(result.dayCount, 4);
       expect(result.isEmpty, isFalse);
+    });
+  });
+
+  group('a batching gateway', () {
+    late _BatchingFakeGateway batching;
+    late PrayerScheduler batchingScheduler;
+
+    setUp(() {
+      batching = _BatchingFakeGateway();
+      batchingScheduler = PrayerScheduler(
+        batching,
+        const PrayerSchedulePlanner(),
+        FixedClock(DateTime(2026, 3, 14, 4)),
+      );
+    });
+
+    test('is committed once, after every arm', () async {
+      await batchingScheduler.reschedule(
+        prayerTimesByDay: _horizon(1),
+        settings: _settings(),
+      );
+
+      expect(batching.calls.first, 'cancel');
+      expect(batching.calls.last, 'commit');
+      expect(batching.calls.where((c) => c == 'commit'), hasLength(1));
+    });
+
+    test('is still committed when the plan is empty', () async {
+      // Master toggle off. Without the commit the native side would keep the
+      // previous plan armed — turning notifications off would appear to do
+      // nothing, which is the R1 defect in its new clothes.
+      await batchingScheduler.reschedule(
+        prayerTimesByDay: _horizon(1),
+        settings: _settings(masterEnabled: false),
+      );
+
+      expect(batching.calls, ['cancel', 'commit']);
+    });
+
+    test('is not committed when the reschedule is suppressed', () async {
+      await batchingScheduler.reschedule(
+        prayerTimesByDay: _horizon(1),
+        settings: _settings(),
+      );
+      batching.calls.clear();
+
+      await batchingScheduler.reschedule(
+        prayerTimesByDay: _horizon(1),
+        settings: _settings(),
+      );
+
+      expect(batching.calls, isEmpty);
+    });
+
+    test('overlapping reschedules never interleave into one sweep', () async {
+      // A batching gateway accumulates a whole sweep in ONE buffer with nothing
+      // to tell two senders apart. Interleaved, the second sweep's cancel
+      // empties it mid-flight and the first sweep's commit applies a plan with
+      // most of its alarms missing — a user left with two prayers armed out of
+      // ten and no error anywhere.
+      batching.slowArm = true;
+
+      await Future.wait([
+        batchingScheduler.reschedule(
+          prayerTimesByDay: _horizon(1),
+          settings: _settings(),
+          force: true,
+        ),
+        batchingScheduler.reschedule(
+          prayerTimesByDay: _horizon(1),
+          settings: _settings(),
+          force: true,
+        ),
+      ]);
+
+      // Two complete, separated transactions: cancel ... commit, then again.
+      final boundaries = batching.calls
+          .where((c) => c == 'cancel' || c == 'commit')
+          .toList();
+      expect(boundaries, ['cancel', 'commit', 'cancel', 'commit']);
+
+      final firstCommit = batching.calls.indexOf('commit');
+      final secondCancel = batching.calls.indexOf('cancel', firstCommit);
+      expect(
+        batching.calls
+            .sublist(0, firstCommit)
+            .where((c) => c.startsWith('arm:')),
+        hasLength(5),
+        reason: 'the first sweep commits all five of its alarms',
+      );
+      expect(secondCancel, firstCommit + 1);
+    });
+
+    test('a failed sweep does not poison the ones after it', () async {
+      // The queue must survive a throw, or one transient failure would silently
+      // block every reschedule for the rest of the session.
+      batching.armThrows = StateError('denied');
+      await expectLater(
+        batchingScheduler.reschedule(
+          prayerTimesByDay: _horizon(1),
+          settings: _settings(),
+        ),
+        throwsStateError,
+      );
+
+      batching.armThrows = null;
+      batching.calls.clear();
+      await batchingScheduler.reschedule(
+        prayerTimesByDay: _horizon(1),
+        settings: _settings(),
+      );
+
+      expect(batching.calls.last, 'commit');
+    });
+
+    test('a failed commit does not advance the signature', () async {
+      // The plan was computed and sent but never applied. If the guard recorded
+      // it as done, every retry for the rest of the session would be skipped
+      // and the user would have no alarms at all.
+      batching.commitThrows = StateError('ledger write failed');
+
+      await expectLater(
+        batchingScheduler.reschedule(
+          prayerTimesByDay: _horizon(1),
+          settings: _settings(),
+        ),
+        throwsStateError,
+      );
+
+      batching.commitThrows = null;
+      batching.calls.clear();
+      await batchingScheduler.reschedule(
+        prayerTimesByDay: _horizon(1),
+        settings: _settings(),
+      );
+
+      expect(batching.calls, contains('commit'));
     });
   });
 }

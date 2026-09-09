@@ -25,6 +25,13 @@ class PrayerNotificationService {
     _isInitialized = true;
   }
 
+  /// Whether the native `AlarmManager` bridge owns the prayer alarms.
+  ///
+  /// False until [initialize] has run. Read by `PrayerTimesCubit` to size the
+  /// horizon it computes: sixty days for the native ledger, seven for the
+  /// plugin's cancel-sweep id space.
+  bool get nativeAlarmsActive => _repository.usesNativeAlarms;
+
   /// Request notification permissions
   Future<bool> requestPermissions() async {
     return await _repository.requestPermissions();

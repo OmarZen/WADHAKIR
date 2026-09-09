@@ -57,6 +57,14 @@ class AppConstants {
 
   // Feature-discovery / re-engagement nudges
   static const String featureNudgeEnabledKey = 'feature_nudge_enabled';
+
+  /// Escape hatch for the native `AlarmManager` prayer alarms.
+  ///
+  /// Set true to put this device back on the `awesome_notifications` path
+  /// without shipping a build. Absent/false means native, which is the default
+  /// for everyone. Reached from Settings by long-pressing the version number.
+  static const String nativePrayerAlarmsDisabledKey =
+      'native_prayer_alarms_disabled';
   static const String featureNudgeLastShownKey = 'feature_nudge_last_shown';
   static const String featureNudgeShownIdsKey = 'feature_nudge_shown_ids';
 

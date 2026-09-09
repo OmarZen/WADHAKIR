@@ -151,7 +151,21 @@
                 android:value="floating_dhikr_reminder_over_other_apps" />
         </service>
 
-        <!-- Restarts the floating-dhikr service after reboot / app update. -->
+        <!-- The prayer adhan fire path. Not exported and given no intent filter:
+             every intent that reaches it is an explicit one this app created,
+             so no other app can make it ring an adhan or wipe the schedule.
+
+             It handles three actions, all defined in PrayerAlarmReceiver:
+             the alarm itself, the 00:05 anchor that rebuilds the armed window,
+             and the notification's stop button. -->
+        <receiver
+            android:name=".PrayerAlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- Restarts the floating-dhikr service after reboot / app update, and
+             re-arms the prayer alarms — the OS drops every alarm on reboot, and
+             MY_PACKAGE_REPLACED covers the Play update that used to wipe them. -->
         <receiver
             android:name=".BootReceiver"
             android:enabled="true"

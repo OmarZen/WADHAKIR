@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/settings/view/widgets/alarm_diagnostics_sheet.dart';
 
 class AboutSectionWidgets extends StatelessWidget {
   const AboutSectionWidgets({super.key});
@@ -138,9 +139,17 @@ class AboutSectionWidgets extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Center(
-                    child: _VersionText(
-                      label: l10n?.translate('settings.version') ?? 'الإصدار',
-                      style: theme.textTheme.bodyMedium?.copyWith(fontSize: 13),
+                    // Long-press opens the alarm escape hatch. Hidden on
+                    // purpose — see AlarmDiagnosticsSheet.
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onLongPress: () => AlarmDiagnosticsSheet.show(context),
+                      child: _VersionText(
+                        label: l10n?.translate('settings.version') ?? 'الإصدار',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),

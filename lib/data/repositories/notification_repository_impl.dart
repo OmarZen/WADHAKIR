@@ -6,9 +6,13 @@ import '../models/notification_settings_model.dart';
 import '../../core/constants/adhan_sounds.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../../core/time/clock.dart';
+import '../../core/constants/app_constants.dart';
 import '../../features/pray_times/services/prayer_schedule_planner.dart';
 import '../../features/pray_times/services/prayer_scheduler.dart';
+import '../../features/pray_times/services/native_prayer_alarm_gateway.dart';
+import '../../features/pray_times/services/fallback_prayer_alarm_gateway.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Factory class to return the appropriate notification repository implementation
 /// based on the current platform
@@ -39,6 +43,9 @@ class NotificationRepositoryImpl implements NotificationRepository {
 
   @override
   Future<void> initialize() => _platformRepository.initialize();
+
+  @override
+  bool get usesNativeAlarms => _platformRepository.usesNativeAlarms;
 
   @override
   Future<bool> requestPermissions() => _platformRepository.requestPermissions();
@@ -176,11 +183,21 @@ class _MobileNotificationRepositoryImpl
   /// Cancels and re-arms the prayer id window from a freshly planned schedule.
   /// This class is its own [PrayerAlarmGateway] — the scheduler decides, the
   /// methods below render.
-  late final PrayerScheduler _scheduler = PrayerScheduler(
+  ///
+  /// Starts on the plugin gateway (`this`) and is replaced during [initialize]
+  /// if the native `AlarmManager` bridge answers. Not `final`, because which
+  /// gateway owns the alarm table is only knowable after an async probe, and a
+  /// reschedule that arrived before that probe finished must still work.
+  late PrayerScheduler _scheduler = PrayerScheduler(
     this,
     const PrayerSchedulePlanner(),
     _clock,
   );
+
+  bool _usesNativeAlarms = false;
+
+  @override
+  bool get usesNativeAlarms => _usesNativeAlarms;
 
   // --- PrayerAlarmGateway ---------------------------------------------------
 
@@ -424,6 +441,92 @@ class _MobileNotificationRepositoryImpl
         ),
       ],
     );
+
+    // Channels exist now, which matters: the native path posts INTO the channels
+    // created above, and a notification sent to a channel key that does not
+    // exist is dropped by Android without an error anywhere.
+    await _resolveAlarmOwner();
+  }
+
+  /// Decides, once per launch, whether the native `AlarmManager` bridge or
+  /// `awesome_notifications` owns the prayer alarms.
+  ///
+  /// Android only, native by default, with two ways back to the plugin: the
+  /// user's escape-hatch setting, and a bridge that does not answer. Both paths
+  /// purge the native table on the way out — a committed native plan stays
+  /// armed until something explicitly takes it back, and leaving it armed
+  /// underneath a plugin schedule would sound every adhan twice.
+  Future<void> _resolveAlarmOwner() async {
+    if (!Platform.isAndroid) return;
+
+    const bridge = MethodChannelAlarmBridge();
+    const native = NativePrayerAlarmGateway(bridge);
+
+    bool disabledByUser = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      disabledByUser =
+          prefs.getBool(AppConstants.nativePrayerAlarmsDisabledKey) ?? false;
+    } catch (e) {
+      // A prefs failure must not decide something this important by accident.
+      debugPrint('Could not read the native-alarm setting, assuming on: $e');
+    }
+
+    final available = await bridge.isAvailable();
+
+    if (disabledByUser || !available) {
+      if (available) {
+        // Only reachable when the user turned it off. Hand the schedule back to
+        // the plugin cleanly.
+        try {
+          await native.abandon();
+        } catch (e) {
+          debugPrint('Could not purge the native alarm table: $e');
+        }
+      }
+      debugPrint(
+        disabledByUser
+            ? '🔔 Native prayer alarms disabled by setting'
+            : '🔔 No native alarm bridge; staying on awesome_notifications',
+      );
+      return;
+    }
+
+    // Take the plugin's prayer schedules back BEFORE the native side arms the
+    // same instants.
+    //
+    // An install upgrading from a build that used the plugin still has up to
+    // twelve days of prayer notifications persisted inside
+    // awesome_notifications, and the plugin's own MY_PACKAGE_REPLACED receiver
+    // re-arms them without any app process. Without this sweep both owners hold
+    // the same prayers and every adhan fires twice for a week after the update.
+    // The same applies to a device coming back from the escape hatch, or from a
+    // session that degraded and armed the plugin.
+    try {
+      await cancelIds(PrayerSchedulePlanner.cancellableIds);
+    } catch (e) {
+      debugPrint('Could not sweep the plugin before native takeover: $e');
+    }
+
+    _scheduler = PrayerScheduler(
+      FallbackPrayerAlarmGateway(
+        native,
+        this,
+        onDegraded: (error, _) {
+          // The plugin cannot carry a sixty-day plan: its cancel sweep only
+          // reaches [PrayerSchedulePlanner.cancelDayWindow] days of ids, so
+          // anything beyond that would be armed and never cancellable. Saying
+          // so here shrinks the horizon the cubit computes from the next
+          // reschedule onward.
+          _usesNativeAlarms = false;
+          debugPrint('🔔 Native alarms degraded to the plugin: $error');
+        },
+      ),
+      const PrayerSchedulePlanner(),
+      _clock,
+    );
+    _usesNativeAlarms = true;
+    debugPrint('🔔 Prayer alarms owned by native AlarmManager');
   }
 
   @override
@@ -827,10 +930,35 @@ class _MobileNotificationRepositoryImpl
   /// (persistent 999, fasting 5001–5999, wird 6001/6099, azkar 7100+).
   @override
   Future<void> cancelPrayerSchedules() async {
+    // BOTH owners, unconditionally, and never only "the active one".
+    //
+    // Which gateway holds the schedule is decided once per launch and can
+    // differ from the launch that armed it — an upgrade, the escape hatch being
+    // flipped, a session that degraded. This is the path behind "turn the adhan
+    // off", and asking the wrong owner means the app keeps calling the adhan
+    // after the user told it to stop. On the native path that is up to sixty
+    // days of it.
     await cancelIds(PrayerSchedulePlanner.cancellableIds);
+    await _purgeNativeAlarms();
     // The next reschedule must actually re-arm: the OS table is now empty, so
     // an unchanged plan is no longer an unchanged reality.
     _scheduler.invalidate();
+  }
+
+  /// Takes back everything the native bridge has armed, if there is one.
+  ///
+  /// Safe to call on iOS, on a build without the Kotlin side, and when the
+  /// native path was never active — the bridge either is not there or has an
+  /// empty ledger.
+  Future<void> _purgeNativeAlarms() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await const NativePrayerAlarmGateway(
+        MethodChannelAlarmBridge(),
+      ).abandon();
+    } catch (e) {
+      debugPrint('Could not purge the native alarm table: $e');
+    }
   }
 
   /// Debug-only: verify iOS actually KEPT every prayer notification we asked for.
@@ -880,6 +1008,12 @@ class _MobileNotificationRepositoryImpl
   @override
   Future<void> cancelAllNotifications() async {
     await AwesomeNotifications().cancelAll();
+    // The plugin's cancelAll reaches only the plugin. Prayer alarms may be
+    // owned by the native bridge instead, and "cancel everything" leaving the
+    // adhan ringing for the next sixty days is the worst possible reading of
+    // this method's name.
+    await _purgeNativeAlarms();
+    _scheduler.invalidate();
   }
 
   @override

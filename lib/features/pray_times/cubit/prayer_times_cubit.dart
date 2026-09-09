@@ -64,6 +64,11 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
   // did not expect.
   int get _scheduleHorizonDays => PrayerSchedulePlanner.horizonDays(
     isIOS: defaultTargetPlatform == TargetPlatform.iOS,
+    // Sixty days once the native bridge owns the table. It stores the whole
+    // plan and arms its own short window, so the horizon is no longer bounded
+    // by how many live OS alarms are reasonable — which is what stopped the
+    // adhan for anyone who left the app closed for a week.
+    nativeAlarms: _notificationService.nativeAlarmsActive,
   );
 
   // Signature of the last scheduled plan. Redundant reschedule requests with an

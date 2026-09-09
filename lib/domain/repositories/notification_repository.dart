@@ -11,6 +11,16 @@ abstract class NotificationRepository {
   /// Check if notification permissions are granted
   Future<bool> hasPermissions();
 
+  /// Whether prayer alarms are owned by the native `AlarmManager` bridge rather
+  /// than by `awesome_notifications`.
+  ///
+  /// Valid only after [initialize] has completed; false before, and false
+  /// forever on iOS and Windows. Callers use it to size the scheduling horizon:
+  /// the native path is handed sixty days because it stores them and arms its
+  /// own window, while the plugin path must stay inside the twelve-day id space
+  /// its cancel sweep can reach.
+  bool get usesNativeAlarms;
+
   /// Schedule notifications for a specific prayer
   /// [prayerName] - Name of the prayer (e.g., 'Fajr', 'Dhuhr')
   /// [prayerTime] - DateTime when the prayer should be notified

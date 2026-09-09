@@ -27,6 +27,33 @@ abstract interface class PrayerAlarmGateway {
   Future<void> arm(PlannedPrayerNotification planned, {String? locationName});
 }
 
+/// The optional half of the gateway contract, for a gateway that treats one
+/// sweep as a transaction.
+///
+/// The plugin arms each notification as it arrives and has nothing to commit.
+/// The native bridge cannot: a sixty-day plan is three hundred alarms, and
+/// persisting the ledger on each one would rewrite a growing JSON document
+/// three hundred times. So it buffers, and [PrayerScheduler] tells it when the
+/// sweep is complete.
+///
+/// The transaction is also what makes a crashed sweep safe. Nothing is applied
+/// until [commit], so an app killed halfway through leaves the PREVIOUS
+/// schedule armed and intact, rather than a half-written one.
+abstract interface class BatchingPrayerAlarmGateway {
+  /// Applies the sweep built since the last [PrayerAlarmGateway.cancelIds].
+  Future<void> commit();
+
+  /// Gives up: cancels everything this gateway has armed and drops its stored
+  /// plan.
+  ///
+  /// Distinct from [PrayerAlarmGateway.cancelIds] precisely because a batching
+  /// gateway's sweep does NOT cancel anything — the previous schedule stays
+  /// live until [commit] replaces it. Handing over to another gateway therefore
+  /// needs this, or the committed plan keeps ringing underneath the new owner's
+  /// and every adhan sounds twice.
+  Future<void> abandon();
+}
+
 /// What a reschedule did.
 class PrayerScheduleResult {
   final List<PlannedPrayerNotification> planned;
@@ -103,6 +130,35 @@ class PrayerScheduler {
     required NotificationSettingsModel settings,
     String? locationName,
     bool force = false,
+  }) {
+    // Serialised, because a sweep is three phases — cancel, arm each of up to
+    // three hundred, commit — and a batching gateway accumulates them in ONE
+    // buffer with nothing to tell two senders apart. Reschedules routinely
+    // arrive together: a settings change, a prayer-time reload and a day
+    // rollover can all land in the same frame. Interleaved, the second sweep's
+    // cancel empties the buffer mid-flight and the first sweep's commit then
+    // applies a plan with most of its alarms missing.
+    final result = _queue.then(
+      (_) => _rescheduleSerially(
+        prayerTimesByDay: prayerTimesByDay,
+        settings: settings,
+        locationName: locationName,
+        force: force,
+      ),
+    );
+    // The chain must survive a failed sweep, or one thrown exception would
+    // poison every reschedule for the rest of the session.
+    _queue = result.then((_) {}, onError: (_) {});
+    return result;
+  }
+
+  Future<void> _queue = Future<void>.value();
+
+  Future<PrayerScheduleResult> _rescheduleSerially({
+    required Map<DateTime, Map<String, DateTime>> prayerTimesByDay,
+    required NotificationSettingsModel settings,
+    String? locationName,
+    bool force = false,
   }) async {
     final plan = preview(
       prayerTimesByDay: prayerTimesByDay,
@@ -121,6 +177,14 @@ class PrayerScheduler {
     await _gateway.cancelIds(PrayerSchedulePlanner.cancellableIds);
     for (final planned in plan) {
       await _gateway.arm(planned, locationName: locationName);
+    }
+
+    // Closes the sweep for a gateway that batches. Sequenced here rather than
+    // in the repository because this class already owns "cancel first, then
+    // arm" — "then apply" is the same responsibility, and a caller that forgot
+    // to commit would leave a plan that was computed, sent and never armed.
+    if (_gateway case final BatchingPrayerAlarmGateway batching) {
+      await batching.commit();
     }
 
     // Recorded only after the arming actually completes. If the gateway throws

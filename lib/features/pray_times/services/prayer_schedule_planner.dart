@@ -135,6 +135,20 @@ class PrayerSchedulePlanner {
   /// covers the widest horizon this app has shipped with room to spare.
   static const int cancelDayWindow = 12;
 
+  /// How many days the native alarm bridge is handed.
+  ///
+  /// Sixty days is two months of adhan for a user who never opens the app —
+  /// the exact person C1 fails today. The native side stores all of it and arms
+  /// only its own short window, so the cost is a few hundred rows in its
+  /// SharedPreferences, not hundreds of live OS alarms.
+  ///
+  /// It is deliberately not longer. Every stored day is computed against the
+  /// last known location, and an alarm armed three months out for a user who
+  /// has since moved is a wrong adhan rather than a missing one. Sixty days
+  /// keeps the self-healing chain fed while any realistic return to the app
+  /// re-plans against where they actually are.
+  static const int nativeHorizonDays = 60;
+
   /// How many days ahead to schedule.
   ///
   /// Android has no cap. iOS keeps only the 64 soonest-firing pending requests
@@ -145,7 +159,15 @@ class PrayerSchedulePlanner {
   /// retention, so shrinking this further would not help — it would free slots
   /// that far-future fasting requests immediately consume and then lose anyway,
   /// trading the app's most important alert for its least important.
-  static int horizonDays({required bool isIOS}) => isIOS ? 5 : 7;
+  ///
+  /// [nativeAlarms] widens it to [nativeHorizonDays]. That is only safe because
+  /// the native gateway owns its whole table and clears it wholesale — the
+  /// plugin path cannot use this horizon, because [cancellableIds] covers
+  /// [cancelDayWindow] days and ids beyond it would be armed and never swept.
+  static int horizonDays({required bool isIOS, bool nativeAlarms = false}) {
+    if (nativeAlarms) return nativeHorizonDays;
+    return isIOS ? 5 : 7;
+  }
 
   /// Every id the prayer schedule may occupy, for the cancel sweep.
   static List<int> get cancellableIds => [

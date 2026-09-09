@@ -45,7 +45,11 @@ class MainActivity : AudioServiceActivity() {
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        
+
+        // The prayer alarm bridge. Registered first because a cold start caused
+        // by tapping an adhan needs it up before Dart asks for the pending tap.
+        PrayerAlarmBridge.register(this, flutterEngine.dartExecutor.binaryMessenger)
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, widgetChannel).setMethodCallHandler { call, result ->
             // Method channel for Flutter to receive navigation commands
             result.success(null)
@@ -232,6 +236,7 @@ class MainActivity : AudioServiceActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        capturePrayerAlarmTap(intent)
         when (intent?.action) {
             "HIJRI_PREVIOUS_MONTH" -> {
                 flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
@@ -243,6 +248,41 @@ class MainActivity : AudioServiceActivity() {
                     MethodChannel(messenger, widgetChannel).invokeMethod("nextMonth", null)
                 }
             }
+        }
+    }
+
+    /**
+     * Stashes the payload of a tapped adhan notification for the Dart router.
+     *
+     * The notification is posted by [PrayerNotifier] with no Flutter engine
+     * alive, so its tap is an ordinary activity intent rather than something
+     * `awesome_notifications` reports. Dart cannot be called yet either — on a
+     * cold start the engine comes up well after this runs — so the payload waits
+     * in [PrayerAlarmStore] and Dart collects it once its navigator exists.
+     */
+    private fun capturePrayerAlarmTap(intent: Intent?) {
+        val source = intent ?: return
+        val extras = source.extras ?: return
+        val payload = extras.keySet()
+            .filter { it.startsWith(PrayerNotifier.EXTRA_PAYLOAD_PREFIX) }
+            .mapNotNull { key ->
+                extras.getString(key)?.let {
+                    key.removePrefix(PrayerNotifier.EXTRA_PAYLOAD_PREFIX) to it
+                }
+            }
+            .toMap()
+        if (payload.isEmpty()) return
+        PrayerAlarmStore.setPendingTap(this, payload)
+
+        // Consume the extras from the launching intent.
+        //
+        // getIntent() keeps returning the SAME intent for the life of the
+        // activity, and onCreate runs again on every configuration change — a
+        // rotation, a theme switch, the user changing font size. Without this
+        // the payload is re-captured and re-routed each time, so the app jumps
+        // back to the prayer screen long after the adhan was dismissed.
+        payload.keys.forEach {
+            source.removeExtra("${PrayerNotifier.EXTRA_PAYLOAD_PREFIX}$it")
         }
     }
 

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/features/share/views/widgets/occasion_card.dart';
-import 'package:wadhakir/features/home/cubit/unsplash_cubit.dart';
-import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
 // Hadith card removed: feature and assets pruned
 import 'package:wadhakir/features/home/views/widgets/prayer_card_widget.dart';
 import 'package:wadhakir/features/home/views/widgets/welcome_section_widget.dart';
@@ -19,12 +16,7 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => UnsplashCubit()..fetchMosqueImages(),
-      child: const HomeScreenContent(),
-    );
-  }
+  Widget build(BuildContext context) => const HomeScreenContent();
 }
 
 class HomeScreenContent extends StatefulWidget {
@@ -54,46 +46,35 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      body: BlocBuilder<UnsplashCubit, UnsplashState>(
-        builder: (context, state) {
-          final mosqueImage = context
-              .read<UnsplashCubit>()
-              .getCurrentMosqueImage();
-
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              // Welcome Section with Mosque Image
-              SliverToBoxAdapter(
-                child: WelcomeSectionWidget(
-                  mosqueImage: mosqueImage,
-                  hijriDate: hijriToday,
-                ),
-              ),
-              // Compact Prayer Times Card
-              SliverToBoxAdapter(child: CompactPrayerCardWidget()),
-              // Salah streak + today's prayers — "don't break the chain"
-              // Present on a Friday and on six annual occasions, and an
-              // empty box on every other day — see OccasionCard. High in the
-              // list because the whole point is that it is seen ON the day.
-              const SliverToBoxAdapter(child: OccasionCard()),
-              const SliverToBoxAdapter(child: HomeStreakBanner()),
-              // Daily progress (wird / adhkar / nawafil)
-              const SliverToBoxAdapter(child: DailyProgressStrip()),
-              // Verse/Dua of the Day card
-              const SliverToBoxAdapter(child: DailyInspirationCard()),
-              // Feature directory grouped into labelled sections
-              const SliverToBoxAdapter(child: MoreIslamicExcerptsWidget()),
-              // Religious occasions strip
-              const SliverToBoxAdapter(child: ReligiousOccasionsStrip()),
-              const SliverToBoxAdapter(child: SizedBox(height: 6)),
-              // Palestine Support Card
-              const SliverToBoxAdapter(child: PalestineSupportCardWidget()),
-              // more space
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
-          );
-        },
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // The hero. Its ground is drawn in code now — see HeroBackdrop.
+          SliverToBoxAdapter(
+            child: WelcomeSectionWidget(hijriDate: hijriToday),
+          ),
+          // Compact Prayer Times Card
+          SliverToBoxAdapter(child: CompactPrayerCardWidget()),
+          // Salah streak + today's prayers — "don't break the chain"
+          // Present on a Friday and on six annual occasions, and an
+          // empty box on every other day — see OccasionCard. High in the
+          // list because the whole point is that it is seen ON the day.
+          const SliverToBoxAdapter(child: OccasionCard()),
+          const SliverToBoxAdapter(child: HomeStreakBanner()),
+          // Daily progress (wird / adhkar / nawafil)
+          const SliverToBoxAdapter(child: DailyProgressStrip()),
+          // Verse/Dua of the Day card
+          const SliverToBoxAdapter(child: DailyInspirationCard()),
+          // Feature directory grouped into labelled sections
+          const SliverToBoxAdapter(child: MoreIslamicExcerptsWidget()),
+          // Religious occasions strip
+          const SliverToBoxAdapter(child: ReligiousOccasionsStrip()),
+          const SliverToBoxAdapter(child: SizedBox(height: 6)),
+          // Palestine Support Card
+          const SliverToBoxAdapter(child: PalestineSupportCardWidget()),
+          // more space
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
       ),
     );
   }

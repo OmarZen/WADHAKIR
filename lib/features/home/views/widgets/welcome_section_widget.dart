@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_core/core.dart';
@@ -7,7 +6,7 @@ import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/utils/date_utils.dart';
 import '../../../../core/constants/islamic_quotes.dart';
 import 'package:wadhakir/core/platform/platform_utils.dart';
-import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
+import 'package:wadhakir/features/home/views/widgets/hero_backdrop.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
@@ -17,14 +16,9 @@ import 'package:wadhakir/features/home/views/widgets/about_developer_dialog.dart
 import 'package:wadhakir/features/home/views/widgets/hijri_calendar_bottom_sheet.dart';
 
 class WelcomeSectionWidget extends StatefulWidget {
-  final UnsplashPhoto? mosqueImage;
   final HijriDateTime hijriDate;
 
-  const WelcomeSectionWidget({
-    super.key,
-    required this.mosqueImage,
-    required this.hijriDate,
-  });
+  const WelcomeSectionWidget({super.key, required this.hijriDate});
 
   @override
   State<WelcomeSectionWidget> createState() => _WelcomeSectionWidgetState();
@@ -84,40 +78,10 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
         ),
         child: Stack(
           children: [
-            // Mosque Background Image
-            if (widget.mosqueImage != null)
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(borderRadius),
-                    bottomRight: Radius.circular(borderRadius),
-                  ),
-                  child: _buildMosqueBackground(context, widget.mosqueImage!),
-                ),
-              ),
-
-            // Gradient Overlay
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(borderRadius),
-                    bottomRight: Radius.circular(borderRadius),
-                  ),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF0C2F3A).withValues(alpha: 0.25),
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: isDesktop ? 0.25 : 0.35),
-                      Colors.black.withValues(alpha: isDesktop ? 0.55 : 0.75),
-                    ],
-                    stops: const [0.0, 0.2, 0.55, 1.0],
-                  ),
-                ),
-              ),
-            ),
+            // The ground. One layer where there used to be a photograph and a
+            // 0.75-black scrim to survive it — see HeroBackdrop for why a
+            // drawn ground is the safer of the two for contrast.
+            HeroBackdrop(borderRadius: borderRadius),
 
             // Header Content
             SafeArea(
@@ -754,63 +718,6 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
       return small ? 18.0 : 24.0;
     }
     return small ? width * 0.032 : width * 0.048;
-  }
-
-  Widget _buildMosqueBackground(
-    BuildContext context,
-    UnsplashPhoto mosqueImage,
-  ) {
-    // Cap the decode to the device's pixel width. The source mosque JPEGs are
-    // up to 4016×6016 (~96 MB decoded RGBA, vs Flutter's 100 MB image cache);
-    // this header is only a few hundred logical px tall, so decoding at native
-    // resolution thrashed the cache and risked OOM on low-end devices. Decoding
-    // at screen width drops it to ~10 MB with no visible quality loss.
-    final mq = MediaQuery.of(context);
-    final decodeWidth = (mq.size.width * mq.devicePixelRatio).round();
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 1200),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      layoutBuilder: (currentChild, previousChildren) => Stack(
-        fit: StackFit.expand,
-        children: [...previousChildren, ?currentChild],
-      ),
-      transitionBuilder: (child, animation) {
-        final scale = Tween<double>(begin: 1.03, end: 1.0).animate(animation);
-        return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(scale: scale, child: child),
-        );
-      },
-      child: Image.asset(
-        mosqueImage.imageUrl,
-        key: ValueKey(mosqueImage.id),
-        fit: BoxFit.cover,
-        cacheWidth: decodeWidth,
-        color: Colors.black.withValues(alpha: 0.1),
-        colorBlendMode: BlendMode.darken,
-        gaplessPlayback: true,
-        errorBuilder: (context, error, stackTrace) {
-          log(
-            'Error loading asset image: $error for path: ${mosqueImage.imageUrl}',
-          );
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
-                ],
-              ),
-            ),
-            child: const Icon(Icons.error, color: Colors.white),
-          );
-        },
-      ),
-    );
   }
 }
 

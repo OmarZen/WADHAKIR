@@ -5,7 +5,9 @@ import 'package:wadhakir/core/design/radii.dart';
 import 'package:wadhakir/core/design/spacing.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/quran/views/screens/quran_screen.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
 import 'package:wadhakir/features/wird/cubit/wird_cubit.dart';
+import 'package:wadhakir/features/wird/services/wird_share.dart';
 import 'package:wadhakir/features/wird/cubit/wird_state.dart';
 import 'package:wadhakir/features/wird/services/wird_format.dart';
 import 'package:wadhakir/features/wird/services/wird_motivations.dart';
@@ -253,6 +255,23 @@ class _FinishedCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // The share sits on the completion card and nowhere else. Mid-plan
+            // the only news is the tally, and a card of that is the scoreboard
+            // PRODUCT.md rules out — the same reason the tasbih has no share
+            // button. A finished khatma with a dedication is a thing people
+            // genuinely tell their family about.
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: ShareActionButton(
+                payloadBuilder: () => WirdShare.build(
+                  plan: state.plan,
+                  khatmaLabel:
+                      l10n?.translate('wird.finished_short') ?? 'تمت الختمة',
+                  dedicatedToLabel:
+                      l10n?.translate('wird.dedicated_to') ?? 'إهداءً إلى',
+                ),
+              ),
+            ),
             const Center(child: Text('🎉', style: TextStyle(fontSize: 40))),
             const SizedBox(height: Spacing.sm),
             Text(

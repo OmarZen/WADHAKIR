@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
 
 import '../../data/moon_phase.dart';
 
@@ -26,20 +29,47 @@ class MoonIslamicContext extends StatelessWidget {
   static const Color _brandAccent = Color(0xFF3A6BA8);
   static const Color _brandGlow = Color(0xFF7BA7D9);
 
+  /// The card behind each verse's share button — roadmap #21.
+  ///
+  /// What travels is the āyah and its citation, never the commentary. The
+  /// commentary is this screen explaining itself to someone who is already
+  /// here; a recipient gets the verse, which is the thing people actually
+  /// forward.
+  ///
+  /// [reference] is required rather than optional for the reason `Occasion`
+  /// spells out: an unsourced verse forwarded at scale is how mangled text
+  /// enters circulation, and these three are already correctly cited on screen.
+  static SharePayload payloadFor({
+    required String verse,
+    required String reference,
+    required String categoryLabel,
+  }) => SharePayload(
+    headline: verse,
+    categoryLabel: categoryLabel,
+    reference: reference,
+    // The Yunus āyah runs to about ninety characters; the compact card would
+    // shrink it to fit, which is the problem the passage variant exists for.
+    variant: ShareCardVariant.passage,
+    captionOverride:
+        '$verse\n$reference\n\n'
+        '${AppConstants.appName}\n${AppConstants.playStoreUrl}',
+  );
+
   @override
   Widget build(BuildContext context) {
+    final sectionLabel =
+        l10n?.translate('moon_phases.islamic_section_title') ??
+        'القمر في الإسلام';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _SectionTitle(
-            label:
-                l10n?.translate('moon_phases.islamic_section_title') ??
-                'القمر في الإسلام',
-          ),
+          _SectionTitle(label: sectionLabel),
           const SizedBox(height: Spacing.md),
           _VerseCard(
+            sectionLabel: sectionLabel,
             arabicVerse:
                 'هُوَ ٱلَّذِى جَعَلَ ٱلشَّمْسَ ضِيَآءًۭ وَٱلْقَمَرَ نُورًۭا '
                 'وَقَدَّرَهُۥ مَنَازِلَ لِتَعْلَمُوا۟ عَدَدَ ٱلسِّنِينَ '
@@ -54,6 +84,7 @@ class MoonIslamicContext extends StatelessWidget {
           ),
           const SizedBox(height: Spacing.md),
           _VerseCard(
+            sectionLabel: sectionLabel,
             arabicVerse: 'ٱقْتَرَبَتِ ٱلسَّاعَةُ وَٱنشَقَّ ٱلْقَمَرُ',
             reference:
                 l10n?.translate('moon_phases.verse_qamar_ref') ??
@@ -70,6 +101,7 @@ class MoonIslamicContext extends StatelessWidget {
           ),
           const SizedBox(height: Spacing.md),
           _VerseCard(
+            sectionLabel: sectionLabel,
             arabicVerse:
                 'يَسْـَٔلُونَكَ عَنِ ٱلْأَهِلَّةِ ۖ قُلْ هِىَ مَوَٰقِيتُ '
                 'لِلنَّاسِ وَٱلْحَجِّ',
@@ -137,12 +169,18 @@ class _VerseCard extends StatelessWidget {
     required this.arabicVerse,
     required this.reference,
     required this.commentary,
+    required this.sectionLabel,
     this.badge,
   });
 
   final String arabicVerse;
   final String reference;
   final String commentary;
+
+  /// «القمر في الإسلام» — the card's category when it has no [badge] of its
+  /// own. Passed down because this widget has no `l10n` and the section title
+  /// is already resolved above it.
+  final String sectionLabel;
   final String? badge;
 
   @override
@@ -206,17 +244,37 @@ class _VerseCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Spacing.sm),
-          Center(
-            child: Text(
-              reference,
-              style: TextStyle(
-                color: MoonIslamicContext._brandGlow.withValues(alpha: 0.92),
-                fontFamily: 'Almarai',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
+          // The citation and the share sit on one line, because the citation is
+          // the thing that has to travel with the āyah and putting the button
+          // anywhere else invites a card without it.
+          Row(
+            children: [
+              const SizedBox(width: 40),
+              Expanded(
+                child: Text(
+                  reference,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: MoonIslamicContext._brandGlow.withValues(
+                      alpha: 0.92,
+                    ),
+                    fontFamily: 'Almarai',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
               ),
-            ),
+              ShareActionButton(
+                payloadBuilder: () => MoonIslamicContext.payloadFor(
+                  verse: arabicVerse,
+                  reference: reference,
+                  categoryLabel: badge ?? sectionLabel,
+                ),
+                color: MoonIslamicContext._brandGlow,
+                size: 18,
+              ),
+            ],
           ),
           const SizedBox(height: Spacing.md),
           Container(height: 1, color: Colors.white.withValues(alpha: 0.10)),

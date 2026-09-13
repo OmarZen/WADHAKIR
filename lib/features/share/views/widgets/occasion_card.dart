@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_core/core.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/share/models/occasion.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
@@ -40,8 +41,14 @@ class OccasionCard extends StatelessWidget {
     // what the anonymous JPEGs this feature replaces are already doing.
     reference: occasion.attribution,
     variant: ShareCardVariant.passage,
+    // The app name and store link are appended here because setting an
+    // override opts out of the default caption, which is the thing that
+    // normally adds them — so without this the Friday card, the one surface
+    // in the app built to be forwarded weekly, was the only one travelling
+    // with no way back to the app.
     captionOverride:
-        '${occasion.greeting}\n\n${occasion.dua}\n${occasion.attribution}',
+        '${occasion.greeting}\n\n${occasion.dua}\n${occasion.attribution}\n\n'
+        '${AppConstants.appName}\n${AppConstants.playStoreUrl}',
   );
 
   @override

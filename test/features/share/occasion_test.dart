@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/features/share/models/occasion.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
@@ -133,6 +134,21 @@ void main() {
       expect(caption, contains('يوم عرفة'));
       expect(caption, contains('لَا إِلَهَ إِلَّا اللَّهُ'));
       expect(caption, contains('رواه الترمذي'));
+    });
+
+    test('every caption carries a way back to the app', () {
+      // Setting captionOverride opts out of the default caption, which is what
+      // normally appends these. Friday is the one surface in this app built to
+      // be forwarded weekly, and it was travelling with no link home.
+      for (final occasion in Occasion.values) {
+        final caption = OccasionCard.payloadFor(occasion).captionOverride!;
+        expect(
+          caption,
+          contains(AppConstants.playStoreUrl),
+          reason: '${occasion.id} forwards with no way back',
+        );
+        expect(caption, contains(AppConstants.appName));
+      }
     });
 
     test('uses the passage layout and the story ratio', () {

@@ -14,8 +14,9 @@ import 'grids/electronic_tasbih_grid_item.dart';
 import 'grids/azkar_reminders_grid_item.dart';
 import 'grids/salah_tracker_grid_item.dart';
 // Hadith library grid removed (hadith feature pruned)
-// Islamic history grid removed (data retained in assets/json_data/history.json
-// for future re-enable — see islamic_history feature, currently unreferenced)
+// Islamic history grid removed in R3 along with the whole feature and its
+// 12.6 MB history.json — it had been unreachable since launch. Recoverable
+// from git history if it is ever wanted back.
 import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/widgets/titled_section.dart';

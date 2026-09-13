@@ -74,7 +74,23 @@ jobs:
 
       - name: 🏗️ Build APK (Debug)
         run: flutter build apk --debug
-        
+
+      # The early-warning half of the size gate. `build-and-release.yml` holds
+      # the authoritative one on the arm64 *release* APK, but that only runs on
+      # a tag — by which point a 50 MB asset is already on develop. This is the
+      # same script against the universal debug APK, which is the artifact this
+      # workflow already builds, so a PR that adds a large asset goes red here
+      # first.
+      #
+      # The budget is loose on purpose: a debug APK carries both ABIs and no
+      # shrinking, so it moves for reasons a release APK does not. R3's asset
+      # diet took it from 407.4 MB to 354.9 MB; 380 MB catches a gross
+      # regression without failing on ordinary drift.
+      - name: 📏 Check APK Size
+        run: |
+          bash tool/check_app_size.sh 380 "universal debug APK" \
+            build/app/outputs/flutter-apk/app-debug.apk
+
       - name: ✅ Success Notification
         if: success()
         run: echo "🎉 All checks passed! Ready for review."

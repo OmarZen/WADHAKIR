@@ -91,13 +91,17 @@ class ShareBackground {
     Color(0xFF880E4F),
   ];
 
-  /// Number of bundled mosque photos (assets/images/mosques/1..11.jpg).
+  /// Number of bundled mosque photos (assets/images/mosques/1..11.webp).
+  ///
+  /// Stored at 1080px wide, which is exactly what [ShareBackgroundLayer] and
+  /// [ShareCard] decode them at (`imageCacheWidth: 1080`) — encoding larger
+  /// would ship pixels the renderer discards.
   static const int mosqueCount = 11;
 
   /// The bundled mosque photos as backgrounds.
   static List<ShareBackground> get mosquePresets => List.generate(
     mosqueCount,
-    (i) => ShareBackground.asset('assets/images/mosques/${i + 1}.jpg'),
+    (i) => ShareBackground.asset('assets/images/mosques/${i + 1}.webp'),
   );
 
   @override

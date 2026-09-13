@@ -10,7 +10,7 @@ class UnsplashCubit extends Cubit<UnsplashState> {
 
   static final List<String> _localImages = List.generate(
     11,
-    (index) => 'assets/images/mosques/${index + 1}.jpg',
+    (index) => 'assets/images/mosques/${index + 1}.webp',
   );
 
   void startAutoRefresh({Duration duration = const Duration(seconds: 300)}) {

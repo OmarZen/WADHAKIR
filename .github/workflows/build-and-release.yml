@@ -125,6 +125,23 @@ jobs:
             flutter build apk --debug --split-per-abi
           fi
 
+      # Google Play caps the compressed download at 200 MB. Until R3 nothing in
+      # CI measured this, so the cap was enforced by Play Console at upload —
+      # after the tag was pushed, and (because the release job runs on the same
+      # tag) with a GitHub release about to be published against a build that
+      # could not ship. This step moves that failure to the build job, where it
+      # costs a re-tag instead of a retracted release.
+      #
+      # arm64 is the split users actually install, and the largest of the three.
+      # R3's asset diet took it from 187.3 MB to 131.1 MB; the 140 MB budget
+      # banks that win and leaves ~9 MB for ordinary growth. Raising it is a
+      # deliberate act in a PR, not something done to turn a red build green.
+      - name: Check APK size against budget
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          bash tool/check_app_size.sh 140 "arm64 release APK" \
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+
       - name: Build App Bundle
         if: startsWith(github.ref, 'refs/tags/v')
         run: flutter build appbundle --release

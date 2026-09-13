@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:wadhakir/core/notifications/reminder_interruption.dart';
 
 /// Schedules the daily "Verse/Dua of the Day" notification.
 ///
@@ -55,7 +57,7 @@ class DailyInspirationNotificationService {
           channelDescription: _channelDescription,
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           channelShowBadge: true,
           playSound: true,
           enableVibration: true,
@@ -93,7 +95,7 @@ class DailyInspirationNotificationService {
           body: body,
           notificationLayout: NotificationLayout.BigText,
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
           autoDismissible: true,
           payload: const {'type': 'daily_inspiration'},
         ),
@@ -149,7 +151,7 @@ class DailyInspirationNotificationService {
           body: body,
           notificationLayout: NotificationLayout.BigText,
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
         ),
       );
       return true;

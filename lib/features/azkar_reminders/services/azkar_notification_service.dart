@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:wadhakir/core/notifications/reminder_interruption.dart';
 import 'package:wadhakir/data/models/azkar_reminder_settings_model.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 
@@ -72,7 +74,7 @@ class AzkarNotificationService {
           channelDescription: _channelDescription,
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           channelShowBadge: true,
           playSound: true,
           enableVibration: true,
@@ -271,7 +273,7 @@ class AzkarNotificationService {
           body: body,
           notificationLayout: NotificationLayout.Default,
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
           autoDismissible: true,
           payload: {'type': type},
         ),
@@ -317,7 +319,7 @@ class AzkarNotificationService {
           body: body,
           notificationLayout: NotificationLayout.Default,
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
           autoDismissible: true,
           payload: {'type': type},
         ),
@@ -357,7 +359,7 @@ class AzkarNotificationService {
           body: body,
           notificationLayout: NotificationLayout.Default,
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
           autoDismissible: true,
           payload: {'type': type, ...extra},
         ),
@@ -413,7 +415,7 @@ class AzkarNotificationService {
           title: 'اختبار تذكير الأذكار',
           body: 'هذا تنبيه تجريبي لتذكيرات الأذكار.',
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
         ),
       );
       return true;

@@ -7,6 +7,8 @@ import '../../core/constants/adhan_sounds.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../../core/time/clock.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/notifications/reminder_interruption.dart';
+import '../../core/notifications/reminder_floor_service.dart';
 import '../../features/pray_times/services/prayer_schedule_planner.dart';
 import '../../features/pray_times/services/prayer_notification_content.dart';
 import '../../features/pray_times/services/prayer_scheduler.dart';
@@ -492,7 +494,7 @@ class _MobileNotificationRepositoryImpl
           channelKey: _channelKeyFasting,
           channelName: 'تذكير بالصيام',
           channelDescription: 'تنبيهات صيام الإثنين والخميس',
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),
           playSound: true,
@@ -507,7 +509,7 @@ class _MobileNotificationRepositoryImpl
           channelKey: _channelKeyWird,
           channelName: 'تذكير الورد',
           channelDescription: 'تذكير الورد اليومي من القرآن الكريم',
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),
           playSound: true,
@@ -522,7 +524,7 @@ class _MobileNotificationRepositoryImpl
           channelKey: _channelKeyDailyInspiration,
           channelName: 'آية وذِكر اليوم',
           channelDescription: 'تذكير يومي بآية أو دعاء أو حديث',
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),
           playSound: true,
@@ -538,7 +540,7 @@ class _MobileNotificationRepositoryImpl
           channelName: 'تذكير الأذكار',
           channelDescription:
               'تذكيرات الأذكار اليومية (الصباح، المساء، بعد الصلاة، قيام الليل)',
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           defaultColor: const Color(0xFF20497D),
           ledColor: const Color(0xFF20497D),
           playSound: true,
@@ -563,6 +565,11 @@ class _MobileNotificationRepositoryImpl
           onlyAlertOnce: true,
           icon: 'resource://drawable/ic_notification',
         ),
+        // The floor beneath every other reminder — a dead man's switch armed on
+        // each resume. Declared here for the same reason as everything else in
+        // this list: initialize() REPLACES the whole channel set, so a channel
+        // owned by its own service would be wiped at the next cold start.
+        ReminderFloorService.channel(),
         // Declared here but POSTED FROM KOTLIN — the "your timezone changed,
         // open the app to update prayer times" notice, which is raised from a
         // broadcast receiver with no Flutter engine alive. It has to be in this

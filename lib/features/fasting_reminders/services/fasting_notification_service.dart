@@ -2,11 +2,25 @@ import 'dart:developer';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:wadhakir/core/notifications/reminder_interruption.dart';
 import 'package:syncfusion_flutter_core/core.dart';
+import 'package:wadhakir/core/notifications/ios_notification_budget.dart';
 import 'package:wadhakir/data/models/fasting/fasting_reminder_settings_model.dart';
 import 'package:wadhakir/data/models/fasting/islamic_fasting_day_model.dart';
 import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
 import 'package:wadhakir/features/fasting_reminders/services/hijri_date_calculator_service.dart';
+
+/// One fasting day the service intends to remind about.
+///
+/// [idBase] is the base its up-to-three reminders are numbered from: `+1` the
+/// eve reminder at Maghrib, `+2` the suhoor reminder at Fajr minus five, `+3`
+/// the advance notice N days ahead.
+typedef FastingDayCandidate = ({
+  int day,
+  IslamicFastingDay fastingDay,
+  int idBase,
+  bool isSpecial,
+});
 
 /// Service for managing fasting reminder notifications
 class FastingNotificationService {
@@ -137,7 +151,7 @@ class FastingNotificationService {
           channelDescription: _channelDescription,
           defaultColor: const Color(0xFF26A69A),
           ledColor: const Color(0xFFFFB74D),
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           channelShowBadge: true,
           playSound: true,
           enableVibration: true,
@@ -194,12 +208,25 @@ class FastingNotificationService {
     // Cancel all existing fasting notifications first
     await cancelAllFastingNotifications();
 
+    // One budget for the whole pass, spent in priority order.
+    //
+    // Fasting is last in ReminderSlot for a reason: it is the only scheduler
+    // here that fans a single setting out into dozens of requests, and it was
+    // the reason the app asked iOS for ~67 of the 64 slots it will keep. The
+    // quota is spent on the weekly repeating reminders first, then on Hijri
+    // days in chronological order, and whatever does not fit is not posted.
+    //
+    // On Android this is unlimited and nothing below changes behaviour.
+    final budget = NotificationSlotBudget.of(
+      IosNotificationBudget.capFor(ReminderSlot.fasting, isIOS: Platform.isIOS),
+    );
+
     // Schedule weekly fasting (Monday/Thursday) if enabled
-    await _scheduleWeeklyFastingNotifications(settings);
+    await _scheduleWeeklyFastingNotifications(settings, budget);
 
     // Schedule Hijri calendar fasting if enabled
     if (settings.monthlyFastingRemindersEnabled) {
-      await _scheduleHijriCalendarNotifications(settings);
+      await _scheduleHijriCalendarNotifications(settings, budget);
     } else {
       log(
         '⏭️  Monthly Hijri fasting reminders DISABLED, skipping Hijri scheduling',
@@ -214,8 +241,13 @@ class FastingNotificationService {
   }
 
   /// Schedule weekly fasting notifications (Monday/Thursday)
+  ///
+  /// Charged to [budget] before the Hijri calendar fan-out, and deliberately
+  /// so: these two are single repeating triggers that never expire, so they
+  /// buy more coverage per slot than any dated reminder in this service.
   Future<void> _scheduleWeeklyFastingNotifications(
     FastingReminderSettings settings,
+    NotificationSlotBudget budget,
   ) async {
     log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     log('📆 WEEKLY FASTING NOTIFICATIONS');
@@ -236,6 +268,7 @@ class FastingNotificationService {
         dayNameArabic: 'الإثنين',
         notificationId: _mondayFastingId,
         settings: settings,
+        budget: budget,
       );
     } else {
       log('\n⏭️  Monday fasting DISABLED');
@@ -250,6 +283,7 @@ class FastingNotificationService {
         dayNameArabic: 'الخميس',
         notificationId: _thursdayFastingId,
         settings: settings,
+        budget: budget,
       );
     } else {
       log('\n⏭️  Thursday fasting DISABLED');
@@ -266,7 +300,12 @@ class FastingNotificationService {
     required String dayNameArabic,
     required int notificationId,
     required FastingReminderSettings settings,
+    required NotificationSlotBudget budget,
   }) async {
+    if (!budget.take()) {
+      log('   🚧 Slot budget spent — skipping $dayName weekly reminder');
+      return;
+    }
     // Parse notification time from settings
     final timeParts = settings.weeklyNotificationTime.split(':');
     final hour = int.parse(timeParts[0]);
@@ -325,7 +364,7 @@ class FastingNotificationService {
           title: '🌙 تذكير بصيام $dayNameArabic',
           body: 'غداً يوم $dayNameArabic، يُستحب الصيام',
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
           fullScreenIntent: false,
           autoDismissible: true,
           payload: {
@@ -399,6 +438,7 @@ class FastingNotificationService {
   /// Schedule Hijri calendar fasting notifications
   Future<void> _scheduleHijriCalendarNotifications(
     FastingReminderSettings settings,
+    NotificationSlotBudget budget,
   ) async {
     log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     log('🌙 HIJRI CALENDAR FASTING NOTIFICATIONS');
@@ -420,6 +460,7 @@ class FastingNotificationService {
       year: currentYear,
       settings: settings,
       idOffset: 0,
+      budget: budget,
     );
 
     // Pre-schedule next month too, so coverage survives a user who doesn't open
@@ -442,11 +483,145 @@ class FastingNotificationService {
         year: nextYear,
         settings: settings,
         idOffset: _nextMonthIdOffset,
+        budget: budget,
       );
     }
 
     log('\n✅ Hijri calendar notifications scheduling complete');
     log('');
+  }
+
+  /// The fasting days of [month]/[year] worth reminding about, **in the order
+  /// they will actually happen**.
+  ///
+  /// Pure, and public for testing, because the ordering is the whole reason the
+  /// slot budget cuts the right reminders — and it is not something any device
+  /// test would show you.
+  ///
+  /// The order these are DECLARED in is not the order they HAPPEN in: Ayyam
+  /// al-Bid (13, 14, 15) is written before the 9th and the 10th. That was
+  /// harmless while every candidate got scheduled, but it decides who survives
+  /// now that the budget is enforced, and "whoever appears earliest in the
+  /// method" is not a defensible answer. Within a single Hijri month ascending
+  /// day IS chronological, so sorting on it puts the soonest reminders first —
+  /// both the most useful set (one a user can still act on) and the same set
+  /// iOS would have kept had it been the one discarding.
+  ///
+  /// Days already past in the current month are dropped. A [month]/[year] that
+  /// is not the current one keeps every day, which is what lets the next-month
+  /// pre-schedule work.
+  @visibleForTesting
+  static List<FastingDayCandidate> monthCandidates({
+    required int month,
+    required int year,
+    required int idOffset,
+    required bool ayyamAlBidEnabled,
+    required bool ninthTenthEnabled,
+    required bool specialDaysEmphasis,
+    required int currentHijriDay,
+    required int currentHijriMonth,
+    required int currentHijriYear,
+  }) {
+    final candidates = <FastingDayCandidate>[];
+    final isCurrentMonth =
+        month == currentHijriMonth && year == currentHijriYear;
+
+    void offer(
+      int day,
+      IslamicFastingDay fastingDay,
+      int idBase, {
+      bool isSpecial = false,
+    }) {
+      if (isCurrentMonth && day < currentHijriDay) return;
+      candidates.add((
+        day: day,
+        fastingDay: fastingDay,
+        idBase: idBase,
+        isSpecial: isSpecial,
+      ));
+    }
+
+    if (ayyamAlBidEnabled) {
+      offer(
+        13,
+        IslamicFastingDay.ayyamAlBid13(),
+        _ayyamAlBidId + 130 + idOffset,
+      );
+      offer(
+        14,
+        IslamicFastingDay.ayyamAlBid14(),
+        _ayyamAlBidId + 140 + idOffset,
+      );
+      offer(
+        15,
+        IslamicFastingDay.ayyamAlBid15(),
+        _ayyamAlBidId + 150 + idOffset,
+      );
+    }
+
+    if (ninthTenthEnabled) {
+      offer(9, IslamicFastingDay.ninthOfMonth(), _ninthTenthId + 90 + idOffset);
+      offer(
+        10,
+        IslamicFastingDay.tenthOfMonth(),
+        _ninthTenthId + 100 + idOffset,
+      );
+    }
+
+    if (specialDaysEmphasis) {
+      // Muharram: Tasu'a and Ashura.
+      if (month == 1) {
+        offer(
+          9,
+          IslamicFastingDay.tasua(),
+          _tasuaId + idOffset,
+          isSpecial: true,
+        );
+        offer(
+          10,
+          IslamicFastingDay.ashura(),
+          _ashuraId + idOffset,
+          isSpecial: true,
+        );
+      }
+      // Dhul Hijjah: Arafah.
+      if (month == 12) {
+        offer(
+          9,
+          IslamicFastingDay.arafah(),
+          _arafahId + idOffset,
+          isSpecial: true,
+        );
+      }
+    }
+
+    // ONE entry per calendar day, then sorted by day.
+    //
+    // A day can carry two entries: the 9th of Muharram is both "the 9th of the
+    // month" and Tasu'a, the 10th is both "the 10th" and Ashura, the 9th of
+    // Dhul Hijjah is both "the 9th" and Arafah. They are the SAME FAST under
+    // two names, and scheduling both means the user gets two near-identical
+    // cards at the same instant — the same Maghrib, the same Fajr minus five.
+    //
+    // Under a slot budget it is worse than untidy. Each entry is charged
+    // separately, so in Muharram the pair on the 9th ate four of the six slots
+    // the first draft allowed and the loop broke before ever reaching Ashura —
+    // the most significant voluntary fast of the year, silently dropped, with
+    // only a log line. Adversarial review caught that before it shipped.
+    //
+    // The named fast wins the day. "صيام عاشوراء" tells a user what this is;
+    // "العاشر من الشهر" does not. Keeping one entry per day is also what makes
+    // IosNotificationBudget.fasting exactly right: a Hijri month offers at most
+    // five distinct fasting days, never seven.
+    final byDay = <int, FastingDayCandidate>{};
+    for (final candidate in candidates) {
+      final existing = byDay[candidate.day];
+      if (existing == null || (!existing.isSpecial && candidate.isSpecial)) {
+        byDay[candidate.day] = candidate;
+      }
+    }
+
+    return byDay.values.toList()..sort((a, b) => a.day.compareTo(b.day));
   }
 
   /// Schedule notifications for a specific month.
@@ -460,141 +635,48 @@ class FastingNotificationService {
     required int year,
     required FastingReminderSettings settings,
     required int idOffset,
+    required NotificationSlotBudget budget,
   }) async {
     final currentHijri = HijriDateTime.now();
     int notificationCount = 0;
 
-    // Helper function to check if notification should be scheduled
-    bool shouldSchedule(int day) {
-      final should =
-          month != currentHijri.month ||
-          year != currentHijri.year ||
-          day >= currentHijri.day;
-      if (!should) {
-        log('   ⏭️  Skipping day $day (in the past)');
-      }
-      return should;
-    }
+    final candidates = monthCandidates(
+      month: month,
+      year: year,
+      idOffset: idOffset,
+      ayyamAlBidEnabled: settings.ayyamAlBidEnabled,
+      ninthTenthEnabled: settings.ninthTenthEnabled,
+      specialDaysEmphasis: settings.specialDaysEmphasis,
+      currentHijriDay: currentHijri.day,
+      currentHijriMonth: currentHijri.month,
+      currentHijriYear: currentHijri.year,
+    );
 
-    // Schedule Ayyam al-Bid (13, 14, 15)
-    if (settings.ayyamAlBidEnabled) {
-      log('\n   🌕 Scheduling Ayyam al-Bid (White Days)...');
-      if (shouldSchedule(13)) {
-        await _scheduleNotificationForDay(
-          hijriYear: year,
-          hijriMonth: month,
-          hijriDay: 13,
-          fastingDay: IslamicFastingDay.ayyamAlBid13(),
-          settings: settings,
-          notificationIdBase: _ayyamAlBidId + 130 + idOffset,
-        );
-        notificationCount++;
-      }
-      if (shouldSchedule(14)) {
-        await _scheduleNotificationForDay(
-          hijriYear: year,
-          hijriMonth: month,
-          hijriDay: 14,
-          fastingDay: IslamicFastingDay.ayyamAlBid14(),
-          settings: settings,
-          notificationIdBase: _ayyamAlBidId + 140 + idOffset,
-        );
-        notificationCount++;
-      }
-      if (shouldSchedule(15)) {
-        await _scheduleNotificationForDay(
-          hijriYear: year,
-          hijriMonth: month,
-          hijriDay: 15,
-          fastingDay: IslamicFastingDay.ayyamAlBid15(),
-          settings: settings,
-          notificationIdBase: _ayyamAlBidId + 150 + idOffset,
-        );
-        notificationCount++;
-      }
-    } else {
-      log('\n   ⏭️  Ayyam al-Bid DISABLED');
-    }
+    log(
+      '\n   📋 ${candidates.length} fasting day(s) to cover in $month/$year, '
+      'soonest first',
+    );
 
-    // Schedule 9th and 10th
-    if (settings.ninthTenthEnabled) {
-      log('\n   📖 Scheduling 9th & 10th of the month...');
-      if (shouldSchedule(9)) {
-        await _scheduleNotificationForDay(
-          hijriYear: year,
-          hijriMonth: month,
-          hijriDay: 9,
-          fastingDay: IslamicFastingDay.ninthOfMonth(),
-          settings: settings,
-          notificationIdBase: _ninthTenthId + 90 + idOffset,
+    for (final candidate in candidates) {
+      if (!budget.hasRoom) {
+        log(
+          '   🚧 Slot budget spent — ${candidates.length - notificationCount} '
+          'later fasting day(s) in $month/$year not scheduled. This is the '
+          'designed outcome on iOS, not a failure.',
         );
-        notificationCount++;
+        break;
       }
-      if (shouldSchedule(10)) {
-        await _scheduleNotificationForDay(
-          hijriYear: year,
-          hijriMonth: month,
-          hijriDay: 10,
-          fastingDay: IslamicFastingDay.tenthOfMonth(),
-          settings: settings,
-          notificationIdBase: _ninthTenthId + 100 + idOffset,
-        );
-        notificationCount++;
-      }
-    } else {
-      log('\n   ⏭️  9th & 10th DISABLED');
-    }
-
-    // Schedule special days with emphasis
-    if (settings.specialDaysEmphasis) {
-      log('\n   ⭐ Scheduling Special Days...');
-      // Muharram special days
-      if (month == 1) {
-        log('      🕘 Muharram detected - scheduling Tasu\'a & Ashura');
-        if (shouldSchedule(9)) {
-          await _scheduleNotificationForDay(
-            hijriYear: year,
-            hijriMonth: month,
-            hijriDay: 9,
-            fastingDay: IslamicFastingDay.tasua(),
-            settings: settings,
-            notificationIdBase: _tasuaId + idOffset,
-            isSpecial: true,
-          );
-          notificationCount++;
-        }
-        if (shouldSchedule(10)) {
-          await _scheduleNotificationForDay(
-            hijriYear: year,
-            hijriMonth: month,
-            hijriDay: 10,
-            fastingDay: IslamicFastingDay.ashura(),
-            settings: settings,
-            notificationIdBase: _ashuraId + idOffset,
-            isSpecial: true,
-          );
-          notificationCount++;
-        }
-      }
-
-      // Dhul Hijjah - Arafah
-      if (month == 12) {
-        log('      🕙 Dhul Hijjah detected - scheduling Arafah');
-        if (shouldSchedule(9)) {
-          await _scheduleNotificationForDay(
-            hijriYear: year,
-            hijriMonth: month,
-            hijriDay: 9,
-            fastingDay: IslamicFastingDay.arafah(),
-            settings: settings,
-            notificationIdBase: _arafahId + idOffset,
-            isSpecial: true,
-          );
-          notificationCount++;
-        }
-      }
-    } else {
-      log('\n   ⏭️  Special Days DISABLED');
+      await _scheduleNotificationForDay(
+        hijriYear: year,
+        hijriMonth: month,
+        hijriDay: candidate.day,
+        fastingDay: candidate.fastingDay,
+        settings: settings,
+        notificationIdBase: candidate.idBase,
+        isSpecial: candidate.isSpecial,
+        budget: budget,
+      );
+      notificationCount++;
     }
 
     log(
@@ -610,6 +692,7 @@ class FastingNotificationService {
     required IslamicFastingDay fastingDay,
     required FastingReminderSettings settings,
     required int notificationIdBase,
+    required NotificationSlotBudget budget,
     bool isSpecial = false,
   }) async {
     log(
@@ -687,6 +770,7 @@ class FastingNotificationService {
             scheduledDate: eveNotificationTime,
             settings: settings,
             fastingDay: fastingDay,
+            budget: budget,
           );
           scheduledCount++;
         }
@@ -744,6 +828,7 @@ class FastingNotificationService {
             scheduledDate: morningNotificationTime,
             settings: settings,
             fastingDay: fastingDay,
+            budget: budget,
           );
           scheduledCount++;
         }
@@ -801,6 +886,7 @@ class FastingNotificationService {
           scheduledDate: advanceNotificationTime,
           settings: settings,
           fastingDay: fastingDay,
+          budget: budget,
         );
         scheduledCount++;
       }
@@ -812,6 +898,12 @@ class FastingNotificationService {
   }
 
   /// Schedule a single notification
+  /// Posts one fasting reminder, if [budget] still has a slot for it.
+  ///
+  /// [budget] is optional because not every caller is part of a plan: the
+  /// "try it now" test notification fires in seconds and is covered by
+  /// [IosNotificationBudget.transientReserve], so charging it to the fasting
+  /// quota would let a user evict a real reminder by tapping a test button.
   Future<void> _scheduleNotification({
     required int id,
     required String title,
@@ -819,7 +911,16 @@ class FastingNotificationService {
     required DateTime scheduledDate,
     required FastingReminderSettings settings,
     required IslamicFastingDay fastingDay,
+    NotificationSlotBudget? budget,
   }) async {
+    // Ask before posting, never after. iOS enforces its cap by silently
+    // discarding the FURTHEST-OUT pending request, which on an over-budget app
+    // is somebody else's prayer — so the slot has to be refused here, where the
+    // cost lands on the lowest-priority reminder instead.
+    if (budget != null && !budget.take()) {
+      log('         🚧 Slot budget spent — skipping #$id ("$title")');
+      return;
+    }
     try {
       await AwesomeNotifications().createNotification(
         content: NotificationContent(
@@ -828,7 +929,7 @@ class FastingNotificationService {
           title: title,
           body: body,
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
           fullScreenIntent: false,
           autoDismissible: true,
           payload: {
@@ -979,7 +1080,7 @@ class FastingNotificationService {
           body: 'هذا تنبيه تجريبي للتأكد من أن تذكيرات الصيام تعمل بشكل صحيح.',
           notificationLayout: NotificationLayout.Default,
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
         ),
       );
       return true;

@@ -12,6 +12,7 @@ import 'package:wadhakir/core/notifications/app_notification_listeners.dart';
 import 'package:wadhakir/core/notifications/notification_router.dart';
 import 'package:wadhakir/core/notifications/native_prayer_tap.dart';
 import 'package:wadhakir/core/notifications/pending_notification_action.dart';
+import 'package:wadhakir/core/notifications/reminder_floor_service.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/app_theme/forui_theme.dart';
 import 'package:wadhakir/data/models/hive_adapters.dart';
@@ -658,6 +659,17 @@ class _GlassWidgetResumeRefresherState
     // Warm taps (app alive): route the tapped notification once the frame is
     // ready. Cold-start taps are consumed by the splash instead.
     PendingNotificationAction.notifier.addListener(_onPendingNotification);
+
+    // Arm the reminder floor here as well as on resume. A cold start is already
+    // "resumed" by the time this observer registers, so the lifecycle callback
+    // below never fires for it — a user who launches the app and closes it
+    // without ever backgrounding and returning would otherwise never reset the
+    // fuse. Channels are registered and awaited before runApp, so the create
+    // has somewhere to land.
+    if (!RestartRequired.isLatched) {
+      // ignore: unawaited_futures
+      ReminderFloorService.instance.arm();
+    }
   }
 
   @override
@@ -713,6 +725,12 @@ class _GlassWidgetResumeRefresherState
     SharedPreferences.getInstance().then(
       FeatureDiscoveryService.instance.maybeScheduleNext,
     );
+
+    // Push the reminder floor's fuse back out. This resume IS the proof that
+    // the user is still here, so it is the only signal the dead man's switch
+    // needs — and resetting it here means an active user never sees it fire.
+    // ignore: unawaited_futures
+    ReminderFloorService.instance.arm();
 
     final prayerCubit = context.read<PrayerTimesCubit>();
 

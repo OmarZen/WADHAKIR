@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:wadhakir/core/notifications/reminder_interruption.dart';
 import 'package:wadhakir/data/models/wird/wird_plan_model.dart';
 import 'package:wadhakir/data/models/wird/wird_enums.dart';
 
@@ -55,7 +57,7 @@ class WirdNotificationService {
           channelDescription: _channelDescription,
           defaultColor: const Color(0xFF26A69A),
           ledColor: const Color(0xFF26A69A),
-          importance: NotificationImportance.High,
+          importance: reminderChannelImportance(isIOS: Platform.isIOS),
           channelShowBadge: true,
           playSound: true,
           enableVibration: true,
@@ -115,7 +117,7 @@ class WirdNotificationService {
           title: 'ورد القرآن اليومي',
           body: reminderBody(plan),
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
           autoDismissible: true,
           payload: const {'type': 'wird_reminder'},
         ),
@@ -168,7 +170,7 @@ class WirdNotificationService {
           title: 'اختبار تذكير الورد',
           body: 'هذا تنبيه تجريبي لتذكير ورد القرآن.',
           category: NotificationCategory.Reminder,
-          wakeUpScreen: true,
+          wakeUpScreen: reminderWakeUpScreen(isIOS: Platform.isIOS),
         ),
       );
       return true;

@@ -27,7 +27,8 @@ class FloatingDhikrSettingsScreen extends StatefulWidget {
 }
 
 class _FloatingDhikrSettingsScreenState
-    extends State<FloatingDhikrSettingsScreen> {
+    extends State<FloatingDhikrSettingsScreen>
+    with WidgetsBindingObserver {
   final _service = FloatingDhikrService.instance;
   FloatingDhikrSettings _settings = const FloatingDhikrSettings();
   bool _loading = true;
@@ -45,7 +46,33 @@ class _FloatingDhikrSettingsScreenState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Granting "display over other apps" means leaving for a system screen, so
+    // the answer arrives on resume and nowhere else. Every request below used
+    // to trust the call's own return value, which reports the state from
+    // BEFORE the user left — so the toggle stayed off no matter what they did
+    // in Settings.
+    if (state == AppLifecycleState.resumed) _refreshPermission();
+  }
+
+  Future<void> _refreshPermission() async {
+    final perm = await _service.hasPermission();
+    if (!mounted || perm == _hasPermission) return;
+    setState(() => _hasPermission = perm);
+    // The user came back having granted it; honour the intent they already
+    // expressed by turning the feature on.
+    if (perm && _settings.enabled) await _service.updateSettings(_settings);
   }
 
   Future<void> _load() async {
@@ -83,7 +110,7 @@ class _FloatingDhikrSettingsScreenState
       return;
     }
     if (value && !_hasPermission) {
-      final granted = await _service.requestPermission();
+      final granted = await _service.requestPermissionAndRecheck();
       if (!mounted) return;
       setState(() => _hasPermission = granted);
       if (!granted) {
@@ -129,7 +156,7 @@ class _FloatingDhikrSettingsScreenState
                 l10n?.translate('floating_dhikr.grant_permission') ??
                 'منح الصلاحية',
             onPressed: () async {
-              final granted = await _service.requestPermission();
+              final granted = await _service.requestPermissionAndRecheck();
               if (!mounted) return;
               setState(() => _hasPermission = granted);
             },
@@ -253,7 +280,8 @@ class _FloatingDhikrSettingsScreenState
                             ) ??
                             'منح الصلاحية',
                         onAction: () async {
-                          final granted = await _service.requestPermission();
+                          final granted = await _service
+                              .requestPermissionAndRecheck();
                           if (!mounted) return;
                           setState(() => _hasPermission = granted);
                         },

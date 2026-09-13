@@ -1293,16 +1293,67 @@ class _FloatingDhikrPage extends StatefulWidget {
   State<_FloatingDhikrPage> createState() => _FloatingDhikrPageState();
 }
 
-class _FloatingDhikrPageState extends State<_FloatingDhikrPage> {
+class _FloatingDhikrPageState extends State<_FloatingDhikrPage>
+    with WidgetsBindingObserver {
   final _service = FloatingDhikrService.instance;
   FloatingDhikrSettings _settings = const FloatingDhikrSettings();
   bool _hasPermission = false;
   bool _busy = false;
 
+  /// True once the user has been sent to the system overlay-permission screen
+  /// and has not come back yet.
+  ///
+  /// Granting that permission means leaving the app, so the answer arrives on
+  /// **resume** and nowhere else. Without this the page asked, was told "not
+  /// granted" (which was just the state before the user left), and either sat
+  /// on a spinner forever or accused the user of denying a permission they
+  /// were in the middle of granting.
+  bool _awaitingPermission = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (!_awaitingPermission) return;
+    _settlePermissionTrip();
+  }
+
+  /// Reads the permission now that the user is back, and finishes the job they
+  /// started if they granted it.
+  Future<void> _settlePermissionTrip() async {
+    final granted = await _service.hasPermission();
+    if (!mounted) return;
+
+    if (!granted) {
+      setState(() {
+        _awaitingPermission = false;
+        _busy = false;
+        _hasPermission = false;
+      });
+      return;
+    }
+
+    final next = _settings.copyWith(enabled: true);
+    await _service.updateSettings(next);
+    if (!mounted) return;
+    setState(() {
+      _settings = next;
+      _hasPermission = true;
+      _awaitingPermission = false;
+      _busy = false;
+    });
   }
 
   Future<void> _load() async {
@@ -1332,32 +1383,29 @@ class _FloatingDhikrPageState extends State<_FloatingDhikrPage> {
       return;
     }
     setState(() => _busy = true);
-    var perm = _hasPermission;
-    if (!perm) perm = await _service.requestPermission();
-    if (!mounted) return;
-    if (!perm) {
-      setState(() {
-        _busy = false;
-        _hasPermission = false;
-      });
-      showFToast(
-        context: context,
-        variant: FToastVariant.destructive,
-        title: Text(
-          _tr(
-            'floating_dhikr.permission_denied',
-            "Permission denied. The floating reminder can't run without it.",
-          ),
-        ),
-      );
+
+    if (!_hasPermission) {
+      // The grant happens in a system settings screen, so the answer comes
+      // back on resume — see [_settlePermissionTrip]. Do NOT conclude anything
+      // from this call's return value.
+      setState(() => _awaitingPermission = true);
+      final granted = await _service.requestPermissionAndRecheck();
+      if (!mounted) return;
+      // If the plugin waited for the settings screen to close, we already have
+      // the real answer and can finish here rather than waiting for a resume
+      // event that may never come.
+      if (granted) {
+        await _settlePermissionTrip();
+      }
       return;
     }
+
     final next = _settings.copyWith(enabled: true);
     await _service.updateSettings(next);
     if (!mounted) return;
     setState(() {
       _settings = next;
-      _hasPermission = perm;
+      _hasPermission = true;
       _busy = false;
     });
   }

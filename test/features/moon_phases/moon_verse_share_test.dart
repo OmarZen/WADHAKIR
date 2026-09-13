@@ -95,5 +95,62 @@ void main() {
       // can see but not send.
       expect(find.byType(ShareActionButton), findsNWidgets(3));
     });
+
+    testWidgets('each button sends ITS OWN verse and citation', (tester) async {
+      // The assertion that actually defends this feature. Every other test in
+      // this file passes the verse and the reference in and asserts they come
+      // back out, which cannot fail — `payloadFor` is a field shuffle. Swap two
+      // `reference:` arguments in the widget and a reader forwards سورة يونس
+      // cited as سورة القمر, correctly typeset, with no test complaining.
+      //
+      // So: build each payload the way the widget does, and check the pairing.
+      tester.view.physicalSize = const Size(1200, 6000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              backgroundColor: Color(0xFF0F1A2A),
+              body: SingleChildScrollView(
+                child: MoonIslamicContext(l10n: null),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Each verse and the surah its citation must name.
+      const expected = {
+        'وَقَدَّرَهُۥ مَنَازِلَ': 'يونس',
+        'ٱقْتَرَبَتِ ٱلسَّاعَةُ': 'القمر',
+        'يَسْـَٔلُونَكَ عَنِ ٱلْأَهِلَّةِ': 'البقرة',
+      };
+
+      final payloads = tester
+          .widgetList<ShareActionButton>(find.byType(ShareActionButton))
+          .map((b) => b.payloadBuilder())
+          .toList();
+
+      expect(payloads, hasLength(3));
+
+      for (final entry in expected.entries) {
+        final match = payloads.singleWhere(
+          (p) => p!.headline.contains(entry.key),
+          orElse: () => null,
+        );
+        expect(match, isNotNull, reason: 'no button carries ${entry.key}');
+        expect(
+          match!.reference,
+          contains(entry.value),
+          reason:
+              '"${entry.key}" is cited as "${match.reference}" — '
+              'it belongs to سورة ${entry.value}',
+        );
+      }
+    });
   });
 }

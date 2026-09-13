@@ -66,6 +66,18 @@ class FloatingDhikrService {
     }
   }
 
+  /// Opens the system "display over other apps" screen.
+  ///
+  /// **Its answer is not the user's answer.** This launches a settings
+  /// activity; by the time the future resolves the user is still standing in
+  /// Settings having decided nothing, so it reports whatever the permission was
+  /// *before* they got there — which is, by definition, "not granted".
+  ///
+  /// Every caller that trusted this return value either told the user
+  /// "permission denied" while they were still deciding, or sat on a spinner
+  /// waiting for news that was never coming. Use
+  /// [requestPermissionAndRecheck], and re-read [hasPermission] when the app
+  /// returns to the foreground.
   Future<bool> requestPermission() async {
     if (!isSupported) return false;
     try {
@@ -75,6 +87,19 @@ class FloatingDhikrService {
       dev.log('requestPermission error: $e', name: _logName);
       return false;
     }
+  }
+
+  /// Asks for the permission, then reports what the platform says *afterwards*.
+  ///
+  /// Covers the case where the plugin's future resolves only once the settings
+  /// activity closes: the re-read is then accurate. When it resolves
+  /// immediately instead, the re-read is still stale and the caller has to wait
+  /// for the app-resume signal — which is why both screens also refresh on
+  /// resume rather than relying on this alone.
+  Future<bool> requestPermissionAndRecheck() async {
+    if (!isSupported) return false;
+    await requestPermission();
+    return hasPermission();
   }
 
   /// On app start, (re)start the native service if the user enabled it. The

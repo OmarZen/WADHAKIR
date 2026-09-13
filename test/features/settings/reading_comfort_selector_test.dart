@@ -199,25 +199,43 @@ void main() {
     });
 
     testWidgets('puts the defaults back', (tester) async {
-      await _pump(
-        tester,
-        cubit,
-        comfort: const ReadingComfort(
-          spacing: ReadingSpacing.airy,
-          font: ReadingFont.arefRuqaa,
-        ),
+      const chosen = ReadingComfort(
+        spacing: ReadingSpacing.airy,
+        font: ReadingFont.arefRuqaa,
       );
 
-      await tester.tap(find.text('إعادة الضبط'));
-      await tester.pumpAndSettle();
-
-      // Asserted through storage rather than through the cubit's state: the
-      // reset has to survive the trip to disk, which is what the reader will
-      // see on the next launch.
+      // WRITE the non-default to storage first.
+      //
+      // Without this the test is vacuous: the mock prefs start empty, so
+      // storage already reads as the default, and the assertion below passes
+      // with the button's handler deleted, with the cubit call removed, or
+      // with setReadingComfort ignoring its argument. The comfort passed to
+      // _pump is only a widget prop — it never reaches disk on its own.
       final repo = AppSettingsRepositoryImpl(
         await SharedPreferences.getInstance(),
       );
-      expect((await repo.getSettings()).readingComfort.isDefault, isTrue);
+      await repo.setReadingComfort(chosen);
+      expect(
+        (await repo.getSettings()).readingComfort.isDefault,
+        isFalse,
+        reason: 'the fixture failed to make this test discriminating',
+      );
+
+      await _pump(tester, cubit, comfort: chosen);
+      await tester.tap(find.text('إعادة الضبط'));
+      await tester.pumpAndSettle();
+
+      // Read back through a FRESH repository. `AppSettingsRepositoryImpl`
+      // memoises in `_cachedSettings`, so the instance used above would hand
+      // back what it last read rather than what the tap just wrote — which is
+      // a property of this fixture, not of the app, where one instance is
+      // shared and does its own invalidation.
+      final after = (await AppSettingsRepositoryImpl(
+        await SharedPreferences.getInstance(),
+      ).getSettings()).readingComfort;
+      expect(after.isDefault, isTrue);
+      expect(after.spacing, ReadingSpacing.comfortable);
+      expect(after.font, ReadingFont.system);
     });
   });
 

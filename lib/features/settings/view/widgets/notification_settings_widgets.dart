@@ -270,6 +270,84 @@ class NotificationSettingsWidgets extends StatelessWidget {
     );
   }
 
+  /// «يتجاوز الوضع الصامت» — whether the adhan sounds through a silenced phone.
+  ///
+  /// Stage 3 moved playback onto `AudioAttributes.USAGE_ALARM`, so the adhan
+  /// follows the ALARM slider and ignores silent and vibrate the way an alarm
+  /// clock does. That is almost certainly right for a prayer app and it is what
+  /// the `USE_EXACT_ALARM` exemption exists for — but it is a change people
+  /// notice on day one, in a meeting, and this is the switch that gives it back.
+  ///
+  /// Android only: on iOS the system decides, and the app has no say.
+  static Widget buildSilentOverrideToggle(
+    BuildContext context,
+    AppSettingsModel settings,
+    SettingsCubit cubit,
+  ) {
+    if (!Platform.isAndroid) return const SizedBox.shrink();
+
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    // Modelled per prayer, written to all five together. Fajr is the one that
+    // is read for display because it is the one people set this for.
+    final isEnabled =
+        settings.notificationSettings.fajrSettings.overrideSilentMode;
+
+    // Same Material wrapper as the toggles above — provides the Material
+    // ancestor FSwitch's ink splashes need.
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+      child: Material(
+        color: isEnabled
+            ? (isDark
+                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                  : theme.colorScheme.primary.withValues(alpha: 0.08))
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isEnabled
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: FSwitch(
+              label: Text(
+                l10n?.translate('settings.adhan_override_silent') ??
+                    'الأذان يتجاوز الوضع الصامت',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+              description: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  l10n?.translate('settings.adhan_override_silent_subtitle') ??
+                      'يُرفع الأذان بمستوى صوت المنبّه حتى لو كان الهاتف صامتاً، '
+                          'مثل المنبّه تماماً. أوقِفه لتحترم التنبيهات الوضع الصامت.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              value: isEnabled,
+              onChange: (value) => cubit.toggleAdhanOverridesSilentMode(value),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   static Widget buildNotificationTimingSelector(
     BuildContext context,
     AppSettingsModel settings,

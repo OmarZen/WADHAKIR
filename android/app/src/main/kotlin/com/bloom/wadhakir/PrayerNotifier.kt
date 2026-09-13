@@ -5,39 +5,83 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
 /**
- * Posts the adhan notification when an alarm fires.
+ * Builds and posts the adhan notification when an alarm fires.
  *
  * Renders nothing of its own: the title, body, channel and payload were all
  * decided in Dart and carried across in [PrayerAlarm]. This turns them into a
- * `Notification` and hands it to the OS.
+ * `Notification` and hands it to the OS — or, on the normal path, to
+ * [AdhanPlaybackService], which posts it as its foreground notification.
  *
  * ## Where the sound comes from
  *
- * From Oreo it is the CHANNEL, never the notification. The adhan channels are
- * created with the mp3 baked in as their sound, which is what makes the full
- * adhan play with no app process alive — and channel sound is immutable once
- * created, hence one channel per adhan and the `_v1` suffix on the keys.
+ * [AdhanPlaybackService], since Stage 3. It used to be the CHANNEL, which is
+ * why the keys carried a `_v1` suffix — channel sound is immutable once
+ * created, so one channel per adhan was the only way to let the user choose
+ * one. That bought a full adhan with no app process alive, at the cost of a
+ * stop button that was best-effort by construction.
  *
- * On 24 and 25 there are no channels, so the sound is set on the notification
- * instead. That path is easy to forget and impossible to notice in testing on a
- * modern device: the notification appears, and it is silent.
+ * The channels this file creates are now **silent**, and there are two of them:
+ * Fajr, and the other four. New keys, because the `_v1` channels can never stop
+ * sounding. Both are declared on the Dart side as well —
+ * `AwesomeNotifications().initialize()` replaces the whole channel set at every
+ * cold start, so a channel only Kotlin creates is deleted the next time the app
+ * opens and every notification posted to it is silently dropped.
  */
 object PrayerNotifier {
 
     /** Extra carried to MainActivity so a tap can be routed to the right screen. */
     const val EXTRA_PAYLOAD_PREFIX = "wadhakir_payload_"
 
+    /**
+     * Posts the adhan card on its own, with no playback service behind it.
+     *
+     * Two paths reach this: the user asked the adhan to respect a silenced
+     * phone, and the foreground service could not be started. Both want the
+     * card — dismissible, because nothing is playing that a stop button would
+     * have to reach.
+     */
     fun post(context: Context, alarm: PrayerAlarm) {
         ensureChannel(context, alarm)
+        postBuilt(context, alarm.id, buildAdhan(context, alarm, ongoing = false))
+    }
 
+    /** Hands an already-built notification to the OS. */
+    fun postBuilt(context: Context, id: Int, notification: android.app.Notification) {
+        try {
+            NotificationManagerCompat.from(context).notify(id, notification)
+        } catch (_: SecurityException) {
+            // POST_NOTIFICATIONS was revoked between arming and firing. Nothing
+            // to recover here; the reminder-health screen (R3) is where the user
+            // finds out.
+        }
+    }
+
+    /**
+     * The adhan card.
+     *
+     * [ongoing] is true when [AdhanPlaybackService] is about to foreground
+     * itself on this notification. That case must not auto-cancel: a tap opens
+     * the app — which people do *because* they heard the adhan — and dismissing
+     * the card there would take the stop button away from an adhan that is
+     * still playing. The service takes it down itself when the mp3 ends.
+     *
+     * The delete intent matters for the same reason. From Android 14 a
+     * foreground-service notification can be swiped away without stopping the
+     * service, which would otherwise leave the adhan sounding with no visible
+     * way to stop it.
+     */
+    fun buildAdhan(
+        context: Context,
+        alarm: PrayerAlarm,
+        ongoing: Boolean = true,
+    ): android.app.Notification {
+        val stop = stopIntent(context, alarm.id)
         val builder = NotificationCompat.Builder(context, alarm.channelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(alarm.title)
@@ -51,38 +95,39 @@ object PrayerNotifier {
             .setGroup(alarm.groupKey)
             .setWhen(alarm.fireAtEpochMs)
             .setShowWhen(true)
-            .setAutoCancel(true)
+            .setOngoing(ongoing)
+            .setAutoCancel(!ongoing)
             .setContentIntent(tapIntent(context, alarm))
-            .addAction(
-                0,
-                STOP_LABEL,
-                stopIntent(context, alarm.id),
-            )
+            .addAction(0, STOP_LABEL, stop)
+            // Without this the platform is allowed to hold a foreground
+            // service's notification back for ten seconds. Ten seconds of adhan
+            // with no visible stop button is the whole defect this stage exists
+            // to fix.
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            // Pre-channel Android. Without this the adhan is silent on 24/25 —
-            // and the fallback matters as much as the adhan itself: a user on
-            // the "Default" sound option has no raw resource, and setting no
-            // sound at all would give them a completely silent prayer alert
-            // rather than the system notification tone they expect.
-            val sound = soundUri(context, alarm) ?: defaultNotificationSound()
-            sound?.let { builder.setSound(it, AudioManagerStreamAlarm) }
-            if (alarm.vibrate) {
-                builder.setVibrate(longArrayOf(0, 500, 250, 500))
-            }
+        if (ongoing) {
+            builder.setDeleteIntent(stop)
         }
 
-        try {
-            NotificationManagerCompat.from(context).notify(alarm.id, builder.build())
-        } catch (_: SecurityException) {
-            // POST_NOTIFICATIONS was revoked between arming and firing. Nothing
-            // to recover here; the reminder-health screen (R3) is where the user
-            // finds out.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && alarm.vibrate) {
+            // Pre-channel Android has nowhere else to put this. From Oreo the
+            // channel carries the vibration pattern, and setting it here too
+            // would buzz twice.
+            builder.setVibrate(longArrayOf(0, 500, 250, 500))
         }
+
+        return builder.build()
     }
 
-    /** Dismisses a sounding adhan. Cancelling the notification stops the sound. */
+    /**
+     * Takes the adhan card out of the tray.
+     *
+     * This used to be how the adhan was stopped — cancelling the notification
+     * that owned the channel sound. It is now only the card: the sound belongs
+     * to [AdhanPlaybackService], and [PrayerAlarmReceiver] stops that too.
+     */
     fun cancel(context: Context, id: Int) {
+        if (id < 0) return
         NotificationManagerCompat.from(context).cancel(id)
     }
 
@@ -149,51 +194,52 @@ object PrayerNotifier {
      *
      * From Oreo a notification posted to an unknown channel id is dropped with
      * no error and nothing in logcat. The channels are normally created by
-     * `awesome_notifications` at app init, but this receiver can fire long after
-     * the user cleared the app's data or after a restore onto a new device — and
-     * a missing channel would turn every remaining adhan into silence.
+     * `awesome_notifications` at app init, but this can fire long after the user
+     * cleared the app's data or after a restore onto a new device — and a
+     * missing channel would turn every remaining adhan into a dropped one.
      *
      * Creating one that already exists is a no-op, and Android ignores changes
      * to an existing channel's settings, so this can never override what the
      * plugin (or the user) configured.
+     *
+     * **Silent, deliberately.** [AdhanPlaybackService] owns the audio now.
+     * Leaving a sound on the channel as well would play the adhan twice, out of
+     * step with itself, on two different volume sliders.
      */
-    private fun ensureChannel(context: Context, alarm: PrayerAlarm) {
+    fun ensureChannel(context: Context, alarm: PrayerAlarm) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
         if (manager.getNotificationChannel(alarm.channelId) != null) return
 
+        val isFajr = alarm.channelId == FAJR_ADHAN_CHANNEL_ID
         val channel = NotificationChannel(
             alarm.channelId,
-            FALLBACK_CHANNEL_NAME,
+            if (isFajr) FAJR_CHANNEL_NAME else ADHAN_CHANNEL_NAME,
             NotificationManager.IMPORTANCE_MAX,
         ).apply {
-            enableVibration(alarm.vibrate)
-            soundUri(context, alarm)?.let { uri ->
-                setSound(
-                    uri,
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build(),
-                )
-            }
+            setSound(null, null)
+            enableVibration(true)
+            vibrationPattern = longArrayOf(0, 500, 250, 500)
+            setShowBadge(true)
         }
         manager.createNotificationChannel(channel)
     }
 
     /**
-     * The user's system notification tone, or null if it cannot be read.
+     * Whether the user has left this channel able to speak.
      *
-     * Wrapped because this receiver now runs in direct boot, and the settings
-     * provider that backs it is per-user: on an API 24/25 device with
-     * file-based encryption it can be unavailable before the first unlock. A
-     * throw here would take the whole adhan down, which is a far worse outcome
-     * than falling back to a silent card on two old API levels.
+     * Checked before starting playback, because a blocked channel makes the
+     * foreground notification invisible while the service keeps running — an
+     * adhan with no stop button anywhere, which is strictly worse than the
+     * best-effort one Stage 3 replaced. A muted channel is read as "the user
+     * muted the adhan", and nothing plays.
      */
-    private fun defaultNotificationSound(): Uri? = try {
-        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-    } catch (_: Exception) {
-        null
+    fun channelAllowsAlert(context: Context, channelId: String): Boolean {
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true
+        val manager = context.getSystemService(NotificationManager::class.java) ?: return true
+        val channel = manager.getNotificationChannel(channelId) ?: return true
+        return channel.importance != NotificationManager.IMPORTANCE_NONE
     }
 
     /**
@@ -207,13 +253,6 @@ object PrayerNotifier {
      */
     fun cancelLocationNotice(context: Context) {
         NotificationManagerCompat.from(context).cancel(LOCATION_NOTICE_ID)
-    }
-
-    /** The bundled adhan, or null for the "Default" option's system beep. */
-    private fun soundUri(context: Context, alarm: PrayerAlarm): Uri? {
-        val res = alarm.soundRes ?: return null
-        if (res.isEmpty()) return null
-        return Uri.parse("android.resource://${context.packageName}/raw/$res")
     }
 
     private fun tapIntent(context: Context, alarm: PrayerAlarm): PendingIntent {
@@ -249,12 +288,6 @@ object PrayerNotifier {
         )
     }
 
-    /**
-     * `Notification.STREAM_ALARM`, spelled out because the constant is
-     * deprecated on the AndroidX builder and only reachable pre-Oreo anyway.
-     */
-    private const val AudioManagerStreamAlarm = 4
-
     private const val STOP_LABEL = "إيقاف الأذان"
 
     /**
@@ -263,7 +296,21 @@ object PrayerNotifier {
      */
     private const val STOP_REQUEST_BASE = 900_000
 
-    private const val FALLBACK_CHANNEL_NAME = "تنبيه الصلاة"
+    /**
+     * The two silent adhan channels, replacing the fifteen sounding `_v1` keys.
+     *
+     * **Must match `PrayerNotificationContent` in Dart**, which declares them to
+     * `AwesomeNotifications().initialize()`. Split Fajr from the rest because a
+     * channel's importance, vibration and lock-screen visibility are the user's
+     * to change, and the one prayer people most often want treated differently
+     * is Fajr — the split also leaves room for the Fajr-only DND bypass without
+     * minting keys a second time.
+     */
+    const val ADHAN_CHANNEL_ID = "prayer_adhan_v2"
+    const val FAJR_ADHAN_CHANNEL_ID = "prayer_adhan_fajr_v2"
+
+    private const val ADHAN_CHANNEL_NAME = "الأذان"
+    private const val FAJR_CHANNEL_NAME = "أذان الفجر"
 
     /**
      * Must match `PrayerNotificationContent.locationNoticeChannelKey` in Dart.

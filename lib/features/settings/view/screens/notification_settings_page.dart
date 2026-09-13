@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
@@ -58,6 +60,19 @@ class NotificationSettingsPage extends StatelessWidget {
                 ),
                 _divider(theme),
                 const AdhanSoundsSectionWidget(),
+                // Sits under the adhan picker on purpose: it is about how that
+                // adhan is heard, not about when the notification arrives.
+                // Android-only, and the divider is gated with it — the toggle
+                // returns an empty box elsewhere, which would otherwise leave
+                // two rules stacked on top of each other.
+                if (Platform.isAndroid) ...[
+                  _divider(theme),
+                  NotificationSettingsWidgets.buildSilentOverrideToggle(
+                    context,
+                    settings,
+                    cubit,
+                  ),
+                ],
                 _divider(theme),
                 NotificationSettingsWidgets.buildPrayerNotificationsSettings(
                   context,

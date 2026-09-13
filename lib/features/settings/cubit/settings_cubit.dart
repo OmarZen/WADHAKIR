@@ -257,6 +257,41 @@ class SettingsCubit extends Cubit<SettingsState> {
     }
   }
 
+  /// Whether the adhan sounds through a silenced phone.
+  ///
+  /// One switch, written to all five prayers — the same fan-out
+  /// [updateAllRegularPrayersSounds] does. The flag is modelled per prayer so a
+  /// future "Fajr only" reading of it costs no migration, but there is no
+  /// per-prayer control in the UI and there should not be one until somebody
+  /// asks: five switches for an alarm-clock behaviour is the kind of settings
+  /// sprawl PRODUCT.md exists to refuse.
+  Future<void> toggleAdhanOverridesSilentMode(bool enabled) async {
+    if (state is! SettingsLoaded) return;
+
+    final notificationSettings =
+        (state as SettingsLoaded).settings.notificationSettings;
+
+    await setNotificationSettings(
+      notificationSettings.copyWith(
+        fajrSettings: notificationSettings.fajrSettings.copyWith(
+          overrideSilentMode: enabled,
+        ),
+        dhuhrSettings: notificationSettings.dhuhrSettings.copyWith(
+          overrideSilentMode: enabled,
+        ),
+        asrSettings: notificationSettings.asrSettings.copyWith(
+          overrideSilentMode: enabled,
+        ),
+        maghribSettings: notificationSettings.maghribSettings.copyWith(
+          overrideSilentMode: enabled,
+        ),
+        ishaSettings: notificationSettings.ishaSettings.copyWith(
+          overrideSilentMode: enabled,
+        ),
+      ),
+    );
+  }
+
   /// Toggle persistent notification
   Future<void> togglePersistentNotification(bool enabled) async {
     if (state is SettingsLoaded) {

@@ -135,9 +135,12 @@ class _MobileNotificationRepositoryImpl
     implements NotificationRepository, PrayerAlarmGateway {
   static const String _channelKeyFajr = 'fajr_channel';
   static const String _channelKeyPrayers = 'prayers_channel';
-  static const String _channelKeyFajrDefault = 'fajr_channel_default_sound';
-  static const String _channelKeyPrayersDefault =
-      'prayers_channel_default_sound';
+  // The two system-beep prayer channels retired by Stage 3 now live as
+  // constants on PrayerNotificationContent, next to the adhan keys that
+  // replaced them — see _legacyAdhanChannelKeys.
+  //
+  // Must match `PersistentPrayerNotifier.CHANNEL_ID` in Kotlin, which is what
+  // posts to it since roadmap #13.
   static const String _channelKeyPersistent = 'persistent_prayer_channel';
   // Must match `FastingNotificationService._channelKey`. Both services
   // initialize awesome_notifications independently — calling `initialize()`
@@ -247,32 +250,187 @@ class _MobileNotificationRepositoryImpl
     return etc;
   }
 
-  /// Build one notification channel per adhan sound, with the mp3 baked in as
-  /// `soundSource`. Channel keys are versioned (`_v1`) because Android channel
-  /// settings are immutable once created — to change a baked sound later, bump
-  /// the version and delete the old key.
-  List<NotificationChannel> _adhanSoundChannels() {
-    return AdhanSounds.all
-        .map(
-          (o) => NotificationChannel(
-            channelKey: 'adhan_${o.key}_v1',
-            channelName: 'أذان: ${o.name}',
-            channelDescription: 'تنبيه الصلاة بصوت "${o.name}"',
-            importance: NotificationImportance.Max,
-            defaultColor: const Color(0xFF20497D),
-            ledColor: const Color(0xFF20497D),
-            playSound: true,
-            soundSource: 'resource://raw/${o.androidRawRes}',
-            enableVibration: true,
-            vibrationPattern: highVibrationPattern,
-            channelShowBadge: true,
-            locked: false,
-            onlyAlertOnce: true,
-            icon: 'resource://drawable/ic_notification',
-          ),
-        )
-        .toList();
+  /// The two **silent** adhan channels.
+  ///
+  /// This used to be a fan-out: one channel per bundled adhan, with the mp3
+  /// baked in as `soundSource`, because a channel's sound is immutable once
+  /// created and that was the only way to let a user choose one. Thirteen of
+  /// those plus two system-beep channels is the fifteen that Stage 3 retired —
+  /// see [_retireLegacyAdhanChannels].
+  ///
+  /// `AdhanPlaybackService` owns the audio now, which is what makes the stop
+  /// button real, so there is nothing for the channel to carry but importance
+  /// and vibration. `playSound: false` is load-bearing: a sound here would play
+  /// on top of the service, out of step with it and on a different volume
+  /// slider.
+  ///
+  /// Fajr keeps a channel of its own so its importance and lock-screen
+  /// visibility can be tuned — by the user today, and by a Fajr-only DND bypass
+  /// later — without dragging the other four along.
+  List<NotificationChannel> _adhanChannels() => [
+    NotificationChannel(
+      channelKey: PrayerNotificationContent.fajrAdhanChannelKey,
+      channelName: 'أذان الفجر',
+      channelDescription: 'تنبيه صلاة الفجر',
+      importance: NotificationImportance.Max,
+      defaultColor: const Color(0xFF20497D),
+      ledColor: const Color(0xFF20497D),
+      playSound: _channelPlaysSound,
+      enableVibration: true,
+      vibrationPattern: highVibrationPattern,
+      channelShowBadge: true,
+      locked: false,
+      onlyAlertOnce: true,
+      icon: 'resource://drawable/ic_notification',
+    ),
+    NotificationChannel(
+      channelKey: PrayerNotificationContent.adhanChannelKey,
+      channelName: 'الأذان',
+      channelDescription: 'تنبيه الصلوات الأربع (الظهر، العصر، المغرب، العشاء)',
+      importance: NotificationImportance.Max,
+      defaultColor: const Color(0xFF20497D),
+      ledColor: const Color(0xFF20497D),
+      playSound: _channelPlaysSound,
+      enableVibration: true,
+      vibrationPattern: highVibrationPattern,
+      channelShowBadge: true,
+      locked: false,
+      onlyAlertOnce: true,
+      icon: 'resource://drawable/ic_notification',
+    ),
+  ];
+
+  /// Silent on Android, sounding on iOS — and the asymmetry is load-bearing.
+  ///
+  /// On Android the channel must be silent or the adhan plays twice: once from
+  /// `AdhanPlaybackService`, once from the channel, out of step and on two
+  /// different volume sliders.
+  ///
+  /// On iOS there is no such service and no OS channel either — the channel
+  /// model is only a gate. `NotificationBuilder.swift` attaches the sound as
+  ///
+  ///     if (content.playSound ?? false) && (channel.playSound ?? false)
+  ///
+  /// so a `playSound: false` channel silences the `customSound` the iOS adhan
+  /// rides on, for every prayer. Stage 3 is Android-only work; this is what
+  /// keeps it that way.
+  static bool get _channelPlaysSound => Platform.isIOS;
+
+  /// Every channel key Stage 3 took out of service.
+  ///
+  /// Thirteen per-sound adhan channels plus the two system-beep ones. Android
+  /// never garbage-collects a deleted channel, so without removing these by key
+  /// they would sit in the user's system notification settings forever on every
+  /// upgraded install — fifteen rows named after adhans that no longer live
+  /// there.
+  static List<String> get _legacyAdhanChannelKeys => [
+    ...AdhanSounds.all.map(
+      (o) => PrayerNotificationContent.legacyAdhanChannelKey(o.key),
+    ),
+    PrayerNotificationContent.legacyFajrDefaultChannelKey,
+    PrayerNotificationContent.legacyPrayersDefaultChannelKey,
+  ];
+
+  /// Deletes the retired channels — but only once the native path has won.
+  ///
+  /// Conditional because the plugin fallback path on Android still needs one of
+  /// them: it cannot reach a foreground service, so its sound has to come from
+  /// a channel. See [_ensureLegacySoundChannel].
+  ///
+  /// Two costs, both accepted deliberately.
+  ///
+  /// `removeChannel` closes any live notification on the channel, so on the
+  /// very first launch after this update a user who opens the app *while the
+  /// old channel-sound adhan is playing* has it cut short. One launch, on one
+  /// upgrade — and after that no prayer posts to these keys at all, because
+  /// `PrayerAlarm.migrateChannel` rewrites even the rows that still name them.
+  ///
+  /// And a user who had MUTED one of these channels loses that: the new channel
+  /// is created fresh, at full importance, and the adhan now rides the alarm
+  /// stream. Their mute is not readable as an intent — it could have meant
+  /// "not this adhan" — and channel settings cannot be carried across keys.
+  /// This is the migration cost the account owner accepted when choosing two
+  /// channels over fifteen; it belongs in the release notes.
+  Future<void> _retireLegacyAdhanChannels() async {
+    for (final key in _legacyAdhanChannelKeys) {
+      try {
+        await AwesomeNotifications().removeChannel(key);
+      } catch (_) {
+        // Never created on this install — a fresh one, or a sound the user
+        // never selected. Nothing to remove.
+      }
+    }
   }
+
+  /// Recreates the one sounding channel the plugin fallback path needs.
+  ///
+  /// The native path plays the adhan from a foreground service, which is what
+  /// makes its stop button real. The plugin path has no such lever: its
+  /// notification is posted by the plugin's own receiver, which this app cannot
+  /// hook, so on Android its sound must still come from a channel with the mp3
+  /// baked in.
+  ///
+  /// Only ever one, for the sound actually selected — not the old fan-out of
+  /// fifteen. The key is deliberately the original `adhan_<key>_v1`, so an
+  /// upgraded install reuses the channel it already has, with whatever the user
+  /// tuned on it intact. Android restores a deleted channel's previous settings
+  /// when it is recreated under the same id, which is exactly what is wanted
+  /// here and is why [_retireLegacyAdhanChannels] is safe to have run.
+  ///
+  /// Returns the channel key to post to.
+  Future<String> _ensureLegacySoundChannel(
+    AdhanSoundOption? adhan,
+    bool isFajr,
+  ) async {
+    final key = adhan?.androidRawRes != null
+        ? PrayerNotificationContent.legacyAdhanChannelKey(adhan!.key)
+        : (isFajr
+              ? PrayerNotificationContent.legacyFajrDefaultChannelKey
+              : PrayerNotificationContent.legacyPrayersDefaultChannelKey);
+
+    // Once per key per launch. A sixty-day sweep is three hundred arms, and
+    // without this every one of them made a platform round trip to create a
+    // channel that already existed.
+    if (_ensuredLegacyChannels.contains(key)) return key;
+
+    try {
+      await AwesomeNotifications().setChannel(
+        NotificationChannel(
+          channelKey: key,
+          channelName: adhan != null ? 'أذان: ${adhan.name}' : 'تنبيه الصلاة',
+          channelDescription: 'تنبيه الصلاة (المسار الاحتياطي)',
+          importance: NotificationImportance.Max,
+          defaultColor: const Color(0xFF20497D),
+          ledColor: const Color(0xFF20497D),
+          playSound: true,
+          soundSource: adhan?.androidRawRes != null
+              ? 'resource://raw/${adhan!.androidRawRes}'
+              : null,
+          enableVibration: true,
+          vibrationPattern: highVibrationPattern,
+          channelShowBadge: true,
+          locked: false,
+          onlyAlertOnce: true,
+          icon: 'resource://drawable/ic_notification',
+        ),
+        // Never force: Android ignores changes to an existing channel anyway,
+        // and forcing would reset settings the user had changed.
+        forceUpdate: false,
+      );
+      _ensuredLegacyChannels.add(key);
+    } catch (e) {
+      // Deliberately not memoised on failure, so the next arm tries again.
+      debugPrint(
+        'NotificationRepository: could not ensure fallback channel: $e',
+      );
+    }
+
+    return key;
+  }
+
+  /// Legacy sounding channels already recreated in this launch.
+  /// See [_ensureLegacySoundChannel].
+  final Set<String> _ensuredLegacyChannels = <String>{};
 
   @override
   Future<void> initialize() async {
@@ -304,44 +462,15 @@ class _MobileNotificationRepositoryImpl
     await AwesomeNotifications().initialize(
       'resource://drawable/ic_notification', // Use custom notification icon
       [
-        // One channel per adhan sound, each with the mp3 BAKED IN as the
-        // channel sound (resource://raw/...). Android bakes the sound into the
-        // channel at creation, so the correct adhan plays reliably even when the
-        // app is killed — this is the core reliability fix. When the phone is on
-        // silent/vibrate, Android suppresses the sound and only the (strong)
-        // vibration fires. See AdhanSounds catalog for the key→raw mapping.
-        ..._adhanSoundChannels(),
-        // Fajr channel - Default notification sound (short beep)
-        NotificationChannel(
-          channelKey: _channelKeyFajrDefault,
-          channelName: 'صلاة الفجر (صوت النظام)',
-          channelDescription: 'تنبيهات صلاة الفجر بصوت النظام',
-          importance: NotificationImportance.Max,
-          defaultColor: const Color(0xFF20497D),
-          ledColor: const Color(0xFF20497D),
-          playSound: true,
-          enableVibration: true,
-          channelShowBadge: true,
-          locked: false,
-          onlyAlertOnce: true,
-          icon: 'resource://drawable/ic_notification',
-        ),
-        // Other prayers channel - Default notification sound (short beep)
-        NotificationChannel(
-          channelKey: _channelKeyPrayersDefault,
-          channelName: 'أوقات الصلاة (صوت النظام)',
-          channelDescription: 'تنبيهات الصلوات بصوت النظام',
-          importance: NotificationImportance.High,
-          defaultColor: const Color(0xFF20497D),
-          ledColor: const Color(0xFF20497D),
-          playSound: true,
-          enableVibration: true,
-          channelShowBadge: true,
-          locked: false,
-          onlyAlertOnce: true,
-          icon: 'resource://drawable/ic_notification',
-        ),
-        // Persistent notification channel - Default importance (no sound)
+        // Two SILENT adhan channels, Fajr and the other four. The sound is not
+        // here any more — AdhanPlaybackService owns it, which is what makes the
+        // stop button real. See _adhanChannels for why this used to be fifteen
+        // channels and what happened to them.
+        ..._adhanChannels(),
+        // Persistent notification channel - Default importance (no sound).
+        // POSTED FROM KOTLIN since roadmap #13: the countdown is rendered by
+        // Android's own chronometer, which the plugin cannot reach. Still
+        // declared here because initialize() replaces the whole channel set.
         NotificationChannel(
           channelKey: _channelKeyPersistent,
           channelName: 'تنبيه دائم لأوقات الصلاة',
@@ -467,6 +596,14 @@ class _MobileNotificationRepositoryImpl
     // created above, and a notification sent to a channel key that does not
     // exist is dropped by Android without an error anywhere.
     await _resolveAlarmOwner();
+
+    // Only once the native path has actually won. The plugin fallback still
+    // needs one of these keys to make a sound at all — see
+    // _ensureLegacySoundChannel — so retiring them unconditionally would leave
+    // an escape-hatch user with a silent adhan.
+    if (_usesNativeAlarms) {
+      await _retireLegacyAdhanChannels();
+    }
   }
 
   /// Decides, once per launch, whether the native `AlarmManager` bridge or
@@ -593,6 +730,41 @@ class _MobileNotificationRepositoryImpl
       // The diagnostic probe: fires as soon as it is asked to, with no lead
       // time and no past-time check — the caller has already put it a couple
       // of seconds out precisely so the user sees it immediately.
+      //
+      // On the native path it goes down the REAL fire path: the same channel,
+      // the same card, the same playback service a prayer uses. That is the
+      // whole value of the button — somebody is asking "will I actually hear
+      // this?", and a probe that answered for a route no adhan takes would be
+      // worse than no button. On this release it would also recreate one of the
+      // sounding channels Stage 3 just retired.
+      if (_usesNativeAlarms) {
+        final planned = PlannedPrayerNotification(
+          id: _testNotificationId,
+          prayer: PlannedPrayer.dhuhr,
+          day: DateTime(prayerTime.year, prayerTime.month, prayerTime.day),
+          dayIndex: 0,
+          prayerTime: prayerTime,
+          fireTime: prayerTime,
+          settings: settings,
+        );
+        final content = PrayerNotificationContent.of(
+          planned,
+          locationName: locationName,
+        );
+        final sounded = await const MethodChannelAlarmBridge().testAdhan({
+          ...NativePrayerAlarmGateway.payloadFor(planned, content),
+          // The probe's own id, not the one the planner would give Dhuhr —
+          // 998 is outside the 100..694 prayer window on purpose, so a stray
+          // test card can never be mistaken for a real prayer or be swept up
+          // by the prayer-range cancel.
+          'id': _testNotificationId,
+          'title': '🔔 تنبيه تجريبي',
+        });
+        if (sounded) return;
+        // The native side could not start the service. Fall through to the
+        // plugin so the user still sees something and learns the answer.
+      }
+
       await _render(
         id: _testNotificationId,
         prayerName: prayerName,
@@ -671,17 +843,26 @@ class _MobileNotificationRepositoryImpl
         ? ''
         : (leadMinutes == 15 ? ' (بعد 15 دقيقة)' : ' (بعد $leadMinutes دقائق)');
 
-    // Resolve the selected adhan → its per-sound channel (sound baked in), so
-    // the correct adhan plays even when the app is dead. A null/unknown sound
-    // (the "Default" option) falls back to the system-beep channel.
+    // Resolve the selected adhan. On iOS it becomes the `customSound` below;
+    // on Android it decides which sounding channel this fallback path needs.
     final AdhanSoundOption? adhan = AdhanSounds.byAssetPath(
       settings.customSoundPath,
     );
     final bool useCustomAdhan = adhan?.androidRawRes != null;
 
-    final String channelKey = useCustomAdhan
-        ? 'adhan_${adhan!.key}_v1'
-        : (isFajr ? _channelKeyFajrDefault : _channelKeyPrayersDefault);
+    // This whole class IS the fallback path. When it is arming prayers, the
+    // native alarm bridge is not — so there is no AdhanPlaybackService in the
+    // fire path and nothing to start one, and the sound has to come from a
+    // channel with the mp3 baked in, the way it did before Stage 3.
+    //
+    // Exactly one channel, for the sound actually chosen, created on demand;
+    // not the fifteen the app used to declare. On iOS the channel is irrelevant
+    // — `customSound` carries the adhan — so it is not created there.
+    final String channelKey = Platform.isAndroid
+        ? await _ensureLegacySoundChannel(adhan, isFajr)
+        : (isFajr
+              ? PrayerNotificationContent.fajrAdhanChannelKey
+              : PrayerNotificationContent.adhanChannelKey);
 
     // Format time for display
     final String formattedTime = _formatTime(prayerTime);

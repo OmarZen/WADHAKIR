@@ -1,102 +1,165 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'native_persistent_notifier.dart';
+import 'prayer_notification_content.dart';
 import 'prayer_notification_service.dart';
 import '../../../data/models/prayer_times_model.dart';
 
-/// Manager for persistent notification that updates every minute
+/// Keeps the ongoing "next prayer" card up to date.
+///
+/// ## What changed, and why it mattered
+///
+/// This used to run `Timer.periodic(Duration(seconds: 1))` and post a whole
+/// notification across the platform channel on every tick — **86,400 posts and
+/// platform round-trips a day**, forever, to animate a countdown. It was the
+/// single largest battery cost in the app, and battery drain is the most common
+/// reason a prayer app is uninstalled.
+///
+/// It was also wrong in the way that mattered most. A Dart timer only runs
+/// while the app does, so the number froze the moment the user left the app —
+/// which is precisely when they would glance at the shade to see how long is
+/// left.
+///
+/// Android has rendered countdowns natively since API 24: `setWhen(instant)`
+/// plus `setUsesChronometer` and `setChronometerCountDown`. The system counts,
+/// with no process alive and **no updates at all**. The plugin does not expose
+/// those flags, which is why this was blocked until R2 built a native
+/// notification path — so the card is now posted from Kotlin.
+///
+/// ## What now updates it
+///
+/// Two things, both of them events rather than ticks:
+///
+///  * this class, when prayer times change or the feature is switched on;
+///  * `PrayerAlarmReceiver`, as each alarm fires — the only moment the *next*
+///    prayer becomes a different prayer. That one runs with no Flutter engine,
+///    which is what keeps the card honest while the app is closed.
+///
+/// Five or six posts a day, down from 86,400.
 class PersistentNotificationManager {
   static final PersistentNotificationManager _instance =
       PersistentNotificationManager._internal();
   factory PersistentNotificationManager() => _instance;
-  PersistentNotificationManager._internal();
 
-  final PrayerNotificationService _notificationService =
-      PrayerNotificationService();
+  PersistentNotificationManager._internal()
+    : _notificationService = PrayerNotificationService(),
+      _nativeNotifier = const MethodChannelPersistentNotifier();
 
-  Timer? _updateTimer;
+  /// Test seam. The production path is the singleton above.
+  @visibleForTesting
+  PersistentNotificationManager.forTesting({
+    required NativePersistentNotifier notifier,
+    PrayerNotificationService? fallbackService,
+  }) : _nativeNotifier = notifier,
+       _notificationService = fallbackService ?? PrayerNotificationService();
+
+  /// The title, with a `{prayer}` token Kotlin substitutes.
+  ///
+  /// Kept here because the native side has to re-render this card on its own
+  /// when an alarm fires, and a second author of Arabic copy on the native side
+  /// is the drift the whole wire format exists to prevent.
+  @visibleForTesting
+  static const String titleFormat = '🕌 الصلاة القادمة: {prayer}';
+
+  final PrayerNotificationService _notificationService;
+  final NativePersistentNotifier _nativeNotifier;
+
   bool _isActive = false;
   PrayerTimesModel? _currentPrayerTimes;
   String? _locationName;
 
-  /// Start the persistent notification with auto-update
+  /// Shows the card and leaves Android to count.
+  ///
+  /// No timer is started. If one is ever added back here, read the class doc
+  /// first — the countdown does not need it, and the cost is 86,400 platform
+  /// round-trips a day.
   Future<void> start({
     required PrayerTimesModel prayerTimes,
     String? locationName,
   }) async {
+    _currentPrayerTimes = prayerTimes;
+    _locationName = locationName;
+
     if (_isActive) {
-      debugPrint('⏰ Persistent notification already running');
+      // Already showing. Still re-post: the caller reaches here on every
+      // reschedule, and the times it just handed over may be newer than the
+      // ones the card was built from.
+      await _post();
       return;
     }
 
-    _currentPrayerTimes = prayerTimes;
-    _locationName = locationName;
     _isActive = true;
-
-    // Show initial notification
-    await _updateNotification();
-
-    // Update every second for real-time countdown
-    _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
-      await _updateNotification();
-    });
-
-    debugPrint('✅ Persistent notification started with 1-second updates');
+    await _post();
   }
 
-  /// Stop the persistent notification
+  /// Takes the card down.
+  ///
+  /// Deliberately NOT guarded on [_isActive]. The card is now owned natively
+  /// and rolled forward by a broadcast receiver, so it outlives this process —
+  /// while `_isActive` is a Dart field that starts false in every new one. The
+  /// guard meant that a user who turned the card off in a session where it had
+  /// not yet been started (the setting toggled before prayer times finished
+  /// loading, or a reschedule that found no times) never reached `hide`, the
+  /// native flag stayed set, and the receiver re-posted the card after every
+  /// prayer forever. There was no way back from it short of clearing app data.
+  ///
+  /// Hiding something that is already hidden costs one no-op cancel.
   Future<void> stop() async {
-    if (!_isActive) return;
-
-    _updateTimer?.cancel();
-    _updateTimer = null;
     _isActive = false;
     _currentPrayerTimes = null;
     _locationName = null;
 
-    await _notificationService.hidePersistentNotification();
-    debugPrint('🛑 Persistent notification stopped');
+    if (_useNativeRenderer) {
+      await _nativeNotifier.hide();
+    } else {
+      await _notificationService.hidePersistentNotification();
+    }
   }
 
-  /// Update prayer times (called when prayer times are refreshed)
+  /// Called when prayer times are recomputed.
   Future<void> updatePrayerTimes({
     required PrayerTimesModel prayerTimes,
     String? locationName,
   }) async {
     _currentPrayerTimes = prayerTimes;
     _locationName = locationName;
-
-    if (_isActive) {
-      await _updateNotification();
-      debugPrint('🔄 Persistent notification updated with new prayer times');
-    }
+    if (_isActive) await _post();
   }
 
-  /// Update the notification with current prayer info
-  Future<void> _updateNotification() async {
-    if (_currentPrayerTimes == null) {
-      debugPrint('⚠️ No prayer times available for notification');
-      return;
-    }
+  /// Whether the countdown is rendered by Android rather than re-posted.
+  ///
+  /// Android only. Windows keeps the plugin path — `notification_repository_
+  /// impl_windows.dart` has its own implementation — and iOS never gets here at
+  /// all: an ongoing notification is not a thing iOS has, so the caller in
+  /// `PrayerTimesCubit` is already guarded on platform.
+  bool get _useNativeRenderer =>
+      defaultTargetPlatform == TargetPlatform.android;
+
+  Future<void> _post() async {
+    final times = _currentPrayerTimes;
+    if (times == null) return;
+
+    final next = _getNextPrayer(DateTime.now(), times);
+    if (next == null) return;
+
+    final prayerAt = next['time'] as DateTime;
+    final body = PrayerNotificationContent.bodyText(prayerAt, _locationName);
 
     try {
-      final now = DateTime.now();
-      final nextPrayerInfo = _getNextPrayer(now, _currentPrayerTimes!);
-
-      if (nextPrayerInfo == null) {
-        debugPrint('⚠️ Could not determine next prayer');
-        return;
+      if (_useNativeRenderer) {
+        await _nativeNotifier.show(
+          titleFormat: titleFormat,
+          prayerName: next['nameAr'] as String,
+          body: body,
+          prayerAt: prayerAt,
+        );
+      } else {
+        await _notificationService.showPersistentNotification(
+          nextPrayerName: next['nameEn'] as String,
+          nextPrayerNameArabic: next['nameAr'] as String,
+          nextPrayerTime: prayerAt,
+          locationName: _locationName,
+        );
       }
-
-      await _notificationService.showPersistentNotification(
-        nextPrayerName: nextPrayerInfo['nameEn']!,
-        nextPrayerNameArabic: nextPrayerInfo['nameAr']!,
-        nextPrayerTime: nextPrayerInfo['time'] as DateTime,
-        locationName: _locationName,
-      );
-
-      debugPrint(
-        '📱 Updated notification: ${nextPrayerInfo['nameAr']} at ${nextPrayerInfo['time']}',
-      );
     } catch (e) {
       debugPrint('❌ Error updating persistent notification: $e');
     }

@@ -78,6 +78,18 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- Required by flutter_overlay_window's foreground service on Android 14+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- The adhan plays from AdhanPlaybackService, a mediaPlayback foreground
+         service. From targetSdk 34 the matching FOREGROUND_SERVICE_<TYPE>
+         permission is required on top of FOREGROUND_SERVICE, and without it
+         startForeground throws SecurityException at the first prayer.
+
+         quran_library's manifest already contributes this permission (it ships
+         com.ryanheise.audioservice.AudioService), so the merged manifest would
+         carry it either way — which is exactly why it is declared here. An app
+         whose adhan depends on a permission that arrives from a transitive
+         dependency's manifest loses it the day that dependency is replaced,
+         and the failure surfaces at a prayer time, not at build time. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Lets the app prompt the user to exempt it from Doze/battery
          optimization so scheduled adhan/fasting/wird alarms fire on time. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
@@ -150,6 +162,39 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="floating_dhikr_reminder_over_other_apps" />
         </service>
+
+        <!-- Plays the adhan. Started from PrayerAlarmReceiver when an alarm
+             fires, which is the only thing that starts it.
+
+             foregroundServiceType="mediaPlayback" because that is what it does —
+             it plays an audio file — and because mediaPlayback, unlike
+             specialUse, has NO TIMEOUT. A four-minute adhan cut short by the
+             platform would be a worse bug than the one this service fixes.
+
+             Starting a foreground service from the background is legal here
+             under a documented exemption: "the app invokes an exact alarm to
+             complete an action the user requested". PrayerAlarmScheduler arms
+             with setAlarmClock, which is that exact alarm. This needs the
+             Play Console foreground-service declaration at submission, next to
+             the exact-alarm one.
+
+             directBootAware is NOT optional. PrayerAlarmReceiver now fires
+             before the first unlock (Stage 2), so it can try to start this while
+             the device is still locked — and a component without the flag is not
+             a valid target then, so the start would fail with nothing in logcat
+             to say why. Same class of bug that made the whole of Stage 2 inert.
+
+             stopWithTask="false" so swiping the app out of Recents does not
+             kill a sounding adhan. It is the platform default for a service;
+             it is spelled out because the whole point of this service is that
+             its lifetime is the adhan's, not the app's. -->
+        <service
+            android:name=".AdhanPlaybackService"
+            android:enabled="true"
+            android:exported="false"
+            android:directBootAware="true"
+            android:stopWithTask="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <!-- The prayer adhan fire path. Not exported and given no intent filter:
              every intent that reaches it is an explicit one this app created,

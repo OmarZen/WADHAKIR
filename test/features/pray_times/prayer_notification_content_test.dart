@@ -13,6 +13,7 @@ PlannedPrayerNotification _planned({
   NotificationTiming timing = NotificationTiming.onTime,
   String? customSoundPath,
   bool vibration = true,
+  bool overrideSilentMode = true,
   DateTime? prayerTime,
 }) {
   final at = prayerTime ?? DateTime(2026, 3, 14, 11, 58);
@@ -30,54 +31,153 @@ PlannedPrayerNotification _planned({
       sound: NotificationSound.defaultSound,
       vibration: vibration,
       customSoundPath: customSoundPath,
+      overrideSilentMode: overrideSilentMode,
     ),
   );
 }
 
 void main() {
   group('channel resolution', () {
-    test('a chosen adhan routes to that sound\'s own channel', () {
-      // The mp3 is baked into the channel at creation, which is what lets the
-      // OS play the right adhan with no app process alive.
-      final content = PrayerNotificationContent.of(
-        _planned(prayer: PlannedPrayer.fajr, customSoundPath: _makkahFajrAsset),
-      );
-
-      expect(content.channelKey, 'adhan_adhan_fajr_makkah_v1');
-      expect(content.useCustomAdhan, isTrue);
-      expect(content.androidRawRes, 'adhan_fajr_makkah');
+    test('every prayer but Fajr shares one channel, whatever the adhan', () {
+      // Stage 3 collapsed fifteen sounding channels into two silent ones. The
+      // channel used to select the sound, because a channel's sound is
+      // immutable and that was the only way to offer a choice; the playback
+      // service selects it now, so the adhan cannot influence the channel.
+      for (final path in <String?>[null, _makkahFajrAsset]) {
+        expect(
+          PrayerNotificationContent.of(
+            _planned(prayer: PlannedPrayer.asr, customSoundPath: path),
+          ).channelKey,
+          PrayerNotificationContent.adhanChannelKey,
+        );
+      }
     });
 
-    test('the default sound splits Fajr from the other four', () {
-      // Two channels, not one, so Fajr's importance and vibration can diverge
-      // later without touching the rest.
+    test('Fajr keeps a channel of its own', () {
+      // So its importance, vibration and lock-screen visibility can diverge —
+      // by the user today, by a Fajr-only DND bypass later — without another
+      // migration.
+      expect(
+        PrayerNotificationContent.of(
+          _planned(
+            prayer: PlannedPrayer.fajr,
+            customSoundPath: _makkahFajrAsset,
+          ),
+        ).channelKey,
+        PrayerNotificationContent.fajrAdhanChannelKey,
+      );
       expect(
         PrayerNotificationContent.of(
           _planned(prayer: PlannedPrayer.fajr),
         ).channelKey,
-        PrayerNotificationContent.fajrDefaultChannelKey,
-      );
-      expect(
-        PrayerNotificationContent.of(
-          _planned(prayer: PlannedPrayer.asr),
-        ).channelKey,
-        PrayerNotificationContent.prayersDefaultChannelKey,
+        PrayerNotificationContent.fajrAdhanChannelKey,
       );
     });
 
-    test('an unknown asset path degrades to the default beep', () {
+    test('the new keys are not the retired ones', () {
+      // A channel's sound is immutable once created, so reusing a `_v1` key
+      // would give a channel that still plays its baked mp3 on top of the
+      // service — the same adhan twice, out of step, on two volume sliders.
+      final live = {
+        PrayerNotificationContent.adhanChannelKey,
+        PrayerNotificationContent.fajrAdhanChannelKey,
+      };
+      final retired = {
+        PrayerNotificationContent.legacyAdhanChannelKey('adhan_fajr_makkah'),
+        PrayerNotificationContent.legacyFajrDefaultChannelKey,
+        PrayerNotificationContent.legacyPrayersDefaultChannelKey,
+      };
+
+      expect(live.intersection(retired), isEmpty);
+    });
+
+    test('the chosen adhan still reaches the wire as a raw resource', () {
+      // The channel stopped carrying the sound; this is what carries it now.
+      final content = PrayerNotificationContent.of(
+        _planned(prayer: PlannedPrayer.fajr, customSoundPath: _makkahFajrAsset),
+      );
+
+      expect(content.useCustomAdhan, isTrue);
+      expect(content.androidRawRes, 'adhan_fajr_makkah');
+    });
+
+    test('an unknown asset path degrades to the system tone', () {
       // A stale settings blob naming an adhan that shipped out of the app must
-      // not resolve to a channel that was never created — a notification on a
-      // missing channel is dropped by Android entirely.
+      // not leave a raw resource name the service cannot resolve.
       final content = PrayerNotificationContent.of(
         _planned(customSoundPath: 'assets/adhan_sounds/deleted.mp3'),
       );
 
-      expect(
-        content.channelKey,
-        PrayerNotificationContent.prayersDefaultChannelKey,
-      );
+      expect(content.channelKey, PrayerNotificationContent.adhanChannelKey);
       expect(content.useCustomAdhan, isFalse);
+      expect(content.androidRawRes, isNull);
+    });
+  });
+
+  group('the legacy keys the migration depends on', () {
+    test('the retired key shape matches what shipped', () {
+      // Kotlin rewrites any non-v2 channel on a stored row to one of the new
+      // keys, because a ledger written before Stage 3 still names a channel
+      // with the mp3 baked in — and that would play the adhan twice, once from
+      // the channel and once from the service. Dart is what removes those
+      // channels by key, so the two spellings have to be the same.
+      expect(
+        PrayerNotificationContent.legacyAdhanChannelKey('adhan_makkah_haram'),
+        'adhan_adhan_makkah_haram_v1',
+      );
+      expect(
+        PrayerNotificationContent.legacyFajrDefaultChannelKey,
+        'fajr_channel_default_sound',
+      );
+      expect(
+        PrayerNotificationContent.legacyPrayersDefaultChannelKey,
+        'prayers_channel_default_sound',
+      );
+    });
+  });
+
+  group('silent-mode override', () {
+    test('defaults to the alarm-clock behaviour', () {
+      expect(PrayerNotificationContent.of(_planned()).overrideSilent, isTrue);
+      expect(
+        PrayerNotificationSettings.defaultSettings().overrideSilentMode,
+        isTrue,
+      );
+    });
+
+    test('carries the user turning it off', () {
+      expect(
+        PrayerNotificationContent.of(
+          _planned(overrideSilentMode: false),
+        ).overrideSilent,
+        isFalse,
+      );
+    });
+
+    test('an install that predates the setting keeps the new default', () {
+      // Every existing install has a settings blob with no such key. Reading it
+      // as false would silently opt the whole install base OUT of the behaviour
+      // the release was built to deliver.
+      final restored = PrayerNotificationSettings.fromJson({
+        'enabled': true,
+        'timing': 0,
+        'sound': 0,
+        'vibration': true,
+        'customSoundPath': null,
+      });
+
+      expect(restored.overrideSilentMode, isTrue);
+    });
+
+    test('survives a JSON round trip in both positions', () {
+      for (final value in [true, false]) {
+        final round = PrayerNotificationSettings.fromJson(
+          PrayerNotificationSettings.defaultSettings()
+              .copyWith(overrideSilentMode: value)
+              .toJson(),
+        );
+        expect(round.overrideSilentMode, value);
+      }
     });
   });
 

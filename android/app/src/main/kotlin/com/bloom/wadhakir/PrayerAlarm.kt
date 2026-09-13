@@ -32,10 +32,41 @@ data class PrayerAlarm(
     /**
      * `res/raw` name of the chosen adhan, or null for the system beep.
      *
-     * Only Android 24/25 reads it — from Oreo the channel owns the sound. See
-     * [PrayerNotifier].
+     * **Load-bearing on every API level since Stage 3.** It used to matter only
+     * on 24/25, because from Oreo the notification channel owned the sound.
+     * [AdhanPlaybackService] now owns the sound on all versions, and this is
+     * what it plays; a null means "the user chose الصوت الافتراضي", which the
+     * service resolves to the system tone.
      */
     val soundRes: String?,
+    /**
+     * The prayer's own instant, as opposed to [fireAtEpochMs] which is this
+     * minus any "before X minutes" lead.
+     *
+     * Carried for the persistent next-prayer notification, whose countdown must
+     * target the prayer itself. The receiver rolls that notification forward
+     * from the ledger with no Flutter engine alive, so it cannot recompute it.
+     *
+     * Zero when absent — rows written before Stage 3 have no such key.
+     */
+    val prayerAtEpochMs: Long,
+    /**
+     * The prayer's Arabic name, e.g. `الفجر`.
+     *
+     * Also for the persistent notification. Kotlin could map it from
+     * [prayerKey], but that would put a second copy of user-facing Arabic on
+     * the native side — the exact drift this wire format exists to prevent.
+     */
+    val prayerName: String,
+    /**
+     * Whether the adhan should sound while the ringer is silent.
+     *
+     * True — the default — makes it behave like an alarm clock, which is what
+     * `AudioAttributes.USAGE_ALARM` gives it. False makes it respect a silenced
+     * phone: the card still posts and the channel still vibrates, but no audio
+     * plays and no playback service is started.
+     */
+    val overrideSilent: Boolean,
     val payload: Map<String, String>,
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
@@ -51,6 +82,9 @@ data class PrayerAlarm(
         // JSONObject.put(String, null) REMOVES the key rather than storing a
         // null, so the reader must tolerate its absence — optString does.
         put(KEY_SOUND_RES, soundRes)
+        put(KEY_PRAYER_AT, prayerAtEpochMs)
+        put(KEY_PRAYER_NAME, prayerName)
+        put(KEY_OVERRIDE_SILENT, overrideSilent)
         put(KEY_PAYLOAD, JSONObject(payload as Map<*, *>))
     }
 
@@ -65,6 +99,9 @@ data class PrayerAlarm(
         private const val KEY_BODY = "body"
         private const val KEY_VIBRATE = "vibrate"
         private const val KEY_SOUND_RES = "soundRes"
+        private const val KEY_PRAYER_AT = "prayerAtEpochMs"
+        private const val KEY_PRAYER_NAME = "prayerName"
+        private const val KEY_OVERRIDE_SILENT = "overrideSilent"
         private const val KEY_PAYLOAD = "payload"
 
         /**
@@ -95,6 +132,12 @@ data class PrayerAlarm(
                 body = args["body"] as? String ?: "",
                 vibrate = args["vibrate"] as? Boolean ?: true,
                 soundRes = (args["soundRes"] as? String)?.takeIf { it.isNotEmpty() },
+                // Falls back to the fire instant, which is the same value
+                // whenever the user is on the default "on time" lead. See
+                // [prayerAtEpochMs].
+                prayerAtEpochMs = (args["prayerAtEpochMs"] as? Number)?.toLong() ?: fireAt,
+                prayerName = args["prayerName"] as? String ?: "",
+                overrideSilent = args["overrideSilent"] as? Boolean ?: true,
                 payload = payload,
             )
         }
@@ -109,19 +152,75 @@ data class PrayerAlarm(
                 }
             }
 
+            val prayerKey = json.optString(KEY_PRAYER, "")
+
             return PrayerAlarm(
                 id = id,
                 fireAtEpochMs = fireAt,
-                prayerKey = json.optString(KEY_PRAYER, ""),
+                prayerKey = prayerKey,
                 dayIndex = json.optInt(KEY_DAY_INDEX, 0),
-                channelId = json.optString(KEY_CHANNEL, "").ifEmpty { return null },
+                channelId = migrateChannel(
+                    json.optString(KEY_CHANNEL, "").ifEmpty { return null },
+                    prayerKey,
+                ),
                 groupKey = json.optString(KEY_GROUP, ""),
                 title = json.optString(KEY_TITLE, ""),
                 body = json.optString(KEY_BODY, ""),
                 vibrate = json.optBoolean(KEY_VIBRATE, true),
                 soundRes = json.optString(KEY_SOUND_RES, "").takeIf { it.isNotEmpty() },
+                // A ledger written before Stage 3 has none of the three keys
+                // below. It is replaced wholesale by the first reschedule after
+                // the update, so these defaults only have to survive the gap
+                // between installing the update and the app next opening:
+                // the countdown target degrades to the fire instant, the
+                // persistent roll-forward skips rows with no Arabic name rather
+                // than rendering "Fajr", and the adhan keeps the alarm-clock
+                // behaviour that is the new default.
+                prayerAtEpochMs = json.optLong(KEY_PRAYER_AT, 0L).takeIf { it > 0L } ?: fireAt,
+                prayerName = json.optString(KEY_PRAYER_NAME, ""),
+                overrideSilent = json.optBoolean(KEY_OVERRIDE_SILENT, true),
                 payload = payload,
             )
+        }
+
+        /**
+         * Forces a stored row onto one of the two silent Stage 3 channels.
+         *
+         * **This is not cosmetic — without it the adhan plays twice.** A ledger
+         * written before Stage 3 names a sounding `adhan_<key>_v1` channel, and
+         * those channels still exist on an upgraded install until the app is
+         * next opened. Nothing rewrites the ledger in between: `MY_PACKAGE_
+         * REPLACED` re-arms from the rows already stored. So the first prayer
+         * after a Play update — a Fajr, typically, hours before anyone opens the
+         * app — would post to a channel that still has the mp3 baked in *and*
+         * start the service that plays the same mp3. Two adhans, a fraction of a
+         * second apart, on two volume sliders, with a stop button that reaches
+         * only one of them.
+         *
+         * This is the same defect class as Stage 1 review findings #1 and #2,
+         * where handing the table between owners doubled every adhan for a week.
+         *
+         * Any unrecognised channel maps to the Stage 3 pair as well: every
+         * prayer alarm belongs on one of these two now, and a row naming a
+         * channel that no longer exists would be dropped by Android in silence.
+         */
+        private fun migrateChannel(channelId: String, prayerKey: String): String = when {
+            channelId == PrayerNotifier.ADHAN_CHANNEL_ID -> channelId
+            channelId == PrayerNotifier.FAJR_ADHAN_CHANNEL_ID -> channelId
+            prayerKey.equals("Fajr", ignoreCase = true) -> PrayerNotifier.FAJR_ADHAN_CHANNEL_ID
+            else -> PrayerNotifier.ADHAN_CHANNEL_ID
+        }
+
+        /**
+         * Reads one alarm back out of an Intent extra.
+         *
+         * [AdhanPlaybackService] is handed the row the receiver already loaded
+         * rather than looking it up again; this is the other half of that.
+         */
+        fun fromJsonString(raw: String): PrayerAlarm? = try {
+            fromJson(JSONObject(raw))
+        } catch (_: Exception) {
+            null
         }
 
         fun listToJson(alarms: List<PrayerAlarm>): String {

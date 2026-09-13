@@ -20,11 +20,44 @@ import 'package:wadhakir/features/pray_times/services/prayer_schedule_planner.da
 /// and both consumers are handed the finished result.
 @immutable
 class PrayerNotificationContent {
-  /// System-beep channels for the "Default" sound option. Fajr has its own so
-  /// its importance and vibration can diverge later without touching the other
-  /// four.
-  static const String fajrDefaultChannelKey = 'fajr_channel_default_sound';
-  static const String prayersDefaultChannelKey =
+  /// The two **silent** adhan channels, and the whole of the channel set the
+  /// prayers use since Stage 3.
+  ///
+  /// They replace fifteen sounding ones — thirteen `adhan_<key>_v1`, one per
+  /// bundled adhan, plus a system-beep channel each for Fajr and the other
+  /// four. That fan-out existed because a channel's sound is immutable once
+  /// created, so a per-sound channel was the only way to let the user pick an
+  /// adhan. Now that `AdhanPlaybackService` owns the audio, the sound is not on
+  /// the channel at all and there is nothing left to fan out over.
+  ///
+  /// Both keys are new for the same immutability reason: the `_v1` channels can
+  /// never be made to stop sounding, and leaving them in the path would play
+  /// the adhan twice.
+  ///
+  /// Fajr keeps a channel of its own. Importance, vibration and lock-screen
+  /// visibility are the user's to change per channel, and Fajr is the prayer
+  /// people most often want treated differently — it is also what a Fajr-only
+  /// Do-Not-Disturb bypass would need, without minting keys a third time.
+  ///
+  /// **Must match `PrayerNotifier.ADHAN_CHANNEL_ID` / `FAJR_ADHAN_CHANNEL_ID`.**
+  static const String adhanChannelKey = 'prayer_adhan_v2';
+  static const String fajrAdhanChannelKey = 'prayer_adhan_fajr_v2';
+
+  /// The retired sounding channels, kept as constants for two reasons.
+  ///
+  /// They have to be removed by key — Android never garbage-collects a deleted
+  /// channel, so without that they linger in the user's system notification
+  /// settings forever on every upgraded install.
+  ///
+  /// And the plugin fallback path on Android still needs one of them. That path
+  /// has no way to reach a native service, so its sound has to come from a
+  /// channel; see `_ensureLegacySoundChannel` in the notification repository,
+  /// which recreates exactly the one the chosen adhan needs.
+  static String legacyAdhanChannelKey(String soundKey) =>
+      'adhan_${soundKey}_v1';
+  static const String legacyFajrDefaultChannelKey =
+      'fajr_channel_default_sound';
+  static const String legacyPrayersDefaultChannelKey =
       'prayers_channel_default_sound';
 
   /// The notification group all five prayers share.
@@ -42,9 +75,8 @@ class PrayerNotificationContent {
 
   final int id;
 
-  /// The Android channel that owns this notification's sound. For a chosen
-  /// adhan this is `adhan_<key>_v1`, whose mp3 is baked in at channel creation
-  /// so the OS plays it with no app process alive.
+  /// The Android channel this notification is posted to — [adhanChannelKey] or
+  /// [fajrAdhanChannelKey]. Silent: the sound belongs to the playback service.
   final String channelKey;
 
   final String title;
@@ -59,10 +91,23 @@ class PrayerNotificationContent {
   final bool useCustomAdhan;
 
   /// The `res/raw` resource name of the chosen adhan, or null for the default
-  /// beep. Only iOS consumes it; on Android the channel already owns the sound.
+  /// beep.
+  ///
+  /// Consumed by iOS as a `customSound`, and — since Stage 3 — by
+  /// `AdhanPlaybackService` on Android, which plays it. It used to matter on
+  /// Android only for API 24/25, because from Oreo the channel owned the sound.
   final String? androidRawRes;
 
   final bool vibrate;
+
+  /// Whether the adhan should sound through a silenced phone.
+  ///
+  /// On Android the service plays on `USAGE_ALARM`, which ignores the ringer
+  /// the way an alarm clock does. True — the default — keeps that; false makes
+  /// the fire path post the card without starting playback when the ringer is
+  /// off. Inert on iOS, where the notification's sound follows the system's own
+  /// rules and the app has no say.
+  final bool overrideSilent;
 
   const PrayerNotificationContent({
     required this.id,
@@ -73,6 +118,7 @@ class PrayerNotificationContent {
     required this.useCustomAdhan,
     required this.androidRawRes,
     required this.vibrate,
+    required this.overrideSilent,
   });
 
   /// Renders one planned notification.
@@ -86,11 +132,12 @@ class PrayerNotificationContent {
     final adhan = AdhanSounds.byAssetPath(planned.settings.customSoundPath);
     final useCustomAdhan = adhan?.androidRawRes != null;
 
-    final channelKey = useCustomAdhan
-        ? 'adhan_${adhan!.key}_v1'
-        : (planned.prayer.isFajr
-              ? fajrDefaultChannelKey
-              : prayersDefaultChannelKey);
+    // The chosen adhan no longer decides the channel — it decides what the
+    // service plays. All that is left for the channel to carry is whether this
+    // is Fajr.
+    final channelKey = planned.prayer.isFajr
+        ? fajrAdhanChannelKey
+        : adhanChannelKey;
 
     return PrayerNotificationContent(
       id: planned.id,
@@ -114,6 +161,7 @@ class PrayerNotificationContent {
       useCustomAdhan: useCustomAdhan,
       androidRawRes: adhan?.androidRawRes,
       vibrate: planned.settings.vibration,
+      overrideSilent: planned.settings.overrideSilentMode,
     );
   }
 
@@ -132,7 +180,11 @@ class PrayerNotificationContent {
     return ' (بعد $minutes $noun)';
   }
 
-  @visibleForTesting
+  /// `4:38 صباحاً • القاهرة`.
+  ///
+  /// Shared with the persistent "next prayer" card so the two read the same,
+  /// and so the roll-forward — which renders that card from a ledger row's
+  /// `body` with no Dart alive — cannot drift from what Dart would have written.
   static String bodyText(DateTime prayerTime, String? locationName) {
     final time = formatTime(prayerTime);
     final location = locationName ?? '';

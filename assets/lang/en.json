@@ -652,6 +652,8 @@
     "persistent_notification": "Persistent Next Prayer Notification",
     "persistent_notification_subtitle": "Show a persistent notification displaying the next prayer time and remaining time",
     "persistent_notification_mobile_only": "This feature is available on mobile only",
+    "adhan_override_silent": "Adhan overrides silent mode",
+    "adhan_override_silent_subtitle": "The adhan sounds at alarm volume even when the phone is silenced, just like an alarm clock. Turn this off to let reminders respect silent mode.",
     "test_notification_subtitle": "Send a test notification to verify the system works on your phone",
     "sending_test_notification": "Sending test notification...",
     "test_notification_sent": "Test notification sent! Check your phone notifications",

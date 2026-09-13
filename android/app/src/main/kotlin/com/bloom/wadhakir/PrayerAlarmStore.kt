@@ -34,6 +34,9 @@ object PrayerAlarmStore {
     private const val KEY_ARMED_IDS = "armed_ids"
     private const val KEY_PENDING_TAP = "pending_tap"
     private const val KEY_LOCATION_STALE = "location_stale"
+    private const val KEY_DEFAULT_SOUND_URI = "default_sound_uri"
+    private const val KEY_PERSISTENT_ENABLED = "persistent_enabled"
+    private const val KEY_PERSISTENT_TITLE_FORMAT = "persistent_title_format"
 
     /** Whether this process has already tried the one-time migration. */
     @Volatile
@@ -154,6 +157,62 @@ object PrayerAlarmStore {
 
     fun isLocationStale(context: Context): Boolean =
         prefs(context).getBoolean(KEY_LOCATION_STALE, false)
+
+    /**
+     * The user's system notification tone, resolved while the device was
+     * unlocked.
+     *
+     * `RingtoneManager` reads the per-user settings provider, which is
+     * credential-encrypted: before the first unlock after a reboot it returns
+     * null or throws. [AdhanPlaybackService] runs in exactly that window, so
+     * the URI is resolved at commit time — when a Flutter engine is alive and
+     * therefore the user certainly is unlocked — and kept here in
+     * device-protected storage.
+     *
+     * Only the "الصوت الافتراضي" option needs it. Every bundled adhan is an APK
+     * resource, which is readable before unlock like the rest of the APK.
+     */
+    fun setDefaultSoundUri(context: Context, uri: String?) {
+        prefs(context).edit().apply {
+            if (uri.isNullOrEmpty()) remove(KEY_DEFAULT_SOUND_URI) else putString(KEY_DEFAULT_SOUND_URI, uri)
+        }.apply()
+    }
+
+    fun defaultSoundUri(context: Context): String? =
+        prefs(context).getString(KEY_DEFAULT_SOUND_URI, null)
+
+    /**
+     * What the persistent "next prayer" notification needs to rebuild itself
+     * with no Flutter engine alive.
+     *
+     * [PrayerAlarmReceiver] rolls that notification forward to the following
+     * prayer as each alarm fires, which is what keeps its countdown honest
+     * while the app is closed. It reads the prayer's name, instant and body
+     * straight off the ledger row; the only thing not in the ledger is whether
+     * the feature is on and how its title reads, so Dart leaves both here.
+     *
+     * [titleFormat] carries a `{prayer}` token. Kotlin substitutes, and never
+     * composes: a second author of Arabic copy on the native side is the drift
+     * this whole wire format exists to prevent.
+     */
+    fun setPersistentConfig(context: Context, enabled: Boolean, titleFormat: String?) {
+        prefs(context).edit()
+            .putBoolean(KEY_PERSISTENT_ENABLED, enabled)
+            .apply {
+                if (titleFormat.isNullOrEmpty()) {
+                    remove(KEY_PERSISTENT_TITLE_FORMAT)
+                } else {
+                    putString(KEY_PERSISTENT_TITLE_FORMAT, titleFormat)
+                }
+            }
+            .apply()
+    }
+
+    fun isPersistentEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_PERSISTENT_ENABLED, false)
+
+    fun persistentTitleFormat(context: Context): String? =
+        prefs(context).getString(KEY_PERSISTENT_TITLE_FORMAT, null)
 
     fun consumePendingTap(context: Context): Map<String, String>? {
         val raw = prefs(context).getString(KEY_PENDING_TAP, null) ?: return null

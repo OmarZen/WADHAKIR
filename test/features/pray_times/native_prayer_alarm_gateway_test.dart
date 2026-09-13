@@ -28,6 +28,13 @@ class _FakeBridge implements NativeAlarmBridge {
 
   @override
   Future<bool> isAvailable() async => available;
+
+  @override
+  Future<bool> testAdhan(Map<String, Object?> alarm) async {
+    calls.add('testAdhan:${alarm['id']}');
+    armed.add(alarm);
+    return true;
+  }
 }
 
 PlannedPrayerNotification _planned({
@@ -36,6 +43,8 @@ PlannedPrayerNotification _planned({
   DateTime? prayerTime,
   Duration lead = Duration.zero,
   bool vibration = true,
+  bool overrideSilentMode = true,
+  String? customSoundPath,
 }) {
   final at = prayerTime ?? DateTime(2026, 3, 14, 4, 41);
   return PlannedPrayerNotification(
@@ -50,6 +59,8 @@ PlannedPrayerNotification _planned({
       timing: NotificationTiming.onTime,
       sound: NotificationSound.defaultSound,
       vibration: vibration,
+      customSoundPath: customSoundPath,
+      overrideSilentMode: overrideSilentMode,
     ),
   );
 }
@@ -116,6 +127,68 @@ void main() {
     await gateway.arm(_planned(vibration: false));
 
     expect(bridge.armed.single['vibrate'], isFalse);
+  });
+
+  test('the chosen adhan crosses as a raw resource name', () async {
+    // Since Stage 3 this is the adhan itself, on every API level:
+    // AdhanPlaybackService plays this resource. It used to matter only on
+    // 24/25, because from Oreo the channel owned the sound.
+    await gateway.arm(
+      _planned(
+        customSoundPath: 'assets/adhan_sounds/أذان الفجر - مكه المكرمة.mp3',
+      ),
+    );
+
+    expect(bridge.armed.single['soundRes'], 'adhan_fajr_makkah');
+  });
+
+  test('the default sound option leaves soundRes null, not empty', () async {
+    // Kotlin reads null as "الصوت الافتراضي" and resolves the system tone. An
+    // empty string would be read the same way by PrayerAlarm.fromChannel, but
+    // only because it takeIf-s on isNotEmpty — do not rely on that by accident.
+    await gateway.arm(_planned());
+
+    expect(bridge.armed.single['soundRes'], isNull);
+  });
+
+  test('the prayer instant rides separately from the fire instant', () async {
+    // The persistent card counts down to the PRAYER. A user on a "15 minutes
+    // before" lead still wants it to reach zero at the adhan, and the receiver
+    // rolls that card forward off the ledger with no Dart alive to recompute.
+    final isha = DateTime(2026, 3, 14, 19, 14);
+    await gateway.arm(
+      _planned(
+        prayer: PlannedPrayer.isha,
+        prayerTime: isha,
+        lead: const Duration(minutes: 15),
+      ),
+    );
+
+    final sent = bridge.armed.single;
+    expect(sent['prayerAtEpochMs'], isha.millisecondsSinceEpoch);
+    expect(
+      sent['fireAtEpochMs'],
+      isha.subtract(const Duration(minutes: 15)).millisecondsSinceEpoch,
+    );
+    expect(sent['prayerAtEpochMs'], greaterThan(sent['fireAtEpochMs']! as int));
+  });
+
+  test('the Arabic prayer name is on the wire, not derived natively', () async {
+    // Kotlin renders the persistent card again on every fire. Mapping the key
+    // to a name there would put a second author of Arabic on the native side —
+    // exactly what this wire format exists to prevent.
+    await gateway.arm(_planned(prayer: PlannedPrayer.maghrib));
+
+    expect(bridge.armed.single['prayerName'], 'المغرب');
+  });
+
+  test('the silent-mode override rides per alarm', () async {
+    await gateway.arm(_planned());
+    expect(bridge.armed.single['overrideSilent'], isTrue);
+
+    bridge.armed.clear();
+    await gateway.arm(_planned(overrideSilentMode: false));
+    expect(bridge.armed.single['overrideSilent'], isFalse);
   });
 
   test('a sweep is a transaction: nothing applies until commit', () async {

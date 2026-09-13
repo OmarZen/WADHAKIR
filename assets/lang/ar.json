@@ -652,6 +652,8 @@
     "persistent_notification": "إشعار دائم للصلاة القادمة",
     "persistent_notification_subtitle": "عرض إشعار دائم يوضح وقت الصلاة القادمة والوقت المتبقي",
     "persistent_notification_mobile_only": "هذه الميزة متاحة على الهواتف فقط",
+    "adhan_override_silent": "الأذان يتجاوز الوضع الصامت",
+    "adhan_override_silent_subtitle": "يُرفع الأذان بمستوى صوت المنبّه حتى لو كان الهاتف صامتاً، مثل المنبّه تماماً. أوقِفه لتحترم التنبيهات الوضع الصامت.",
     "test_notification_subtitle": "إرسال إشعار تجريبي للتحقق من عمل النظام على الهاتف",
     "sending_test_notification": "إرسال إشعار تجريبي...",
     "test_notification_sent": "تم إرسال الإشعار التجريبي! تحقق من إشعارات الهاتف",

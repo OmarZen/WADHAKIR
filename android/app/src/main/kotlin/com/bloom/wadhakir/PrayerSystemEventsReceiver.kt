@@ -53,6 +53,15 @@ class PrayerSystemEventsReceiver : BroadcastReceiver() {
 
                 PrayerAlarmScheduler.rearmWindow(appContext, System.currentTimeMillis())
 
+                // Repair the persistent card too. A reboot leaves it showing
+                // whatever prayer was next before the phone went down, and
+                // nothing else would correct that until the next alarm fired —
+                // which on LOCKED_BOOT_COMPLETED can be the following morning.
+                PersistentPrayerNotifier.rollForward(
+                    appContext,
+                    System.currentTimeMillis(),
+                )
+
                 // WorkManager keeps its database in credential-protected
                 // storage, so touching it before the first unlock throws. The
                 // reconciler is a repair path, not a delivery one — it can wait

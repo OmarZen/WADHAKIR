@@ -453,7 +453,13 @@ class PrayerTimesCubit extends Cubit<PrayerTimesState> {
     ]) {
       final ps = entry.$2;
       buf.write(
-        '|${entry.$1}:${ps.enabled}:${ps.timing.index}:${ps.customSoundPath ?? ""}',
+        '|${entry.$1}:${ps.enabled}:${ps.timing.index}:${ps.customSoundPath ?? ""}'
+        // Part of the signature because it is part of the WIRE: the native
+        // ledger carries overrideSilent per alarm, so a toggle that did not
+        // reschedule would be a setting the user changed and the fire path
+        // never heard about. Vibration is deliberately not here — it is owned
+        // by the notification channel, so re-arming could not change it.
+        ':${ps.overrideSilentMode}',
       );
     }
     final days = byDay.keys.toList()..sort();

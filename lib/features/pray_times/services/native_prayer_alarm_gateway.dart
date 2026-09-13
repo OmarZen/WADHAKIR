@@ -41,6 +41,16 @@ abstract interface class NativeAlarmBridge {
   /// missing — which is what makes an accidental half-migration fail loudly at
   /// startup instead of silently dropping every adhan.
   Future<bool> isAvailable();
+
+  /// Sounds one adhan right now, through the real fire path.
+  ///
+  /// The Settings probe. It exists so somebody can prove the adhan works before
+  /// trusting it with their prayers, which means it has to travel the route a
+  /// real prayer travels — the same channel, the same card, the same playback
+  /// service. Posting a lookalike through the plugin instead would test a code
+  /// path no adhan uses, and on this release it would also recreate one of the
+  /// sounding channels Stage 3 just retired.
+  Future<bool> testAdhan(Map<String, Object?> alarm);
 }
 
 /// [NativeAlarmBridge] over the real platform channel.
@@ -69,6 +79,18 @@ class MethodChannelAlarmBridge implements NativeAlarmBridge {
     if (defaultTargetPlatform != TargetPlatform.android) return false;
     try {
       return await channel.invokeMethod<bool>('isAvailable') ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> testAdhan(Map<String, Object?> alarm) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+    try {
+      return await channel.invokeMethod<bool>('testAdhan', alarm) ?? false;
     } on MissingPluginException {
       return false;
     } on PlatformException {
@@ -123,8 +145,12 @@ class NativePrayerAlarmGateway
   }
 
   /// The wire format, kept in one place so the Kotlin reader has exactly one
-  /// contract to match.
-  @visibleForTesting
+  /// contract to match — `PrayerAlarm.fromChannel` is the other half of it.
+  ///
+  /// Public rather than test-only because the Settings diagnostic probe builds
+  /// one of these too: the point of that button is to travel the route a real
+  /// adhan travels, and a second hand-written copy of this map is exactly how
+  /// the two would drift.
   static Map<String, Object?> payloadFor(
     PlannedPrayerNotification planned,
     PrayerNotificationContent content,
@@ -139,11 +165,18 @@ class NativePrayerAlarmGateway
     'title': content.title,
     'body': content.body,
     'vibrate': content.vibrate,
-    // Only Android 7 reads this. From Oreo the channel owns the sound, and the
-    // adhan channels already have the mp3 baked in — but this app's minSdk is
-    // 24, and on 24/25 a notification with no sound of its own is silent. The
-    // one thing this feature must never be.
+    // The adhan itself, on every API level since Stage 3: `AdhanPlaybackService`
+    // plays this resource. It used to matter only on 24/25, because from Oreo
+    // the channel owned the sound — the channels are silent now. Null is the
+    // "الصوت الافتراضي" option, which the service resolves to the system tone.
     'soundRes': content.androidRawRes,
+    // The prayer's own instant and name, for the persistent "next prayer" card.
+    // Its countdown targets the prayer, not this notification's fire time, and
+    // the receiver rolls it forward from the ledger with no engine alive — so
+    // both have to be on the wire rather than recomputed natively.
+    'prayerAtEpochMs': planned.prayerTime.millisecondsSinceEpoch,
+    'prayerName': planned.prayer.arabicName,
+    'overrideSilent': content.overrideSilent,
     'payload': content.payload,
   };
 }

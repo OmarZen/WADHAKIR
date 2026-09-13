@@ -21,12 +21,28 @@ class PrayerNotificationSettings extends Equatable {
   final bool vibration;
   final String? customSoundPath; // Flutter asset path of the selected adhan
 
+  /// Whether the adhan sounds through a silenced phone.
+  ///
+  /// On Android the adhan plays from a foreground service on
+  /// `AudioAttributes.USAGE_ALARM`, so it follows the ALARM slider and ignores
+  /// silent and vibrate mode the way an alarm clock does. That is what the
+  /// `USE_EXACT_ALARM` exemption is for and almost certainly what a prayer app
+  /// should do — but it is a change people notice on day one, so it has a
+  /// switch. False makes the fire path post the adhan card, and vibrate, but
+  /// play nothing while the ringer is off.
+  ///
+  /// Modelled per prayer for symmetry with everything else here; the settings
+  /// screen writes all five together, the same way the adhan picker does.
+  /// Inert on iOS, where the OS decides.
+  final bool overrideSilentMode;
+
   const PrayerNotificationSettings({
     required this.enabled,
     required this.timing,
     required this.sound,
     required this.vibration,
     this.customSoundPath,
+    this.overrideSilentMode = true,
   });
 
   factory PrayerNotificationSettings.defaultSettings() {
@@ -36,6 +52,7 @@ class PrayerNotificationSettings extends Equatable {
       sound: NotificationSound.defaultSound,
       vibration: true,
       customSoundPath: null,
+      overrideSilentMode: true,
     );
   }
 
@@ -45,6 +62,7 @@ class PrayerNotificationSettings extends Equatable {
     NotificationSound? sound,
     bool? vibration,
     Object? customSoundPath = _undefined,
+    bool? overrideSilentMode,
   }) {
     return PrayerNotificationSettings(
       enabled: enabled ?? this.enabled,
@@ -55,6 +73,7 @@ class PrayerNotificationSettings extends Equatable {
       customSoundPath: customSoundPath == _undefined
           ? this.customSoundPath
           : customSoundPath as String?,
+      overrideSilentMode: overrideSilentMode ?? this.overrideSilentMode,
     );
   }
 
@@ -65,6 +84,7 @@ class PrayerNotificationSettings extends Equatable {
       'sound': sound.index,
       'vibration': vibration,
       'customSoundPath': customSoundPath,
+      'overrideSilentMode': overrideSilentMode,
     };
   }
 
@@ -75,6 +95,10 @@ class PrayerNotificationSettings extends Equatable {
       sound: NotificationSound.values[json['sound'] as int? ?? 0],
       vibration: json['vibration'] as bool? ?? true,
       customSoundPath: json['customSoundPath'] as String?,
+      // Absent on every install that predates Stage 3, which is all of them.
+      // Defaulting to true is what makes the new alarm-clock behaviour the
+      // default the user chose, rather than something only new installs get.
+      overrideSilentMode: json['overrideSilentMode'] as bool? ?? true,
     );
   }
 
@@ -85,6 +109,7 @@ class PrayerNotificationSettings extends Equatable {
     sound,
     vibration,
     customSoundPath,
+    overrideSilentMode,
   ];
 }
 

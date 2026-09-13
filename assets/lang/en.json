@@ -1333,5 +1333,15 @@
   "share": {
     "ratio_story": "Story",
     "ratio_post": "Post"
+  },
+  "occasion": {
+    "friday": "Blessed Friday",
+    "ramadan": "Ramadan Mubarak",
+    "laylat_al_qadr": "The Night of Decree",
+    "eid_al_fitr": "Eid al-Fitr Mubarak",
+    "arafah": "The Day of Arafah",
+    "eid_al_adha": "Eid al-Adha Mubarak",
+    "ashura": "The Day of Ashura",
+    "share_prompt": "Send a card to someone you love"
   }
 }

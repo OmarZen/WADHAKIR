@@ -1333,5 +1333,15 @@
   "share": {
     "ratio_story": "ستوري",
     "ratio_post": "منشور"
+  },
+  "occasion": {
+    "friday": "جمعة مباركة",
+    "ramadan": "رمضان مبارك",
+    "laylat_al_qadr": "ليلة القدر",
+    "eid_al_fitr": "عيد فطر مبارك",
+    "arafah": "يوم عرفة",
+    "eid_al_adha": "عيد أضحى مبارك",
+    "ashura": "يوم عاشوراء",
+    "share_prompt": "أرسل بطاقة لمن تحب"
   }
 }

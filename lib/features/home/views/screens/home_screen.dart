@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_core/core.dart';
+import 'package:wadhakir/features/share/views/widgets/occasion_card.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_cubit.dart';
 import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
 // Hadith card removed: feature and assets pruned
@@ -72,6 +73,10 @@ class _HomeScreenContentState extends State<HomeScreenContent> {
               // Compact Prayer Times Card
               SliverToBoxAdapter(child: CompactPrayerCardWidget()),
               // Salah streak + today's prayers — "don't break the chain"
+              // Present on a Friday and on six annual occasions, and an
+              // empty box on every other day — see OccasionCard. High in the
+              // list because the whole point is that it is seen ON the day.
+              const SliverToBoxAdapter(child: OccasionCard()),
               const SliverToBoxAdapter(child: HomeStreakBanner()),
               // Daily progress (wird / adhkar / nawafil)
               const SliverToBoxAdapter(child: DailyProgressStrip()),

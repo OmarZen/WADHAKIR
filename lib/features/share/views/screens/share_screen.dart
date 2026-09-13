@@ -50,6 +50,12 @@ class _ShareScreenState extends State<ShareScreen> {
   /// own photo). Seeded from the payload's background or the brand default.
   late ShareBackground _background;
 
+  /// User-chosen export shape, seeded from the payload's default (9:16).
+  ///
+  /// Per-session like [_background]. Nothing stores a ratio, so there is no
+  /// stored value that can go stale against a future change.
+  late ShareCardRatio _ratio;
+
   /// Completes when the current background's image is decoded into the cache,
   /// so the capture isn't blank/stale. No-op for gradient/color backgrounds.
   Future<void> _bgReady = Future<void>.value();
@@ -58,6 +64,7 @@ class _ShareScreenState extends State<ShareScreen> {
   void initState() {
     super.initState();
     _background = widget.payload.background ?? ShareBackground.brand;
+    _ratio = widget.payload.ratio;
   }
 
   void _onBackgroundChanged(ShareBackground background) {
@@ -66,8 +73,9 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   /// The payload actually rendered/captured — the caller's payload with the
-  /// currently-selected background applied.
-  SharePayload get _payload => widget.payload.withBackground(_background);
+  /// currently-selected background and export shape applied.
+  SharePayload get _payload =>
+      widget.payload.copyWith(background: _background, ratio: _ratio);
 
   // --------------------------------------------------------------- Actions
 
@@ -224,9 +232,10 @@ class _ShareScreenState extends State<ShareScreen> {
           builder: (context, c) {
             final maxW = c.maxWidth;
             final maxH = c.maxHeight;
-            final byWidth = maxW / ShareCard.aspectRatio;
+            final ratio = _ratio.value;
+            final byWidth = maxW / ratio;
             final height = byWidth <= maxH ? byWidth : maxH;
-            final width = height * ShareCard.aspectRatio;
+            final width = height * ratio;
             return SizedBox(
               width: width,
               height: height,
@@ -289,6 +298,12 @@ class _ShareScreenState extends State<ShareScreen> {
             BackgroundPickerBar(
               selected: _background,
               onChanged: _onBackgroundChanged,
+            ),
+            _RatioToggle(
+              selected: _ratio,
+              storyLabel: _tr('share.ratio_story', 'ستوري'),
+              postLabel: _tr('share.ratio_post', 'منشور'),
+              onChanged: (ratio) => setState(() => _ratio = ratio),
             ),
             _ActionBar(
               isSharing: _isSharing,
@@ -418,6 +433,104 @@ class _ActionBar extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The story / post shape switch.
+///
+/// Two options, not a dropdown of ratios: the user is choosing *where they are
+/// about to post*, not a number. «ستوري» and «منشور» are the words WhatsApp and
+/// Instagram already use in Arabic, so nobody has to learn 9:16.
+class _RatioToggle extends StatelessWidget {
+  const _RatioToggle({
+    required this.selected,
+    required this.storyLabel,
+    required this.postLabel,
+    required this.onChanged,
+  });
+
+  final ShareCardRatio selected;
+  final String storyLabel;
+  final String postLabel;
+  final ValueChanged<ShareCardRatio> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _chip(
+            theme,
+            label: storyLabel,
+            icon: Icons.crop_portrait_rounded,
+            ratio: ShareCardRatio.story,
+          ),
+          const SizedBox(width: 10),
+          _chip(
+            theme,
+            label: postLabel,
+            icon: Icons.crop_square_rounded,
+            ratio: ShareCardRatio.post,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(
+    ThemeData theme, {
+    required String label,
+    required IconData icon,
+    required ShareCardRatio ratio,
+  }) {
+    final active = selected == ratio;
+    return Semantics(
+      selected: active,
+      button: true,
+      child: InkWell(
+        onTap: active ? null : () => onChanged(ratio),
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: active
+                ? theme.colorScheme.primary.withValues(alpha: 0.14)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: active
+                  ? theme.colorScheme.primary.withValues(alpha: 0.55)
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.18),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: active
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: active
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

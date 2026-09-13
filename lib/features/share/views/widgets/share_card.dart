@@ -18,9 +18,13 @@ class ShareCard extends StatelessWidget {
 
   final SharePayload payload;
 
-  /// Aspect ratio of the rendered card. 4:5 is Instagram-portrait — the
-  /// sweet spot for most social apps without cutting off the headline.
-  static const double aspectRatio = 4 / 5;
+  /// Aspect ratio of the rendered card, from [SharePayload.ratio].
+  ///
+  /// Was a `static const 4/5` until R4. It is a property now because WhatsApp
+  /// Status — the region's dominant broadcast surface — is strictly 9:16, and a
+  /// 4:5 card posted there is letterboxed badly enough that people screenshot
+  /// the app instead of using its share button.
+  double get aspectRatio => payload.ratio.value;
 
   // Fixed brand palette — same as `_OnboardingPalette` so the share card
   // visually descends from the onboarding flow the user just saw. No
@@ -38,19 +42,38 @@ class ShareCard extends StatelessWidget {
     if (payload.variant == ShareCardVariant.passage) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: ShareBackgroundLayer(
-                background: background,
-                imageCacheWidth: 1080,
-              ),
-            ),
-            // Orbs only over flat backgrounds; photos get the scrim instead.
-            if (!background.isImage)
-              const Positioned.fill(child: _DecorativeOrbs()),
-            _PassageForeground(payload: payload),
-          ],
+        child: LayoutBuilder(
+          builder: (context, c) {
+            // A FLOOR, not a fixed ratio.
+            //
+            // The passage variant exists so a long entry — one of the 40 Hadith
+            // — stays readable instead of being shrunk to fit a box, so it must
+            // still grow past this. But a SHORT passage in a content-height card
+            // comes out almost square, which is the letterboxing problem the
+            // ratio was introduced to solve, just arriving from the other side.
+            // The floor makes short passages Status-ready and leaves long ones
+            // alone.
+            final minHeight = c.maxWidth.isFinite
+                ? c.maxWidth / payload.ratio.value
+                : 0.0;
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: ShareBackgroundLayer(
+                    background: background,
+                    imageCacheWidth: 1080,
+                  ),
+                ),
+                // Orbs only over flat backgrounds; photos get the scrim instead.
+                if (!background.isImage)
+                  const Positioned.fill(child: _DecorativeOrbs()),
+                ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: minHeight),
+                  child: _PassageForeground(payload: payload),
+                ),
+              ],
+            );
+          },
         ),
       );
     }
@@ -89,6 +112,12 @@ class _PassageForeground extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        // Centred so a passage shorter than the ratio floor sits in the middle
+        // of the card rather than clinging to the top with dead space beneath
+        // it. With `MainAxisSize.min` under an incoming minHeight, the column
+        // takes the larger of its content and that floor, and this distributes
+        // whatever is left over.
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _BrandStrip(),

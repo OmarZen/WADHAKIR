@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quran_library/quran_library.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../widgets/ayah_share_sheet.dart';
 
 class QuranScreen extends StatelessWidget {
   const QuranScreen({super.key});
@@ -19,6 +20,14 @@ class QuranScreen extends StatelessWidget {
       showAyahBookmarkedIcon: true,
       enableWordSelection: true,
       withPageView: true,
+      // Roadmap #22. The library has exposed this callback all along and
+      // nothing was using it, which is what made the Quran screen a dead end:
+      // sending an ayah to someone meant leaving the app to find the verse
+      // somewhere else. `details` carries the touch position, which this sheet
+      // does not need — it opens centred, not as a context menu, because the
+      // choice being made is "how do I send this", not "what is under my
+      // finger".
+      onAyahLongPress: (details, ayah) => AyahShareSheet.show(context, ayah),
       appLanguageCode: l10n?.locale.languageCode ?? 'en',
       ayahIconColor: theme.colorScheme.primary,
       ayahSelectedFontColor: theme.colorScheme.onSurface,

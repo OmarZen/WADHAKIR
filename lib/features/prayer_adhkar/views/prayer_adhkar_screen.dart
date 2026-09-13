@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/core/widgets/branded_header.dart';
 import 'package:wadhakir/features/prayer_adhkar/prayer_adhkar_data.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
 
 /// "أذكار بعد الصلاة" — the after-salam adhkar with a branded header, an
 /// overall completion counter, and a tap-to-count card per dhikr (progress
@@ -221,6 +223,21 @@ class _DhikrCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // The dhikr, not the count. What travels is the words; how far
+              // through them this user happens to be is nobody else's business
+              // and is exactly the scorekeeping PRODUCT.md rules out.
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: ShareActionButton(
+                  payloadBuilder: () => SharePayload(
+                    headline: dhikr.text,
+                    categoryLabel:
+                        context.l10n?.translate('prayer_adhkar.title') ??
+                        'أذكار بعد الصلاة',
+                    repetitions: dhikr.count > 1 ? dhikr.count : null,
+                  ),
+                ),
+              ),
               Text(
                 dhikr.text,
                 textAlign: TextAlign.center,

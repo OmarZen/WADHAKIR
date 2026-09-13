@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
 import '../shared/azkar_shared_widgets.dart';
 import 'feature_grid_card.dart';
 
@@ -208,6 +210,19 @@ class _AzkarCardState extends State<_AzkarCard> {
                     ),
                   ),
                   const Spacer(),
+                  ShareActionButton(
+                    payloadBuilder: () => SharePayload(
+                      headline: widget.text,
+                      categoryLabel:
+                          context.l10n?.translate('home.raqia_sharia') ??
+                          'الرقية الشرعية',
+                      repetitions: widget.repeat > 1 ? widget.repeat : null,
+                      reference: widget.reference,
+                      // Deliberately NOT the benefit text: a share card carries
+                      // the ruqya itself, and the reason to read it is context
+                      // for the reader, not for whoever receives it.
+                    ),
+                  ),
                   // Reset button
                   IconButton(
                     onPressed: completed > 0 ? _reset : null,

@@ -390,7 +390,10 @@
     "morphology": "Morphology",
     "quran": "Quran",
     "ten_recitations": "Ten Recitations",
-    "tajweed_options": "Tajweed Options"
+    "tajweed_options": "Tajweed Options",
+    "share_as_image": "Share as a card",
+    "share_as_text": "Share as text",
+    "copy_ayah": "Copy the verse"
   },
   "azkar": {
     "items": "Items",
@@ -1310,5 +1313,9 @@
     "at_capacity": "Scheduled reminders have reached the system limit, so the furthest ones may not arrive. Open the app every few days.",
     "healthy_silent": "Your reminders arrive on time, but silently — your phone is on silent and «override silent mode» is off.",
     "healthy_scheduled": "Your reminders are scheduled and held by the system."
+  },
+  "share": {
+    "ratio_story": "Story",
+    "ratio_post": "Post"
   }
 }

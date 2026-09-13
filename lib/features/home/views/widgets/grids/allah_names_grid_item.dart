@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/home/views/widgets/grids/feature_grid_card.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
 
 class AllahNamesGridItem extends StatelessWidget {
   const AllahNamesGridItem({super.key});
@@ -118,15 +120,40 @@ class AllahNamesGridItem extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              languageCode == 'en' ? item.nameEn : item.name,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontFamily: languageCode == 'en'
-                                    ? null
-                                    : 'ScheherazadeNew',
-                              ),
+                            // The share button sits opposite the name rather
+                            // than under the card, so the row reads as "this
+                            // name, and what you can do with it" and the card
+                            // keeps its centred shape.
+                            Row(
+                              children: [
+                                ShareActionButton(
+                                  payloadBuilder: () => SharePayload(
+                                    headline: languageCode == 'en'
+                                        ? item.textEn
+                                        : item.text,
+                                    categoryLabel: languageCode == 'en'
+                                        ? item.nameEn
+                                        : item.name,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    languageCode == 'en'
+                                        ? item.nameEn
+                                        : item.name,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontFamily: languageCode == 'en'
+                                          ? null
+                                          : 'ScheherazadeNew',
+                                    ),
+                                  ),
+                                ),
+                                // Balances the button's width so the name stays
+                                // optically centred in the card.
+                                const SizedBox(width: 40),
+                              ],
                             ),
                             const SizedBox(height: 8),
                             Text(

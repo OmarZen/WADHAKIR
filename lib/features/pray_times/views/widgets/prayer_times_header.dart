@@ -3,12 +3,23 @@ import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/prayer_settings_dialog.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
 
 class PrayerTimesHeader extends StatelessWidget {
   final Size size;
   final PrayerTimesCubit cubit;
 
-  const PrayerTimesHeader({super.key, required this.size, required this.cubit});
+  /// Builds the card for the share button, called at tap time. Null hides the
+  /// button entirely — there is nothing to share before the times have loaded.
+  final SharePayload? Function()? payloadBuilder;
+
+  const PrayerTimesHeader({
+    super.key,
+    required this.size,
+    required this.cubit,
+    this.payloadBuilder,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +83,29 @@ class PrayerTimesHeader extends StatelessWidget {
               ],
             ),
           ),
+          if (payloadBuilder != null) ...[
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ShareActionButton(
+                payloadBuilder: payloadBuilder!,
+                color: theme.colorScheme.primary,
+                size: 22,
+                tooltip:
+                    l10n?.translate('prayer_times.share') ?? 'مشاركة المواقيت',
+              ),
+            ),
+            SizedBox(width: isDesktop ? 8.0 : size.width * 0.015),
+          ],
           Container(
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,

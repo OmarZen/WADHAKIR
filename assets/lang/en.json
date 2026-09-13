@@ -926,7 +926,8 @@
     "turkey_description": "The standard used in Turkey Fajr angle: 18, Isha angle: 17",
     "tehran": "Tehran, Iran",
     "tehran_description": "The standard used in Iran Fajr angle: 17.7, Isha angle: 14, Maghrib angle: 4.5",
-    "settings": "Settings"
+    "settings": "Settings",
+    "share": "Share times"
   },
   "radio": {
     "title": "Radio",

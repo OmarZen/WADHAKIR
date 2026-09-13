@@ -9,7 +9,31 @@ import 'package:wadhakir/features/share/models/share_background.dart';
 ///   headline plus an optional [SharePayload.secondaryText] (e.g. an English
 ///   translation) underneath. Used for long entries like the 40 Hadith so the
 ///   text stays readable instead of shrinking.
-enum ShareCardVariant { compact, passage }
+/// - [timetable]: fixed-ratio card rendering [SharePayload.timetableRows] as an
+///   aligned two-column list — a label on one side, a value on the other. Used
+///   by prayer times, which is tabular data and not prose: the other two
+///   variants centre a single text block, so a timetable sent through them
+///   comes out ragged, with no two times sharing a column.
+enum ShareCardVariant { compact, passage, timetable }
+
+/// One line of a [ShareCardVariant.timetable] card — a label and its value,
+/// both pre-formatted by the caller.
+///
+/// The caller formats because `ShareCard` is deliberately pixel-deterministic:
+/// it reads no `MediaQuery`, no `Theme`, and — the reason this type holds
+/// strings rather than a `DateTime` — no ambient `intl` locale. A card whose
+/// digits depended on the host locale would capture differently than it
+/// previewed.
+@immutable
+class ShareTimetableRow {
+  /// Right-hand side in RTL — e.g. «الفجر».
+  final String label;
+
+  /// Left-hand side in RTL — e.g. «٤:٣٠ ص».
+  final String value;
+
+  const ShareTimetableRow({required this.label, required this.value});
+}
 
 /// The shape of the exported card.
 ///
@@ -71,6 +95,11 @@ class SharePayload {
   /// by the compact variant.
   final String? secondaryText;
 
+  /// Rows rendered by [ShareCardVariant.timetable]. Ignored by every other
+  /// variant, and an empty list falls back to the headline alone rather than
+  /// drawing an empty table.
+  final List<ShareTimetableRow> timetableRows;
+
   /// Card layout. Defaults to [ShareCardVariant.compact].
   final ShareCardVariant variant;
 
@@ -99,6 +128,7 @@ class SharePayload {
     this.reference,
     this.captionOverride,
     this.secondaryText,
+    this.timetableRows = const [],
     this.variant = ShareCardVariant.compact,
     this.headlineRtl = true,
     this.background,
@@ -118,6 +148,7 @@ class SharePayload {
     reference: reference,
     captionOverride: captionOverride,
     secondaryText: secondaryText,
+    timetableRows: timetableRows,
     variant: variant,
     headlineRtl: headlineRtl,
     // An explicit flag rather than "null means clear", because null is also

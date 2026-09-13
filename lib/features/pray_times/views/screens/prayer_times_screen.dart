@@ -1,8 +1,13 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syncfusion_flutter_core/core.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/utils/arabic_text.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
+import 'package:wadhakir/features/pray_times/utils/prayer_times_share.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
 import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/prayer_times_error.dart';
 import 'package:wadhakir/features/pray_times/views/widgets/prayer_times_header.dart';
@@ -34,6 +39,15 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
   bool _hasCheckedLocation = false;
   bool _hasTriggeredLoad = false;
 
+  /// City for the shared card's subhead, resolved once when the screen opens.
+  ///
+  /// Resolved here rather than inside the share button because
+  /// `getCurrentLocationName()` is async — it geocodes — while
+  /// `ShareActionButton.payloadBuilder` is deliberately synchronous. Null until
+  /// it lands, and null leaves the city off the card rather than delaying the
+  /// share.
+  String? _locationName;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +59,7 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _triggerLoadIfNeeded();
+      _resolveLocationName();
     });
 
     // Check location services after a short delay to let the screen load
@@ -60,6 +75,67 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
       _hasTriggeredLoad = true;
       cubit.loadPrayerTimes();
     }
+  }
+
+  Future<void> _resolveLocationName() async {
+    if (!mounted) return;
+    try {
+      final name = await context
+          .read<PrayerTimesCubit>()
+          .getCurrentLocationName();
+      if (!mounted) return;
+      setState(() => _locationName = name);
+    } catch (e) {
+      // A card without a city is still a useful card. Never block the share.
+      debugPrint('Could not resolve a city for the share card: $e');
+    }
+  }
+
+  /// The card, built at tap time.
+  ///
+  /// Reads `cubit.state` rather than closing over the state this screen was
+  /// built with, because the date arrows emit a new one: capturing early is how
+  /// a share button sends yesterday's timetable after the user has paged to
+  /// tomorrow.
+  SharePayload? _buildSharePayload() {
+    final state = context.read<PrayerTimesCubit>().state;
+    if (state is! PrayerTimesLoaded) return null;
+    final times = state.selectedPrayerTimes;
+    if (times == null) return null;
+
+    final l10n = AppLocalizations.of(context);
+    String tr(String key, String fallback) {
+      final value = l10n?.translate(key);
+      // `translate` hands back the key itself on a miss, so `?? fallback`
+      // alone would put "prayer_times.fajr" on a card people broadcast.
+      return value == null || value == key ? fallback : value;
+    }
+
+    return PrayerTimesShare.build(
+      times: times,
+      labels: PrayerTimesShareLabels(
+        title: tr('prayer_times.title', 'مواقيت الصلاة'),
+        fajr: tr('prayer_times.fajr', 'الفجر'),
+        sunrise: tr('prayer_times.sunrise', 'الشروق'),
+        dhuhr: tr('prayer_times.dhuhr', 'الظهر'),
+        asr: tr('prayer_times.asr', 'العصر'),
+        maghrib: tr('prayer_times.maghrib', 'المغرب'),
+        isha: tr('prayer_times.isha', 'العشاء'),
+      ),
+      cityName: _locationName,
+      dateLine: _dateLine(state.selectedDate),
+    );
+  }
+
+  /// «٢١ ربيع الأول ١٤٤٧ هـ · Sat, Sep 13, 2025» — both calendars, because a
+  /// card read in either one has to be unambiguous about which day it is for.
+  String _dateLine(DateTime date) {
+    final hijri = HijriDateTime.fromDateTime(date);
+    final month = hijri.month >= 1 && hijri.month <= 12
+        ? ArabicText.hijriMonths[hijri.month - 1]
+        : '';
+    final hijriLine = '${hijri.day} $month ${hijri.year} هـ';
+    return '$hijriLine · ${DateFormat.yMMMEd().format(date)}';
   }
 
   Future<void> _checkLocationServices() async {
@@ -145,7 +221,11 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
                   return Column(
                     children: [
                       // Custom header
-                      PrayerTimesHeader(size: size, cubit: cubit),
+                      PrayerTimesHeader(
+                        size: size,
+                        cubit: cubit,
+                        payloadBuilder: _buildSharePayload,
+                      ),
 
                       // Main prayer times content
                       Expanded(

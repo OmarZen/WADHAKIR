@@ -87,10 +87,195 @@ class ShareCard extends StatelessWidget {
           children: [
             ShareBackgroundLayer(background: background, imageCacheWidth: 1080),
             if (!background.isImage) const _DecorativeOrbs(),
-            _CardForeground(payload: payload),
+            if (payload.variant == ShareCardVariant.timetable &&
+                payload.timetableRows.isNotEmpty)
+              _TimetableForeground(payload: payload)
+            else
+              _CardForeground(payload: payload),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Foreground for [ShareCardVariant.timetable]: brand strip, the headline as a
+/// title, [SharePayload.reference] as the subhead beneath it, then the rows as
+/// an aligned two-column table.
+///
+/// ## Why a `Table` and not a column of `Row`s
+///
+/// `Table` sizes each column across *all* its rows, so every time lands on one
+/// baseline and every label on another. A list of `Row`s would size each line
+/// independently and reproduce exactly the raggedness that made the compact
+/// variant wrong for this data in the first place.
+///
+/// Unlike the other two variants this one draws no [SharePayload.categoryLabel]
+/// chip: on a card whose headline is already «مواقيت الصلاة» the category would
+/// only repeat the title. The field is still worth setting — the share screen
+/// uses it as the system-share *subject*.
+class _TimetableForeground extends StatelessWidget {
+  const _TimetableForeground({required this.payload});
+  final SharePayload payload;
+
+  @override
+  Widget build(BuildContext context) {
+    final subhead = payload.reference ?? '';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(26, 32, 26, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _BrandStrip(),
+          const SizedBox(height: 20),
+          Text(
+            payload.headline,
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: ShareCard._ink,
+              fontFamily: 'Almarai',
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
+              height: 1.4,
+              shadows: [
+                Shadow(
+                  color: Color(0x40000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+          if (subhead.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              subhead,
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.rtl,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.82),
+                fontFamily: 'Almarai',
+                fontSize: 12.5,
+                height: 1.5,
+              ),
+            ),
+          ],
+          Expanded(
+            child: Center(child: _TimetableRows(rows: payload.timetableRows)),
+          ),
+          const SizedBox(height: 12),
+          const _Footer(),
+        ],
+      ),
+    );
+  }
+}
+
+/// The aligned rows themselves. Scaled down (never up) by a [FittedBox] so a
+/// narrow card, or an unusually long label, shrinks the table instead of
+/// overflowing it — the same guard `_Headline` uses.
+class _TimetableRows extends StatelessWidget {
+  const _TimetableRows({required this.rows});
+  final List<ShareTimetableRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, c) {
+        final maxW = c.maxWidth.isFinite ? c.maxWidth : 360.0;
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxW),
+            child: Table(
+              // RTL, so the first column of each row renders on the right.
+              textDirection: TextDirection.rtl,
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              columnWidths: const {
+                0: IntrinsicColumnWidth(),
+                1: FlexColumnWidth(),
+                2: IntrinsicColumnWidth(),
+              },
+              children: [
+                for (final row in rows)
+                  TableRow(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        child: Text(
+                          row.label,
+                          textDirection: TextDirection.rtl,
+                          style: const TextStyle(
+                            color: ShareCard._ink,
+                            fontFamily: 'Almarai',
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            shadows: [
+                              Shadow(
+                                color: Color(0x33000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // The leader between label and value. A hairline rather
+                      // than a row of dots, because the card already speaks
+                      // that language — `_BrandStrip` and the passage divider
+                      // are both fading hairlines.
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        child: Container(
+                          height: 1,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withValues(alpha: 0.06),
+                                Colors.white.withValues(alpha: 0.34),
+                                Colors.white.withValues(alpha: 0.06),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        child: Text(
+                          row.value,
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.end,
+                          style: const TextStyle(
+                            color: ShareCard._ink,
+                            fontFamily: 'Almarai',
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            // Digits on a fixed advance width, so the times
+                            // form a column instead of drifting row to row.
+                            fontFeatures: [FontFeature.tabularFigures()],
+                            shadows: [
+                              Shadow(
+                                color: Color(0x33000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'grids/feature_grid_card.dart';
 import 'grids/moon_phases_grid_item.dart';
 import 'grids/pray_azkar_grid_item.dart';
 import 'grids/allah_names_grid_item.dart';
@@ -87,15 +90,41 @@ class MoreIslamicExcerptsWidget extends StatelessWidget {
     return TitledSection(
       title: title,
       icon: icon,
-      child: GridView.count(
-        crossAxisCount: columns,
-        childAspectRatio: 0.92,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        padding: EdgeInsets.zero,
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        children: items,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const spacing = 10.0;
+
+          // The tile shape this grid has always had, derived from the cell
+          // width exactly as `childAspectRatio: 0.92` did.
+          final cellWidth =
+              (constraints.maxWidth - spacing * (columns - 1)) / columns;
+          final byShape = cellWidth / 0.92;
+
+          // …used as a FLOOR rather than the answer. A ratio derives height
+          // from width, and width does not change when the reader turns the
+          // text up — so at the largest scales this app offers, the label grew
+          // and the cell did not, and every tile in the directory overflowed by
+          // the difference. Nothing moves at the default size; the row only
+          // gets taller once the text genuinely needs it.
+          final extent = math.max(
+            byShape,
+            FeatureGridCard.minExtentFor(context),
+          );
+
+          return GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: spacing,
+              mainAxisSpacing: spacing,
+              mainAxisExtent: extent,
+            ),
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: items.length,
+            itemBuilder: (context, i) => items[i],
+          );
+        },
       ),
     );
   }

@@ -38,6 +38,39 @@ class FeatureGridCard extends StatelessWidget {
          'Provide either icon or iconBuilder',
        );
 
+  /// Height of the icon chip: a 24pt glyph inside 12pt of padding on each side.
+  /// Fixed — the chip does not grow with the text scale, only the label does.
+  static const double _chipExtent = 48;
+
+  /// Gap between the chip and the label.
+  static const double _chipToLabel = 10;
+
+  /// The card's own vertical padding, top and bottom.
+  static const double _verticalPadding = 28;
+
+  /// Leading applied to the label.
+  static const double _labelHeight = 1.2;
+
+  /// The label is allowed two lines before it ellipsizes.
+  static const int _labelLines = 2;
+
+  /// The height this card needs at the caller's current text scale.
+  ///
+  /// Exposed because the grid above it has to know. A fixed
+  /// `childAspectRatio` derives height from width, which is fine until the
+  /// reader turns the text up: the label is the only part that grows, the cell
+  /// is not, and the tile overflows by exactly the extra leading. The grid uses
+  /// this as a floor — see `more_islamic_excerpts_widget.dart`.
+  static double minExtentFor(BuildContext context) {
+    final theme = Theme.of(context);
+    final fontSize = theme.textTheme.bodyMedium?.fontSize ?? 14;
+    final scaled = MediaQuery.textScalerOf(context).scale(fontSize);
+    return _verticalPadding +
+        _chipExtent +
+        _chipToLabel +
+        scaled * _labelHeight * _labelLines;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -54,6 +87,7 @@ class FeatureGridCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(12),
@@ -71,15 +105,20 @@ class FeatureGridCard extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                height: 1.2,
+            const SizedBox(height: _chipToLabel),
+            // Flexible, not a bare Text: [minExtentFor] tells the grid how much
+            // room this needs, but a caller that gives it less must lose a line
+            // of label rather than paint outside the card.
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: _labelLines,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: _labelHeight,
+                ),
               ),
             ),
           ],

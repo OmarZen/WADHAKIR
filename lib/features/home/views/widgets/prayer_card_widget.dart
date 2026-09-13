@@ -91,33 +91,46 @@ class _CompactPrayerCardWidgetState extends State<CompactPrayerCardWidget> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: Radii.all(Radii.sm),
+                // Expanded, because the two action buttons beside it keep
+                // their natural width and the title does not: at the largest
+                // text scale this app offers, «مواقيت الصلاة» plus its icon
+                // plus those buttons is wider than the header, and the title
+                // is the part that can afford to wrap.
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: Radii.all(Radii.sm),
+                        ),
+                        child: Icon(
+                          Icons.access_time_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.access_time_rounded,
-                        color: Colors.white,
-                        size: 20,
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          l10n?.translate('home.prayer_times') ??
+                              'Prayer Times',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isDark
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      l10n?.translate('home.prayer_times') ?? 'Prayer Times',
-                      style: TextStyle(
-                        color: isDark
-                            ? theme.colorScheme.onSurface
-                            : theme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,

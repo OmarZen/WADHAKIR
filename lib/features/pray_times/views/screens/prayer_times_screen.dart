@@ -39,14 +39,24 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
   bool _hasCheckedLocation = false;
   bool _hasTriggeredLoad = false;
 
-  /// City for the shared card's subhead, resolved once when the screen opens.
+  /// City for the shared card's subhead.
   ///
   /// Resolved here rather than inside the share button because
   /// `getCurrentLocationName()` is async — it geocodes — while
   /// `ShareActionButton.payloadBuilder` is deliberately synchronous. Null until
   /// it lands, and null leaves the city off the card rather than delaying the
   /// share.
+  ///
+  /// **Re-resolved on every state the cubit emits, not once on open.** The
+  /// settings gear sits one icon from the share button and offers «تحديث
+  /// الموقع»; resolving once meant a user could update their location, watch
+  /// the times change, tap share, and send Jeddah's timetable under Cairo's
+  /// name. A card that is wrong about where it applies is worse than a card
+  /// with no city at all.
   String? _locationName;
+
+  /// Guards against overlapping geocodes when several states land together.
+  bool _resolvingLocation = false;
 
   @override
   void initState() {
@@ -78,16 +88,19 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
   }
 
   Future<void> _resolveLocationName() async {
-    if (!mounted) return;
+    if (!mounted || _resolvingLocation) return;
+    _resolvingLocation = true;
     try {
       final name = await context
           .read<PrayerTimesCubit>()
           .getCurrentLocationName();
       if (!mounted) return;
-      setState(() => _locationName = name);
+      if (name != _locationName) setState(() => _locationName = name);
     } catch (e) {
       // A card without a city is still a useful card. Never block the share.
       debugPrint('Could not resolve a city for the share card: $e');
+    } finally {
+      _resolvingLocation = false;
     }
   }
 
@@ -210,7 +223,11 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
 
           // Main Content
           SafeArea(
-            child: BlocBuilder<PrayerTimesCubit, PrayerTimesState>(
+            child: BlocConsumer<PrayerTimesCubit, PrayerTimesState>(
+              // Any new state can mean a new location — «تحديث الموقع» in the
+              // settings dialog refreshes the times without this screen ever
+              // rebuilding its city.
+              listener: (context, state) => _resolveLocationName(),
               builder: (context, state) {
                 if (state is PrayerTimesLoading) {
                   return loading_widget.PrayerTimesLoadingWidget(
@@ -220,11 +237,16 @@ class _PrayerTimesScreenContentState extends State<_PrayerTimesScreenContent>
                 } else if (state is PrayerTimesLoaded) {
                   return Column(
                     children: [
-                      // Custom header
+                      // Custom header. The share button is offered only when
+                      // the selected day HAS times: the date arrows can reach a
+                      // day the cubit holds nothing for, and a button that
+                      // silently does nothing on tap is worse than no button.
                       PrayerTimesHeader(
                         size: size,
                         cubit: cubit,
-                        payloadBuilder: _buildSharePayload,
+                        payloadBuilder: state.selectedPrayerTimes == null
+                            ? null
+                            : _buildSharePayload,
                       ),
 
                       // Main prayer times content

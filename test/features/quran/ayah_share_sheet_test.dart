@@ -23,6 +23,12 @@ AyahModel ayah({
 )..arabicName = arabicName;
 
 void main() {
+  /// Strips Arabic combining marks so "does it say the word twice" can be
+  /// asked of vowelled text. Independent of the production helper on purpose —
+  /// a test that reused it would agree with it by construction.
+  String bare(String text) =>
+      text.replaceAll(RegExp('[ً-ٰٟۖ-ۭ]'), '').replaceAll('ٱ', 'ا');
+
   group('the reference', () {
     test('reads «سورة الكهف — ١٠» with Arabic-Indic numerals', () {
       // Western digits inside an Arabic card read as a foreign object.
@@ -30,12 +36,43 @@ void main() {
     });
 
     test('does not say «سورة» twice', () {
-      // The library's surah names carry the word on some builds and not on
-      // others, and a doubled one is the kind of mistake a reader notices
-      // immediately and the app never reports.
+      // A doubled one is the kind of mistake a reader notices immediately and
+      // the app never reports.
       expect(
         AyahShareSheet(ayah: ayah(arabicName: 'سورة الكهف')).reference,
         'سورة الكهف — ١٠',
+      );
+    });
+
+    test('does not say «سورة» twice for the DIACRITIZED names either', () {
+      // This is the form quran_library actually supplies — every one of the
+      // 114 names in quranV4.json is fully vowelled. The undiacritized case
+      // above was the only one tested, so a bare startsWith('سورة') matched
+      // none of the real names and every card, caption and clipboard copy went
+      // out reading «سورة سُورَةُ ٱلْفَاتِحَةِ — ١».
+      for (final real in [
+        'سُورَةُ ٱلْفَاتِحَةِ',
+        'سُورَةُ البَقَرَةِ',
+        'سُورَةُ الكَهْفِ',
+      ]) {
+        final reference = AyahShareSheet(
+          ayah: ayah(arabicName: real),
+        ).reference;
+        expect(
+          'سورة'.allMatches(bare(reference)).length,
+          1,
+          reason: '"$reference" says the word more than once',
+        );
+        expect(reference, startsWith(real));
+      }
+    });
+
+    test('still prefixes a name that genuinely lacks the word', () {
+      // The fix must not over-match: a name with no «سورة» in it still needs
+      // one adding.
+      expect(
+        AyahShareSheet(ayah: ayah(arabicName: 'ٱلْفَاتِحَةِ')).reference,
+        startsWith('سورة ٱلْفَاتِحَةِ'),
       );
     });
 

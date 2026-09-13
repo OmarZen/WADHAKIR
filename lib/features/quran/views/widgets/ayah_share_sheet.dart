@@ -42,11 +42,31 @@ class AyahShareSheet extends StatelessWidget {
     final surah = ayah.arabicName?.trim();
     final number = WirdFormat.toArabicDigits(ayah.ayahNumber);
     if (surah == null || surah.isEmpty) return 'آية $number';
-    // The library's names already carry the word «سورة» on some builds and not
-    // on others; adding a second one is worse than adding none.
-    final named = surah.startsWith('سورة') ? surah : 'سورة $surah';
+    // The library's names already carry the word «سورة» — but fully
+    // diacritized, as «سُورَةُ ٱلْفَاتِحَةِ». A bare `startsWith('سورة')`
+    // therefore matched NONE of the 114, and every card, caption and clipboard
+    // copy went out reading «سورة سُورَةُ ٱلْفَاتِحَةِ — ١».
+    //
+    // Comparing on the stripped form is the fix: it is the letters that decide
+    // whether the word is already there, not the harakat on them.
+    final named = _stripArabicDiacritics(surah).startsWith('سورة')
+        ? surah
+        : 'سورة $surah';
     return '$named — $number';
   }
+
+  /// [text] with the Arabic combining marks removed, for comparison only.
+  ///
+  /// Covers the harakat and Quranic annotation blocks the mushaf text uses
+  /// (U+064B–U+0652 tanwin/harakat, U+0653–U+065F and U+0670 superscript alef,
+  /// U+06D6–U+06ED the Quranic stop and small-letter marks), plus the
+  /// ornamental alef wasla «ٱ» which is a base letter rather than a mark.
+  static String _stripArabicDiacritics(String text) => text
+      .replaceAll(RegExp('[ً-ٰٟۖ-ۭ]'), '')
+      .replaceAll('ٱ', 'ا')
+      .replaceAll('آ', 'ا')
+      .replaceAll('أ', 'ا')
+      .replaceAll('إ', 'ا');
 
   /// The ayah as it should travel.
   ///

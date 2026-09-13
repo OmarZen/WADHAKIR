@@ -210,6 +210,23 @@ class _ShareScreenState extends State<ShareScreen> {
   /// passage cards are given a fixed width and grow to content height inside
   /// a scroll view (the RepaintBoundary still captures the FULL card, even
   /// the parts scrolled out of view).
+  /// The card, pinned to no text scaling.
+  ///
+  /// `ShareCard` documents itself as pixel-deterministic — "it never reads
+  /// `MediaQuery` or `Theme.colorScheme`, so the on-screen preview and the
+  /// captured PNG look identical". It reads no `MediaQuery` *explicitly*, but
+  /// every `Text` resolves `MediaQuery.textScalerOf` inside its own build, and
+  /// `main.dart` installs a 0.9–1.6 scaler over the whole app.
+  ///
+  /// So the card was not deterministic at all: a reader at 1.6 got a timetable
+  /// whose subhead no longer fit its two lines and **ellipsized the date off
+  /// the card** while the caption still carried it, and a passage card tall
+  /// enough to threaten the capture. The exported image is a fixed-size
+  /// artefact for someone else's screen; it is the one surface in this app that
+  /// must not follow this reader's text-size preference.
+  Widget _card() =>
+      MediaQuery.withNoTextScaling(child: ShareCard(payload: _payload));
+
   Widget _buildPreview() {
     if (widget.payload.variant == ShareCardVariant.passage) {
       return SingleChildScrollView(
@@ -217,10 +234,7 @@ class _ShareScreenState extends State<ShareScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
-            child: RepaintBoundary(
-              key: _boundaryKey,
-              child: ShareCard(payload: _payload),
-            ),
+            child: RepaintBoundary(key: _boundaryKey, child: _card()),
           ),
         ),
       );
@@ -239,10 +253,7 @@ class _ShareScreenState extends State<ShareScreen> {
             return SizedBox(
               width: width,
               height: height,
-              child: RepaintBoundary(
-                key: _boundaryKey,
-                child: ShareCard(payload: _payload),
-              ),
+              child: RepaintBoundary(key: _boundaryKey, child: _card()),
             );
           },
         ),

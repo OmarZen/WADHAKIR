@@ -104,6 +104,39 @@ void main() {
       expect(payload.reference, '٢١ ربيع الأول ١٤٤٧ هـ');
     });
 
+    test('never prints raw coordinates as the city', () {
+      // When geocoding is unavailable and no name was ever cached, the
+      // repository falls back to '31.20°, 29.92°' — the sender's position to
+      // about a kilometre. On a WhatsApp Status that is a home address, leaked
+      // by a feature the user thought shared prayer times.
+      final payload = _payload(cityName: '31.20°, 29.92°');
+
+      expect(payload.reference, isNot(contains('°')));
+      expect(payload.captionOverride, isNot(contains('°')));
+      expect(payload.reference, '٢١ ربيع الأول ١٤٤٧ هـ');
+    });
+
+    test('knows every sentinel the location layer can return', () {
+      // Two layers give up in two different words: the repository says «موقع
+      // غير محدد», the cubit's catch says «غير معروف». A filter that knew only
+      // the first put the second on the card.
+      for (final sentinel in PrayerTimesShare.unknownLocations) {
+        expect(
+          PrayerTimesShare.isPrintableCity(sentinel),
+          isFalse,
+          reason: '"\$sentinel" would have been printed on a card',
+        );
+      }
+      expect(PrayerTimesShare.unknownLocations, contains('غير معروف'));
+    });
+
+    test('a real city still prints', () {
+      // The filter must not be so eager that it eats legitimate names.
+      for (final city in ['القاهرة', 'جدة', 'Mountain View', 'مدينة نصر']) {
+        expect(PrayerTimesShare.isPrintableCity(city), isTrue, reason: city);
+      }
+    });
+
     test('omits a null or empty city', () {
       expect(_payload(cityName: null).reference, '٢١ ربيع الأول ١٤٤٧ هـ');
       expect(_payload(cityName: '').reference, '٢١ ربيع الأول ١٤٤٧ هـ');

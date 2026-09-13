@@ -185,14 +185,37 @@ void main() {
     });
 
     test('every method Dart can send has a Kotlin arm', () {
-      for (final method in [
-        'ledgerAppend',
-        'ledgerRead',
-        'ledgerClear',
-        'oemAutostartKey',
-        'openOemAutostart',
-        'blockedChannel',
+      // READ OFF THE DART, not hand-listed. A hand-written list cannot catch a
+      // rename on the Dart side — the renamed method simply stops being
+      // mentioned anywhere and the old name sits in the list, still matching
+      // Kotlin, still green. Both ends are now derived from source, so a
+      // rename on either one fails this.
+      final sent = <String>{};
+      for (final path in [
+        'lib/features/pray_times/services/native_prayer_alarm_gateway.dart',
+        'lib/core/reminders/reminder_ledger.dart',
+        'lib/core/reminders/reminder_platform_probe.dart',
+        'lib/core/reminders/oem_autostart.dart',
+        'lib/core/utils/alarm_permission_helper.dart',
       ]) {
+        final file = File(path);
+        if (!file.existsSync()) continue;
+        sent.addAll(
+          RegExp(
+            r"invokeMethod(?:<[^>]*>)?\(\s*'([a-zA-Z]+)'",
+          ).allMatches(file.readAsStringSync()).map((m) => m.group(1)!),
+        );
+      }
+
+      // Canary: if the regex goes stale this set empties and every assertion
+      // below passes vacuously.
+      expect(
+        sent,
+        containsAll(['ledgerAppend', 'ledgerRead', 'blockedChannel']),
+        reason: 'the Dart-side scan found nothing — the regex has gone stale',
+      );
+
+      for (final method in sent) {
         expect(
           handled,
           contains(method),
@@ -202,6 +225,34 @@ void main() {
               'swallowed, and look exactly like a device with nothing to say',
         );
       }
+    });
+
+    test('the exact-alarm probe is answered natively', () {
+      // The settings UI, the reminder health screen and the scheduler must
+      // share ONE answer to "can this app schedule an exact alarm". Dart
+      // cannot work it out: SCHEDULE_EXACT_ALARM is capped at API 32 in the
+      // manifest and USE_EXACT_ALARM takes over from 33, so a permission-
+      // library check reports "denied" on every modern device — the opposite
+      // of the truth, and it sent users to a settings screen that cannot
+      // exist for an app holding USE_EXACT_ALARM.
+      expect(
+        handled,
+        contains('canScheduleExactAlarms'),
+        reason: 'without this arm the helper falls back to the wrong answer',
+      );
+
+      final scheduler = File(
+        'android/app/src/main/kotlin/com/bloom/wadhakir/PrayerAlarmScheduler.kt',
+      ).readAsStringSync();
+
+      // The bridge must delegate to the scheduler's own gate rather than
+      // re-deriving one, or the two can disagree.
+      expect(
+        bridge,
+        contains('PrayerAlarmScheduler.canScheduleExact'),
+        reason: 'the bridge must answer with the gate the scheduler uses',
+      );
+      expect(scheduler, contains('fun canScheduleExact(context: Context)'));
     });
   });
 }

@@ -69,6 +69,58 @@ Future<GlobalKey> render(
 }
 
 void main() {
+  testWidgets('the exported card ignores the reader\'s text size', (
+    tester,
+  ) async {
+    // ShareCard calls itself pixel-deterministic, but every Text inside it
+    // resolves MediaQuery.textScalerOf during its own build, and main.dart
+    // installs a 0.9-1.6 scaler over the whole app. At 1.6 the timetable
+    // subhead stopped fitting its two lines and ELLIPSIZED THE DATE OFF THE
+    // CARD while the caption still carried it.
+    //
+    // The exported image is a fixed artefact for somebody else's screen. The
+    // share screen pins it with MediaQuery.withNoTextScaling; this asserts the
+    // card is unmoved by a scaler above it.
+    tester.view.physicalSize = const Size(1200, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    Future<Size> sizeAt(double scale) async {
+      final key = GlobalKey();
+      await tester.pumpWidget(
+        MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Center(
+              child: SizedBox(
+                width: 360,
+                child: RepaintBoundary(
+                  key: key,
+                  child: MediaQuery.withNoTextScaling(
+                    child: ShareCard(payload: _payload()),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      return tester.getSize(find.text(_rows.first.value));
+    }
+
+    final plain = await sizeAt(1.0);
+    final enlarged = await sizeAt(1.6);
+
+    expect(
+      enlarged.height,
+      closeTo(plain.height, 0.5),
+      reason: 'the card followed the reader\'s text scale',
+    );
+    expect(enlarged.width, closeTo(plain.width, 0.5));
+  });
+
   testWidgets('the card is 9:16 like every other share card', (tester) async {
     final key = await render(tester, _payload());
     final size = tester.getSize(find.byKey(key));

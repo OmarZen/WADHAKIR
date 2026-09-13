@@ -329,6 +329,16 @@ object PrayerAlarmScheduler {
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S || manager.canScheduleExactAlarms()
 
     /**
+     * The same gate, reachable from the bridge so the settings UI and the
+     * scheduler cannot disagree about whether exact alarms are available.
+     */
+    fun canScheduleExact(context: Context): Boolean {
+        val manager =
+            context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return false
+        return canScheduleExact(manager)
+    }
+
+    /**
      * The alarm's own PendingIntent.
      *
      * Both the request code and the intent's data carry the id. Extras do not

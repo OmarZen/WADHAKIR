@@ -55,6 +55,24 @@ object PrayerAlarmBridge {
                 // which is what the gateway treats as "not available".
                 "isAvailable" -> result.success(true)
 
+                // The ONLY authoritative answer to "can this app schedule an
+                // exact alarm". Dart cannot work it out.
+                //
+                // The app declares SCHEDULE_EXACT_ALARM capped at API 32 and
+                // USE_EXACT_ALARM from 33 — Google's documented split for
+                // alarm-clock-class apps. So from API 33 the app holds exact
+                // alarm rights permanently and non-revocably, while
+                // SCHEDULE_EXACT_ALARM is not declared AT ALL for that SDK
+                // level. Any permission-library check of SCHEDULE_EXACT_ALARM
+                // therefore reports "denied" on every modern device, which is
+                // the opposite of the truth.
+                //
+                // AlarmManager.canScheduleExactAlarms() is what the scheduler
+                // itself gates on (PrayerAlarmScheduler.kt), so asking it here
+                // keeps the settings UI and the scheduler on one answer.
+                "canScheduleExactAlarms" ->
+                    result.success(PrayerAlarmScheduler.canScheduleExact(appContext))
+
                 "clear" -> {
                     synchronized(lock) { pending.clear() }
                     result.success(null)

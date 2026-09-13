@@ -194,6 +194,15 @@ class ReadingComfortSelector extends StatelessWidget {
   /// allows.
   Widget _row(List<Widget> children) =>
       Wrap(spacing: 8, runSpacing: 8, children: children);
+
+  /// Gap between the rules in a spacing chip's glyph, for [spacing].
+  ///
+  /// Derived from the real leading so the picture cannot drift from the value
+  /// it depicts: 1.7 → 1.5px, 2.0 → 3px, 2.4 → 5px. Public so a test can assert
+  /// the ordering holds — a glyph that did not widen with the spacing would
+  /// still look like a glyph.
+  static double spacingGlyphGap(ReadingSpacing spacing) =>
+      (spacing.height - 1.4) * 5.0;
 }
 
 /// Icon, title, subtitle and the current value — the header shape the text-size
@@ -310,9 +319,7 @@ class _SpacingGlyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Derived from the real leading so the glyph cannot drift from the value it
-    // depicts: 1.7 → 1.5px, 2.0 → 3px, 2.4 → 5px.
-    final gap = (spacing.height - 1.4) * 5.0;
+    final gap = ReadingComfortSelector.spacingGlyphGap(spacing);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

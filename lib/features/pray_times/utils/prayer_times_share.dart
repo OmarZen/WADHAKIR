@@ -44,9 +44,36 @@ class PrayerTimesShareLabels {
 class PrayerTimesShare {
   const PrayerTimesShare._();
 
-  /// What `PrayerTimesRepository.getCurrentLocationName()` returns when it has
-  /// no coordinates at all. Never printed on a card.
+  /// The strings the location layer hands back when it does NOT know where the
+  /// user is. None of them is ever printed on a card.
+  ///
+  /// There is more than one because more than one layer gives up:
+  /// `PrayerTimesRepositoryImpl.getCurrentLocationName` returns «موقع غير محدد»
+  /// when it has no coordinates, and `PrayerTimesCubit.getCurrentLocationName`
+  /// catches and returns «غير معروف». A filter that knew only the first let the
+  /// second straight onto the card.
+  static const Set<String> unknownLocations = {'موقع غير محدد', 'غير معروف'};
+
+  /// Kept for callers and tests that want the primary sentinel by name.
   static const String unknownLocation = 'موقع غير محدد';
+
+  /// Whether [value] is a place name fit to print on a card someone broadcasts.
+  ///
+  /// ## The coordinate case
+  ///
+  /// When geocoding is unavailable and no name was ever cached, the repository
+  /// falls back to `'31.20°, 29.92°'` — the user's position to about a
+  /// kilometre. That is not a city name, it is a home address, and putting it
+  /// on a WhatsApp Status is a privacy leak the user did not ask for and would
+  /// not spot. The degree sign is the tell, and it cannot appear in a real
+  /// place name.
+  static bool isPrintableCity(String? value) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) return false;
+    if (unknownLocations.contains(text)) return false;
+    if (text.contains('°')) return false;
+    return true;
+  }
 
   /// The six rows, in the order a printed mosque timetable carries them.
   ///
@@ -78,8 +105,10 @@ class PrayerTimesShare {
 
   /// The «city · date» line under the title. Either half may be missing; if
   /// both are, the subhead is empty and the card renders without it.
-  static String subhead({String? cityName, String? dateLine}) =>
-      [cityName, dateLine].where(_isUsable).join(' · ');
+  static String subhead({String? cityName, String? dateLine}) => [
+    if (isPrintableCity(cityName)) cityName!.trim(),
+    if (dateLine != null && dateLine.trim().isNotEmpty) dateLine.trim(),
+  ].join(' · ');
 
   /// Builds the payload for [times] as they stand on [dateLine].
   ///
@@ -130,7 +159,4 @@ class PrayerTimesShare {
       ..add(AppConstants.playStoreUrl);
     return lines.join('\n');
   }
-
-  static bool _isUsable(String? value) =>
-      value != null && value.isNotEmpty && value != unknownLocation;
 }

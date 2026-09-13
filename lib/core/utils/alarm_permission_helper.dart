@@ -1,33 +1,58 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wadhakir/core/widgets/app_dialog.dart';
+import 'package:wadhakir/features/pray_times/services/native_prayer_alarm_gateway.dart';
 
 /// Helper class to handle SCHEDULE_EXACT_ALARM permission
 /// Required for Android 14+ to schedule exact alarms for prayer times
 class AlarmPermissionHelper {
-  /// Check if the app can schedule exact alarms
-  /// Returns true if permission is granted or not required (Android < 12)
+  /// Whether this app can actually schedule an exact alarm.
+  ///
+  /// ## Why this asks the platform and not `permission_handler`
+  ///
+  /// The manifest declares `SCHEDULE_EXACT_ALARM` capped at **API 32** and
+  /// `USE_EXACT_ALARM` from **33** — Google's documented split for
+  /// alarm-clock-class apps. From API 33 the app therefore holds exact-alarm
+  /// rights permanently and non-revocably, and `SCHEDULE_EXACT_ALARM` is not
+  /// declared *at all*.
+  ///
+  /// Asking `Permission.scheduleExactAlarm.status` on such a device asks about
+  /// a permission the app never requested, and gets back "denied" — on every
+  /// Android 13, 14, 15 and 16 install, which is most of the install base. The
+  /// app then told those users their alarms were broken, and sent them to a
+  /// settings screen that cannot exist for an app holding `USE_EXACT_ALARM`.
+  ///
+  /// `AlarmManager.canScheduleExactAlarms()` is the real answer, and is what
+  /// `PrayerAlarmScheduler` itself gates on — so the settings UI, the health
+  /// screen and the scheduler now share one source of truth.
   static Future<bool> canScheduleExactAlarms() async {
     if (!Platform.isAndroid) return true;
 
     try {
-      // For Android 12 and above, we need to check if exact alarms are allowed
-      // This is automatically handled by the permission_handler package
-      // For Android 14+, this will return false if user hasn't granted permission
+      final allowed = await MethodChannelAlarmBridge.channel.invokeMethod<bool>(
+        'canScheduleExactAlarms',
+      );
+      if (allowed != null) return allowed;
+    } on MissingPluginException {
+      // A build without the native side. Fall through to the old probe rather
+      // than claiming anything.
+      debugPrint('Native exact-alarm probe unavailable; falling back');
+    } catch (e) {
+      debugPrint('Error checking exact alarm permission natively: $e');
+    }
 
-      // Check using AlarmManager (from android_alarm_manager_plus or native code)
-      // Since we don't have direct access to AlarmManager.canScheduleExactAlarms()
-      // we'll use permission_handler's scheduleExactAlarm permission
+    try {
       final status = await Permission.scheduleExactAlarm.status;
       return status.isGranted;
     } catch (e) {
       debugPrint('Error checking exact alarm permission: $e');
-      // On older Android versions, this will fail, so we assume true
+      // Pre-Android-12 has no such permission; assume the alarm will land.
       return true;
     }
   }

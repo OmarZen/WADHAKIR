@@ -76,8 +76,54 @@ object PrayerAlarmScheduler {
      * cancels everything armed that is not in it, and arms the rest. Calling it
      * twice changes nothing, which is what lets three repair paths all end in
      * the same function without coordinating.
+     *
+     * [firedId] is the alarm whose firing triggered this call, when one did. It
+     * is excluded from the lapse detection below: an alarm that the OS delivered
+     * late is still an alarm the OS delivered, and counting it as never having
+     * arrived would report every deferred adhan twice — once as late, once as
+     * missing.
+     *
+     * [observeLapses] is false when the sweep was caused by the environment
+     * changing rather than by time passing normally — see [recordLapses].
      */
-    fun rearmWindow(context: Context, nowMs: Long) {
+    fun rearmWindow(
+        context: Context,
+        nowMs: Long,
+        firedId: Int? = null,
+        observeLapses: Boolean = true,
+    ) = synchronized(sweepLock) {
+        rearmWindowLocked(context, nowMs, firedId, observeLapses)
+    }
+
+    /**
+     * Serialises every sweep.
+     *
+     * A sweep is a read-modify-write over the armed set: read `armedIds`, decide,
+     * write `setArmedIds`. [PrayerAlarmReceiver.onFire] starts a **new, unsynchronised
+     * thread for every firing**, and Android delivers backlogged alarms in quick
+     * succession after a Doze stretch — so two sweeps genuinely overlap.
+     *
+     * Interleaved, they do two kinds of damage. The older one predates this
+     * release: the second thread's `setArmedIds` can be computed from a set read
+     * before the first thread's write, leaving an alarm armed with the OS that
+     * the ledger no longer lists, which nothing ever cancels. The newer one is
+     * the lapse detector's: `firedId` excludes only the *calling* thread's own
+     * alarm, so thread A, still seeing B's id in a stale `armedIds`, will write a
+     * `lapsed` row for an alarm that fired successfully in thread B a moment ago
+     * — a false accusation against a healthy device, which is the one thing the
+     * health screen must never produce.
+     *
+     * `recordLapses`'s "cannot report twice, for free" guarantee assumes single
+     * -threaded execution. This is what makes that assumption true.
+     */
+    private val sweepLock = Any()
+
+    private fun rearmWindowLocked(
+        context: Context,
+        nowMs: Long,
+        firedId: Int?,
+        observeLapses: Boolean,
+    ) {
         val manager = context.getSystemService(AlarmManager::class.java)
         if (manager == null) {
             Log.w(TAG, "No AlarmManager; cannot arm prayer alarms")
@@ -98,16 +144,22 @@ object PrayerAlarmScheduler {
         // every commit and is bounded at sixty days, and the filter below
         // already ignores anything in the past.
         val horizonMs = nowMs + ARM_WINDOW_DAYS * 24L * 60L * 60L * 1000L
-        val due = PrayerAlarmStore.all(context).filter {
+        val ledger = PrayerAlarmStore.all(context)
+        val due = ledger.filter {
             it.fireAtEpochMs > nowMs + MIN_LEAD_MS && it.fireAtEpochMs <= horizonMs
         }
         val desiredIds = due.map { it.id }.toSet()
+
+        val armedIds = PrayerAlarmStore.armedIds(context)
+        if (observeLapses) {
+            recordLapses(context, manager, ledger, armedIds, nowMs, firedId)
+        }
 
         // Cancel first. An id that dropped out of the plan — a prayer the user
         // switched off, a day that rolled out of the window — has no other way
         // of being taken back: AlarmManager cannot be enumerated, so an alarm
         // nobody cancels rings forever.
-        val stale = PrayerAlarmStore.armedIds(context) - desiredIds
+        val stale = armedIds - desiredIds
         stale.forEach { cancelById(context, manager, it) }
 
         due.forEach { arm(context, manager, it) }
@@ -116,6 +168,124 @@ object PrayerAlarmScheduler {
         scheduleAnchor(context, manager, nowMs)
 
         Log.i(TAG, "Armed ${due.size} alarms, cancelled ${stale.size}, ledger=${PrayerAlarmStore.all(context).size}")
+    }
+
+    /**
+     * Writes a `lapsed` row for every alarm that was armed, whose moment came
+     * and went, and which never fired.
+     *
+     * ## Why this is the right place, and the only one
+     *
+     * Nobody is present at the moment of a miss — that is what makes it a miss.
+     * It can only ever be *detected afterwards*, by something holding both
+     * halves of the evidence: the set the OS was asked to keep, and a clock.
+     * This sweep is the only code in the app that holds both.
+     *
+     * The inference is sound because firing re-arms. When an alarm fires,
+     * [PrayerAlarmReceiver] calls this function, and the write of [desiredIds]
+     * at the end drops that id from the armed set at a moment when its instant
+     * is roughly now. So an id that is *still* armed with an instant well in the
+     * past is an id whose alarm was never delivered — there is no other way for
+     * it to have survived.
+     *
+     * ## Why it cannot report the same lapse twice
+     *
+     * For free, and deliberately. `setArmedIds(desiredIds)` at the end of the
+     * sweep contains only future instants, so every id reported here is gone
+     * from the armed set by the time the next sweep runs. No "already reported"
+     * state is kept, which means there is none to get out of step.
+     *
+     * Only ids still present in [ledger] are reported: the row is worthless
+     * without the instant it was armed for, and an id with no row is already
+     * handled as a stale cancel.
+     *
+     * ## What must NOT reach here, and why
+     *
+     * The inference only holds while "this instant is in the past" means time
+     * passed normally. Two situations break that, and both were found producing
+     * a false accusation:
+     *
+     *  * **The environment changed.** [PrayerSystemEventsReceiver] sweeps on
+     *    `TIME_SET`, `BOOT_COMPLETED` and their siblings. A clock corrected
+     *    forward by three days makes every armed alarm "overdue" at once — up
+     *    to [ARM_WINDOW_DAYS] × 5 rows from one sweep — and a phone that spent
+     *    the night switched off crosses Isha and Fajr. Neither is the device
+     *    killing the app; one is NTP and the other is a power button. Those
+     *    callers pass `observeLapses = false`.
+     *  * **Exact alarms are revoked.** [arm] then degrades to
+     *    `setAndAllowWhileIdle`, which is inexact by design and routinely runs
+     *    minutes late while dozing. A sweep landing in that gap would record a
+     *    lapse for an adhan that is merely deferred. The permission is
+     *    diagnosed on its own, ahead of any of this, so nothing is lost by
+     *    staying quiet here — and the rows are permanent, so a false one would
+     *    go on accusing the device for a fortnight after the user fixed the
+     *    real problem.
+     */
+    private fun recordLapses(
+        context: Context,
+        manager: AlarmManager,
+        ledger: List<PrayerAlarm>,
+        armedIds: Set<Int>,
+        nowMs: Long,
+        firedId: Int?,
+    ) {
+        if (armedIds.isEmpty()) return
+        if (!canScheduleExact(manager)) return
+        try {
+            ledger.asSequence()
+                // The predicate itself lives in ReminderRules, which has no
+                // Android types and is therefore the only part of this file a
+                // JUnit test can reach. It is also the part whose failure is
+                // silent — see ReminderRulesTest.
+                .filter {
+                    ReminderRules.isLapsed(
+                        id = it.id,
+                        fireAtEpochMs = it.fireAtEpochMs,
+                        nowMs = nowMs,
+                        firedId = firedId,
+                        armedIds = armedIds,
+                    )
+                }
+                .forEach { ReminderLedgerStore.recordLapsed(context, it.id, it.fireAtEpochMs, nowMs) }
+        } catch (e: Exception) {
+            // Diagnostics never get to break the re-arm they are observing.
+            Log.w(TAG, "Could not record lapsed alarms", e)
+        }
+    }
+
+    /**
+     * Records lapses against the ledger **as it stands right now**, without
+     * arming anything.
+     *
+     * Exists for one caller — [PrayerAlarmBridge]'s `commit` — and for a reason
+     * that made the whole detector a no-op on the single path that matters most.
+     *
+     * A commit does `replaceAll` then `rearmWindow`. `replaceAll` overwrites the
+     * ledger with Dart's freshly computed plan, and `PrayerSchedulePlanner` drops
+     * everything not still in the future. So by the time the sweep looks for
+     * "armed, and its instant has passed", the rows it needs are already gone —
+     * `armedIds` still holds ids from days ago, and the ledger has nothing to
+     * match them against.
+     *
+     * What that erased is exactly the evidence worth having. A force-stop —
+     * whether the user's or an OEM's — kills the alarm chain, the 00:05 anchor
+     * and WorkManager together, so nothing runs again until the app is opened.
+     * That reopen IS the commit. Every multi-day silence therefore recorded
+     * nothing at all, at the precise moment someone had opened the app to find
+     * out why they had missed their prayers.
+     *
+     * So: observe first, against the old ledger, then replace.
+     */
+    fun observeLapses(context: Context, nowMs: Long) = synchronized(sweepLock) {
+        val manager = context.getSystemService(AlarmManager::class.java) ?: return@synchronized
+        recordLapses(
+            context,
+            manager,
+            PrayerAlarmStore.all(context),
+            PrayerAlarmStore.armedIds(context),
+            nowMs,
+            firedId = null,
+        )
     }
 
     /** Takes back every alarm this app owns and empties the ledger. */

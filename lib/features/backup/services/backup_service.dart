@@ -88,9 +88,22 @@ class BackupService {
   /// [BackupKeys.specFor] is the only gate — a key that is not allowlisted is
   /// never read, so a plugin's private keys cannot leak into a file the user
   /// is about to send to themselves over WhatsApp.
+  /// [diagnostics] is the reminder ledger, already read and serialised by the
+  /// caller.
+  ///
+  /// Passed in rather than read here on purpose. This class holds no clock and
+  /// no file handles, which is what lets every branch in it be tested against
+  /// an in-memory preference store — and the ledger is a file, on Android one
+  /// that lives in device-protected storage behind a method channel. Opening it
+  /// from here would trade that away for nothing.
+  ///
+  /// It rides in [BackupEnvelope.diagnostics], outside [data] and therefore
+  /// outside [restore]'s reach. See that field for why a ledger must never be
+  /// restored onto a different device.
   BackupEnvelope buildEnvelope({
     required String appVersion,
     required DateTime exportedAt,
+    List<Map<String, Object?>> diagnostics = const [],
   }) {
     final data = <String, BackupValue>{};
     for (final key in _prefs.getKeys()) {
@@ -104,6 +117,7 @@ class BackupService {
       appVersion: appVersion,
       exportedAt: exportedAt.toUtc(),
       data: data,
+      diagnostics: diagnostics,
     );
   }
 

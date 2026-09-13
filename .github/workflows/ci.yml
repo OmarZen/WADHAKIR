@@ -72,6 +72,16 @@ jobs:
       - name: 🩹 Patch quran_library for AGP 9.x
         run: bash android/fix_deps_proguard.sh
 
+      # The native side's own tests. `flutter test` above cannot reach them —
+      # it never compiles Kotlin — and `flutter build apk` compiles it without
+      # running anything, so without this step the Kotlin tests exist and are
+      # never executed by anybody.
+      #
+      # After the proguard patch, because that is what makes any Gradle task in
+      # this project configure at all.
+      - name: 🤖 Test (Kotlin)
+        run: cd android && ./gradlew :app:testDebugUnitTest
+
       - name: 🏗️ Build APK (Debug)
         run: flutter build apk --debug
 

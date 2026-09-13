@@ -176,4 +176,14 @@ dependencies {
     // Google Play feature delivery (Android 14 compatible)
     implementation("com.google.android.play:feature-delivery:2.1.0")
     implementation("com.google.android.play:feature-delivery-ktx:2.1.0")
+
+    // JVM unit tests for the native side — `./gradlew :app:testDebugUnitTest`,
+    // and a step in ci.yml.
+    //
+    // Plain JUnit, no Robolectric and no instrumentation, which constrains what
+    // may be tested to code with no Android types in it. That constraint is the
+    // point: see ReminderRules, where the two decisions that can silently tell a
+    // user their phone is broken were pulled out precisely so they could be
+    // reached from here without a device.
+    testImplementation("junit:junit:4.13.2")
 }

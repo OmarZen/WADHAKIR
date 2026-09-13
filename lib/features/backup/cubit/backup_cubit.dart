@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:wadhakir/core/app/restart_required.dart';
+import 'package:wadhakir/core/reminders/reminder_ledger.dart';
 import 'package:wadhakir/features/backup/cubit/backup_state.dart';
 import 'package:wadhakir/features/backup/models/backup_envelope.dart';
 import 'package:wadhakir/features/backup/services/backup_crypto.dart';
@@ -67,7 +68,16 @@ class BackupCubit extends Cubit<BackupState> {
     if (state is BackupInProgress) return;
     emit(const BackupInProgress(BackupTask.exporting));
 
-    final envelope = _buildEnvelope(await _appVersion());
+    // The reminder ledger travels with the export and with nothing else.
+    //
+    // Read here rather than in `_buildEnvelope`, because that is also what
+    // `refresh()` calls on every rebuild of the export screen — and this is a
+    // ~250 KB read across a method channel that only the file needs. The
+    // summary only ever looks at `.data`.
+    final envelope = _buildEnvelope(
+      await _appVersion(),
+      diagnostics: await _readReminderLedger(),
+    );
     if (envelope.data.isEmpty) {
       refresh(error: BackupError.nothingToExport);
       return;
@@ -245,8 +255,30 @@ class BackupCubit extends Cubit<BackupState> {
     );
   }
 
-  BackupEnvelope _buildEnvelope(String appVersion) =>
-      _service.buildEnvelope(appVersion: appVersion, exportedAt: _now());
+  BackupEnvelope _buildEnvelope(
+    String appVersion, {
+    List<Map<String, Object?>> diagnostics = const [],
+  }) => _service.buildEnvelope(
+    appVersion: appVersion,
+    exportedAt: _now(),
+    diagnostics: diagnostics,
+  );
+
+  /// The reminder ledger, as JSON rows for [BackupEnvelope.diagnostics].
+  ///
+  /// Never fails the export. The ledger is the least important thing in the
+  /// file by a wide margin — it is diagnostics, and everything else here is a
+  /// user's irreplaceable record of years of worship. A backup that refused to
+  /// run because a diagnostics file was unreadable would be the feature failing
+  /// at exactly the moment it matters.
+  Future<List<Map<String, Object?>>> _readReminderLedger() async {
+    try {
+      final entries = await ReminderLedger.instance.read();
+      return [for (final entry in entries) entry.toJson()];
+    } catch (_) {
+      return const [];
+    }
+  }
 
   /// The running app's `version+build`, recorded in the file so a user with
   /// two backups can tell which is which.

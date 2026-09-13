@@ -9,6 +9,7 @@ import '../../core/time/clock.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/notifications/reminder_interruption.dart';
 import '../../core/notifications/reminder_floor_service.dart';
+import '../../core/reminders/reminder_ledger.dart';
 import '../../features/pray_times/services/prayer_schedule_planner.dart';
 import '../../features/pray_times/services/prayer_notification_content.dart';
 import '../../features/pray_times/services/prayer_scheduler.dart';
@@ -198,6 +199,17 @@ class _MobileNotificationRepositoryImpl
     this,
     const PrayerSchedulePlanner(),
     _clock,
+    _ledgerObserver,
+  );
+
+  /// Writes the reminder ledger's `armed` summary row.
+  ///
+  /// Reads `usesNativeAlarms` at call time, not at construction: which gateway
+  /// owns the alarm table is decided by an async probe during [initialize], and
+  /// a row that named the wrong path would send a support conversation looking
+  /// at the wrong half of the system.
+  late final _LedgerPlanObserver _ledgerObserver = _LedgerPlanObserver(
+    () => _usesNativeAlarms,
   );
 
   bool _usesNativeAlarms = false;
@@ -689,6 +701,7 @@ class _MobileNotificationRepositoryImpl
       ),
       const PrayerSchedulePlanner(),
       _clock,
+      _ledgerObserver,
     );
     _usesNativeAlarms = true;
     debugPrint('🔔 Prayer alarms owned by native AlarmManager');
@@ -1106,6 +1119,12 @@ class _MobileNotificationRepositoryImpl
       force: true,
     );
 
+    // The reminder ledger's `armed` row is written by `_ledgerObserver`, inside
+    // PrayerScheduler, not here — see [PrayerPlanObserver]. It lived at this
+    // point once, immediately above the early return below, where one careless
+    // reorder would have recorded only the non-empty plans and silently dropped
+    // the empty ones, which are the interesting half.
+
     if (result.isEmpty) {
       debugPrint(
         settings.masterEnabled
@@ -1326,4 +1345,32 @@ $timeRemaining$locationText''';
   Future<void> hidePersistentNotification() async {
     await AwesomeNotifications().cancel(_persistentId);
   }
+}
+
+/// Writes the reminder ledger's one summary row per committed plan.
+///
+/// One row per commit, never one per alarm — the owner's decision on #15, and
+/// the arithmetic behind it: sixty days is three hundred alarms, so a row each
+/// would flush a 2,000-row ring in under seven reschedules and answer nothing
+/// this row does not.
+///
+/// [_usesNative] is a callback rather than a value because which gateway owns
+/// the alarm table is decided by an async probe, and this observer is built
+/// before that probe runs.
+class _LedgerPlanObserver implements PrayerPlanObserver {
+  _LedgerPlanObserver(this._usesNative);
+
+  final bool Function() _usesNative;
+
+  @override
+  Future<void> onPlanArmed(List<PlannedPrayerNotification> plan) =>
+      ReminderLedger.instance.recordArmed(
+        count: plan.length,
+        until: plan.isEmpty
+            ? null
+            : plan
+                  .map((p) => p.fireTime)
+                  .reduce((a, b) => a.isAfter(b) ? a : b),
+        path: _usesNative() ? 'native' : 'plugin',
+      );
 }

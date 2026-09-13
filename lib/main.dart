@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +15,8 @@ import 'package:wadhakir/core/notifications/notification_router.dart';
 import 'package:wadhakir/core/notifications/native_prayer_tap.dart';
 import 'package:wadhakir/core/notifications/pending_notification_action.dart';
 import 'package:wadhakir/core/notifications/reminder_floor_service.dart';
+import 'package:wadhakir/core/reminders/reminder_ledger.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/app_theme/forui_theme.dart';
 import 'package:wadhakir/data/models/hive_adapters.dart';
@@ -669,6 +673,33 @@ class _GlassWidgetResumeRefresherState
     if (!RestartRequired.isLatched) {
       // ignore: unawaited_futures
       ReminderFloorService.instance.arm();
+      // ignore: unawaited_futures
+      _recordPendingReminders();
+    }
+  }
+
+  /// Asks iOS how many of this app's scheduled notifications it is still
+  /// holding, and writes the answer to the reminder ledger.
+  ///
+  /// **iOS only, and that is the point.** iOS keeps at most 64 pending
+  /// notifications per app and silently drops the overflow — there is no error,
+  /// no callback, and nothing in the app can tell. `IosNotificationBudget`
+  /// exists to keep the app under that cap; this is the only way to find out
+  /// whether it worked on a real device, and the only delivery evidence iOS
+  /// offers at all, since it has no native fire path to report from the way
+  /// `PrayerAlarmReceiver` does on Android.
+  ///
+  /// Deliberately NOT run on Android. There
+  /// `getScheduledNotificationIds()` reports the plugin's schedules, and on a
+  /// native-alarm install the five prayers are not among them — a row saying
+  /// "the OS holds 12" would read as catastrophic loss when nothing is wrong.
+  Future<void> _recordPendingReminders() async {
+    if (!Platform.isIOS) return;
+    try {
+      final ids = await PrayerNotificationService().getScheduledNotifications();
+      await ReminderLedger.instance.recordPending(count: ids.length);
+    } catch (_) {
+      // Diagnostics never get to break a resume.
     }
   }
 
@@ -731,6 +762,11 @@ class _GlassWidgetResumeRefresherState
     // needs — and resetting it here means an active user never sees it fire.
     // ignore: unawaited_futures
     ReminderFloorService.instance.arm();
+
+    // What iOS still holds, recorded each time the user comes back. See
+    // _recordPendingReminders.
+    // ignore: unawaited_futures
+    _recordPendingReminders();
 
     final prayerCubit = context.read<PrayerTimesCubit>();
 

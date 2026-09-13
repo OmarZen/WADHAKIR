@@ -99,6 +99,8 @@ void main() {
     scheduler = PrayerScheduler(gateway, const PrayerSchedulePlanner(), clock);
   });
 
+  group('the plan observer', _observerTests);
+
   group('sequencing', () {
     test('cancels the whole prayer window before arming anything', () async {
       // Order matters: arming first would let a cancel sweep wipe what was
@@ -458,5 +460,128 @@ void main() {
 
       expect(batching.calls, contains('commit'));
     });
+  });
+}
+
+/// Records every plan the scheduler says it armed.
+class _RecordingObserver implements PrayerPlanObserver {
+  final List<List<PlannedPrayerNotification>> plans = [];
+  Object? throws;
+
+  @override
+  Future<void> onPlanArmed(List<PlannedPrayerNotification> plan) async {
+    plans.add(plan);
+    final failure = throws;
+    if (failure != null) throw failure;
+  }
+}
+
+/// The reminder ledger's `armed` row is written through [PrayerPlanObserver].
+///
+/// It is here, and not at the repository that calls this class, because the
+/// property that matters is WHEN — and at the repository the write sat directly
+/// above an `if (result.isEmpty) return`, one careless reorder away from
+/// recording only the plans that were never the problem. Here it is provable.
+void _observerTests() {
+  late _FakeGateway gateway;
+  late FixedClock clock;
+  late _RecordingObserver observer;
+  late PrayerScheduler scheduler;
+
+  setUp(() {
+    gateway = _FakeGateway();
+    clock = FixedClock(DateTime(2026, 3, 14, 4));
+    observer = _RecordingObserver();
+    scheduler = PrayerScheduler(
+      gateway,
+      const PrayerSchedulePlanner(),
+      clock,
+      observer,
+    );
+  });
+
+  test('reports the plan that was armed', () async {
+    await scheduler.reschedule(
+      prayerTimesByDay: _horizon(2),
+      settings: _settings(),
+    );
+
+    expect(observer.plans, hasLength(1));
+    expect(observer.plans.single, isNotEmpty);
+    expect(observer.plans.single.length, gateway.armed.length);
+  });
+
+  test('an EMPTY plan is reported too', () async {
+    // The one that matters. "The app armed nothing on the 3rd" is exactly what
+    // makes a week of silence afterwards make sense, and it is the row a
+    // reorder would have dropped.
+    await scheduler.reschedule(
+      prayerTimesByDay: _horizon(2),
+      settings: _settings(masterEnabled: false),
+    );
+
+    expect(observer.plans, hasLength(1));
+    expect(observer.plans.single, isEmpty);
+  });
+
+  test('is not told about a reschedule that was suppressed', () async {
+    await scheduler.reschedule(
+      prayerTimesByDay: _horizon(2),
+      settings: _settings(),
+    );
+    await scheduler.reschedule(
+      prayerTimesByDay: _horizon(2),
+      settings: _settings(),
+    );
+
+    // Nothing was armed the second time, so nothing was armed to report. A row
+    // per call would make the ledger a log of app resumes rather than of plans.
+    expect(observer.plans, hasLength(1));
+  });
+
+  test('is not told when arming failed', () async {
+    gateway.armThrows = StateError('exact alarms refused');
+
+    await expectLater(
+      scheduler.reschedule(
+        prayerTimesByDay: _horizon(2),
+        settings: _settings(),
+      ),
+      throwsStateError,
+    );
+
+    expect(
+      observer.plans,
+      isEmpty,
+      reason:
+          'recording a plan that was never armed would make the ledger '
+          'agree with what the app intended instead of what it did',
+    );
+  });
+
+  test('a failing observer never fails the sweep', () async {
+    observer.throws = StateError('ledger is unwritable');
+
+    final result = await scheduler.reschedule(
+      prayerTimesByDay: _horizon(2),
+      settings: _settings(),
+    );
+
+    // Diagnostics are worth less than an adhan, and this runs after the alarms
+    // are already armed.
+    expect(result.planned, isNotEmpty);
+    expect(gateway.armed, isNotEmpty);
+  });
+
+  test('no observer is a supported configuration', () async {
+    final bare = PrayerScheduler(
+      _FakeGateway(),
+      const PrayerSchedulePlanner(),
+      clock,
+    );
+    await expectLater(
+      bare.reschedule(prayerTimesByDay: _horizon(2), settings: _settings()),
+      completes,
+    );
   });
 }

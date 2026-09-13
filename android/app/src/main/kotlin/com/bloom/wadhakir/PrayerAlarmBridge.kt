@@ -78,8 +78,21 @@ object PrayerAlarmBridge {
                     val snapshot = synchronized(lock) { pending.toList().also { pending.clear() } }
                     runOffThread(result) {
                         cacheDefaultSoundUri(appContext)
+                        val now = System.currentTimeMillis()
+                        // BEFORE replaceAll, and this ordering is the feature.
+                        //
+                        // The new plan contains only future alarms, so replacing
+                        // the ledger first destroys every row an armed-but-never
+                        // -fired alarm could be matched against — and a commit is
+                        // exactly what happens when someone opens the app after a
+                        // force-stop has silenced it for days. Observing
+                        // afterwards recorded nothing, every time, on the one
+                        // path a user actually cares about.
+                        PrayerAlarmScheduler.observeLapses(appContext, now)
                         PrayerAlarmStore.replaceAll(appContext, snapshot)
-                        PrayerAlarmScheduler.rearmWindow(appContext, System.currentTimeMillis())
+                        // Already observed above; observing again against the new
+                        // ledger would find nothing and cost a second pass.
+                        PrayerAlarmScheduler.rearmWindow(appContext, now, observeLapses = false)
                         if (snapshot.isEmpty()) {
                             PrayerAlarmReconcileWorker.cancel(appContext)
                         } else {
@@ -160,6 +173,94 @@ object PrayerAlarmBridge {
                             PrayerNotifier.post(appContext, alarm)
                             result.success(false)
                         }
+                    }
+                }
+
+                // --- the reminder ledger (roadmap #15) -----------------------
+                //
+                // Dart does not open this file. Kotlin owns the only writer,
+                // because the most valuable row in it — an alarm arriving, and
+                // how late — is written from PrayerAlarmReceiver with no Flutter
+                // engine alive. Two writers through one lock onto one document;
+                // two writers with their own file handles would interleave and
+                // lose rows.
+                "ledgerAppend" -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val row = call.arguments as? Map<String, Any?>
+                    if (row == null) {
+                        result.error("PRAYER_ALARM_BAD_ARGS", "ledgerAppend needs a row", null)
+                    } else {
+                        runOffThread(result) { ReminderLedgerStore.appendRaw(appContext, row) }
+                    }
+                }
+
+                // Returns the whole NDJSON document. At 2,000 rows that is about
+                // 250 KB across the channel, which is why it is only ever called
+                // when the health screen opens — never on the resume path.
+                "ledgerRead" -> {
+                    executor.execute {
+                        val text = ReminderLedgerStore.readAll(appContext)
+                        mainHandler.post { result.success(text) }
+                    }
+                }
+
+                "ledgerClear" -> runOffThread(result) { ReminderLedgerStore.clear(appContext) }
+
+                // Which adhan channel the OS is blocking right now, or null.
+                //
+                // LIVE, deliberately. The health screen used to read this off
+                // `muted` rows in the ledger, which meant a user who muted a
+                // channel on Monday and unmuted it on Tuesday was told it was
+                // still muted for a fortnight — and that verdict sits near the
+                // top of the ladder, so every real fault underneath stayed
+                // hidden for the same fortnight.
+                //
+                // Dart supplies the keys rather than Kotlin holding a second
+                // copy: there are two channels, «الأذان» and «أذان الفجر», and
+                // the caller needs to know WHICH one to open. A button that
+                // opens the healthy one shows the user a channel with nothing
+                // wrong and changes nothing.
+                "blockedChannel" -> {
+                    @Suppress("UNCHECKED_CAST")
+                    val keys = (call.arguments as? List<*>)?.filterIsInstance<String>().orEmpty()
+                    executor.execute {
+                        val blocked = keys.firstOrNull {
+                            !PrayerNotifier.channelAllowsAlert(appContext, it)
+                        }
+                        mainHandler.post { result.success(blocked) }
+                    }
+                }
+
+                // --- probed OEM deep-links (roadmap #16) ---------------------
+                //
+                // Returns the vendor key of a screen that actually exists on
+                // THIS device, or null. Dart renders no button for a null, which
+                // is the entire point of the item: a button that opens nothing
+                // is worse than no button, because it is a broken app that also
+                // blames the user's phone.
+                //
+                // The Arabic label is composed in Dart from the key. Kotlin
+                // never authors copy — same rule as PrayerAlarm's wire format.
+                "oemAutostartKey" -> {
+                    executor.execute {
+                        val key = OemAutostart.resolve(appContext)?.key
+                        mainHandler.post { result.success(key) }
+                    }
+                }
+
+                // Off the platform thread, like the probe above.
+                //
+                // `open` re-resolves before launching, and that walk is up to
+                // fourteen synchronous PackageManager Binder round-trips. Doing
+                // it inline blocked the UI thread at the exact moment the user
+                // had just pressed a button and was watching for a response —
+                // on precisely the budget hardware this feature exists for.
+                // `startActivity` with FLAG_ACTIVITY_NEW_TASK is fine from a
+                // background thread.
+                "openOemAutostart" -> {
+                    executor.execute {
+                        val opened = OemAutostart.open(appContext)
+                        mainHandler.post { result.success(opened) }
                     }
                 }
 

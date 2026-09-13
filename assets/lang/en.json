@@ -1267,5 +1267,48 @@
     "reset": "Reset"
   },
   "cancel": "Cancel",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "reminder_health": {
+    "title": "Are your reminders arriving?",
+    "subtitle": "A quick check of how reminders are doing on this device",
+    "healthy": "Your reminders are arriving on time.",
+    "off": "Reminders are switched off. Turn them on in notification settings.",
+    "too_early": "Not enough has happened yet to say anything definite about your reminders.",
+    "notifications_blocked": "Notification permission is off, so nothing can reach you.",
+    "channel_muted": "The adhan channel is muted in system settings, so the reminder arrives silently.",
+    "exact_alarms_off": "The exact alarms permission is off, so the adhan may arrive late.",
+    "device_stopping": "This device is stopping the app, so some reminders did not arrive on time.",
+    "arriving_late": "Reminders are arriving a little later than their time on this device.",
+    "oem_failed": "Could not open the device settings.",
+    "action": {
+      "notifications": "Open notification settings",
+      "channel": "Open adhan channel settings",
+      "exact_alarms": "Allow exact alarms",
+      "oem": "Open device settings",
+      "battery": "Exempt the app from battery optimisation"
+    },
+    "note": {
+      "no_evidence": "The app starts noticing your reminders from the first one that arrives.",
+      "private": "All of this stays on your device and is never sent anywhere. It travels with your backup if you take one.",
+      "window_today": "This reading is based on today's reminders only on this device.",
+      "window_days": "This reading is based on the last {days} days of reminders on this device."
+    },
+    "oem": {
+      "xiaomi": "Open Autostart in Security",
+      "huawei": "Open Startup in Phone Manager",
+      "oppo": "Open Auto-start in Security Center",
+      "oneplus": "Open Chain launch in Security",
+      "vivo": "Open Background start in Security",
+      "transsion": "Open Autostart in PhoneMaster",
+      "samsung": "Open the app's battery settings",
+      "meizu": "Open Background running in Security",
+      "asus": "Open Auto-start in Mobile Manager",
+      "nokia": "Open power saver exceptions"
+    },
+    "silent_delivery": "The reminder arrives, but the adhan does not play on this device.",
+    "nothing_scheduled": "The system is not holding any scheduled reminder right now. Open the app to reschedule them.",
+    "at_capacity": "Scheduled reminders have reached the system limit, so the furthest ones may not arrive. Open the app every few days.",
+    "healthy_silent": "Your reminders arrive on time, but silently — your phone is on silent and «override silent mode» is off.",
+    "healthy_scheduled": "Your reminders are scheduled and held by the system."
+  }
 }

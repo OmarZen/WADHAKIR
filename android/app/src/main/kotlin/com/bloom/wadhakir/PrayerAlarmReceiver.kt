@@ -39,12 +39,37 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
             // that switched this prayer off, or the user wiping app data. Ringing
             // an adhan the app no longer intends is worse than staying silent.
             Log.w(TAG, "Alarm $id fired but is not in the ledger; ignoring")
+            // Still worth a row. One of these is noise; a run of them means the
+            // two ledgers have drifted, which is a fault nothing else reports.
+            // The instant is unknown here, so `due` is the arrival — a skew of
+            // zero, which is honest: there is nothing to be late against.
+            val orphanAt = System.currentTimeMillis()
+            val pendingOrphan = goAsync()
+            Thread {
+                try {
+                    ReminderLedgerStore.recordFired(
+                        context,
+                        id,
+                        orphanAt,
+                        ReminderRules.OUTCOME_ORPHAN,
+                        orphanAt,
+                    )
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not record orphan alarm $id", e)
+                } finally {
+                    // In a finally, like every other goAsync in this file. A
+                    // throw that skipped this would leak the broadcast grant,
+                    // and the row being written here is the least important
+                    // thing in the app.
+                    pendingOrphan.finish()
+                }
+            }.start()
             return
         }
 
         // Sound first. Everything below is bookkeeping, and the adhan is the
         // only part with a deadline.
-        soundAdhan(context, alarm)
+        val outcome = soundAdhan(context, alarm)
 
         // Then walk the window forward. Done inside goAsync so a slow ledger
         // rewrite cannot be killed halfway by the 10-second receiver budget and
@@ -53,7 +78,28 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         Thread {
             val now = System.currentTimeMillis()
             try {
-                PrayerAlarmScheduler.rearmWindow(context, now)
+                // The row Dart cannot write: this process has no Flutter engine
+                // and the app may not have been opened for weeks. `fireAtEpochMs`
+                // against now is the only honest measure of whether this device
+                // delivers an alarm at the instant it was armed for — which is
+                // the entire question the health screen answers.
+                ReminderLedgerStore.recordFired(
+                    context,
+                    alarm.id,
+                    alarm.fireAtEpochMs,
+                    outcome,
+                    now,
+                )
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not record alarm $id in the reminder ledger", e)
+            }
+            try {
+                // This alarm's own id is handed over so the sweep's lapse
+                // detection skips it. It is still in the armed set with an
+                // instant now in the past — which is what a lapse looks like —
+                // except that it plainly did arrive, and is the reason this code
+                // is running at all.
+                PrayerAlarmScheduler.rearmWindow(context, now, firedId = alarm.id)
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to re-arm after alarm $id", e)
             }
@@ -97,28 +143,49 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
      * What is left is Android 12 and 12L with `SCHEDULE_EXACT_ALARM` revoked,
      * where the alarm has already degraded to inexact. The card still posts and
      * the channel still vibrates.
+     *
+     * Returns which of the four happened, for the reminder ledger. The three
+     * quiet outcomes are kept distinct rather than collapsed into "did not
+     * sound" because only one of them is a fault: a verdict that counted a
+     * user's own silenced phone as a delivery failure would tell them their
+     * device is broken for doing what they asked.
      */
-    private fun soundAdhan(context: Context, alarm: PrayerAlarm) {
+    private fun soundAdhan(context: Context, alarm: PrayerAlarm): String {
         PrayerNotifier.ensureChannel(context, alarm)
 
-        if (!PrayerNotifier.channelAllowsAlert(context, alarm.channelId)) {
-            Log.i(TAG, "Channel ${alarm.channelId} is muted; not sounding alarm ${alarm.id}")
-            return
+        // The choice between the three routes is in ReminderRules, which has no
+        // Android types and is therefore the only part of this decision a JUnit
+        // test can reach. Everything left here is the doing, not the deciding.
+        val route = ReminderRules.adhanRoute(
+            channelAllowsAlert = PrayerNotifier.channelAllowsAlert(context, alarm.channelId),
+            overrideSilent = alarm.overrideSilent,
+            ringerSilenced = isRingerSilenced(context),
+        )
+
+        when (route) {
+            ReminderRules.AdhanRoute.MUTED -> {
+                Log.i(TAG, "Channel ${alarm.channelId} is muted; not sounding alarm ${alarm.id}")
+                return ReminderRules.outcomeFor(route)
+            }
+
+            ReminderRules.AdhanRoute.SILENT_CARD -> {
+                PrayerNotifier.post(context, alarm)
+                return ReminderRules.outcomeFor(route)
+            }
+
+            ReminderRules.AdhanRoute.PLAY -> Unit
         }
 
-        if (!alarm.overrideSilent && isRingerSilenced(context)) {
-            PrayerNotifier.post(context, alarm)
-            return
-        }
-
-        try {
+        return try {
             ContextCompat.startForegroundService(
                 context,
                 AdhanPlaybackService.playIntent(context, alarm),
             )
+            ReminderRules.outcomeFor(route)
         } catch (e: Exception) {
             Log.e(TAG, "Foreground start refused for alarm ${alarm.id}; card only", e)
             PrayerNotifier.post(context, alarm)
+            ReminderRules.OUTCOME_REFUSED
         }
     }
 

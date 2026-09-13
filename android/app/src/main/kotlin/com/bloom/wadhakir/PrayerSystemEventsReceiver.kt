@@ -51,7 +51,38 @@ class PrayerSystemEventsReceiver : BroadcastReceiver() {
                     onTimezoneChanged(appContext)
                 }
 
-                PrayerAlarmScheduler.rearmWindow(appContext, System.currentTimeMillis())
+                // What happened, kept as context for the health screen.
+                //
+                // Its own try block, because it shares this one with the re-arm
+                // that is the entire reason this receiver exists. That is the
+                // mistake Stage 3 already made once — a single throw took the
+                // persistent card down with the thing beside it — and a
+                // diagnostics row must never be able to cost a device its
+                // post-reboot repair.
+                try {
+                    ReminderLedgerStore.recordTrigger(appContext, action)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not record the $action trigger", e)
+                }
+
+                // `observeLapses = false` for every event this receiver
+                // handles.
+                //
+                // The sweep's lapse detection reads "armed, and its instant is
+                // in the past" as "this device killed the alarm". That holds
+                // only while time passed normally, and none of these events is
+                // normal time passing: `TIME_SET` can move the clock forward by
+                // days and make the whole armed window overdue at once, and
+                // `BOOT_COMPLETED` means the phone was off — so Isha and Fajr
+                // did not fire because there was no device, not because a
+                // vendor stopped the app. Recording those would tell a user who
+                // simply switched their phone off overnight that their handset
+                // is at fault, and the rows are permanent.
+                PrayerAlarmScheduler.rearmWindow(
+                    appContext,
+                    System.currentTimeMillis(),
+                    observeLapses = false,
+                )
 
                 // Repair the persistent card too. A reboot leaves it showing
                 // whatever prayer was next before the phone went down, and

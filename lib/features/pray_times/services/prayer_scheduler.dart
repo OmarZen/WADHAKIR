@@ -54,6 +54,24 @@ abstract interface class BatchingPrayerAlarmGateway {
   Future<void> abandon();
 }
 
+/// Told, once, whenever a plan has actually been armed.
+///
+/// A fourth collaborator, and optional, because the three that were already
+/// here are what make this class testable and a static reach-out would have
+/// ended that. The reminder ledger's `armed` row is written through this.
+///
+/// It hangs off the scheduler rather than off the repository that calls it for
+/// one reason: the property that matters is **when**. The row has to be written
+/// for an EMPTY plan too — "the app armed nothing on the 3rd" is what makes a
+/// week of silence afterwards make sense — and at the repository the call sat
+/// above an `if (result.isEmpty) return`, one careless reorder away from
+/// recording only the plans that were never the problem. Here it cannot be
+/// reordered past anything, and a fake can prove it.
+abstract interface class PrayerPlanObserver {
+  /// [plan] is what was armed, and may be empty.
+  Future<void> onPlanArmed(List<PlannedPrayerNotification> plan);
+}
+
 /// What a reschedule did.
 class PrayerScheduleResult {
   final List<PlannedPrayerNotification> planned;
@@ -97,12 +115,16 @@ class PrayerScheduler {
   /// armed. Turning notifications off would appear to do nothing.
   String? _lastSignature;
 
+  /// Notified after a plan is armed. Null where nothing is watching.
+  final PrayerPlanObserver? _observer;
+
   /// Positional-optional so the two seams can be initializing formals with
   /// defaults — Dart forbids a private name on a named parameter.
   PrayerScheduler(
     this._gateway, [
     this._planner = const PrayerSchedulePlanner(),
     this._clock = systemClock,
+    this._observer,
   ]);
 
   /// The plan this device would arm right now, without arming it.
@@ -192,6 +214,20 @@ class PrayerScheduler {
     // advance, or a transient failure would suppress every retry for the rest
     // of the session and silently leave the user with no adhan.
     _lastSignature = signature;
+
+    // Unconditional, and deliberately below no early return: an EMPTY plan is
+    // itself the explanation for the silence that follows it. See
+    // [PrayerPlanObserver].
+    //
+    // Awaited rather than fired and forgotten so an observer cannot still be
+    // writing when the next serialised reschedule starts — but never allowed to
+    // fail the sweep, because an adhan is worth more than the record of it.
+    final observer = _observer;
+    if (observer != null) {
+      try {
+        await observer.onPlanArmed(plan);
+      } catch (_) {}
+    }
 
     return PrayerScheduleResult(planned: plan, signature: signature);
   }

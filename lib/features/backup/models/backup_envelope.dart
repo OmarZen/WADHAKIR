@@ -123,6 +123,32 @@ class BackupEnvelope {
 
   final Map<String, BackupValue> data;
 
+  /// The reminder ledger, carried out of the device but never back into one.
+  ///
+  /// ## Why this is not in [data]
+  ///
+  /// [data] is round-trip: everything in it is written into SharedPreferences
+  /// by `BackupService.restore`, and allowlisted keys the file *lacks* are
+  /// deleted. Neither behaviour is right here.
+  ///
+  /// The ledger is not a preference — it is a file, and on Android one that
+  /// Kotlin owns. More importantly it is a record of **this device's** reminder
+  /// delivery. Restoring a Xiaomi's ledger onto a Pixel would make the health
+  /// screen diagnose hardware it has never run on, and it would do it
+  /// confidently, in one calm sentence. The verdict would be wrong and there
+  /// would be nothing on screen to suggest it.
+  ///
+  /// So it rides out here, beside [data] and outside the allowlist gate, where
+  /// `restore` physically cannot reach it. What it is for is the support
+  /// conversation the owner's #15 decision asked for: the evidence leaves the
+  /// device inside the user's own backup file, and never onto another one.
+  ///
+  /// Rows are the JSON form of `ReminderLedgerEntry`. Held untyped so this
+  /// layer stays free of a dependency on the reminders core, and so a file
+  /// written by a newer build with extra fields survives a trip through an
+  /// older one.
+  final List<Map<String, Object?>> diagnostics;
+
   /// Entries the file contained that [decode] refused to keep — a key this
   /// build does not allow, or a value that contradicted its own type tag.
   ///
@@ -136,6 +162,7 @@ class BackupEnvelope {
     required this.appVersion,
     required this.exportedAt,
     required this.data,
+    this.diagnostics = const [],
     this.skippedEntryCount = 0,
   });
 
@@ -145,6 +172,12 @@ class BackupEnvelope {
     'appVersion': appVersion,
     'exportedAt': exportedAt.toUtc().toIso8601String(),
     'data': {for (final entry in data.entries) entry.key: entry.value.toJson()},
+    // Omitted entirely when empty, so a file from a device that has never
+    // fired a reminder looks exactly like one written before this field
+    // existed. No schemaVersion bump: the version is only for a change a v1
+    // reader could not handle correctly, and a v1 reader ignores a key it does
+    // not know — which is the correct behaviour here, not a degraded one.
+    if (diagnostics.isNotEmpty) 'diagnostics': diagnostics,
   });
 
   /// Parses the plaintext body.
@@ -208,8 +241,25 @@ class BackupEnvelope {
           DateTime.tryParse(decoded['exportedAt'] as String? ?? '')?.toUtc() ??
           DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       data: data,
+      diagnostics: _readDiagnostics(decoded['diagnostics']),
       skippedEntryCount: skipped,
     );
+  }
+
+  /// Reads the diagnostics block permissively, and never fails on it.
+  ///
+  /// Deliberately softer than everything above. The rest of this parser refuses
+  /// damaged input because writing it back would corrupt the user's records —
+  /// but nothing writes these rows anywhere, so the worst a malformed one can
+  /// do is not be read. A restore that refused to run because the *diagnostics*
+  /// were damaged would block the one operation in this app that people reach
+  /// for after losing a phone.
+  static List<Map<String, Object?>> _readDiagnostics(Object? raw) {
+    if (raw is! List) return const [];
+    return [
+      for (final row in raw)
+        if (row is Map) row.map((key, value) => MapEntry('$key', value)),
+    ];
   }
 }
 

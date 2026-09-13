@@ -1,3 +1,4 @@
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -87,6 +88,18 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
           AppSettingsModel.maxTextScale,
         );
 
+    // Both resolve through `fromId`, which falls back to the default for an
+    // unknown value — so a file written by a newer build that added a face,
+    // or hand-edited, degrades to the app's own look rather than to nothing.
+    final readingComfort = ReadingComfort(
+      spacing: ReadingSpacing.fromId(
+        _sharedPreferences.getString(AppConstants.readingSpacingKey),
+      ),
+      font: ReadingFont.fromId(
+        _sharedPreferences.getString(AppConstants.readingFontKey),
+      ),
+    );
+
     _cachedSettings = AppSettingsModel(
       themeMode: themeMode,
       languageCode: languageCode,
@@ -96,6 +109,7 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       onboardingCompleted: onboardingCompleted,
       userName: userName,
       textScale: textScale,
+      readingComfort: readingComfort,
     );
 
     _settingsController.add(_cachedSettings!);
@@ -175,6 +189,22 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
 
     final settings = await getSettings();
     _cachedSettings = settings.copyWith(userName: name);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setReadingComfort(ReadingComfort comfort) async {
+    await _sharedPreferences.setString(
+      AppConstants.readingSpacingKey,
+      comfort.spacing.id,
+    );
+    await _sharedPreferences.setString(
+      AppConstants.readingFontKey,
+      comfort.font.id,
+    );
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(readingComfort: comfort);
     _settingsController.add(_cachedSettings!);
   }
 

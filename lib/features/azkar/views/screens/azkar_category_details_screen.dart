@@ -1,3 +1,4 @@
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -450,10 +451,18 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
                 // Main Dua Text
                 Text(
                   item.text,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontSize: 22,
-                    height: 2.0,
-                    fontWeight: FontWeight.w400,
+                  // `height` and `fontFamily` come from the user's reading
+                  // preferences now; the hardcoded `height: 2.0` that used to
+                  // sit here is still the default, so an install that never
+                  // opens the setting renders exactly as before. Size stays
+                  // out of it — that is `textScale`, applied app-wide in
+                  // main.dart, and two controls that both make text bigger
+                  // would disagree about by how much.
+                  style: ReadingComfortScope.of(context).apply(
+                    theme.textTheme.bodyLarge?.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                   textAlign: TextAlign.right,
                   textDirection: TextDirection.rtl,

@@ -17,6 +17,7 @@ import 'package:wadhakir/core/notifications/pending_notification_action.dart';
 import 'package:wadhakir/core/notifications/reminder_floor_service.dart';
 import 'package:wadhakir/core/reminders/reminder_ledger.dart';
 import 'package:wadhakir/features/pray_times/services/prayer_notification_service.dart';
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/core/app_theme/forui_theme.dart';
 import 'package:wadhakir/data/models/hive_adapters.dart';
@@ -35,6 +36,7 @@ import 'package:wadhakir/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_onboarding_completed_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_user_name_usecase.dart';
 import 'package:wadhakir/domain/usecases/set_text_scale_usecase.dart';
+import 'package:wadhakir/domain/usecases/set_reading_comfort_usecase.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
 import 'package:wadhakir/features/settings/cubit/settings_state.dart';
@@ -226,6 +228,9 @@ void main() async {
   );
   final setUserNameUseCase = SetUserNameUseCase(appSettingsRepository);
   final setTextScaleUseCase = SetTextScaleUseCase(appSettingsRepository);
+  final setReadingComfortUseCase = SetReadingComfortUseCase(
+    appSettingsRepository,
+  );
 
   // Create prayer times use cases
   final getPrayerTimesUseCase = GetPrayerTimesUseCase(prayerTimesRepository);
@@ -290,6 +295,7 @@ void main() async {
       setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
       setUserNameUseCase: setUserNameUseCase,
       setTextScaleUseCase: setTextScaleUseCase,
+      setReadingComfortUseCase: setReadingComfortUseCase,
       // Quran
 
       // Prayer Times
@@ -346,6 +352,7 @@ class MyApp extends StatelessWidget {
   final SetOnboardingCompletedUseCase setOnboardingCompletedUseCase;
   final SetUserNameUseCase setUserNameUseCase;
   final SetTextScaleUseCase setTextScaleUseCase;
+  final SetReadingComfortUseCase setReadingComfortUseCase;
 
   // Quran
 
@@ -394,6 +401,7 @@ class MyApp extends StatelessWidget {
     required this.setOnboardingCompletedUseCase,
     required this.setUserNameUseCase,
     required this.setTextScaleUseCase,
+    required this.setReadingComfortUseCase,
     // Quran
 
     // Prayer Times
@@ -437,6 +445,7 @@ class MyApp extends StatelessWidget {
             setOnboardingCompletedUseCase: setOnboardingCompletedUseCase,
             setUserNameUseCase: setUserNameUseCase,
             setTextScaleUseCase: setTextScaleUseCase,
+            setReadingComfortUseCase: setReadingComfortUseCase,
           ),
           lazy: false,
         ),
@@ -577,12 +586,14 @@ class MyApp extends StatelessWidget {
               var themeMode = ThemeMode.light;
               var locale = const Locale('ar');
               var textScale = 1.0;
+              var readingComfort = ReadingComfort.defaults;
 
               // Update with loaded settings if available
               if (state is SettingsLoaded) {
                 themeMode = state.settings.themeMode;
                 locale = Locale(state.settings.languageCode);
                 textScale = state.settings.textScale;
+                readingComfort = state.settings.readingComfort;
               }
 
               return MaterialApp(
@@ -621,12 +632,23 @@ class MyApp extends StatelessWidget {
                   return MediaQuery.withClampedTextScaling(
                     minScaleFactor: effective,
                     maxScaleFactor: effective,
-                    child: FTheme(
-                      data: buildForuiTheme(Theme.of(context)),
-                      // FToaster provides the overlay host for forui toasts so
-                      // any screen can call showFToast(...) with the unified
-                      // styling.
-                      child: FToaster(child: child ?? const SizedBox.shrink()),
+                    // Reading preferences ride alongside the scaler rather
+                    // than inside it: size is a MediaQuery concern the whole
+                    // framework already understands, while line spacing and
+                    // font choice apply only where somebody is READING, and
+                    // only surfaces that opt in should change. See
+                    // ReadingComfortScope.
+                    child: ReadingComfortScope(
+                      comfort: readingComfort,
+                      child: FTheme(
+                        data: buildForuiTheme(Theme.of(context)),
+                        // FToaster provides the overlay host for forui toasts so
+                        // any screen can call showFToast(...) with the unified
+                        // styling.
+                        child: FToaster(
+                          child: child ?? const SizedBox.shrink(),
+                        ),
+                      ),
                     ),
                   );
                 },

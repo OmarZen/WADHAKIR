@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'package:wadhakir/core/widgets/branded_header.dart';
 import 'package:wadhakir/features/prayer_adhkar/prayer_adhkar_data.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
@@ -241,10 +242,11 @@ class _DhikrCard extends StatelessWidget {
               Text(
                 dhikr.text,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontFamily: 'ScheherazadeNew',
-                  height: 1.9,
-                  fontSize: 19,
+                style: ReadingComfortScope.of(context).apply(
+                  theme.textTheme.titleMedium?.copyWith(
+                    fontFamily: 'ScheherazadeNew',
+                    fontSize: 19,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),

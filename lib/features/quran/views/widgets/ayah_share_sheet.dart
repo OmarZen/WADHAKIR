@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'package:wadhakir/features/share/models/share_payload.dart';
 import 'package:wadhakir/features/wird/services/wird_format.dart';
 
@@ -118,9 +119,10 @@ class AyahShareSheet extends StatelessWidget {
                   ayahText,
                   textAlign: TextAlign.center,
                   textDirection: TextDirection.rtl,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontFamily: 'ScheherazadeNew',
-                    height: 2.0,
+                  style: ReadingComfortScope.of(context).apply(
+                    theme.textTheme.titleMedium?.copyWith(
+                      fontFamily: 'ScheherazadeNew',
+                    ),
                   ),
                 ),
               ),

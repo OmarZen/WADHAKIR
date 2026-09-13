@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'app_lock_settings_model.dart';
 import 'notification_settings_model.dart';
 
@@ -30,6 +31,14 @@ class AppSettingsModel extends Equatable {
   static const double minTextScale = 0.9;
   static const double maxTextScale = 1.6;
 
+  /// Line spacing and font choice for reading surfaces — roadmap #24.
+  ///
+  /// Separate from [textScale] on purpose. Size shipped in R1 and applies to
+  /// the whole app through the OS scaler; this applies only where somebody is
+  /// reading rather than operating, and defaults to leaving every surface
+  /// exactly as it renders today.
+  final ReadingComfort readingComfort;
+
   const AppSettingsModel({
     required this.themeMode,
     required this.languageCode,
@@ -39,6 +48,7 @@ class AppSettingsModel extends Equatable {
     this.onboardingCompleted = false,
     this.userName = '',
     this.textScale = 1.0,
+    this.readingComfort = ReadingComfort.defaults,
   });
 
   factory AppSettingsModel.defaultSettings() {
@@ -51,6 +61,7 @@ class AppSettingsModel extends Equatable {
       onboardingCompleted: false,
       userName: '',
       textScale: 1.0,
+      readingComfort: ReadingComfort.defaults,
     );
   }
 
@@ -63,6 +74,7 @@ class AppSettingsModel extends Equatable {
     bool? onboardingCompleted,
     String? userName,
     double? textScale,
+    ReadingComfort? readingComfort,
   }) {
     return AppSettingsModel(
       themeMode: themeMode ?? this.themeMode,
@@ -73,6 +85,7 @@ class AppSettingsModel extends Equatable {
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       userName: userName ?? this.userName,
       textScale: textScale ?? this.textScale,
+      readingComfort: readingComfort ?? this.readingComfort,
     );
   }
 
@@ -86,5 +99,6 @@ class AppSettingsModel extends Equatable {
     onboardingCompleted,
     userName,
     textScale,
+    readingComfort,
   ];
 }

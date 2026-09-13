@@ -46,6 +46,8 @@ class AppConstants {
   static const String onboardingCompletedKey = 'onboarding_completed';
   static const String userNameKey = 'user_name';
   static const String textScaleKey = 'text_scale';
+  static const String readingSpacingKey = 'reading_spacing';
+  static const String readingFontKey = 'reading_font';
   // One-time gate for the existing-user name prompt (set true once the prompt
   // has been shown or onboarding finished, so it never nags again).
   static const String namePromptSeenKey = 'name_prompt_seen';

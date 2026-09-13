@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
+import 'package:wadhakir/features/settings/view/widgets/reading_comfort_selector.dart';
 import 'package:wadhakir/features/settings/view/widgets/text_size_selector.dart';
 
 /// Compact appearance widget showing theme and language side by side
@@ -37,6 +38,10 @@ class AppearanceSettingsWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TextSizeSelector(settings: settings, cubit: cubit),
+          // Directly under the size control, because they answer the same
+          // question — "can I read this comfortably?" — from two directions.
+          const SizedBox(height: 4),
+          ReadingComfortSelector(settings: settings, cubit: cubit),
         ],
       ),
     );

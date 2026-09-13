@@ -716,7 +716,23 @@
     "notifications_on": "Enabled",
     "notifications_off": "Disabled",
     "text_size": "Text size",
-    "text_size_sample": "My Lord, expand for me my breast and ease for me my task"
+    "text_size_sample": "My Lord, expand for me my breast and ease for me my task",
+    "reading_comfort": "Reading comfort",
+    "reading_comfort_subtitle": "Line spacing and font on reading screens",
+    "reading_sample": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+    "line_spacing": "Line spacing",
+    "reading_font": "Font",
+    "spacing": {
+      "compact": "Compact",
+      "comfortable": "Comfortable",
+      "airy": "Airy"
+    },
+    "font": {
+      "system": "As is",
+      "almarai": "Almarai",
+      "scheherazade": "Scheherazade",
+      "aref_ruqaa": "Aref Ruqaa"
+    }
   },
   "backup": {
     "title": "Backup",

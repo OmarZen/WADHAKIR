@@ -183,6 +183,20 @@ class BackupKeys {
       BackupSection.settings,
     ),
     BackupKeySpec('user_name', BackupValueType.string, BackupSection.settings),
+    // Roadmap #24. Reading preferences are preferences, not device facts —
+    // somebody who set ArefRuqaa at airy spacing wants that on their new phone
+    // too. Stored as the enum ids, and read back through `fromId`, which falls
+    // back to the default for a value this build does not know.
+    BackupKeySpec(
+      'reading_spacing',
+      BackupValueType.string,
+      BackupSection.settings,
+    ),
+    BackupKeySpec(
+      'reading_font',
+      BackupValueType.string,
+      BackupSection.settings,
+    ),
     // Prayer notification schedule: master toggle, per-prayer timing, sound.
     BackupKeySpec(
       'notification_settings',

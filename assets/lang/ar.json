@@ -716,7 +716,23 @@
     "notifications_on": "مفعّلة",
     "notifications_off": "متوقفة",
     "text_size": "حجم الخط",
-    "text_size_sample": "رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي"
+    "text_size_sample": "رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي",
+    "reading_comfort": "راحة القراءة",
+    "reading_comfort_subtitle": "تباعد الأسطر ونوع الخط في شاشات القراءة",
+    "reading_sample": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+    "line_spacing": "تباعد الأسطر",
+    "reading_font": "نوع الخط",
+    "spacing": {
+      "compact": "متقارب",
+      "comfortable": "مريح",
+      "airy": "متباعد"
+    },
+    "font": {
+      "system": "كما هو",
+      "almarai": "المراعي",
+      "scheherazade": "شهرزاد",
+      "aref_ruqaa": "عارف رقعة"
+    }
   },
   "backup": {
     "title": "النسخ الاحتياطي",

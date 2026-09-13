@@ -1,3 +1,5 @@
+import 'package:wadhakir/core/reading/reading_comfort.dart';
+import 'package:wadhakir/domain/usecases/set_reading_comfort_usecase.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,6 +27,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   final SetOnboardingCompletedUseCase? _setOnboardingCompletedUseCase;
   final SetUserNameUseCase? _setUserNameUseCase;
   final SetTextScaleUseCase? _setTextScaleUseCase;
+  final SetReadingComfortUseCase? _setReadingComfortUseCase;
   final PrayerNotificationService _notificationService;
 
   StreamSubscription? _settingsSubscription;
@@ -39,6 +42,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     this._setOnboardingCompletedUseCase,
     this._setUserNameUseCase,
     this._setTextScaleUseCase,
+    this._setReadingComfortUseCase,
     PrayerNotificationService? notificationService,
   }) : _notificationService =
            notificationService ?? PrayerNotificationService(),
@@ -73,6 +77,21 @@ class SettingsCubit extends Cubit<SettingsState> {
     if (_setTextScaleUseCase == null) return;
     try {
       await _setTextScaleUseCase.call(scale);
+    } catch (e) {
+      emit(SettingsError(e.toString()));
+    }
+  }
+
+  /// Persist line spacing and font choice for reading surfaces — roadmap #24.
+  ///
+  /// Deliberately one setter for the pair rather than two. They are read
+  /// together by every surface, and two independent writes would mean two
+  /// stream emissions and a frame in between where the app is rendering half of
+  /// one preference and half of the other.
+  Future<void> setReadingComfort(ReadingComfort comfort) async {
+    if (_setReadingComfortUseCase == null) return;
+    try {
+      await _setReadingComfortUseCase.call(comfort);
     } catch (e) {
       emit(SettingsError(e.toString()));
     }

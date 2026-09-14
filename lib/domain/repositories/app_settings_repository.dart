@@ -1,5 +1,8 @@
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'package:flutter/material.dart';
+import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
+import 'package:wadhakir/data/models/notification_settings_model.dart';
 
 abstract class AppSettingsRepository {
   Future<AppSettingsModel> getSettings();
@@ -10,7 +13,18 @@ abstract class AppSettingsRepository {
 
   Future<void> setShowBasmala(bool showBasmala);
 
-  Future<void> setFontSize(double fontSize);
+  Future<void> setNotificationSettings(NotificationSettingsModel settings);
+
+  Future<void> setAppLockSettings(AppLockSettingsModel settings);
+  Future<void> setOnboardingCompleted(bool completed);
+  Future<void> setUserName(String name);
+
+  /// Persist the user's text scale. Implementations clamp to
+  /// [AppSettingsModel.minTextScale]..[AppSettingsModel.maxTextScale].
+  Future<void> setTextScale(double scale);
+
+  /// Line spacing and font choice for reading surfaces — roadmap #24.
+  Future<void> setReadingComfort(ReadingComfort comfort);
 
   Stream<AppSettingsModel> get settingsStream;
 }

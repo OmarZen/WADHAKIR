@@ -1,0 +1,342 @@
+name: Build & Release
+
+# Two triggers:
+#   1. Pushing a tag like v3.3.2+22 → builds the signed Android APK + AAB, the
+#      Windows MSIX and an UNSIGNED iOS IPA, then creates a GitHub release with
+#      all of them attached and the release notes taken from CHANGELOG.md.
+#   2. Manual `workflow_dispatch` → builds the same artifacts without signing or
+#      publishing, as a sanity check.
+#
+# Platform notes:
+#   * Android — signed with the upload key from secrets on tagged builds.
+#   * Windows — `msix_config` in pubspec.yaml sets `store: true`, so the MSIX is
+#     unsigned by design (the Store signs it on submission).
+#   * iOS     — built with --no-codesign and zipped into an IPA by hand. This
+#     repo has no Apple signing certificate or provisioning profile in secrets,
+#     so a signed, App-Store-installable build is not possible here. The IPA is
+#     for sideloading (AltStore / Sideloadly) and testing only. To ship to the
+#     App Store, add the certificate + profile as secrets and an
+#     ios/ExportOptions.plist, then swap in `flutter build ipa --export-options-plist`.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  # Never cancel a half-finished release: an interrupted run can leave a
+  # published release with only some of its artifacts attached.
+  cancel-in-progress: false
+
+env:
+  # Must satisfy pubspec.yaml's `sdk: '>=3.12.0'` / `flutter: '>=3.44.0'`
+  # (forui 0.23 needs Dart 3.12). 3.44.4 ships Dart 3.12.2. Keep this in step
+  # with the constraint in pubspec.yaml or `pub get` fails version solving.
+  FLUTTER_VERSION: '3.44.4'
+  # AGP 9.1.0 + Gradle 9.3.1; android/app/build.gradle.kts targets JVM 17.
+  JAVA_VERSION: '17'
+
+jobs:
+  # --------------------------------------------------------------- analyze
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  # --------------------------------------------------------- build: android
+  # One job builds both APK (sideload + GitHub release attachment) and AAB
+  # (Google Play upload) in the same checkout, sharing the keystore setup.
+  build-android:
+    name: Build Android
+    needs: analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GRADLE_OPTS: -Dorg.gradle.vfs.watch=false -Dorg.gradle.daemon=false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+
+      # See ci.yml — quran_library 4.2.x + AGP 9.x. Must run after `pub get`,
+      # which restores the pristine pub-cache copy.
+      - name: Patch quran_library for AGP 9.x
+        run: bash android/fix_deps_proguard.sh
+
+      # Tagged builds are signed release builds. Manual `workflow_dispatch`
+      # runs produce a debug-signed build that nobody ships, so the keystore
+      # step is skipped on that path — android/app/build.gradle.kts falls back
+      # to the debug key when key.properties is absent.
+      - name: Set up keystore (release builds only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/upload-keystore.jks
+          {
+            echo "storePassword=${{ secrets.KEYSTORE_STORE_PASSWORD }}"
+            echo "keyPassword=${{ secrets.KEYSTORE_KEY_PASSWORD }}"
+            echo "keyAlias=${{ secrets.KEYSTORE_KEY_ALIAS }}"
+            echo "storeFile=../upload-keystore.jks"
+          } > android/key.properties
+
+      # Fail loudly rather than silently publishing a debug-signed release:
+      # Google Play rejects those, and the rejection would only surface at upload.
+      - name: Verify release signing is configured
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          test -s android/key.properties || { echo "::error::key.properties missing — is KEYSTORE_BASE64 set?"; exit 1; }
+          test -s android/upload-keystore.jks || { echo "::error::upload-keystore.jks missing/empty — is KEYSTORE_BASE64 set?"; exit 1; }
+
+      - name: Build APK
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            flutter build apk --release --split-per-abi
+          else
+            flutter build apk --debug --split-per-abi
+          fi
+
+      # Google Play caps the compressed download at 200 MB. Until R3 nothing in
+      # CI measured this, so the cap was enforced by Play Console at upload —
+      # after the tag was pushed, and (because the release job runs on the same
+      # tag) with a GitHub release about to be published against a build that
+      # could not ship. This step moves that failure to the build job, where it
+      # costs a re-tag instead of a retracted release.
+      #
+      # arm64 is the split users actually install, and the largest of the three.
+      # R3's asset diet took it from 187.3 MB to 131.1 MB; the 140 MB budget
+      # banks that win and leaves ~9 MB for ordinary growth. Raising it is a
+      # deliberate act in a PR, not something done to turn a red build green.
+      - name: Check APK size against budget
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          bash tool/check_app_size.sh 140 "arm64 release APK" \
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+
+      - name: Build App Bundle
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: flutter build appbundle --release
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
+
+      - name: Upload AAB artifact
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: build/app/outputs/bundle/release/*.aab
+          retention-days: 30
+
+  # --------------------------------------------------------- build: windows
+  #
+  # NOT a release gate — see `needs:` on the release job. The MSIX is currently
+  # unbuildable through no fault of this repo:
+  #
+  #   WARNING: PRI249: 0xdef00520 - Invalid qualifier: COM_QCF_BISMILLAH-REGULAR
+  #   Unhandled exception ... MakePri.generatePRI
+  #
+  # Windows' makepri.exe treats everything after the first dot in a filename as a
+  # resource qualifier. quran_library ships 612 assets named `*.ttf.gz` /
+  # `*.json.gz` (plus vertopal.com_QCF_Bismillah-Regular.ttf), so makepri rejects
+  # them and the msix package — which offers no flag to skip PRI generation —
+  # treats the non-zero exit as fatal. Renaming 612 third-party assets is not a
+  # workaround.
+  #
+  # Kept running (and allowed to fail) so the day quran_library renames those
+  # assets, or msix adds a skip-PRI flag, this job goes green on its own and can
+  # be promoted straight back into the release `needs:` list.
+  # Tracked as a follow-up; the Windows build itself compiles fine since the
+  # _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS fix in
+  # windows/CMakeLists.txt — it is only the MSIX packaging step that fails.
+  build-windows:
+    name: Build Windows (MSIX)
+    needs: analyze
+    runs-on: windows-latest
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - run: flutter config --no-analytics
+      - run: flutter config --enable-windows-desktop
+      - run: flutter pub get
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      # Reads msix_config from pubspec.yaml (msix_version must match `version:`
+      # there — bump both together). `store: true` means the package is left
+      # unsigned for Microsoft Store submission.
+      - name: Build MSIX
+        run: dart run msix:create
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix
+          path: build/windows/x64/runner/Release/*.msix
+          retention-days: 30
+
+  # ------------------------------------------------------------- build: ios
+  build-ios:
+    name: Build iOS (unsigned IPA)
+    needs: analyze
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - run: flutter config --no-analytics
+      - run: flutter pub get
+
+      # No Apple certificate/provisioning profile in secrets, so this cannot be
+      # code-signed. See the header comment for what shipping to the App Store
+      # would require.
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+
+      # `flutter build ipa` needs an export-options plist and a signing identity;
+      # with neither, the standard approach is to zip Runner.app into the IPA
+      # layout by hand. The result installs via AltStore/Sideloadly, not the
+      # App Store.
+      - name: Package unsigned IPA
+        run: |
+          VERSION="$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+          mkdir -p build/ios/ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
+          cd build/ios/ipa
+          zip -qry "Wadhakir-${VERSION}-unsigned.ipa" Payload
+          rm -rf Payload
+          ls -lh ./*.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: build/ios/ipa/*.ipa
+          retention-days: 30
+
+  # -------------------------------------------------------------- release
+  # Tag-triggered only. Creates a GitHub release and attaches the signed APK
+  # splits, the AAB and the unsigned IPA. Release notes come from CHANGELOG.md
+  # (the section matching the tag version).
+  #
+  # build-windows is deliberately NOT in `needs:` — the MSIX cannot currently be
+  # packaged (see that job's comment), and gating releases on a known-broken
+  # third-party interaction would mean never shipping. The `files:` glob below
+  # still picks up an .msix if that job ever starts producing one, so promoting
+  # Windows back into `needs:` is the only change required once it is fixed.
+  release:
+    name: GitHub Release
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      # Every artifact from this run lands under artifacts/<name>/...
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: List artifacts
+        run: find artifacts -type f | sort
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          # Grab the block starting at `## [VERSION]` up to (not including)
+          # the next `## [` header.
+          #
+          # Literal prefix match, NOT a regex: tags look like v3.3.2+22, and as a
+          # regex the `+` is a quantifier ("one or more 3"), so `$0 ~ ver` never
+          # matched and every release silently fell back to the generic
+          # "Release v<x>" body. Prefix rather than equality because the headers
+          # carry a trailing " - <date>".
+          awk -v hdr="## [$VERSION]" '
+            index($0, hdr) == 1 { capture=1; next }
+            capture && /^## \[/ { exit }
+            capture { print }
+          ' CHANGELOG.md > release_notes.md
+
+          if [ ! -s release_notes.md ]; then
+            echo "::warning::No CHANGELOG.md section found for $VERSION — using a generic body."
+            echo "Release v$VERSION" > release_notes.md
+          fi
+
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "### Downloads"
+            echo ""
+            echo "| Platform | File | Notes |"
+            echo "|---|---|---|"
+            echo "| Android | \`app-arm64-v8a-release.apk\` | Most modern devices |"
+            echo "| Android | \`app-armeabi-v7a-release.apk\` | Older 32-bit devices |"
+            echo "| Android | \`app-release.aab\` | Google Play upload only |"
+            echo "| iOS | \`.ipa\` | **Unsigned** — sideload via AltStore/Sideloadly; not installable from the App Store |"
+          } >> release_notes.md
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Wadhakir ${{ github.ref_name }}
+          body_path: release_notes.md
+          files: |
+            artifacts/**/*.apk
+            artifacts/**/*.aab
+            artifacts/**/*.msix
+            artifacts/**/*.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

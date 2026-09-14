@@ -1,6 +1,7 @@
-import 'package:adhan/adhan.dart';
-import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
+import 'package:equatable/equatable.dart';
+import 'package:adhan_dart/adhan_dart.dart';
+import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
 
 class PrayerTimesModel extends Equatable {
   final DateTime fajr;
@@ -10,8 +11,12 @@ class PrayerTimesModel extends Equatable {
   final DateTime maghrib;
   final DateTime isha;
   final DateTime date;
-  final CalculationMethod calculationMethod;
+  final CalculationParameters calculationParameters;
   final Coordinates coordinates;
+
+  // Sunnah Times - Qiyam times
+  final DateTime middleOfTheNight;
+  final DateTime lastThirdOfTheNight;
 
   const PrayerTimesModel({
     required this.fajr,
@@ -21,26 +26,82 @@ class PrayerTimesModel extends Equatable {
     required this.maghrib,
     required this.isha,
     required this.date,
-    required this.calculationMethod,
+    required this.calculationParameters,
     required this.coordinates,
+    required this.middleOfTheNight,
+    required this.lastThirdOfTheNight,
   });
+
+  Map<String, dynamic> toJson() {
+    final timeFormat = DateFormat('HH:mm');
+    return {
+      'fajr': timeFormat.format(fajr),
+      'sunrise': timeFormat.format(sunrise),
+      'dhuhr': timeFormat.format(dhuhr),
+      'asr': timeFormat.format(asr),
+      'maghrib': timeFormat.format(maghrib),
+      'isha': timeFormat.format(isha),
+      'date': date.toIso8601String(),
+      'middleOfTheNight': timeFormat.format(middleOfTheNight),
+      'lastThirdOfTheNight': timeFormat.format(lastThirdOfTheNight),
+    };
+  }
+
+  factory PrayerTimesModel.fromJson(Map<String, dynamic> json) {
+    final now = DateTime.now();
+
+    DateTime parseTime(String time) {
+      final parts = time.split(':');
+      return DateTime(
+        now.year,
+        now.month,
+        now.day,
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+      );
+    }
+
+    return PrayerTimesModel(
+      fajr: parseTime(json['fajr']),
+      sunrise: parseTime(json['sunrise']),
+      dhuhr: parseTime(json['dhuhr']),
+      asr: parseTime(json['asr']),
+      maghrib: parseTime(json['maghrib']),
+      isha: parseTime(json['isha']),
+      date: DateTime.parse(json['date']),
+      calculationParameters: CalculationMethodMapper.getParameters(
+        'muslim_world_league',
+      ),
+      coordinates: const Coordinates(0, 0), // Default coordinates
+      middleOfTheNight: parseTime(json['middleOfTheNight']),
+      lastThirdOfTheNight: parseTime(json['lastThirdOfTheNight']),
+    );
+  }
 
   factory PrayerTimesModel.fromPrayerTimes(
     PrayerTimes prayerTimes, {
-    required CalculationMethod calculationMethod,
+    required CalculationParameters calculationParameters,
     required Coordinates coordinates,
     required DateTime date,
   }) {
+    // Convert UTC times to local time
+    // adhan_dart returns times in UTC, we need to convert to local timezone
+
+    // Calculate Sunnah times (Qiyam times)
+    final sunnahTimes = SunnahTimes(prayerTimes);
+
     return PrayerTimesModel(
-      fajr: prayerTimes.fajr,
-      sunrise: prayerTimes.sunrise,
-      dhuhr: prayerTimes.dhuhr,
-      asr: prayerTimes.asr,
-      maghrib: prayerTimes.maghrib,
-      isha: prayerTimes.isha,
+      fajr: prayerTimes.fajr.toLocal(),
+      sunrise: prayerTimes.sunrise.toLocal(),
+      dhuhr: prayerTimes.dhuhr.toLocal(),
+      asr: prayerTimes.asr.toLocal(),
+      maghrib: prayerTimes.maghrib.toLocal(),
+      isha: prayerTimes.isha.toLocal(),
       date: date,
-      calculationMethod: calculationMethod,
+      calculationParameters: calculationParameters,
       coordinates: coordinates,
+      middleOfTheNight: sunnahTimes.middleOfTheNight.toLocal(),
+      lastThirdOfTheNight: sunnahTimes.lastThirdOfTheNight.toLocal(),
     );
   }
 
@@ -56,13 +117,24 @@ class PrayerTimesModel extends Equatable {
     if (now.isBefore(asr)) return asr;
     if (now.isBefore(maghrib)) return maghrib;
     if (now.isBefore(isha)) return isha;
+    if (now.isBefore(middleOfTheNight)) return middleOfTheNight;
+    if (now.isBefore(lastThirdOfTheNight)) return lastThirdOfTheNight;
 
-    // If all prayers for today have passed, return tomorrow's Fajr
-    final dateComponents =
-        DateComponents.from(date.add(const Duration(days: 1)));
-    final params = calculationMethod.getParameters();
-    final prayerTimes = PrayerTimes(coordinates, dateComponents, params);
-    return prayerTimes.fajr;
+    // If all times for today have passed, return tomorrow's Fajr.
+    // Pass UTC midnight so adhan_dart computes the correct solar day.
+    final tomorrowDate = date.add(const Duration(days: 1));
+    final tomorrowDateUtc = DateTime.utc(
+      tomorrowDate.year,
+      tomorrowDate.month,
+      tomorrowDate.day,
+    );
+    final tomorrowPrayerTimes = PrayerTimes(
+      coordinates: coordinates,
+      date: tomorrowDateUtc,
+      calculationParameters: calculationParameters,
+      precision: true,
+    );
+    return tomorrowPrayerTimes.fajr.toLocal();
   }
 
   String get nextPrayerName {
@@ -73,6 +145,8 @@ class PrayerTimesModel extends Equatable {
     if (now.isBefore(asr)) return 'العصر';
     if (now.isBefore(maghrib)) return 'المغرب';
     if (now.isBefore(isha)) return 'العشاء';
+    if (now.isBefore(middleOfTheNight)) return 'منتصف الليل';
+    if (now.isBefore(lastThirdOfTheNight)) return 'الثلث الأخير من الليل';
     return 'الفجر';
   }
 
@@ -87,13 +161,22 @@ class PrayerTimesModel extends Equatable {
 
     // Find current prayer time (the last prayer that occurred)
     if (now.isBefore(fajr)) {
-      // Before Fajr, use Isha from yesterday
-      final yesterdayComponents =
-          DateComponents.from(date.subtract(const Duration(days: 1)));
-      final params = calculationMethod.getParameters();
-      final yesterdayPrayers =
-          PrayerTimes(coordinates, yesterdayComponents, params);
-      currentPrayer = yesterdayPrayers.isha;
+      // Before Fajr, use last third of night from yesterday.
+      // Pass UTC midnight so adhan_dart computes the correct solar day.
+      final yesterdayDate = date.subtract(const Duration(days: 1));
+      final yesterdayDateUtc = DateTime.utc(
+        yesterdayDate.year,
+        yesterdayDate.month,
+        yesterdayDate.day,
+      );
+      final yesterdayPrayers = PrayerTimes(
+        coordinates: coordinates,
+        date: yesterdayDateUtc,
+        calculationParameters: calculationParameters,
+        precision: true,
+      );
+      final yesterdaySunnahTimes = SunnahTimes(yesterdayPrayers);
+      currentPrayer = yesterdaySunnahTimes.lastThirdOfTheNight.toLocal();
     } else if (now.isBefore(sunrise)) {
       currentPrayer = fajr;
     } else if (now.isBefore(dhuhr)) {
@@ -104,9 +187,13 @@ class PrayerTimesModel extends Equatable {
       currentPrayer = asr;
     } else if (now.isBefore(isha)) {
       currentPrayer = maghrib;
-    } else {
-      // After Isha
+    } else if (now.isBefore(middleOfTheNight)) {
       currentPrayer = isha;
+    } else if (now.isBefore(lastThirdOfTheNight)) {
+      currentPrayer = middleOfTheNight;
+    } else {
+      // After last third of night
+      currentPrayer = lastThirdOfTheNight;
     }
 
     // Calculate total interval between current and next prayer
@@ -115,14 +202,16 @@ class PrayerTimesModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        fajr,
-        sunrise,
-        dhuhr,
-        asr,
-        maghrib,
-        isha,
-        date,
-        calculationMethod,
-        coordinates
-      ];
+    fajr,
+    sunrise,
+    dhuhr,
+    asr,
+    maghrib,
+    isha,
+    date,
+    calculationParameters,
+    coordinates,
+    middleOfTheNight,
+    lastThirdOfTheNight,
+  ];
 }

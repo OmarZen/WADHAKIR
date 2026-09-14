@@ -1,4 +1,4 @@
-import 'package:adhan/adhan.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
 
 class SetCalculationMethodUseCase {
@@ -6,7 +6,7 @@ class SetCalculationMethodUseCase {
 
   SetCalculationMethodUseCase(this._repository);
 
-  Future<void> call(CalculationMethod method) async {
-    await _repository.setCalculationMethod(method);
+  Future<void> call(CalculationParameters parameters) async {
+    await _repository.setCalculationParameters(parameters);
   }
 }

@@ -18,11 +18,12 @@ class QiblaLoading extends QiblaState {
 
 class QiblaLoaded extends QiblaState {
   final QiblaModel qiblaModel;
+  final bool isAligned;
 
-  const QiblaLoaded(this.qiblaModel);
+  const QiblaLoaded(this.qiblaModel, {this.isAligned = false});
 
   @override
-  List<Object?> get props => [qiblaModel];
+  List<Object?> get props => [qiblaModel, isAligned];
 }
 
 class QiblaError extends QiblaState {

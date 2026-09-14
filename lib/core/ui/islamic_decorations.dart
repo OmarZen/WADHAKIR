@@ -17,9 +17,7 @@ class IslamicDecorations {
     return Stack(
       children: [
         Container(
-          decoration: BoxDecoration(
-            color: primaryColor,
-          ),
+          decoration: BoxDecoration(color: primaryColor),
           child: CustomPaint(
             painter: IslamicPatternPainter(
               color: Theme.of(context).colorScheme.onPrimary,
@@ -35,10 +33,9 @@ class IslamicDecorations {
             opacity: opacity,
             child: IslamicIcons.lanternIcon(
               size: 40,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onPrimary
-                  .withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onPrimary.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -49,10 +46,9 @@ class IslamicDecorations {
             opacity: opacity,
             child: IslamicIcons.lanternIcon(
               size: 40,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onPrimary
-                  .withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onPrimary.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -111,17 +107,9 @@ class IslamicDecorations {
           child: child,
         ),
         // Left lantern decoration
-        Positioned(
-          top: -15,
-          left: 0,
-          child: _buildLantern(context),
-        ),
+        Positioned(top: -15, left: 0, child: _buildLantern(context)),
         // Right lantern decoration
-        Positioned(
-          top: -15,
-          right: 0,
-          child: _buildLantern(context),
-        ),
+        Positioned(top: -15, right: 0, child: _buildLantern(context)),
       ],
     );
   }
@@ -141,11 +129,7 @@ class IslamicDecorations {
   static Widget islamicDivider(BuildContext context) {
     return Row(
       children: [
-        const Expanded(
-          child: Divider(
-            thickness: 1,
-          ),
-        ),
+        const Expanded(child: Divider(thickness: 1)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: IslamicIcons.ornamentIcon(
@@ -153,11 +137,7 @@ class IslamicDecorations {
             color: Theme.of(context).dividerColor,
           ),
         ),
-        const Expanded(
-          child: Divider(
-            thickness: 1,
-          ),
-        ),
+        const Expanded(child: Divider(thickness: 1)),
       ],
     );
   }
@@ -168,10 +148,7 @@ class IslamicPatternPainter extends CustomPainter {
   final Color color;
   final double opacity;
 
-  IslamicPatternPainter({
-    required this.color,
-    required this.opacity,
-  });
+  IslamicPatternPainter({required this.color, required this.opacity});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -225,10 +202,7 @@ class GeometricPatternPainter extends CustomPainter {
   final Color color;
   final double opacity;
 
-  GeometricPatternPainter({
-    required this.color,
-    required this.opacity,
-  });
+  GeometricPatternPainter({required this.color, required this.opacity});
 
   @override
   void paint(Canvas canvas, Size size) {

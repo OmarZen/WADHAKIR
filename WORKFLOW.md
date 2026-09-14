@@ -12,7 +12,7 @@ This file explains **EVERYTHING** about our Git workflow, branches, and developm
 - **Purpose**: Production-ready code only
 - **Protection**: ⚠️ **HEAVILY PROTECTED** - No direct pushes allowed
 - **Content**: Only stable, tested, released code
-- **Merges From**: Only `release/*` or `hotfix/*` branches
+- **Merges From**: Only `release/*` or critical `fix/*` branches
 - **When to Use**: Never work directly on this branch
 - **Deployment**: Automatically deploys to production (if configured)
 
@@ -38,9 +38,9 @@ This file explains **EVERYTHING** about our Git workflow, branches, and developm
   - `feature/dark-mode-support`
 
 #### 4. `fix/*` Branches 🐛
-- **Purpose**: Fix bugs found during development
-- **Branch From**: `develop`
-- **Merge To**: `develop`
+- **Purpose**: Fix bugs found during development or production
+- **Branch From**: `develop` (or `main` for critical production fixes)
+- **Merge To**: `develop` (and `main` if critical)
 - **Naming**: `fix/prayer-time-calculation`, `fix/ui-layout-issue`
 - **Lifespan**: Created → Fixed → Merged → Deleted
 - **Examples**:
@@ -48,17 +48,7 @@ This file explains **EVERYTHING** about our Git workflow, branches, and developm
   - `fix/qibla-direction-offset`
   - `fix/app-crash-on-startup`
 
-#### 5. `hotfix/*` Branches 🚨
-- **Purpose**: Emergency fixes for production issues
-- **Branch From**: `main` (production)
-- **Merge To**: `main` AND `develop`
-- **Naming**: `hotfix/v1.2.1-critical-crash`, `hotfix/v1.2.2-prayer-bug`
-- **Lifespan**: Created → Fixed → Merged to both branches → Deleted
-- **Examples**:
-  - `hotfix/v1.2.1-app-wont-start`
-  - `hotfix/v1.2.2-prayer-times-broken`
-
-#### 6. `release/*` Branches 📦
+#### 5. `release/*` Branches 📦
 - **Purpose**: Prepare new releases (testing, bug fixes, version updates)
 - **Branch From**: `develop`
 - **Merge To**: `main` (then merge back to `develop`)
@@ -136,7 +126,7 @@ git push -u origin fix/prayer-times-timezone
 # Create PR to develop → Get review → Merge → Delete branch
 ```
 
-### 🚨 **Hotfix Workflow (Emergency Production Fix)**
+### 🚨 **Critical Production Fix Workflow**
 
 ```bash
 # 🎯 GOAL: Fix critical production bug immediately
@@ -145,24 +135,24 @@ git push -u origin fix/prayer-times-timezone
 git checkout main
 git pull origin main
 
-# 2. Create hotfix branch
-git checkout -b hotfix/v1.2.1-app-crash
+# 2. Create critical fix branch
+git checkout -b fix/critical-app-crash
 
 # 3. Fix the critical issue
 # - Minimal changes only
 # - Focus on the specific problem
 
-# 4. Update version in pubspec.yaml
+# 4. Update version in pubspec.yaml (patch version)
 # version: 1.2.1+121
 
-# 5. Commit the hotfix
+# 5. Commit the fix
 git add .
-git commit -m "fix(core): prevent app crash on startup"
+git commit -m "fix(critical): prevent app crash on startup"
 git commit -m "chore(release): bump version to 1.2.1"
 
 # 6. Create PR to main
-git push -u origin hotfix/v1.2.1-app-crash
-# Create PR: main ← hotfix/v1.2.1-app-crash
+git push -u origin fix/critical-app-crash
+# Create PR: main ← fix/critical-app-crash
 
 # 7. After merge to main
 git checkout main
@@ -173,11 +163,11 @@ git push origin v1.2.1
 # 8. Merge back to develop
 git checkout develop
 git pull origin develop
-git merge main  # Bring hotfix to develop
+git merge main  # Bring fix to develop
 git push origin develop
 
-# 9. Delete hotfix branch
-git branch -d hotfix/v1.2.1-app-crash
+# 9. Delete fix branch
+git branch -d fix/critical-app-crash
 ```
 
 ### 📦 **Release Workflow**
@@ -353,14 +343,14 @@ git add . && git commit -m "feat(scope): my change"
 git push -u origin feature/my-new-feature
 ```
 
-### Emergency Hotfix:
+### Emergency Critical Fix:
 ```bash
 # Emergency fix
 git checkout main && git pull origin main
-git checkout -b hotfix/v1.x.x-emergency-fix
+git checkout -b fix/critical-emergency-fix
 # Fix the issue
 git add . && git commit -m "fix(critical): emergency fix"
-git push -u origin hotfix/v1.x.x-emergency-fix
+git push -u origin fix/critical-emergency-fix
 ```
 
 ### Release:
@@ -392,7 +382,7 @@ git push -u origin release/v1.x.0
 - **Workflow Questions**: Check this file first!
 - **Technical Issues**: Create an issue using templates
 - **Code Review**: Tag reviewers in PR
-- **Emergency**: Use hotfix workflow immediately
+- **Emergency**: Use critical fix workflow immediately
 
 ---
 

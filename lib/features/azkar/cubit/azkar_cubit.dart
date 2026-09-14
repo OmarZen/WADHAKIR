@@ -7,9 +7,7 @@ import '../../../domain/repositories/azkar_repository.dart';
 class AzkarCubit extends Cubit<AzkarState> {
   final AzkarRepository _azkarRepository;
 
-  AzkarCubit({required AzkarRepository azkarRepository})
-      : _azkarRepository = azkarRepository,
-        super(AzkarInitial());
+  AzkarCubit({required this._azkarRepository}) : super(AzkarInitial());
 
   Future<void> loadCategories() async {
     try {
@@ -28,10 +26,12 @@ class AzkarCubit extends Cubit<AzkarState> {
   void selectItem(int index) {
     if (state is AzkarCategorySelected) {
       final currentState = state as AzkarCategorySelected;
-      emit(AzkarCategorySelected(
-        category: currentState.category,
-        selectedItemIndex: index,
-      ));
+      emit(
+        AzkarCategorySelected(
+          category: currentState.category,
+          selectedItemIndex: index,
+        ),
+      );
     }
   }
 }

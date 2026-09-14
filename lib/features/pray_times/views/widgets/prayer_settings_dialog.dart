@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wadhakir/core/widgets/islamic_icons.dart';
-import 'package:adhan/adhan.dart' show CalculationMethod, Madhab;
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/utils/calculation_method_mapper.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
 
 class PrayerSettingsDialog extends StatelessWidget {
   final PrayerTimesCubit cubit;
 
-  const PrayerSettingsDialog({
-    super.key,
-    required this.cubit,
-  });
+  const PrayerSettingsDialog({super.key, required this.cubit});
 
   static Future<void> show(BuildContext context, PrayerTimesCubit cubit) async {
     if (context.mounted) {
@@ -73,15 +73,24 @@ class PrayerSettingsDialog extends StatelessWidget {
                       slivers: [
                         // Prayer calculation methods
                         _buildCalculationMethodsSection(
-                            context, size, primaryColor),
+                          context,
+                          size,
+                          primaryColor,
+                        ),
 
                         // Asr calculation (Madhab)
                         _buildAsrCalculationSection(
-                            context, size, primaryColor),
+                          context,
+                          size,
+                          primaryColor,
+                        ),
 
                         // Location update section
                         _buildLocationUpdateSection(
-                            context, size, primaryColor),
+                          context,
+                          size,
+                          primaryColor,
+                        ),
 
                         SliverToBoxAdapter(
                           child: SizedBox(height: size.height * 0.02),
@@ -101,20 +110,19 @@ class PrayerSettingsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, Size size, Color primaryColor,
-      AppLocalizations? l10n) {
+  Widget _buildHeader(
+    BuildContext context,
+    Size size,
+    Color primaryColor,
+    AppLocalizations? l10n,
+  ) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: size.height * 0.02,
-      ),
+      padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            primaryColor,
-            primaryColor.withValues(alpha: 0.85),
-          ],
+          colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
         ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
@@ -200,21 +208,30 @@ class PrayerSettingsDialog extends StatelessWidget {
   }
 
   Widget _buildCalculationMethodsSection(
-      BuildContext context, Size size, Color primaryColor) {
+    BuildContext context,
+    Size size,
+    Color primaryColor,
+  ) {
     return SliverToBoxAdapter(
-      child: FutureBuilder<CalculationMethod>(
+      child: FutureBuilder<CalculationParameters>(
         future: cubit.getCalculationMethod(),
         builder: (context, snapshot) {
           final currentMethod = snapshot.data;
+          String? currentMethodName;
+          if (currentMethod != null) {
+            currentMethodName = CalculationMethodMapper.getMethodName(
+              currentMethod,
+            );
+          }
           final l10n = AppLocalizations.of(context);
 
           return _SettingsSection(
             title:
                 l10n?.translate('prayer_times.calculation_method_settings') ??
-                    'طريقة حساب مواقيت الصلاة',
+                'طريقة حساب مواقيت الصلاة',
             subtitle:
                 l10n?.translate('prayer_times.choose_calculation_method') ??
-                    'اختر الطريقة المناسبة لحساب المواقيت حسب منطقتك',
+                'اختر الطريقة المناسبة لحساب المواقيت حسب منطقتك',
             icon: Icons.calculate_outlined,
             iconColor: const Color(0xFF3498DB),
             margin: EdgeInsets.fromLTRB(
@@ -226,55 +243,124 @@ class PrayerSettingsDialog extends StatelessWidget {
             child: Column(
               children: [
                 _CalculationMethodTile(
-                  title: l10n?.translate('prayer_times.muslim_world_league') ??
+                  title:
+                      l10n?.translate('prayer_times.muslim_world_league') ??
                       'رابطة العالم الإسلامي',
-                  subtitle: l10n?.translate(
-                          'prayer_times.muslim_world_league_description') ??
-                      'المعيار المستخدم في أغلب الدول الإسلامية',
-                  isSelected:
-                      currentMethod == CalculationMethod.muslim_world_league,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.muslim_world_league),
+                  subtitle:
+                      l10n?.translate(
+                        'prayer_times.muslim_world_league_description',
+                      ) ??
+                      'زاوية الفجر: 18، زاوية العشاء: 17',
+                  isSelected: currentMethodName == 'muslim_world_league',
+                  onTap: () =>
+                      _setCalculationMethod(context, 'muslim_world_league'),
                 ),
                 _CalculationMethodTile(
-                  title: l10n?.translate('prayer_times.egyptian') ??
+                  title:
+                      l10n?.translate('prayer_times.egyptian') ??
                       'الهيئة المصرية العامة للمساحة',
                   subtitle:
                       l10n?.translate('prayer_times.egyptian_description') ??
-                          'المعيار المستخدم في مصر وأجزاء من أفريقيا',
-                  isSelected: currentMethod == CalculationMethod.egyptian,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.egyptian),
+                      'زاوية الفجر: 19.5، زاوية العشاء: 17.5',
+                  isSelected: currentMethodName == 'egyptian',
+                  onTap: () => _setCalculationMethod(context, 'egyptian'),
                 ),
                 _CalculationMethodTile(
-                  title: l10n?.translate('prayer_times.karachi') ??
+                  title:
+                      l10n?.translate('prayer_times.karachi') ??
                       'جامعة العلوم الإسلامية، كراتشي',
                   subtitle:
                       l10n?.translate('prayer_times.karachi_description') ??
-                          'المعيار المستخدم في باكستان وأجزاء من آسيا',
-                  isSelected: currentMethod == CalculationMethod.karachi,
-                  onTap: () =>
-                      _setCalculationMethod(context, CalculationMethod.karachi),
+                      'زاوية الفجر: 18، زاوية العشاء: 18',
+                  isSelected: currentMethodName == 'karachi',
+                  onTap: () => _setCalculationMethod(context, 'karachi'),
                 ),
                 _CalculationMethodTile(
-                  title: l10n?.translate('prayer_times.umm_al_qura') ??
+                  title:
+                      l10n?.translate('prayer_times.umm_al_qura') ??
                       'جامعة أم القرى، مكة المكرمة',
                   subtitle:
                       l10n?.translate('prayer_times.umm_al_qura_description') ??
-                          'المعيار المستخدم في المملكة العربية السعودية',
-                  isSelected: currentMethod == CalculationMethod.umm_al_qura,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.umm_al_qura),
+                      'زاوية الفجر: 18، الفترة بعد المغرب: 90 دقيقة',
+                  isSelected: currentMethodName == 'umm_al_qura',
+                  onTap: () => _setCalculationMethod(context, 'umm_al_qura'),
                 ),
                 _CalculationMethodTile(
-                  title: l10n?.translate('prayer_times.north_america') ??
-                      'الجمعية الإسلامية لأمريكا الشمالية',
-                  subtitle: l10n?.translate(
-                          'prayer_times.north_america_description') ??
-                      'المعيار المستخدم في الولايات المتحدة وكندا',
-                  isSelected: currentMethod == CalculationMethod.north_america,
-                  onTap: () => _setCalculationMethod(
-                      context, CalculationMethod.north_america),
+                  title:
+                      l10n?.translate('prayer_times.dubai') ??
+                      'دولة الإمارات العربية المتحدة',
+                  subtitle:
+                      l10n?.translate('prayer_times.dubai_description') ??
+                      'زاوية الفجر والعشاء: 18.2',
+                  isSelected: currentMethodName == 'dubai',
+                  onTap: () => _setCalculationMethod(context, 'dubai'),
+                ),
+                _CalculationMethodTile(
+                  title: l10n?.translate('prayer_times.qatar') ?? 'دولة قطر',
+                  subtitle:
+                      l10n?.translate('prayer_times.qatar_description') ??
+                      'نسخة معدلة من طريقة أم القرى. زاوية الفجر: 18، فترة العشاء: 90',
+                  isSelected: currentMethodName == 'qatar',
+                  onTap: () => _setCalculationMethod(context, 'qatar'),
+                ),
+                _CalculationMethodTile(
+                  title:
+                      l10n?.translate('prayer_times.kuwait') ?? 'دولة الكويت',
+                  subtitle:
+                      l10n?.translate('prayer_times.kuwait_description') ??
+                      'زاوية الفجر: 18، زاوية العشاء: 17.5',
+                  isSelected: currentMethodName == 'kuwait',
+                  onTap: () => _setCalculationMethod(context, 'kuwait'),
+                ),
+                _CalculationMethodTile(
+                  title:
+                      l10n?.translate('prayer_times.moon_sighting_committee') ??
+                      'لجنة رؤية الهلال',
+                  subtitle:
+                      l10n?.translate(
+                        'prayer_times.moon_sighting_committee_description',
+                      ) ??
+                      'زاوية الفجر: 18، زاوية العشاء: 18، مع تعديلات موسمية',
+                  isSelected: currentMethodName == 'moonsighting_committee',
+                  onTap: () =>
+                      _setCalculationMethod(context, 'moonsighting_committee'),
+                ),
+                _CalculationMethodTile(
+                  title:
+                      l10n?.translate('prayer_times.singapore') ?? 'سنغافورة',
+                  subtitle:
+                      l10n?.translate('prayer_times.singapore_description') ??
+                      'زاوية الفجر: 20، زاوية العشاء: 18',
+                  isSelected: currentMethodName == 'singapore',
+                  onTap: () => _setCalculationMethod(context, 'singapore'),
+                ),
+                _CalculationMethodTile(
+                  title: l10n?.translate('prayer_times.turkey') ?? 'تركيا',
+                  subtitle:
+                      l10n?.translate('prayer_times.turkey_description') ??
+                      'زاوية الفجر: 18، زاوية العشاء: 17',
+                  isSelected: currentMethodName == 'turkiye',
+                  onTap: () => _setCalculationMethod(context, 'turkiye'),
+                ),
+                _CalculationMethodTile(
+                  title: l10n?.translate('prayer_times.tehran') ?? 'طهران',
+                  subtitle:
+                      l10n?.translate('prayer_times.tehran_description') ??
+                      'زاوية الفجر: 17.7، زاوية العشاء: 14، زاوية المغرب: 4.5',
+                  isSelected: currentMethodName == 'tehran',
+                  onTap: () => _setCalculationMethod(context, 'tehran'),
+                ),
+                _CalculationMethodTile(
+                  title:
+                      l10n?.translate('prayer_times.north_america') ??
+                      'أمريكا الشمالية (ISNA)',
+                  subtitle:
+                      l10n?.translate(
+                        'prayer_times.north_america_description',
+                      ) ??
+                      'زاوية الفجر: 15، زاوية العشاء: 15 (غير موصى به)',
+                  isSelected: currentMethodName == 'north_america',
+                  onTap: () => _setCalculationMethod(context, 'north_america'),
                 ),
               ],
             ),
@@ -285,7 +371,10 @@ class PrayerSettingsDialog extends StatelessWidget {
   }
 
   Widget _buildAsrCalculationSection(
-      BuildContext context, Size size, Color primaryColor) {
+    BuildContext context,
+    Size size,
+    Color primaryColor,
+  ) {
     return SliverToBoxAdapter(
       child: FutureBuilder<Madhab>(
         future: cubit.getMadhab(),
@@ -294,10 +383,13 @@ class PrayerSettingsDialog extends StatelessWidget {
           final l10n = AppLocalizations.of(context);
 
           return _SettingsSection(
-            title: l10n?.translate('prayer_times.asr_calculation_method') ??
+            title:
+                l10n?.translate('prayer_times.asr_calculation_method') ??
                 'طريقة حساب وقت صلاة العصر',
-            subtitle: l10n?.translate(
-                    'prayer_times.asr_calculation_method_description') ??
+            subtitle:
+                l10n?.translate(
+                  'prayer_times.asr_calculation_method_description',
+                ) ??
                 'اختر الطريقة المناسبة لحساب وقت العصر حسب المذهب',
             icon: Icons.sunny,
             iconColor: const Color(0xFF27AE60),
@@ -310,21 +402,29 @@ class PrayerSettingsDialog extends StatelessWidget {
             child: Column(
               children: [
                 _CalculationMethodTile(
-                  title: l10n?.translate(
-                          'prayer_times.asr_calculation_method_shafi') ??
+                  title:
+                      l10n?.translate(
+                        'prayer_times.asr_calculation_method_shafi',
+                      ) ??
                       'الشافعي، المالكي، الحنبلي',
-                  subtitle: l10n?.translate(
-                          'prayer_times.asr_calculation_method_shafi_description') ??
+                  subtitle:
+                      l10n?.translate(
+                        'prayer_times.asr_calculation_method_shafi_description',
+                      ) ??
                       'عندما يكون ظل الشيء مثل طوله',
                   isSelected: currentMadhab == Madhab.shafi,
                   onTap: () => _setMadhab(context, Madhab.shafi),
                 ),
                 _CalculationMethodTile(
-                  title: l10n?.translate(
-                          'prayer_times.asr_calculation_method_hanafi') ??
+                  title:
+                      l10n?.translate(
+                        'prayer_times.asr_calculation_method_hanafi',
+                      ) ??
                       'الحنفي',
-                  subtitle: l10n?.translate(
-                          'prayer_times.asr_calculation_method_hanafi_description') ??
+                  subtitle:
+                      l10n?.translate(
+                        'prayer_times.asr_calculation_method_hanafi_description',
+                      ) ??
                       'عندما يكون ظل الشيء ضعف طوله',
                   isSelected: currentMadhab == Madhab.hanafi,
                   onTap: () => _setMadhab(context, Madhab.hanafi),
@@ -338,13 +438,17 @@ class PrayerSettingsDialog extends StatelessWidget {
   }
 
   Widget _buildLocationUpdateSection(
-      BuildContext context, Size size, Color primaryColor) {
+    BuildContext context,
+    Size size,
+    Color primaryColor,
+  ) {
     final l10n = AppLocalizations.of(context);
     return SliverToBoxAdapter(
       child: _SettingsSection(
         title:
             l10n?.translate('prayer_times.location_update') ?? 'تحديث الموقع',
-        subtitle: l10n?.translate('prayer_times.location_update_description') ??
+        subtitle:
+            l10n?.translate('prayer_times.location_update_description') ??
             'تحديث الموقع الحالي لحساب مواقيت الصلاة بدقة',
         icon: Icons.location_on,
         iconColor: const Color(0xFFE67E22),
@@ -359,82 +463,76 @@ class PrayerSettingsDialog extends StatelessWidget {
           children: [
             // Current location text
             FutureBuilder<String>(
-                future: cubit.getCurrentLocationName(),
-                builder: (context, snapshot) {
-                  final locationName = snapshot.data ??
-                      l10n?.translate('prayer_times.loading_location') ??
-                      'جاري تحميل الموقع...';
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+              future: cubit.getCurrentLocationName(),
+              builder: (context, snapshot) {
+                final locationName =
+                    snapshot.data ??
+                    l10n?.translate('prayer_times.loading_location') ??
+                    'جاري تحميل الموقع...';
+                return Container(
+                  margin: EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE67E22).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFFE67E22).withValues(alpha: 0.2),
+                      width: 1,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE67E22).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFFE67E22).withValues(alpha: 0.2),
-                        width: 1,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.place,
+                        color: const Color(0xFFE67E22),
+                        size: size.width * 0.05,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.place,
-                          color: const Color(0xFFE67E22),
-                          size: size.width * 0.05,
-                        ),
-                        SizedBox(width: size.width * 0.02),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n?.translate(
-                                        'prayer_times.current_location') ??
-                                    'الموقع الحالي',
-                                style: TextStyle(
-                                  fontSize: size.width * 0.03,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w600,
-                                ),
+                      SizedBox(width: size.width * 0.02),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n?.translate(
+                                    'prayer_times.current_location',
+                                  ) ??
+                                  'الموقع الحالي',
+                              style: TextStyle(
+                                fontSize: size.width * 0.03,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w700,
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                locationName,
-                                style: TextStyle(
-                                  fontSize: size.width * 0.035,
-                                  color: Colors.grey[800],
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              locationName,
+                              style: TextStyle(
+                                fontSize: size.width * 0.035,
+                                color: Colors.grey[800],
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                }),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
 
             // Update location button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _updateLocation(context),
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n?.translate('prayer_times.update_location') ??
-                    'تحديث الموقع'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE67E22),
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    vertical: size.height * 0.015,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 2,
+              child: FButton(
+                onPress: () => _updateLocation(context),
+                prefix: const Icon(Icons.refresh),
+                child: Text(
+                  l10n?.translate('prayer_times.update_location') ??
+                      'تحديث الموقع',
                 ),
               ),
             ),
@@ -445,18 +543,17 @@ class PrayerSettingsDialog extends StatelessWidget {
   }
 
   // Button for time adjustment
-  Widget _buildActionButtons(BuildContext context, Size size, ThemeData theme,
-      AppLocalizations? l10n) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    Size size,
+    ThemeData theme,
+    AppLocalizations? l10n,
+  ) {
     return Container(
       padding: EdgeInsets.all(size.width * 0.04),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.shade200,
-            width: 1,
-          ),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey.shade200, width: 1)),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
@@ -466,40 +563,24 @@ class PrayerSettingsDialog extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Close button
-          TextButton.icon(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.of(context).pop();
             },
-            icon: const Icon(Icons.close),
-            label: Text(l10n?.translate('prayer_times.close') ?? 'إغلاق'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[600],
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
+            variant: FButtonVariant.ghost,
+            mainAxisSize: MainAxisSize.min,
+            prefix: const Icon(Icons.close),
+            child: Text(l10n?.translate('prayer_times.close') ?? 'إغلاق'),
           ),
 
           // Save button
-          ElevatedButton.icon(
-            onPressed: () {
+          FButton(
+            onPress: () {
               Navigator.of(context).pop();
             },
-            icon: const Icon(Icons.check),
-            label: Text(l10n?.translate('prayer_times.done') ?? 'تم'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.06,
-                vertical: size.height * 0.015,
-              ),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
+            mainAxisSize: MainAxisSize.min,
+            prefix: const Icon(Icons.check),
+            child: Text(l10n?.translate('prayer_times.done') ?? 'تم'),
           ),
         ],
       ),
@@ -507,8 +588,9 @@ class PrayerSettingsDialog extends StatelessWidget {
   }
 
   // Actions
-  void _setCalculationMethod(BuildContext context, CalculationMethod method) {
-    BlocProvider.of<PrayerTimesCubit>(context).setCalculationMethod(method);
+  void _setCalculationMethod(BuildContext context, String methodName) {
+    final parameters = CalculationMethodMapper.getParameters(methodName);
+    BlocProvider.of<PrayerTimesCubit>(context).setCalculationMethod(parameters);
   }
 
   void _setMadhab(BuildContext context, Madhab madhab) {
@@ -518,6 +600,7 @@ class PrayerSettingsDialog extends StatelessWidget {
   void _updateLocation(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
+
     // Show loading indicator
     scaffoldMessenger.showSnackBar(
       SnackBar(
@@ -532,8 +615,10 @@ class PrayerSettingsDialog extends StatelessWidget {
               ),
             ),
             SizedBox(width: 10),
-            Text(l10n?.translate('prayer_times.loading_location') ??
-                'جاري تحديث الموقع...'),
+            Text(
+              l10n?.translate('prayer_times.loading_location') ??
+                  'جاري تحديث الموقع...',
+            ),
           ],
         ),
         duration: Duration(seconds: 2),
@@ -546,23 +631,40 @@ class PrayerSettingsDialog extends StatelessWidget {
 
       // Show success message
       if (context.mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(l10n?.translate('prayer_times.location_updated') ??
-                'تم تحديث الموقع بنجاح'),
-            backgroundColor: Colors.green,
+        showFToast(
+          context: context,
+          title: Text(
+            l10n?.translate('prayer_times.location_updated') ??
+                'تم تحديث الموقع بنجاح',
           ),
         );
       }
     } catch (e) {
-      // Show error message
+      // Show error message with specific handling for location services
       if (context.mounted) {
+        final errorMessage = e.toString().contains('disabled')
+            ? l10n?.translate('prayer_times.location_services_disabled') ??
+                  'خدمات الموقع معطلة. يرجى تفعيل خدمات الموقع في إعدادات الجهاز للحصول على أوقات الصلاة بدقة.'
+            : l10n?.translate('prayer_times.location_update_failed') ??
+                  'فشل تحديث الموقع: $e';
+
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text(
-                l10n?.translate('prayer_times.location_update_failed') ??
-                    'فشل تحديث الموقع: $e'),
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+            action: e.toString().contains('disabled')
+                ? SnackBarAction(
+                    label:
+                        l10n?.translate('prayer_times.open_settings') ??
+                        'فتح الإعدادات',
+                    textColor: Colors.white,
+                    onPressed: () {
+                      // Open location settings
+                      Geolocator.openLocationSettings();
+                    },
+                  )
+                : null,
           ),
         );
       }
@@ -628,11 +730,7 @@ class _SettingsSection extends StatelessWidget {
                     color: iconColor.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: size.width * 0.045,
-                  ),
+                  child: Icon(icon, color: iconColor, size: size.width * 0.045),
                 ),
                 SizedBox(width: size.width * 0.03),
                 Flexible(
@@ -671,10 +769,7 @@ class _SettingsSection extends StatelessWidget {
             ),
 
           // Section content
-          Padding(
-            padding: EdgeInsets.all(size.width * 0.03),
-            child: child,
-          ),
+          Padding(padding: EdgeInsets.all(size.width * 0.03), child: child),
         ],
       ),
     );
@@ -717,11 +812,21 @@ class _CalculationMethodTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Radio<bool>(
-              value: true,
-              groupValue: isSelected,
-              onChanged: (_) => onTap(),
-              activeColor: theme.primaryColor,
+            Container(
+              width: 24,
+              height: 24,
+              margin: const EdgeInsets.only(left: 12, right: 8, top: 2),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? theme.primaryColor : Colors.grey.shade400,
+                  width: 2,
+                ),
+                color: isSelected ? theme.primaryColor : Colors.transparent,
+              ),
+              child: isSelected
+                  ? Icon(Icons.check, size: 16, color: Colors.white)
+                  : null,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -732,18 +837,16 @@ class _CalculationMethodTile extends StatelessWidget {
                     title,
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: isSelected ? theme.primaryColor : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   ),
                 ],
               ),

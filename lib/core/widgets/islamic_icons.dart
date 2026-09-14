@@ -36,11 +36,7 @@ class IslamicIcons {
 
   // Placeholder for mosque icon
   static Widget mosqueIcon({double size = 24, Color? color}) {
-    return Icon(
-      Icons.mosque_rounded,
-      size: size,
-      color: color,
-    );
+    return Icon(Icons.mosque_rounded, size: size, color: color);
   }
 
   // Placeholder for calendar icon
@@ -48,18 +44,10 @@ class IslamicIcons {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Icon(
-          Icons.calendar_month,
-          size: size,
-          color: color,
-        ),
+        Icon(Icons.calendar_month, size: size, color: color),
         Positioned(
           bottom: size * 0.32,
-          child: Icon(
-            Icons.mosque_rounded,
-            size: size * 0.4,
-            color: color,
-          ),
+          child: Icon(Icons.mosque_rounded, size: size * 0.4, color: color),
         ),
       ],
     );
@@ -70,21 +58,9 @@ class IslamicIcons {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          Icons.star,
-          size: size * 0.5,
-          color: color,
-        ),
-        Icon(
-          Icons.auto_awesome,
-          size: size,
-          color: color,
-        ),
-        Icon(
-          Icons.star,
-          size: size * 0.5,
-          color: color,
-        ),
+        Icon(Icons.star, size: size * 0.5, color: color),
+        Icon(Icons.auto_awesome, size: size, color: color),
+        Icon(Icons.star, size: size * 0.5, color: color),
       ],
     );
   }
@@ -94,18 +70,10 @@ class IslamicIcons {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Icon(
-          Icons.lightbulb,
-          size: size,
-          color: color,
-        ),
+        Icon(Icons.lightbulb, size: size, color: color),
         Positioned(
           top: size * 0.23,
-          child: Icon(
-            Icons.horizontal_rule,
-            size: size * 0.5,
-            color: color,
-          ),
+          child: Icon(Icons.horizontal_rule, size: size * 0.5, color: color),
         ),
       ],
     );
@@ -116,16 +84,8 @@ class IslamicIcons {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Icon(
-          Icons.star_border_rounded,
-          size: size,
-          color: color,
-        ),
-        Icon(
-          Icons.star_rounded,
-          size: size * 0.7,
-          color: color,
-        ),
+        Icon(Icons.star_border_rounded, size: size, color: color),
+        Icon(Icons.star_rounded, size: size * 0.7, color: color),
       ],
     );
   }
@@ -135,11 +95,7 @@ class IslamicIcons {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Icon(
-          Icons.volunteer_activism,
-          size: size,
-          color: color,
-        ),
+        Icon(Icons.volunteer_activism, size: size, color: color),
         Positioned(
           bottom: size * 0.1,
           right: size * 0.1,
@@ -158,18 +114,10 @@ class IslamicIcons {
     return Stack(
       alignment: Alignment.center,
       children: [
-        Icon(
-          Icons.emoji_events,
-          size: size,
-          color: color,
-        ),
+        Icon(Icons.emoji_events, size: size, color: color),
         Positioned(
           top: size * 0.2,
-          child: Icon(
-            Icons.star,
-            size: size * 0.3,
-            color: color,
-          ),
+          child: Icon(Icons.star, size: size * 0.3, color: color),
         ),
       ],
     );

@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 // Primary color palette
 const Color _primaryColor = Color(0xFF20497D); // Primary blue
 const Color _secondaryColor = Color(0xFF0D1122); // Deep dark blue/black
-const Color _neutralGray = Color(0xFF9A9BA8); // Medium gray
 const Color _lightGray = Color(0xFFCECACA); // Light gray
 // const Color _white = Color(0xFFFFFFFF); // White
 
@@ -12,7 +11,23 @@ const Color _lightGray = Color(0xFFCECACA); // Light gray
 const Color _backgroundColor = Color(0xFFF9F9F9);
 const Color _cardColor = Colors.white;
 const Color _textColor = Color(0xFF0D1122);
-const Color _secondaryTextColor = Color(0xFF9A9BA8);
+
+/// Secondary/body text on light surfaces.
+///
+/// Was `0xFF9A9BA8`, which measures **2.61:1** against the `0xFFF9F9F9`
+/// scaffold and 2.75:1 against white — well under the WCAG AA 4.5:1 floor for
+/// body text, and this is `bodyMedium`, so it styled secondary text app-wide.
+/// PRODUCT.md names outdoor legibility as non-negotiable and flags this exact
+/// value as a known risk.
+///
+/// `0xFF5B6070` measures **5.95:1** on the scaffold and 6.27:1 on white. It is
+/// deliberately the same cool-neutral hue family, so nothing else in the
+/// palette shifts — only the lightness drops far enough to be readable in sun.
+///
+/// The dark theme is NOT changed: its greys already measure 6.06:1
+/// (`0xFF9A9BA8` icons on `0xFF1E1E1E`) and 10.26:1 (`0xFFCECACA` body text),
+/// so they already pass and darkening them would only hurt.
+const Color _secondaryTextColor = Color(0xFF5B6070);
 
 // Category colors - harmonized with primary palette
 const Color morningAzkarColor = Color(0xFF3498DB); // Bright blue
@@ -23,6 +38,8 @@ const Color wakeupAzkarColor = Color(0xFF16A085); // Teal
 const Color mosqueAzkarColor = Color(0xFFD35400); // Orange
 const Color maathurDuaColor = Color(0xFF7FB069); // Sage green
 const Color quranDuaColor = Color(0xFFDAA520); // Golden/Amber
+const Color midnightPrayerColor = Color(0xFF9C27B0); // Purple for midnight
+const Color lastThirdPrayerColor = Color(0xFF3F51B5); // Indigo for last third
 
 // Dark theme colors
 const Color _darkPrimaryColor = Color(0xFF20497D); // Same primary blue
@@ -42,13 +59,66 @@ const Color darkWakeupAzkarColor = Color(0xFF1ABC9C); // Brighter teal
 const Color darkMosqueAzkarColor = Color(0xFFE67E22); // Brighter orange
 const Color darkMaathurDuaColor = Color(0xFF8FC779); // Brighter sage green
 const Color darkQuranDuaColor = Color(0xFFF1C40F); // Brighter gold
+const Color darkMidnightPrayerColor = Color(
+  0xFFAB47BC,
+); // Brighter purple for midnight
+const Color darkLastThirdPrayerColor = Color(
+  0xFF5C6BC0,
+); // Brighter indigo for last third
 
 // Typography settings
+//
+// WEIGHTS THAT ACTUALLY EXIST — check this table before writing a fontWeight.
+// Flutter silently resolves a requested weight to the nearest bundled one, so
+// asking for a weight a family does not ship is not an error, it is a lie in
+// the source: the code says one thing and the screen shows another.
+//
+//   Almarai          400, 700   (300 + 800 exist on disk but are NOT declared
+//                                in pubspec, so they do not ship)
+//   Jomhuria         400        ← one weight only
+//   ScheherazadeNew  400, 700
+//   ArefRuqaa        400, 700
+//
+// None of them ship a 500 or a 600. The codebase previously asked for w500 in
+// ~90 places and w600 in ~35, all of which rendered as 400 and 700 anyway —
+// and the app-bar title asked Jomhuria for w600, which rendered as its only
+// weight, 400. Those were normalised to what they actually render.
+//
+// If a genuine mid-weight is ever needed, declare Almarai-ExtraBold.ttf
+// (already in assets/fonts/Almarai/) as weight 800 in pubspec first.
 const String _primaryFont = 'Almarai';
 const String _religiousFont = 'Jomhuria';
 
+// Edge-to-edge safe system UI overlay styles.
+//
+// These deliberately leave `statusBarColor` and `systemNavigationBarColor`
+// null so the Flutter engine does NOT call the deprecated
+// `Window.setStatusBarColor` / `Window.setNavigationBarColor` APIs that
+// Android 15 flags. (The built-in `SystemUiOverlayStyle.light`/`.dark` presets
+// carry a non-null black `systemNavigationBarColor`, which triggers the call.)
+// Leaving the bars transparent is also the correct edge-to-edge behavior:
+// content draws behind them. Only icon brightness is controlled.
+
+/// For surfaces on a dark/brand-blue background that want WHITE system-bar icons.
+const SystemUiOverlayStyle kOverlayStyleLightIcons = SystemUiOverlayStyle(
+  statusBarColor: null,
+  systemNavigationBarColor: null,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark, // iOS counterpart of light icons
+  systemNavigationBarIconBrightness: Brightness.light,
+);
+
+/// For surfaces on a light background that want DARK system-bar icons.
+const SystemUiOverlayStyle kOverlayStyleDarkIcons = SystemUiOverlayStyle(
+  statusBarColor: null,
+  systemNavigationBarColor: null,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light, // iOS counterpart of dark icons
+  systemNavigationBarIconBrightness: Brightness.dark,
+);
+
 final ThemeData lightTheme = ThemeData(
-  useMaterial3: true,
+  useMaterial3: false, // Required by quran_library package
   brightness: Brightness.light,
   primaryColor: _primaryColor,
   primaryColorDark: _secondaryColor,
@@ -115,18 +185,16 @@ final ThemeData lightTheme = ThemeData(
     titleTextStyle: const TextStyle(
       fontFamily: _religiousFont,
       fontSize: 36,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
-    systemOverlayStyle: SystemUiOverlayStyle.light,
+    systemOverlayStyle: kOverlayStyleLightIcons,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: _primaryColor,
       foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
@@ -135,18 +203,14 @@ final ThemeData lightTheme = ThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: _primaryColor,
       side: const BorderSide(color: _primaryColor, width: 1.5),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
   ),
   cardTheme: CardThemeData(
     color: _cardColor,
     elevation: 2,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     shadowColor: _primaryColor.withValues(alpha: 0.2),
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -156,7 +220,13 @@ final ThemeData lightTheme = ThemeData(
   colorScheme: ColorScheme.light(
     primary: _primaryColor,
     secondary: _secondaryColor,
-    tertiary: _neutralGray,
+    // `tertiary` is read as a TEXT colour in 8 places — including
+    // prayer_times_content.dart:48 and prayer_times_header.dart:69, i.e. the
+    // exact "prayer times outdoors in bright sunlight" case PRODUCT.md calls
+    // non-negotiable. It previously pointed at a separate `_neutralGray`
+    // constant that held the same failing 0xFF9A9BA8 value, so fixing only
+    // `bodyMedium` would have left this half of the problem in place.
+    tertiary: _secondaryTextColor,
     surface: _cardColor,
     onPrimary: Colors.white,
     onSecondary: Colors.white,
@@ -167,7 +237,7 @@ final ThemeData lightTheme = ThemeData(
 );
 
 final ThemeData darkTheme = ThemeData(
-  useMaterial3: true,
+  useMaterial3: false, // Required by quran_library package
   brightness: Brightness.dark,
   primaryColor: _darkPrimaryColor,
   primaryColorDark: _darkSecondaryColor,
@@ -234,18 +304,16 @@ final ThemeData darkTheme = ThemeData(
     titleTextStyle: const TextStyle(
       fontFamily: _religiousFont,
       fontSize: 36,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
-    systemOverlayStyle: SystemUiOverlayStyle.light,
+    systemOverlayStyle: kOverlayStyleLightIcons,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: _darkPrimaryColor,
       foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
@@ -254,18 +322,14 @@ final ThemeData darkTheme = ThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: Colors.white,
       side: const BorderSide(color: Colors.white, width: 1.5),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     ),
   ),
   cardTheme: CardThemeData(
     color: _darkCardColor,
     elevation: 3,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     shadowColor: Colors.black.withValues(alpha: 0.4),
   ),
   floatingActionButtonTheme: FloatingActionButtonThemeData(

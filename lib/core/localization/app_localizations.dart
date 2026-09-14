@@ -14,8 +14,9 @@ class AppLocalizations {
 
   Future<bool> load() async {
     // Load the language JSON file from the assets folder
-    String jsonString =
-        await rootBundle.loadString('assets/lang/${locale.languageCode}.json');
+    String jsonString = await rootBundle.loadString(
+      'assets/lang/${locale.languageCode}.json',
+    );
     Map<String, dynamic> jsonMap = json.decode(jsonString);
 
     // Flatten nested JSON structure
@@ -24,8 +25,10 @@ class AppLocalizations {
     return true;
   }
 
-  Map<String, String> _flattenMap(Map<String, dynamic> map,
-      [String prefix = '']) {
+  Map<String, String> _flattenMap(
+    Map<String, dynamic> map, [
+    String prefix = '',
+  ]) {
     Map<String, String> result = {};
 
     map.forEach((key, value) {

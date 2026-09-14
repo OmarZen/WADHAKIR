@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Mirrors the PR gate in .github/workflows/ci.yml, so the same three checks
+# fail here rather than ten minutes later on CI.
+#
+# These hooks only exist once `npm install` has run (husky 8 sets
+# core.hooksPath from the `prepare` script). That is deliberate: a Flutter
+# contributor who never touches npm gets no hooks and no error, and CI is
+# still the real gate.
+dart format --set-exit-if-changed .
+flutter analyze
+flutter test

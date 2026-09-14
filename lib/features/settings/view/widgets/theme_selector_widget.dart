@@ -1,0 +1,262 @@
+import 'package:flutter/material.dart';
+import 'package:wadhakir/data/models/app_settings_model.dart';
+import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
+
+class ThemeSelectorWidget extends StatelessWidget {
+  final AppSettingsModel settings;
+  final SettingsCubit cubit;
+
+  const ThemeSelectorWidget({
+    super.key,
+    required this.settings,
+    required this.cubit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: isDark
+          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
+          : theme.colorScheme.surface,
+      child: InkWell(
+        onTap: () => _showThemeDialog(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  settings.themeMode == ThemeMode.light
+                      ? Icons.light_mode
+                      : settings.themeMode == ThemeMode.dark
+                      ? Icons.dark_mode
+                      : Icons.brightness_auto,
+                  color: isDark
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onPrimary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n?.translate('settings.theme') ?? 'السمة',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      settings.themeMode == ThemeMode.system
+                          ? l10n?.translate('settings.system_theme') ??
+                                'حسب النظام'
+                          : settings.themeMode == ThemeMode.light
+                          ? l10n?.translate('settings.light_theme') ?? 'فاتح'
+                          : l10n?.translate('settings.dark_theme') ?? 'داكن',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showThemeDialog(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Theme Selector',
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, anim1, anim2) {
+        return Container();
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+          scale: Curves.easeOut.transform(anim1.value),
+          child: FadeTransition(
+            opacity: anim1,
+            child: Dialog(
+              backgroundColor: theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 360),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            Icons.palette,
+                            color: isDark
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onPrimary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            l10n?.translate('settings.select_theme') ??
+                                'اختر السمة',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    // Theme Options
+                    _buildThemeOption(
+                      context,
+                      title: l10n?.translate('settings.light_theme') ?? 'فاتح',
+                      icon: Icons.light_mode,
+                      mode: ThemeMode.light,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildThemeOption(
+                      context,
+                      title: l10n?.translate('settings.dark_theme') ?? 'داكن',
+                      icon: Icons.dark_mode,
+                      mode: ThemeMode.dark,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildThemeOption(
+                      context,
+                      title:
+                          l10n?.translate('settings.system_theme') ??
+                          'حسب النظام',
+                      icon: Icons.brightness_auto,
+                      mode: ThemeMode.system,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThemeOption(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required ThemeMode mode,
+  }) {
+    final theme = Theme.of(context);
+    final isSelected = settings.themeMode == mode;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          cubit.setThemeMode(mode);
+          Navigator.of(context).pop();
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              if (isSelected)
+                Icon(
+                  Icons.check_circle,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

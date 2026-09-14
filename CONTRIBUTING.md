@@ -1,177 +1,126 @@
 # Contributing to Wadhakir 🤝
 
-Thank you for your interest in contributing to Wadhakir! This document outlines our development workflow and guidelines.
+Thank you for helping improve Wadhakir. This guide explains the rules we follow so contributions stay easy to review and safe to merge.
 
-## 🌟 Getting Started
+## Before you start
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/WADHAKIR.git
-   cd WADHAKIR
-   ```
-3. **Set up Flutter environment** (see README.md for details)
-4. **Install dependencies**:
-   ```bash
-   flutter pub get
-   ```
+1. Fork the repository.
+2. Clone your fork locally.
+3. Install dependencies:
 
-## 🌲 Branching Strategy
-
-We use a **Git Flow** inspired workflow:
-
-### Main Branches
-- **`main`** - Production-ready code (protected)
-- **`develop`** - Integration branch for ongoing development (default branch)
-
-### Supporting Branches
-- **`feature/*`** - New features (branch from `develop`)
-- **`fix/*`** - Bug fixes (branch from `develop`) 
-- **`hotfix/*`** - Critical production fixes (branch from `main`)
-- **`release/*`** - Release preparation (branch from `develop`)
-
-### Branch Naming Convention
 ```bash
-feature/prayer-reminder
-fix/qibla-direction-bug
-hotfix/v1.2.1-crash-fix
-release/v1.3.0
-chore/update-dependencies
+flutter pub get
+bash android/fix_deps_proguard.sh
 ```
 
-## 🔄 Development Workflow
+   **Re-run `android/fix_deps_proguard.sh` after every `flutter pub get`.** It
+   patches `quran_library` in the pub cache for AGP 9.x, and `pub get` restores
+   the pristine copy each time — so the patch has to be re-applied after any
+   command that resolves dependencies. Without it the Android build fails
+   during Gradle configuration with no indication that a patch is missing.
 
-### 1. Create a Feature Branch
+4. *(Optional)* Install the local git hooks, which run format, analyze and
+   tests before each commit and lint the commit message:
+
 ```bash
-git checkout develop
-git pull origin develop
-git checkout -b feature/your-feature-name
+npm install
 ```
 
-### 2. Make Your Changes
-- Write clean, well-documented code
-- Follow Dart/Flutter best practices
-- Add tests for new functionality
-- Run code quality checks:
-  ```bash
-  dart format .
-  flutter analyze
-  flutter test
-  ```
+   The hooks live in `.husky/`. They are a convenience, not the gate — CI runs
+   the same checks on every pull request.
 
-### 3. Commit Your Changes
-We use **Conventional Commits** format:
+5. Read the README and the workflow guide so you understand the current app structure.
+
+## Branching rules
+
+We follow a Git Flow style process:
+
+- `main` is for stable releases only.
+- `develop` is the default integration branch.
+- `feature/*` is for new work.
+- `fix/*` is for bug fixes.
+- `release/*` is for release preparation.
+
+### Branch naming examples
+
 ```bash
-feat(prayers): add prayer reminder notifications
-fix(qibla): correct compass calibration issue
-chore(deps): update flutter to 3.24.0
-docs(readme): add installation instructions
+feature/prayer-reminder-ui
+feature/quran-bookmarking
+fix/qibla-compass-calibration
+fix/overlay-visibility
+release/v3.0.1
 ```
 
-#### Commit Types
-- `feat` - New feature
-- `fix` - Bug fix
-- `chore` - Maintenance (dependencies, build, etc.)
-- `docs` - Documentation changes
-- `refactor` - Code refactoring
-- `perf` - Performance improvements
-- `test` - Adding/updating tests
-- `revert` - Reverting changes
+## Contribution rules
 
-### 4. Push and Create Pull Request
+- Keep changes focused on one goal.
+- Use respectful, constructive language in issues and pull requests.
+- Do not commit secrets, local config files, or generated build artifacts.
+- Add or update tests when behavior changes.
+- Update documentation when the user-facing behavior changes.
+- Include screenshots or a short recording for UI updates.
+
+## Development checklist
+
+Before opening a pull request, run:
+
 ```bash
-git push -u origin feature/your-feature-name
+dart format .
+flutter analyze
+flutter test
 ```
 
-Open a Pull Request to `develop` branch using our PR template.
+If you changed platform-specific files, test on the relevant device or emulator as well.
 
-## 📋 Pull Request Guidelines
+## Commit message convention
 
-### Before Submitting
-- [ ] Code compiles without errors
-- [ ] All tests pass: `flutter test`
-- [ ] Code is formatted: `dart format .`
-- [ ] No analysis issues: `flutter analyze`
-- [ ] Updated documentation if needed
-- [ ] Added/updated tests for new features
+Use Conventional Commits:
 
-### PR Requirements
-- **Target branch**: `develop` (unless it's a hotfix)
-- **Title**: Follow conventional commit format
-- **Description**: Use our PR template
-- **Reviews**: At least 1 approval required
-- **CI**: All checks must pass
+```bash
+feat(quran): add bookmark screen
+fix(prayer-times): correct timezone handling
+docs(readme): improve setup instructions
+chore(deps): update packages
+```
 
-## 🚀 Release Process
+Recommended types:
 
-### Regular Releases
-1. Create release branch from `develop`:
-   ```bash
-   git checkout develop
-   git checkout -b release/v1.3.0
-   ```
-2. Update version in `pubspec.yaml`
-3. Update `CHANGELOG.md`
-4. Test thoroughly
-5. Create PR to `main`
-6. After merge, tag the release:
-   ```bash
-   git tag -a v1.3.0 -m "Release v1.3.0"
-   git push origin v1.3.0
-   ```
-7. Merge `main` back to `develop`
+- `feat` — new feature
+- `fix` — bug fix
+- `docs` — documentation only
+- `refactor` — code restructuring without behavior changes
+- `test` — tests added or updated
+- `chore` — maintenance or tooling
+- `perf` — performance improvement
+- `revert` — revert a previous change
 
-### Hotfixes
-1. Branch from `main`:
-   ```bash
-   git checkout main
-   git checkout -b hotfix/v1.2.1-critical-fix
-   ```
-2. Fix the issue
-3. Update version in `pubspec.yaml`
-4. Create PR to `main`
-5. After merge, tag and merge back to `develop`
+## Pull request rules
 
-## 🧪 Testing
+- Open PRs against `develop` unless the change is a critical production fix.
+- Use the PR template in `.github/PULL_REQUEST_TEMPLATE.md`.
+- Include a clear summary, test steps, and any relevant screenshots.
+- Make sure CI passes before requesting review.
+- Respond to review feedback promptly and keep discussions constructive.
 
-- **Unit tests**: `flutter test`
-- **Widget tests**: Test UI components
-- **Integration tests**: Test complete user flows
-- **Manual testing**: Test on real devices
+## Release flow
 
-## 📝 Code Style
+1. Create a `release/*` branch from `develop`.
+2. Update the version in `pubspec.yaml`.
+3. Update `CHANGELOG.md` if the release includes user-visible changes.
+4. Run the full checks again.
+5. Open a PR to `main`.
+6. After merge, tag the release and merge `main` back into `develop`.
 
-- Follow [Dart style guide](https://dart.dev/guides/language/effective-dart/style)
-- Use `dart format` for consistent formatting
-- Use meaningful variable and function names
-- Add documentation for public APIs
-- Keep functions small and focused
+## Reporting bugs and requesting features
 
-## 🐛 Bug Reports
+- Use the issue templates in `.github/ISSUE_TEMPLATE/`.
+- Describe the problem or request clearly.
+- Add steps to reproduce whenever possible.
+- Include screenshots, videos, or device details if they help explain the issue.
 
-Use our [bug report template](.github/ISSUE_TEMPLATE/bug_report.md) and include:
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment details (app version, device, OS)
-- Screenshots/videos if applicable
+## Need help?
 
-## ✨ Feature Requests
+- Use GitHub Issues for bugs.
+- Use GitHub Discussions for questions and ideas.
 
-Use our [feature request template](.github/ISSUE_TEMPLATE/feature_request.md) and include:
-- Clear description of the feature
-- Problem it solves
-- Acceptance criteria
-
-## 📞 Getting Help
-
-- **Issues**: Open a GitHub issue
-- **Discussions**: Use GitHub Discussions for questions
-- **Discord**: [Join our community](https://discord.gg/wadhakir) (if applicable)
-
-## 🙏 Thank You
-
-Your contributions make Wadhakir better for the entire Muslim community. May Allah reward your efforts! 
-
----
-
-**Happy coding! 🚀**
+Thank you for contributing to Wadhakir and helping keep it welcoming for the community.

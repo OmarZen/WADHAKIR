@@ -1,4 +1,4 @@
-import 'package:adhan/adhan.dart';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 import 'package:wadhakir/domain/repositories/prayer_times_repository.dart';
 
@@ -9,12 +9,12 @@ class GetPrayerTimesUseCase {
 
   Future<PrayerTimesModel> call({
     required DateTime date,
-    CalculationMethod? calculationMethod,
+    CalculationParameters? calculationParameters,
     Madhab? madhab,
   }) async {
     return await _repository.getPrayerTimes(
       date: date,
-      calculationMethod: calculationMethod,
+      calculationParameters: calculationParameters,
       madhab: madhab,
     );
   }

@@ -1,19 +1,134 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Queries for intent handling (Android 11+) -->
+    <queries>
+        <!-- For URL launching -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- For sharing -->
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="*/*" />
+        </intent>
+        <!-- For opening app settings -->
+        <intent>
+            <action android:name="android.settings.APPLICATION_DETAILS_SETTINGS" />
+        </intent>
+
+        <!-- OEM autostart / app-protection screens — roadmap #16.
+
+             On these vendors the battery exemption Android offers is not the
+             switch that matters: each runs its own task killer with its own
+             allowlist, and an app left off it is force-stopped, which cancels
+             every alarm it had armed.
+
+             From Android 11 a package this app has no relationship with is
+             invisible to PackageManager unless it is named here. Without these
+             entries OemAutostart.resolve() returns null on EVERY device and the
+             feature fails silently, in a way indistinguishable from a phone
+             that genuinely does not have the screen.
+
+             This list must stay in step with OemAutostart.queriedPackages. -->
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.miui.powerkeeper" />
+        <package android:name="com.huawei.systemmanager" />
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oppo.safe" />
+        <package android:name="com.oneplus.security" />
+        <package android:name="com.vivo.permissionmanager" />
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.transsion.phonemaster" />
+        <package android:name="com.samsung.android.lool" />
+        <package android:name="com.samsung.android.sm" />
+        <package android:name="com.meizu.safe" />
+        <package android:name="com.asus.mobilemanager" />
+        <package android:name="com.evenwell.powersaving.g3" />
+    </queries>
 
     <!-- Permissions for Qibla compass -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
-    <uses-feature android:name="android.hardware.sensor.compass" android:required="true" />
-    
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
+
+    <!-- Camera for the Qibla AR (camera overlay) mode; not required so devices
+         without a camera can still install and use the compass. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
     <!-- Permissions for audio streaming -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    
+    <!-- Islamic backgrounds: set wallpaper + save rendered image to gallery -->
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <!-- camera_android_camerax declares this with maxSdkVersion=28; keep the
+         app's 29 and tell the merger ours wins. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        tools:replace="android:maxSdkVersion" />
+
+    <!-- Permissions for notifications -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Exact alarms for the adhan. Two permissions, split by API level — this is
+         Google's documented pattern for alarm-clock-class apps.
+
+         SCHEDULE_EXACT_ALARM is capped at API 32 because from API 33 it is no
+         longer pre-granted: on Android 14+ it is DENIED by default for a fresh
+         install (and denied again after a backup-restore onto a new device),
+         and can only be recovered by sending the user to a settings screen.
+         When it is missing, _scheduleOne() catches the failure and retries with
+         preciseAlarm:false — so the adhan silently degrades to an inexact,
+         Doze-deferrable alarm for a large share of the install base.
+
+         USE_EXACT_ALARM (API 33+) is auto-granted and non-revocable, and Play
+         explicitly permits it for apps whose core function is alarms/clocks or
+         calendar reminders. A prayer-time adhan is exactly that: the user asks
+         to be alerted at a precise astronomical time, and a late adhan is a
+         failed product. This must be declared in the Play Console's
+         "Exact alarm permission" declaration at submission time. -->
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Required by flutter_overlay_window's foreground service on Android 14+ -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- The adhan plays from AdhanPlaybackService, a mediaPlayback foreground
+         service. From targetSdk 34 the matching FOREGROUND_SERVICE_<TYPE>
+         permission is required on top of FOREGROUND_SERVICE, and without it
+         startForeground throws SecurityException at the first prayer.
+
+         quran_library's manifest already contributes this permission (it ships
+         com.ryanheise.audioservice.AudioService), so the merged manifest would
+         carry it either way — which is exactly why it is declared here. An app
+         whose adhan depends on a permission that arrives from a transitive
+         dependency's manifest loses it the day that dependency is replaced,
+         and the failure surfaces at a prayer time, not at build time. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Lets the app prompt the user to exempt it from Doze/battery
+         optimization so scheduled adhan/fasting/wird alarms fire on time. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+
     <application
-        android:label="Wadhakir"
+        android:label="@string/app_name"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -28,19 +143,288 @@
                  while the Flutter UI initializes. After that, this theme continues
                  to determine the Window background behind the Flutter UI. -->
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"
+            />
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Add home widget launch intent filter -->
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.LAUNCH" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".AppLockOverlayActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/NormalTheme" />
+
+        <!-- App-lock monitor. On Android 14+ (targetSDK 34+) a foreground
+             service MUST declare a type, else startForeground throws
+             MissingForegroundServiceTypeException. It watches the foreground
+             app and overlays a lock screen during prayer windows, which fits
+             "specialUse" (the FOREGROUND_SERVICE_SPECIAL_USE permission is
+             declared above). The property justifies it for Play review. -->
+        <service
+            android:name=".AppLockMonitorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="app_lock_monitor_foreground_app_during_prayer_times" />
+        </service>
+
+        <!-- Native floating-dhikr foreground service: keeps showing the pill
+             over other apps on a timer even when the app is killed. -->
+        <service
+            android:name=".FloatingDhikrService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="floating_dhikr_reminder_over_other_apps" />
+        </service>
+
+        <!-- Plays the adhan. Started from PrayerAlarmReceiver when an alarm
+             fires, which is the only thing that starts it.
+
+             foregroundServiceType="mediaPlayback" because that is what it does —
+             it plays an audio file — and because mediaPlayback, unlike
+             specialUse, has NO TIMEOUT. A four-minute adhan cut short by the
+             platform would be a worse bug than the one this service fixes.
+
+             Starting a foreground service from the background is legal here
+             under a documented exemption: "the app invokes an exact alarm to
+             complete an action the user requested". PrayerAlarmScheduler arms
+             with setAlarmClock, which is that exact alarm. This needs the
+             Play Console foreground-service declaration at submission, next to
+             the exact-alarm one.
+
+             directBootAware is NOT optional. PrayerAlarmReceiver now fires
+             before the first unlock (Stage 2), so it can try to start this while
+             the device is still locked — and a component without the flag is not
+             a valid target then, so the start would fail with nothing in logcat
+             to say why. Same class of bug that made the whole of Stage 2 inert.
+
+             stopWithTask="false" so swiping the app out of Recents does not
+             kill a sounding adhan. It is the platform default for a service;
+             it is spelled out because the whole point of this service is that
+             its lifetime is the adhan's, not the app's. -->
+        <service
+            android:name=".AdhanPlaybackService"
+            android:enabled="true"
+            android:exported="false"
+            android:directBootAware="true"
+            android:stopWithTask="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- The prayer adhan fire path. Not exported and given no intent filter:
+             every intent that reaches it is an explicit one this app created,
+             so no other app can make it ring an adhan or wipe the schedule.
+
+             It handles three actions, all defined in PrayerAlarmReceiver:
+             the alarm itself, the 00:05 anchor that rebuilds the armed window,
+             and the notification's stop button.
+
+             directBootAware is NOT optional here, and its absence is invisible.
+             While the user is locked, the OS resolves broadcast targets with
+             MATCH_DIRECT_BOOT_AWARE only — so a receiver without it is not a
+             valid target even for an explicit intent. AlarmManager still counts
+             the alarm as delivered and forgets it; there is no redelivery at
+             unlock. Every alarm the direct-boot re-arm sets up would fire into
+             nothing, while logcat cheerfully reports them armed. -->
+        <receiver
+            android:name=".PrayerAlarmReceiver"
+            android:enabled="true"
+            android:exported="false"
+            android:directBootAware="true" />
+
+        <!-- Every system event that can invalidate the armed prayer schedule.
+             directBootAware because the ledger now lives in device-protected
+             storage: LOCKED_BOOT_COMPLETED re-arms the whole window while the
+             lock screen is still up, so a prayer falling between a reboot and
+             the first unlock is no longer missed.
+
+             MY_PACKAGE_REPLACED is the one that used to lose every alarm
+             silently on each Play update. TIMEZONE_CHANGED cannot fix the
+             instants on its own — see PrayerSystemEventsReceiver. -->
+        <receiver
+            android:name=".PrayerSystemEventsReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Restarts the floating-dhikr service after reboot / app update.
+             Prayer alarms are handled above, not here. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- flutter_overlay_window's foreground service. Required by the
+             plugin to draw the floating adhkar reminder over other apps.
+             The PROPERTY_SPECIAL_USE_FGS_SUBTYPE value explains the
+             special-use foreground service to Google Play review. -->
+        <service
+            android:name="flutter.overlay.window.flutter_overlay_window.OverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="floating_dhikr_reminder_over_other_apps" />
+        </service>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Prayer Times Widget -->
+        <receiver
+            android:name=".PrayerTimesWidgetProvider"
+            android:label="Prayer Times"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/prayer_times_widget_info" />
+        </receiver>
+
+        <!-- Prayer Times List Widget -->
+        <receiver
+            android:name=".PrayerTimesListWidgetProvider"
+            android:label="Prayer Times List"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/prayer_times_list_widget_info" />
+        </receiver>
+
+        <!-- Hijri Calendar Widget -->
+        <receiver
+            android:name=".HijriCalendarWidgetProvider"
+            android:label="Hijri Calendar"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+                <action android:name="com.bloom.wadhakir.HIJRI_CALENDAR_ACTION" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/hijri_calendar_widget_info" />
+        </receiver>
+
+        <!-- Glass Prayer Detail Widget -->
+        <receiver
+            android:name=".GlassPrayerDetailWidgetProvider"
+            android:label="Prayer Detail"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glass_prayer_detail_widget_info" />
+        </receiver>
+
+        <!-- Glass Prayer Next Widget -->
+        <receiver
+            android:name=".GlassPrayerNextWidgetProvider"
+            android:label="Prayer Next"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glass_prayer_next_widget_info" />
+        </receiver>
+
+        <!-- Live Prayer Clock Widget -->
+        <receiver
+            android:name=".GlassClockWidgetProvider"
+            android:label="Prayer Clock"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glass_clock_widget_info" />
+        </receiver>
+
+        <!-- Wird Progress Widget -->
+        <receiver
+            android:name=".WirdProgressWidgetProvider"
+            android:label="ورد القرآن"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/wird_progress_widget_info" />
+        </receiver>
+
+        <!-- Daily Inspiration (Verse/Dua of the Day) Widget -->
+        <receiver
+            android:name=".DailyInspirationWidgetProvider"
+            android:label="آية وذِكر اليوم"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="es.antonborri.home_widget.action.INTERNAL_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/daily_inspiration_widget_info" />
+        </receiver>
+
+        <!-- Home Widget Background Receiver -->
+        <receiver
+            android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -49,8 +433,8 @@
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
         </intent>
     </queries>
 </manifest>

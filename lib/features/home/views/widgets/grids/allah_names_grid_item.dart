@@ -2,69 +2,44 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/home/views/widgets/grids/feature_grid_card.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
 
 class AllahNamesGridItem extends StatelessWidget {
   const AllahNamesGridItem({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () => _showAllahNamesSheet(context),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                ),
-                child: Icon(Icons.menu_book_rounded,
-                    color: theme.colorScheme.primary),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
-                  style: theme.textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return FeatureGridCard(
+      icon: Icons.collections_bookmark,
+      label: l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
+      onTap: () => _showAllahNamesSheet(context),
     );
   }
 
   Future<void> _showAllahNamesSheet(BuildContext context) async {
     final theme = Theme.of(context);
-    final data =
-        await rootBundle.loadString('assets/json_data/Names_Of_Allah.json');
+    final languageCode = Localizations.localeOf(context).languageCode;
+    final data = await rootBundle.loadString(
+      'assets/json_data/Names_Of_Allah.json',
+    );
     final List<dynamic> list = json.decode(data) as List<dynamic>;
     final items = list
-        .map((e) => (
-              id: e['id'] as int,
-              name: e['name'] as String,
-              text: e['text'] as String,
-            ))
+        .map(
+          (e) => (
+            id: e['id'] as int,
+            name: e['name'] as String,
+            nameEn: e['name_en'] as String? ?? e['name'] as String,
+            text: e['text'] as String,
+            textEn: e['text_en'] as String? ?? e['text'] as String,
+          ),
+        )
         .toList(growable: false);
+
+    if (!context.mounted) return;
 
     // ignore: use_build_context_synchronously
     await showModalBottomSheet(
@@ -76,80 +51,127 @@ class AllahNamesGridItem extends StatelessWidget {
       ),
       builder: (context) {
         final l10n = context.l10n;
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.8,
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              Container(
-                width: 44,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(20),
+        return Directionality(
+          textDirection: languageCode == 'en'
+              ? TextDirection.ltr
+              : TextDirection.rtl,
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.8,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    Icon(Icons.menu_book_rounded,
-                        color: theme.colorScheme.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n?.translate('home.asmallah') ?? 'أسماء الله الحسنى',
-                      style: theme.textTheme.titleLarge,
-                    ),
-                  ],
-                ),
-              ),
-              _IslamicDivider(),
-              Expanded(
-                child: ListView.separated(
-                  physics: const BouncingScrollPhysics(),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        color: theme.colorScheme.surface,
-                        border: Border.all(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.18),
-                        ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.menu_book_rounded,
+                        color: theme.colorScheme.primary,
                       ),
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            item.name,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontFamily: 'ScheherazadeNew',
+                      const SizedBox(width: 8),
+                      Text(
+                        languageCode == 'en'
+                            ? 'The 99 Names of Allah'
+                            : (l10n?.translate('home.asmallah') ??
+                                  'أسماء الله الحسنى'),
+                        style: theme.textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                ),
+                _IslamicDivider(),
+                Expanded(
+                  child: ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    // Pad the bottom by the system gesture/nav inset so the
+                    // last card clears the navigation bar under edge-to-edge.
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      16 + MediaQuery.of(context).viewPadding.bottom,
+                    ),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          color: theme.colorScheme.surface,
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.18,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            item.text,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge
-                                ?.copyWith(height: 1.6),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                        ),
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // The share button sits opposite the name rather
+                            // than under the card, so the row reads as "this
+                            // name, and what you can do with it" and the card
+                            // keeps its centred shape.
+                            Row(
+                              children: [
+                                ShareActionButton(
+                                  payloadBuilder: () => SharePayload(
+                                    headline: languageCode == 'en'
+                                        ? item.textEn
+                                        : item.text,
+                                    categoryLabel: languageCode == 'en'
+                                        ? item.nameEn
+                                        : item.name,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    languageCode == 'en'
+                                        ? item.nameEn
+                                        : item.name,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontFamily: languageCode == 'en'
+                                          ? null
+                                          : 'ScheherazadeNew',
+                                    ),
+                                  ),
+                                ),
+                                // Balances the button's width so the name stays
+                                // optically centred in the card.
+                                const SizedBox(width: 40),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              languageCode == 'en' ? item.textEn : item.text,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-            ],
+                const SizedBox(height: 8),
+              ],
+            ),
           ),
         );
       },
@@ -166,21 +188,26 @@ class _IslamicDivider extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-              child: Divider(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2))),
+            child: Divider(
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
+          ),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 8),
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                color: theme.colorScheme.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Icon(Icons.star, size: 12, color: theme.colorScheme.primary),
           ),
           Expanded(
-              child: Divider(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.2))),
+            child: Divider(
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            ),
+          ),
         ],
       ),
     );

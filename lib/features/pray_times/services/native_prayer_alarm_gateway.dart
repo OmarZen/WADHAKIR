@@ -1,0 +1,182 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_notification_content.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_schedule_planner.dart';
+import 'package:wadhakir/features/pray_times/services/prayer_scheduler.dart';
+
+/// The Android side of the native alarm bridge, as a Dart interface.
+///
+/// Exists so [NativePrayerAlarmGateway] can be unit-tested. A `MethodChannel`
+/// is not fakeable in the way this needs — the point of the R1 extraction was
+/// that the whole scheduling path is assertable without a device, and putting a
+/// raw channel call in the gateway would have given that back.
+abstract interface class NativeAlarmBridge {
+  /// Opens a plan transaction and discards any half-built previous one.
+  ///
+  /// Nothing is cancelled yet. The scheduler always sweeps before it arms, so
+  /// this means "a new plan is coming", and the alarms currently armed stay
+  /// armed until [commit] replaces them. A sweep that dies partway therefore
+  /// costs nothing — the old schedule is still live.
+  Future<void> clear();
+
+  /// Adds one fully-rendered alarm to the plan being built.
+  ///
+  /// Buffered, not applied. Persisting the ledger on each of three hundred
+  /// calls would rewrite a growing JSON document three hundred times.
+  Future<void> arm(Map<String, Object?> alarm);
+
+  /// Applies the buffered plan: replaces the ledger, cancels what is no longer
+  /// in it, and arms the near window.
+  Future<void> commit();
+
+  /// Cancels every alarm the native side has armed and empties its ledger.
+  ///
+  /// Used when handing the schedule to another owner. [clear] deliberately does
+  /// not do this — it only opens a transaction.
+  Future<void> purge();
+
+  /// Whether this device has a working native alarm bridge.
+  ///
+  /// False on iOS, and false on an Android build where the platform side is
+  /// missing — which is what makes an accidental half-migration fail loudly at
+  /// startup instead of silently dropping every adhan.
+  Future<bool> isAvailable();
+
+  /// Sounds one adhan right now, through the real fire path.
+  ///
+  /// The Settings probe. It exists so somebody can prove the adhan works before
+  /// trusting it with their prayers, which means it has to travel the route a
+  /// real prayer travels — the same channel, the same card, the same playback
+  /// service. Posting a lookalike through the plugin instead would test a code
+  /// path no adhan uses, and on this release it would also recreate one of the
+  /// sounding channels Stage 3 just retired.
+  Future<bool> testAdhan(Map<String, Object?> alarm);
+}
+
+/// [NativeAlarmBridge] over the real platform channel.
+class MethodChannelAlarmBridge implements NativeAlarmBridge {
+  static const MethodChannel channel = MethodChannel(
+    'com.bloom.wadhakir/prayer_alarms',
+  );
+
+  const MethodChannelAlarmBridge();
+
+  @override
+  Future<void> clear() => channel.invokeMethod<void>('clear');
+
+  @override
+  Future<void> arm(Map<String, Object?> alarm) =>
+      channel.invokeMethod<void>('arm', alarm);
+
+  @override
+  Future<void> commit() => channel.invokeMethod<void>('commit');
+
+  @override
+  Future<void> purge() => channel.invokeMethod<void>('purge');
+
+  @override
+  Future<bool> isAvailable() async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+    try {
+      return await channel.invokeMethod<bool>('isAvailable') ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> testAdhan(Map<String, Object?> alarm) async {
+    if (defaultTargetPlatform != TargetPlatform.android) return false;
+    try {
+      return await channel.invokeMethod<bool>('testAdhan', alarm) ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+}
+
+/// Arms prayer alarms through native `AlarmManager.setAlarmClock` instead of
+/// `awesome_notifications`.
+///
+/// ## What moves and what does not
+///
+/// Nothing about *what* to schedule changes: [PrayerSchedulePlanner] still
+/// decides, [PrayerNotificationContent] still renders, and this class is a
+/// second implementation of [PrayerAlarmGateway]'s two methods. What changes is
+/// who holds the table. The plugin arms only what the app told it about on its
+/// last launch, which is why the adhan stops for anyone who leaves the app
+/// closed for longer than the horizon (C1). The native side is handed a 60-day
+/// plan, keeps it in its own storage, and re-arms itself from every alarm that
+/// fires — so the chain survives without a Flutter engine ever running.
+///
+/// ## Absolute time
+///
+/// Every alarm crosses the channel as epoch milliseconds, never as a wall-clock
+/// field set plus a timezone name. The plugin path caches a resolved zone
+/// identifier and re-renders calendar components against it, which is what
+/// makes a DST transition or a flight mis-fire the whole armed horizon (C18).
+/// An instant has no such ambiguity.
+class NativePrayerAlarmGateway
+    implements PrayerAlarmGateway, BatchingPrayerAlarmGateway {
+  final NativeAlarmBridge _bridge;
+
+  const NativePrayerAlarmGateway(this._bridge);
+
+  @override
+  Future<void> cancelIds(Iterable<int> ids) => _bridge.clear();
+
+  @override
+  Future<void> commit() => _bridge.commit();
+
+  @override
+  Future<void> abandon() => _bridge.purge();
+
+  @override
+  Future<void> arm(PlannedPrayerNotification planned, {String? locationName}) {
+    final content = PrayerNotificationContent.of(
+      planned,
+      locationName: locationName,
+    );
+    return _bridge.arm(payloadFor(planned, content));
+  }
+
+  /// The wire format, kept in one place so the Kotlin reader has exactly one
+  /// contract to match — `PrayerAlarm.fromChannel` is the other half of it.
+  ///
+  /// Public rather than test-only because the Settings diagnostic probe builds
+  /// one of these too: the point of that button is to travel the route a real
+  /// adhan travels, and a second hand-written copy of this map is exactly how
+  /// the two would drift.
+  static Map<String, Object?> payloadFor(
+    PlannedPrayerNotification planned,
+    PrayerNotificationContent content,
+  ) => {
+    'id': planned.id,
+    // The only time value on the wire. See the class doc.
+    'fireAtEpochMs': planned.fireTime.millisecondsSinceEpoch,
+    'prayerKey': planned.prayer.key,
+    'dayIndex': planned.dayIndex,
+    'channelId': content.channelKey,
+    'groupKey': PrayerNotificationContent.groupKey,
+    'title': content.title,
+    'body': content.body,
+    'vibrate': content.vibrate,
+    // The adhan itself, on every API level since Stage 3: `AdhanPlaybackService`
+    // plays this resource. It used to matter only on 24/25, because from Oreo
+    // the channel owned the sound — the channels are silent now. Null is the
+    // "الصوت الافتراضي" option, which the service resolves to the system tone.
+    'soundRes': content.androidRawRes,
+    // The prayer's own instant and name, for the persistent "next prayer" card.
+    // Its countdown targets the prayer, not this notification's fire time, and
+    // the receiver rolls it forward from the ledger with no engine alive — so
+    // both have to be on the wire rather than recomputed natively.
+    'prayerAtEpochMs': planned.prayerTime.millisecondsSinceEpoch,
+    'prayerName': planned.prayer.arabicName,
+    'overrideSilent': content.overrideSilent,
+    'payload': content.payload,
+  };
+}

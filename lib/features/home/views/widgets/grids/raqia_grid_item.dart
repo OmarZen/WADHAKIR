@@ -3,55 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
+import 'package:wadhakir/features/share/views/widgets/share_action_button.dart';
+import '../shared/azkar_shared_widgets.dart';
+import 'feature_grid_card.dart';
 
 class RaqiaGridItem extends StatelessWidget {
   const RaqiaGridItem({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = context.l10n;
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () =>
-            _showAzkarSheet(context, 'assets/json_data/raqia sharia.json'),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                ),
-                child: Icon(
-                  Icons.healing_rounded,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  l10n?.translate('home.raqia_sharia') ?? 'الرقية الشرعية',
-                  style: theme.textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ),
+
+    return FeatureGridCard(
+      icon: Icons.healing_rounded,
+      label: l10n?.translate('home.raqia_sharia') ?? 'الرقية الشرعية',
+      onTap: () =>
+          _showAzkarSheet(context, 'assets/json_data/raqia sharia.json'),
+      trailing: GridProgressBadge(
+        assetPath: 'assets/json_data/raqia sharia.json',
+        prefsPrefix: 'raqia_',
       ),
     );
   }
@@ -61,6 +32,8 @@ class RaqiaGridItem extends StatelessWidget {
     final data = await rootBundle.loadString(assetPath);
     final map = json.decode(data) as Map<String, dynamic>;
     final List<dynamic> content = map['content'] as List<dynamic>;
+
+    if (!context.mounted) return;
 
     await showModalBottomSheet(
       context: context,
@@ -103,13 +76,20 @@ class RaqiaGridItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const _IslamicDivider(),
+              const IslamicDividerShared(),
               Expanded(
                 child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
+                  // Pad the bottom by the system gesture/nav inset so the last
+                  // card clears the navigation bar under edge-to-edge.
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    16,
+                    16,
+                    16 + MediaQuery.of(context).viewPadding.bottom,
+                  ),
                   itemCount: content.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final item = content[index] as Map<String, dynamic>;
                     final text = item['text'] as String? ?? '';
@@ -230,6 +210,19 @@ class _AzkarCardState extends State<_AzkarCard> {
                     ),
                   ),
                   const Spacer(),
+                  ShareActionButton(
+                    payloadBuilder: () => SharePayload(
+                      headline: widget.text,
+                      categoryLabel:
+                          context.l10n?.translate('home.raqia_sharia') ??
+                          'الرقية الشرعية',
+                      repetitions: widget.repeat > 1 ? widget.repeat : null,
+                      reference: widget.reference,
+                      // Deliberately NOT the benefit text: a share card carries
+                      // the ruqya itself, and the reason to read it is context
+                      // for the reader, not for whoever receives it.
+                    ),
+                  ),
                   // Reset button
                   IconButton(
                     onPressed: completed > 0 ? _reset : null,
@@ -244,7 +237,7 @@ class _AzkarCardState extends State<_AzkarCard> {
                         context.l10n?.translate('home.reset') ?? 'إعادة تعيين',
                   ),
                   const SizedBox(width: 4),
-                  _ProgressButton(
+                  ProgressButtonShared(
                     progress: progress,
                     label: '$completed/${widget.repeat}',
                     onTap: _increment,
@@ -288,89 +281,4 @@ class _AzkarCardState extends State<_AzkarCard> {
   }
 }
 
-class _ProgressButton extends StatelessWidget {
-  final double progress;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ProgressButton({
-    required this.progress,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.24),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                value: progress,
-                strokeWidth: 3,
-                backgroundColor: theme.colorScheme.primary.withValues(
-                  alpha: 0.15,
-                ),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  theme.colorScheme.primary,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(label, style: theme.textTheme.labelMedium),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _IslamicDivider extends StatelessWidget {
-  const _IslamicDivider();
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Divider(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Icon(Icons.star, size: 12, color: theme.colorScheme.primary),
-          ),
-          Expanded(
-            child: Divider(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// Shared divider and progress button moved to shared/azkar_shared_widgets.dart

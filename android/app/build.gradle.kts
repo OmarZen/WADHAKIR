@@ -3,7 +3,13 @@ import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    // Apply the Kotlin Android plugin so the `kotlin { compilerOptions { ... } }`
+    // block at the bottom of this file resolves. Version is declared in
+    // `android/settings.gradle.kts` with `apply false` so it propagates here.
+    // Without this, CI fails with:
+    //   "Unresolved reference 'compilerOptions'"
+    //   "fun DependencyHandler.kotlin / PluginDependenciesSpec.kotlin"
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -14,22 +20,62 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+// An .aab exists for exactly one purpose: uploading to Google Play. Play checks
+// the signature and rejects anything not signed with the upload key, so a
+// debug-signed bundle is not just useless — it wastes a round trip through the
+// Play Console to find out. An APK is different: a debug-signed release APK is
+// genuinely useful locally for size checks and R8/shrinker verification, so that
+// path falls back to the debug key with a warning (see buildTypes.release).
+//
+// Fail here, before the ~10 minute build, with an error that says what to do.
+if (!keystorePropertiesFile.exists() &&
+    gradle.startParameter.taskNames.any { it.contains("bundleRelease", ignoreCase = true) }
+) {
+    throw GradleException(
+        """
+
+        ┌───────────────────────────────────────────────────────────────────────┐
+        │ Cannot build a release App Bundle: no signing key.                    │
+        └───────────────────────────────────────────────────────────────────────┘
+
+        android/key.properties is missing, so this .aab could only be signed with
+        the DEBUG key — and Google Play will reject it with:
+
+            "Your Android App Bundle is signed with the wrong key."
+
+        Pick one:
+
+        1. Let CI build it (recommended — the upload key lives in GitHub secrets,
+           not on any laptop):
+               git tag -a v<version> -m "..." && git push origin v<version>
+           then download the `android-aab` artifact from the run, or take the
+           .aab attached to the GitHub release.
+
+        2. Sign locally. Create android/key.properties (gitignored) with:
+               storePassword=<KEYSTORE_STORE_PASSWORD>
+               keyPassword=<KEYSTORE_KEY_PASSWORD>
+               keyAlias=<KEYSTORE_KEY_ALIAS>
+               storeFile=/absolute/path/to/upload-keystore.jks
+           Keep the .jks OUTSIDE this repository.
+
+        To build an unsigned APK for local testing instead, use:
+            flutter build apk --release
+        """.trimIndent()
+    )
+}
+
 android {
     namespace = "com.bloom.wadhakir"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.bloom.wadhakir"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -41,23 +87,103 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String?
-            keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { File(it as String) }
-            storePassword = keystoreProperties["storePassword"] as String?
+            // Only populate when key.properties exists. Assigning nulls here and
+            // then wiring this config into the release build type produces
+            // spectacularly unhelpful errors: `assembleRelease` fails with
+            // `SigningConfig "release" is missing required property "storeFile"`,
+            // and `bundleRelease` fails with a bare
+            // `java.lang.NullPointerException (no error message)` from
+            // FinalizeBundleTask — neither of which says "you have no keystore".
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties["keyAlias"] as String?
+                keyPassword = keystoreProperties["keyPassword"] as String?
+                // Gradle's project.file(), NOT java.io.File(): a raw File() with a
+                // relative path like "../upload-keystore.jks" resolves against the
+                // JVM's working directory — which is the Gradle daemon's dir, not
+                // this project — and fails with
+                //   Keystore file '/home/runner/.gradle/daemon/9.3.1/../upload-keystore.jks' not found
+                // project.file() resolves relative to android/app/, so
+                // "../upload-keystore.jks" correctly means android/upload-keystore.jks
+                // (where CI writes it). Absolute paths pass through unchanged.
+                storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+                storePassword = keystoreProperties["storePassword"] as String?
+            }
         }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            // signingConfig = signingConfigs.getByName("debug")
-            signingConfig = signingConfigs.getByName("release")
+            // Sign with the real upload key when android/key.properties is
+            // present (CI writes it from secrets before a tagged build; see
+            // .github/workflows/build-and-release.yml). Otherwise fall back to
+            // debug signing so `flutter build apk/appbundle --release` still
+            // works locally for size checks and R8/shrinker verification.
+            //
+            // A debug-signed artifact CANNOT be uploaded to Google Play — Play
+            // rejects it because the signature does not match the upload key. To
+            // produce an uploadable build locally you need android/key.properties
+            // (both it and *.jks are gitignored):
+            //
+            //     storePassword=<KEYSTORE_STORE_PASSWORD>
+            //     keyPassword=<KEYSTORE_KEY_PASSWORD>
+            //     keyAlias=<KEYSTORE_KEY_ALIAS>
+            //     storeFile=../upload-keystore.jks
+            //
+            // Easier: push a `v*` tag and let CI build the signed AAB.
+            signingConfig = if (keystorePropertiesFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                logger.warn(
+                    "⚠️  android/key.properties not found — signing the release " +
+                    "build with the DEBUG key. This artifact is fine for local " +
+                    "testing but Google Play WILL reject it."
+                )
+                signingConfigs.getByName("debug")
+            }
+
+            // Enable code shrinking, obfuscation, and optimization
+            isMinifyEnabled = true
+            isShrinkResources = true
+            
+            // Use proguard rules
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Required for edge-to-edge support on Android 15 (API 35)
+    implementation("androidx.core:core-ktx:1.13.1")
+
+    // Reconciles the prayer alarm window every six hours. Repair only — the
+    // adhan itself is delivered by AlarmManager.setAlarmClock, because periodic
+    // work is the first thing OEM power managers defer.
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+
+    // Google Play feature delivery (Android 14 compatible)
+    implementation("com.google.android.play:feature-delivery:2.1.0")
+    implementation("com.google.android.play:feature-delivery-ktx:2.1.0")
+
+    // JVM unit tests for the native side — `./gradlew :app:testDebugUnitTest`,
+    // and a step in ci.yml.
+    //
+    // Plain JUnit, no Robolectric and no instrumentation, which constrains what
+    // may be tested to code with no Android types in it. That constraint is the
+    // point: see ReminderRules, where the two decisions that can silently tell a
+    // user their phone is broken were pulled out precisely so they could be
+    // reached from here without a device.
+    testImplementation("junit:junit:4.13.2")
 }

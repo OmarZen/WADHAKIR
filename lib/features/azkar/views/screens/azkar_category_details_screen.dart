@@ -1,23 +1,23 @@
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
+import 'package:wadhakir/core/widgets/celebration.dart';
 import 'package:wadhakir/data/models/azkar_item.dart';
-import 'package:wadhakir/core/app_theme/app_theme.dart';
 import 'package:wadhakir/data/models/azkar_category.dart';
 import 'package:wadhakir/features/azkar/cubit/azkar_cubit.dart';
 import 'package:wadhakir/features/azkar/cubit/azkar_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/repositories/azkar_repository_impl.dart';
 import 'package:wadhakir/features/azkar/views/widgets/islamic_pattern_painter.dart';
+import 'package:wadhakir/features/share/models/share_payload.dart';
 
 class AzkarCategoryDetailsScreen extends StatefulWidget {
   final AzkarCategory category;
 
-  const AzkarCategoryDetailsScreen({
-    super.key,
-    required this.category,
-  });
+  const AzkarCategoryDetailsScreen({super.key, required this.category});
 
   @override
   State<AzkarCategoryDetailsScreen> createState() =>
@@ -32,52 +32,32 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
   int _repeatCount = 0;
   bool _autoAdvance = true;
 
-  // Get the appropriate color based on category title
-  Color get _categoryColor {
-    final title = widget.category.title;
-    if (title.contains('الصباح')) {
-      return morningAzkarColor;
-    } else if (title.contains('المساء')) {
-      return eveningAzkarColor;
-    } else if (title.contains('النوم')) {
-      return sleepAzkarColor;
-    } else if (title.contains('الاستيقاظ')) {
-      return wakeupAzkarColor;
-    } else if (title.contains('المسجد') || title.contains('الصلاة')) {
-      return mosqueAzkarColor;
-    } else if (title.contains('أدعية')) {
-      return maathurDuaColor;
-    } else if (title.contains('قرآنية')) {
-      return quranDuaColor;
-    } else {
-      return prayerAzkarColor;
-    }
-  }
-
-  // Get the appropriate icon based on category title
   IconData get _categoryIcon {
     final title = widget.category.title;
-    if (title.contains('الصباح')) {
+    final titleEn = widget.category.titleEn;
+    if (title.contains('الصباح') || titleEn.contains('Morning')) {
       return Icons.wb_sunny_outlined;
-    } else if (title.contains('المساء')) {
+    }
+    if (title.contains('المساء') || titleEn.contains('Evening')) {
       return Icons.nights_stay_outlined;
-    } else if (title.contains('النوم')) {
+    }
+    if (title.contains('النوم') || titleEn.contains('Sleep')) {
       return Icons.bedtime_outlined;
-    } else if (title.contains('الاستيقاظ')) {
+    }
+    if (title.contains('الاستيقاظ') || titleEn.contains('Waking')) {
       return Icons.light_mode_outlined;
-    } else if (title.contains('المسجد') || title.contains('الصلاة')) {
+    }
+    if (title.contains('المسجد') ||
+        title.contains('الصلاة') ||
+        titleEn.contains('Mosque') ||
+        titleEn.contains('Prayer')) {
       return Icons.mosque_outlined;
-    } else if (title.contains('أدعية')) {
-      return Icons.auto_awesome_outlined;
-    } else if (title.contains('قرآنية')) {
-      return Icons.menu_book_outlined;
-    } else if (title.contains('اليومية')) {
-      return Icons.calendar_month_outlined;
-    } else if (title.contains('المغفرة') || title.contains('دعاء')) {
-      return Icons.front_hand;
-    } else {
+    }
+    if (title.contains('أدعية') || titleEn.contains('Dua')) {
       return Icons.auto_awesome_outlined;
     }
+    if (title.contains('قرآنية')) return Icons.menu_book_outlined;
+    return Icons.auto_awesome_outlined;
   }
 
   @override
@@ -85,7 +65,7 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 400),
     );
     _animationController.forward();
 
@@ -96,6 +76,8 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
           _currentPage = page;
           _repeatCount = 0;
         });
+        // Re-trigger animation for new page
+        _animationController.forward(from: 0);
       }
     });
   }
@@ -108,120 +90,96 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
   }
 
   void _incrementCounter(AdhkarItem item) {
-    // For items with 0 or 1 repetition, just count once and move to the next
     final maxCount = item.count <= 1 ? 1 : item.count;
 
-    if (_repeatCount < maxCount - 1) {
+    if (_repeatCount < maxCount) {
       setState(() {
         _repeatCount++;
-        // Provide haptic feedback
         HapticFeedback.mediumImpact();
       });
 
-      // If repetition is 1 or 0, automatically move to the next page
-      if (maxCount == 1 && _repeatCount == maxCount - 1) {
-        // Small delay to show the counter at 1 before moving
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _moveToNextPage();
-        });
-      }
-    } else {
-      // Repetitions completed, but don't reset counter to 0
-      // Instead, keep it at the max count to show completion
-      setState(() {
-        _repeatCount = maxCount; // Keep at max instead of resetting to 0
-      });
-
-      // Provide success feedback
-      HapticFeedback.heavyImpact();
-
-      // If auto advance is enabled, move to next
-      if (_autoAdvance) {
-        _moveToNextPage();
+      if (_repeatCount >= maxCount) {
+        HapticFeedback.heavyImpact();
+        if (_autoAdvance) {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            _moveToNextPage();
+          });
+        }
       }
     }
   }
 
   void _moveToNextPage() {
-    // Auto-navigate to next item if not at the end
     if (_currentPage < widget.category.items.length - 1) {
       _pageController.animateToPage(
         _currentPage + 1,
-        duration: const Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
     } else {
-      // Show completion message when reaching the end
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      // Reward finishing a whole azkar set with a confetti burst + haptic.
+      Celebration.burst(
+        context,
+        message:
             context.l10n?.translate('azkar.completed_all_azkar') ??
-                'You have completed all azkar in this category',
-          ),
-          backgroundColor: _categoryColor,
-          duration: const Duration(seconds: 2),
-        ),
+            'أكملت جميع الأذكار',
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return BlocProvider(
-      create: (context) => AzkarCubit(
-        azkarRepository: AzkarRepositoryImpl(),
-      )..selectCategory(widget.category),
+      create: (context) =>
+          AzkarCubit(azkarRepository: AzkarRepositoryImpl())
+            ..selectCategory(widget.category),
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          title: Text(widget.category.title),
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: _categoryColor,
-          leading: IconButton(
-            icon: Icon(_categoryIcon, size: 24),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-        body: _buildBody(),
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: _buildBody(theme),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(ThemeData theme) {
     return BlocBuilder<AzkarCubit, AzkarState>(
       builder: (context, state) {
         if (state is AzkarCategorySelected) {
-          return _buildCategoryContent(context, state);
+          return _buildCategoryContent(context, state, theme);
         }
         return Center(
-          child: CircularProgressIndicator(
-            color: _categoryColor,
-          ),
+          child: CircularProgressIndicator(color: theme.colorScheme.primary),
         );
       },
     );
   }
 
   Widget _buildCategoryContent(
-      BuildContext context, AzkarCategorySelected state) {
+    BuildContext context,
+    AzkarCategorySelected state,
+    ThemeData theme,
+  ) {
+    final size = MediaQuery.of(context).size;
     if (state.category.items.isEmpty) {
       return Center(
-          child: Text(
-              context.l10n?.translate('azkar.no_azkar_in_this_category') ??
-                  'No Azkar in this category'));
+        child: Text(
+          context.l10n?.translate('azkar.no_azkar_in_this_category') ??
+              'لا توجد أذكار في هذه الفئة',
+        ),
+      );
     }
 
     return Stack(
       children: [
-        // Background pattern
+        // Islamic pattern background
         Positioned.fill(
           child: Opacity(
-            opacity: 0.2,
+            opacity: 0.02,
             child: CustomPaint(
               painter: IslamicPatternPainter(
-                color: _categoryColor,
-                gridSize: 60,
+                color: theme.colorScheme.primary,
+                gridSize: 100,
               ),
             ),
           ),
@@ -229,61 +187,184 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
 
         Column(
           children: [
-            const SizedBox(height: kToolbarHeight + 50),
-
-            // Progress indicator
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            SafeArea(
+              bottom: false,
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        '${_currentPage + 1}/${state.category.items.length}',
-                        style: TextStyle(
-                          color: _categoryColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: ((_currentPage + 1) /
-                                state.category.items.length),
-                            backgroundColor:
-                                _categoryColor.withValues(alpha: 0.1),
-                            color: _categoryColor,
-                            minHeight: 10,
+                  // Custom Header with back button
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    child: Row(
+                      children: [
+                        InkWell(
+                          onTap: () => Navigator.pop(context),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            _categoryIcon,
+                            color: theme.colorScheme.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.category.getLocalizedTitle(
+                                  Localizations.localeOf(context).languageCode,
+                                ),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                '${state.category.items.length} ${context.l10n?.translate('azkar.items') ?? 'أذكار'}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
 
-                  // Auto-advance toggle
-                  Align(
-                    alignment: Alignment.centerRight,
+                  // Progress indicator
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          context.l10n?.translate('azkar.auto_move') ?? 'Auto move',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _categoryColor,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${_currentPage + 1}/${state.category.items.length}',
+                            style: TextStyle(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
-                        Switch(
-                          value: _autoAdvance,
-                          onChanged: (value) {
-                            setState(() {
-                              _autoAdvance = value;
-                            });
-                          },
-                          activeThumbColor: _categoryColor,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value:
+                                  ((_currentPage + 1) /
+                                  state.category.items.length),
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary,
+                              minHeight: 8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Auto-advance toggle — controls whether finishing a
+                        // dhikr's count jumps to the next one. Icon previously
+                        // used play/pause which was confusing; "skip_next"
+                        // matches the actual behaviour.
+                        Tooltip(
+                          message:
+                              context.l10n?.translate(
+                                'azkar.auto_advance_tooltip',
+                              ) ??
+                              'ينتقل تلقائياً للذكر التالي عند الانتهاء من العدد',
+                          waitDuration: const Duration(milliseconds: 250),
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _autoAdvance = !_autoAdvance;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _autoAdvance
+                                    ? theme.colorScheme.primary.withValues(
+                                        alpha: 0.1,
+                                      )
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _autoAdvance
+                                        ? Icons.skip_next_rounded
+                                        : Icons.last_page_rounded,
+                                    size: 16,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    context.l10n?.translate(
+                                          'azkar.auto_advance_label',
+                                        ) ??
+                                        context.l10n?.translate(
+                                          'azkar.auto_move',
+                                        ) ??
+                                        (_autoAdvance ? 'تلقائي' : 'يدوي'),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -292,164 +373,166 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
               ),
             ),
 
-            // PageView for Azkar items
+            SizedBox(height: size.height * 0.02),
+
+            // PageView for Azkar items - Touch anywhere to count
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const BouncingScrollPhysics(),
-                itemCount: state.category.items.length,
-                itemBuilder: (context, index) {
-                  final item = state.category.items[index];
-                  return AnimatedBuilder(
+              child: GestureDetector(
+                onTap: () {
+                  if (state.category.items.isNotEmpty &&
+                      _currentPage < state.category.items.length) {
+                    _incrementCounter(state.category.items[_currentPage]);
+                  }
+                },
+                behavior: HitTestBehavior.translucent,
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: state.category.items.length,
+                  itemBuilder: (context, index) {
+                    final item = state.category.items[index];
+                    return AnimatedBuilder(
                       animation: _animationController,
                       builder: (context, child) {
                         return FadeTransition(
-                          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(
-                            CurvedAnimation(
-                              parent: _animationController,
-                              curve: const Interval(0.0, 0.5,
-                                  curve: Curves.easeOut),
-                            ),
+                          opacity: _animationController,
+                          child: SlideTransition(
+                            position:
+                                Tween<Offset>(
+                                  begin: const Offset(0, 0.1),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: _animationController,
+                                    curve: Curves.easeOut,
+                                  ),
+                                ),
+                            child: _buildAdhkarPage(context, item, theme),
                           ),
-                          child: _buildAdhkarPage(context, item, index),
                         );
-                      });
-                },
+                      },
+                    );
+                  },
+                ),
               ),
             ),
 
-            // Bottom actions and counter
-            _buildBottomPanel(context, state),
+            // Bottom panel
+            _buildBottomPanel(context, state, theme),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildAdhkarPage(BuildContext context, AdhkarItem item, int index) {
+  Widget _buildAdhkarPage(
+    BuildContext context,
+    AdhkarItem item,
+    ThemeData theme,
+  ) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          // Bismillah at the top
-          if (index == 0 || item.text.contains('بسم الله'))
-            Column(
+          // Dua Card
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Text(
-                    context.l10n?.translate('azkar.bismillah') ??
-                        'بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ',
-                    style: TextStyle(
+                // Main Dua Text
+                Text(
+                  item.text,
+                  // `height` and `fontFamily` come from the user's reading
+                  // preferences now; the hardcoded `height: 2.0` that used to
+                  // sit here is still the default, so an install that never
+                  // opens the setting renders exactly as before. Size stays
+                  // out of it — that is `textScale`, applied app-wide in
+                  // main.dart, and two controls that both make text bigger
+                  // would disagree about by how much.
+                  style: ReadingComfortScope.of(context).apply(
+                    theme.textTheme.bodyLarge?.copyWith(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: _categoryColor,
-                      fontFamily: 'Almarai',
+                      fontWeight: FontWeight.w400,
                     ),
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
                   ),
+                  textAlign: TextAlign.right,
+                  textDirection: TextDirection.rtl,
                 ),
-                _buildIslamicDivider(),
-                const SizedBox(height: 24),
+
+                // Count badge
+                if (item.count > 1) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.repeat_rounded,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${item.count} ${context.l10n?.translate('azkar.times') ?? 'مرات'}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Source / hadith reference (only when the data provides it)
+                if (item.reference != null && item.reference!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _AdhkarSourceRow(reference: item.reference!),
+                ],
               ],
             ),
-
-          // Dua Card
-          Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: _categoryColor.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Main Dua Text
-                  Text(
-                    item.text,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      height: 2.0,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Source/footnote if it exists
-                  if (item.text.contains('(رواه'))
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _categoryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        // Extract the source text
-                        item.text.substring(
-                            item.text.indexOf('(') + 1, item.text.indexOf(')')),
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: _categoryColor,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        textAlign: TextAlign.center,
-                        textDirection: TextDirection.rtl,
-                      ),
-                    ),
-
-                  if (item.count > 1)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12.0),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: _categoryColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            '${context.l10n?.translate('azkar.repetition')}: ${item.count} ${context.l10n?.translate('azkar.times')}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: _categoryColor,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
           ),
+
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildBottomPanel(BuildContext context, AzkarCategorySelected state) {
+  Widget _buildBottomPanel(
+    BuildContext context,
+    AzkarCategorySelected state,
+    ThemeData theme,
+  ) {
     final currentItem = state.category.items[_currentPage];
+    final maxCount = currentItem.count > 0 ? currentItem.count : 1;
+    final progress = _repeatCount / maxCount;
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        color: theme.cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -458,165 +541,147 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Counter circle - ALWAYS show the counter
-          GestureDetector(
-            onTap: () => _incrementCounter(currentItem),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).cardColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: _categoryColor.withValues(alpha: 0.3),
-                      blurRadius: 16,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Progress indicator
-                    SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: TweenAnimationBuilder<double>(
-                          tween: Tween<double>(
-                            begin: 0,
-                            // If count is 1 or 0, just set max to 1
-                            end: currentItem.count > 0
-                                ? (_repeatCount) / currentItem.count
-                                : _repeatCount / 1,
-                          ),
+          // Counter circle — the primary tap target. The whole screen above
+          // is also tappable for convenience, but new users need to see this
+          // ring so the tap interaction is discoverable.
+          Padding(
+            padding: const EdgeInsets.only(top: 20, bottom: 16),
+            child: Tooltip(
+              message:
+                  context.l10n?.translate('azkar.tap_to_count_tooltip') ??
+                  'اضغط للعدّ — يمكنك أيضاً الضغط على أي مكان من الشاشة',
+              waitDuration: const Duration(milliseconds: 250),
+              child: GestureDetector(
+                onTap: () => _incrementCounter(currentItem),
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.cardColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Progress indicator
+                      SizedBox(
+                        width: 120,
+                        height: 120,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0, end: progress),
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeOutCubic,
                           builder: (context, value, child) {
                             return CircularProgressIndicator(
                               value: value,
-                              strokeWidth: 10,
-                              backgroundColor:
-                                  _categoryColor.withValues(alpha: 0.1),
-                              color: _categoryColor,
+                              strokeWidth: 8,
+                              backgroundColor: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary,
                             );
-                          }),
-                    ),
+                          },
+                        ),
+                      ),
 
-                    // Counter text - Modified to handle count=1 case
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '$_repeatCount',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: _categoryColor,
+                      // Counter text
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '$_repeatCount',
+                            style: TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
-                        ),
-                        Text(
-                          currentItem.count > 1
-                              ? '${context.l10n?.translate('azkar.from')} ${currentItem.count}'
-                              : context.l10n
-                                      ?.translate('azkar.tap_to_continue') ??
-                                  'Tap to continue',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _categoryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          if (maxCount > 1)
+                            Text(
+                              '${context.l10n?.translate('azkar.from') ?? 'من'} $maxCount',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
 
-          // Action buttons
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildActionButton(
-                  context,
-                  Icons.copy_rounded,
-                  context.l10n?.translate('azkar.copy') ?? 'Copy',
-                  onTap: () => _copyTextToClipboard(context, state),
-                ),
-                _buildActionButton(
-                  context,
-                  Icons.share_rounded,
-                  context.l10n?.translate('azkar.share') ?? 'Share',
-                  onTap: () => _shareText(context, state),
-                ),
-                // _buildActionButton(
-                //   context,
-                //   Icons.favorite_border_rounded,
-                //   context.l10n?.translate('favorite') ?? 'Favorite',
-                //   onTap: () {},
-                // ),
-              ],
+          // Action buttons with bottom safe area padding
+          SafeArea(
+            top: false,
+            minimum: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildActionButton(
+                    context,
+                    Icons.copy_rounded,
+                    context.l10n?.translate('azkar.copy') ?? 'نسخ',
+                    theme,
+                    onTap: () => _copyTextToClipboard(context, state),
+                  ),
+                  _buildActionButton(
+                    context,
+                    Icons.share_rounded,
+                    context.l10n?.translate('azkar.share') ?? 'مشاركة',
+                    theme,
+                    onTap: () => _shareText(context, state),
+                  ),
+                ],
+              ),
             ),
           ),
+          // add more space
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 
-  Widget _buildIslamicDivider() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 1,
-            color: _categoryColor.withValues(alpha: 0.3),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Icon(
-            Icons.star,
-            size: 16,
-            color: _categoryColor,
-          ),
-        ),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: _categoryColor.withValues(alpha: 0.3),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionButton(BuildContext context, IconData icon, String label,
-      {required VoidCallback onTap}) {
+  Widget _buildActionButton(
+    BuildContext context,
+    IconData icon,
+    String label,
+    ThemeData theme, {
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: _categoryColor,
-              size: 24,
-            ),
+            Icon(icon, color: theme.colorScheme.primary, size: 24),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: _categoryColor,
-                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -626,30 +691,119 @@ class _AzkarCategoryDetailsScreenState extends State<AzkarCategoryDetailsScreen>
   }
 
   void _copyTextToClipboard(
-      BuildContext context, AzkarCategorySelected state) async {
+    BuildContext context,
+    AzkarCategorySelected state,
+  ) async {
     final text = state.category.items[_currentPage].text;
     await Clipboard.setData(ClipboardData(text: text));
 
-    // Show snackbar
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              context.l10n?.translate('azkar.text_copied') ?? 'Text copied'),
-          duration: const Duration(seconds: 2),
-          backgroundColor: _categoryColor,
-        ),
+      showFToast(
+        context: context,
+        title: Text(context.l10n?.translate('azkar.text_copied') ?? 'تم النسخ'),
       );
     }
   }
 
-  void _shareText(BuildContext context, AzkarCategorySelected state) async {
-    final text = state.category.items[_currentPage].text;
-    final category = state.category.title;
+  /// Open the branded share screen for the current dhikr. The screen
+  /// renders a 4:5 card, lets the user share it as a PNG (or fall back to
+  /// text), and handles the share-plus call itself. We just hand it a
+  /// `SharePayload` and let it own the flow.
+  void _shareText(BuildContext context, AzkarCategorySelected state) {
+    final item = state.category.items[_currentPage];
+    final category = state.category.getLocalizedTitle(
+      Localizations.localeOf(context).languageCode,
+    );
+    Navigator.of(context).pushNamed(
+      AppConstants.shareRoute,
+      arguments: SharePayload(
+        headline: item.text,
+        categoryLabel: category,
+        repetitions: item.count > 1 ? item.count : null,
+        reference: item.reference,
+      ),
+    );
+  }
+}
 
-    await Share.share(
-      '$text\n\n${context.l10n?.translate('azkar.from')} $category - ${context.l10n?.translate('azkar.app_name')}',
-      subject: category,
+/// Collapsible "Source" row shown under each dhikr that has a hadith / Quran
+/// reference. Defaults to collapsed (just a chevron + label) so the dhikr
+/// text remains the focus.
+class _AdhkarSourceRow extends StatefulWidget {
+  final String reference;
+
+  const _AdhkarSourceRow({required this.reference});
+
+  @override
+  State<_AdhkarSourceRow> createState() => _AdhkarSourceRowState();
+}
+
+class _AdhkarSourceRowState extends State<_AdhkarSourceRow> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final muted =
+        theme.textTheme.bodySmall?.color?.withValues(alpha: 0.75) ??
+        Colors.grey;
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: InkWell(
+        onTap: () => setState(() => _expanded = !_expanded),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.menu_book_rounded, size: 16, color: muted),
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n?.translate('azkar.source_label') ?? 'المصدر',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: muted,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: muted,
+                  ),
+                ],
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                child: _expanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8, right: 22),
+                        child: Text(
+                          widget.reference,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: muted,
+                            height: 1.55,
+                          ),
+                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.right,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -11,8 +11,17 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
-.env
-uploads-keystore.jks
+# .env - now tracked with safe placeholder values
+
+# Signing material — NEVER commit. This rule used to read
+# "uploads-keystore.jks" (note the stray "s"), which matched nothing: the real
+# file is upload-keystore.jks, so it sat tracked at the repo root of a PUBLIC
+# repository from v1.0.0 onward. Match by extension so a typo can't silently
+# expose a key again. android/.gitignore also covers **/*.jks, but only for
+# paths under android/ — this catches the rest of the tree.
+*.jks
+*.keystore
+key.properties
 android/key.properties
 
 # IntelliJ related
@@ -22,9 +31,9 @@ android/key.properties
 .idea/
 
 # The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code which you may wish to be included in version control. This project
+# keeps it local — settings.json here is per-developer machine config.
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -46,3 +55,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Cloudflare Wrangler
+.wrangler/
+
+.claude/
+.agents/
+skills-lock.json
+.github/prompts/
+
+# Impeccable design-skill working artifacts
+.impeccable/

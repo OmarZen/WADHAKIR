@@ -1,8 +1,12 @@
+import 'package:wadhakir/core/reading/reading_comfort.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/core/constants/app_constants.dart';
+import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
+import 'package:wadhakir/data/models/notification_settings_model.dart';
 import 'package:wadhakir/domain/repositories/app_settings_repository.dart';
 
 class AppSettingsRepositoryImpl implements AppSettingsRepository {
@@ -32,14 +36,80 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     // Get other settings
     final showBasmala =
         _sharedPreferences.getBool(AppConstants.showBasmalaKey) ?? true;
-    final fontSize =
-        _sharedPreferences.getDouble(AppConstants.fontSizeKey) ?? 1.0;
+
+    // Get notification settings
+    final notificationSettingsJson = _sharedPreferences.getString(
+      AppConstants.notificationSettingsKey,
+    );
+    NotificationSettingsModel notificationSettings;
+    if (notificationSettingsJson != null) {
+      try {
+        notificationSettings = NotificationSettingsModel.fromJson(
+          jsonDecode(notificationSettingsJson) as Map<String, dynamic>,
+        );
+      } catch (e) {
+        notificationSettings = NotificationSettingsModel.defaultSettings();
+      }
+    } else {
+      notificationSettings = NotificationSettingsModel.defaultSettings();
+    }
+
+    // Get app lock settings
+    final appLockSettingsJson = _sharedPreferences.getString(
+      AppConstants.appLockSettingsKey,
+    );
+    AppLockSettingsModel appLockSettings;
+    if (appLockSettingsJson != null) {
+      try {
+        appLockSettings = AppLockSettingsModel.fromJson(
+          jsonDecode(appLockSettingsJson) as Map<String, dynamic>,
+        );
+      } catch (e) {
+        appLockSettings = AppLockSettingsModel.defaultSettings();
+      }
+    } else {
+      appLockSettings = AppLockSettingsModel.defaultSettings();
+    }
+
+    // Get onboarding completed flag
+    final onboardingCompleted =
+        _sharedPreferences.getBool(AppConstants.onboardingCompletedKey) ??
+        false;
+
+    // Get the user's name (empty string = not set)
+    final userName =
+        _sharedPreferences.getString(AppConstants.userNameKey) ?? '';
+
+    // Clamp on read: a value written by a future build with wider bounds, or a
+    // hand-edited prefs file, must never be able to render the UI unusable.
+    final textScale =
+        (_sharedPreferences.getDouble(AppConstants.textScaleKey) ?? 1.0).clamp(
+          AppSettingsModel.minTextScale,
+          AppSettingsModel.maxTextScale,
+        );
+
+    // Both resolve through `fromId`, which falls back to the default for an
+    // unknown value — so a file written by a newer build that added a face,
+    // or hand-edited, degrades to the app's own look rather than to nothing.
+    final readingComfort = ReadingComfort(
+      spacing: ReadingSpacing.fromId(
+        _sharedPreferences.getString(AppConstants.readingSpacingKey),
+      ),
+      font: ReadingFont.fromId(
+        _sharedPreferences.getString(AppConstants.readingFontKey),
+      ),
+    );
 
     _cachedSettings = AppSettingsModel(
       themeMode: themeMode,
       languageCode: languageCode,
       showBasmala: showBasmala,
-      fontSize: fontSize,
+      notificationSettings: notificationSettings,
+      appLockSettings: appLockSettings,
+      onboardingCompleted: onboardingCompleted,
+      userName: userName,
+      textScale: textScale,
+      readingComfort: readingComfort,
     );
 
     _settingsController.add(_cachedSettings!);
@@ -74,11 +144,80 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   }
 
   @override
-  Future<void> setFontSize(double fontSize) async {
-    await _sharedPreferences.setDouble(AppConstants.fontSizeKey, fontSize);
+  Future<void> setNotificationSettings(
+    NotificationSettingsModel notificationSettings,
+  ) async {
+    await _sharedPreferences.setString(
+      AppConstants.notificationSettingsKey,
+      jsonEncode(notificationSettings.toJson()),
+    );
 
     final settings = await getSettings();
-    _cachedSettings = settings.copyWith(fontSize: fontSize);
+    _cachedSettings = settings.copyWith(
+      notificationSettings: notificationSettings,
+    );
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setAppLockSettings(AppLockSettingsModel appLockSettings) async {
+    await _sharedPreferences.setString(
+      AppConstants.appLockSettingsKey,
+      jsonEncode(appLockSettings.toJson()),
+    );
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(appLockSettings: appLockSettings);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setOnboardingCompleted(bool completed) async {
+    await _sharedPreferences.setBool(
+      AppConstants.onboardingCompletedKey,
+      completed,
+    );
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(onboardingCompleted: completed);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setUserName(String name) async {
+    await _sharedPreferences.setString(AppConstants.userNameKey, name);
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(userName: name);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setReadingComfort(ReadingComfort comfort) async {
+    await _sharedPreferences.setString(
+      AppConstants.readingSpacingKey,
+      comfort.spacing.id,
+    );
+    await _sharedPreferences.setString(
+      AppConstants.readingFontKey,
+      comfort.font.id,
+    );
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(readingComfort: comfort);
+    _settingsController.add(_cachedSettings!);
+  }
+
+  @override
+  Future<void> setTextScale(double scale) async {
+    final clamped = scale.clamp(
+      AppSettingsModel.minTextScale,
+      AppSettingsModel.maxTextScale,
+    );
+    await _sharedPreferences.setDouble(AppConstants.textScaleKey, clamped);
+
+    final settings = await getSettings();
+    _cachedSettings = settings.copyWith(textScale: clamped);
     _settingsController.add(_cachedSettings!);
   }
 

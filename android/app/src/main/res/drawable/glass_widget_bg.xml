@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frosted dark-glass card background shared by the native widgets. Matches
+     the gradient + hairline edge of the Flutter-rendered glass widgets. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:startColor="#FF2A3551"
+        android:centerColor="#FF161D30"
+        android:endColor="#FF0B0E18"
+        android:type="linear" />
+    <corners android:radius="22dp" />
+    <stroke android:width="1dp" android:color="#2EFFFFFF" />
+</shape>

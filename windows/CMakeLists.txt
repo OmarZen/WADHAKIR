@@ -10,6 +10,21 @@ set(BINARY_NAME "wadhakir")
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
 
+# MSVC 14.51 (the toolchain on Visual Studio 2026 / windows-latest runners) made
+# <experimental/coroutine> a hard error instead of a deprecation warning:
+#   error C2338: static assertion failed: 'error STL1011: The /await compiler
+#   option, <experimental/coroutine> ... are deprecated by Microsoft and will be
+#   REMOVED SOON.'
+# Three plugins we depend on still include it — gal, permission_handler_windows
+# and windows_notification — so `flutter build windows` fails to compile them.
+# We cannot patch those plugins from here, and this macro is the escape hatch
+# Microsoft's own error text points at.
+#
+# Declared before the plugin subdirectories are pulled in below (via
+# flutter/generated_plugins.cmake), so it applies to their targets too.
+# Remove once all three move to the C++20 <coroutine> header.
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)

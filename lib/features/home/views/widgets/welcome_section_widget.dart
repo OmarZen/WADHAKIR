@@ -1,433 +1,851 @@
-import 'dart:developer';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:hijri/hijri_calendar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syncfusion_flutter_core/core.dart';
+import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/utils/date_utils.dart';
 import '../../../../core/constants/islamic_quotes.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:wadhakir/features/home/cubit/unsplash_state.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
+import 'package:wadhakir/features/home/views/widgets/hero_backdrop.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
+import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
+import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
+import 'package:wadhakir/features/settings/cubit/settings_state.dart';
 import 'package:wadhakir/features/home/views/widgets/about_developer_dialog.dart';
+import 'package:wadhakir/features/home/views/widgets/hijri_calendar_bottom_sheet.dart';
 
-class WelcomeSectionWidget extends StatelessWidget {
-  final UnsplashPhoto? mosqueImage;
-  final HijriCalendar hijriDate;
+class WelcomeSectionWidget extends StatefulWidget {
+  final HijriDateTime hijriDate;
 
-  const WelcomeSectionWidget({
-    super.key,
-    required this.mosqueImage,
-    required this.hijriDate,
-  });
+  const WelcomeSectionWidget({super.key, required this.hijriDate});
+
+  @override
+  State<WelcomeSectionWidget> createState() => _WelcomeSectionWidgetState();
+}
+
+class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
+  Timer? _timer;
+  // A ValueNotifier so the per-second tick rebuilds ONLY the countdown subtree
+  // (via ValueListenableBuilder), not the whole hero — the mosque image,
+  // gradient, date card and quote no longer re-render every second.
+  final ValueNotifier<DateTime> _now = ValueNotifier<DateTime>(DateTime.now());
+  late final IslamicQuote _quote;
+
+  @override
+  void initState() {
+    super.initState();
+    _quote = IslamicQuotes.getRandomQuote();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      _now.value = DateTime.now();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _now.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final now = DateTime.now();
+    final now = _now.value;
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
+    final isDesktop = PlatformUtils.isDesktop;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+    // Responsive sizing based on platform
+    final maxWidth = isDesktop ? 1400.0 : double.infinity;
+    final horizontalPadding = _getResponsivePadding(size.width, isDesktop);
+    final verticalPadding = _getResponsiveVerticalPadding(
+      size.height,
+      isDesktop,
+    );
+    final borderRadius = isDesktop ? 24.0 : 32.0;
+
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(borderRadius),
+            bottomRight: Radius.circular(borderRadius),
+          ),
         ),
-      ),
-      child: Stack(
-        children: [
-          // Mosque Background Image
-          if (mosqueImage != null)
-            Positioned.fill(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-                child: _buildMosqueBackground(context, mosqueImage!),
-              ),
-            ),
+        child: Stack(
+          children: [
+            // The ground. One layer where there used to be a photograph and a
+            // 0.75-black scrim to survive it — see HeroBackdrop for why a
+            // drawn ground is the safer of the two for contrast.
+            HeroBackdrop(borderRadius: borderRadius),
 
-          // Gradient Overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
+            // Header Content
+            SafeArea(
+              bottom: false,
+              maintainBottomViewPadding: false,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: verticalPadding,
                 ),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.black.withValues(alpha: 0.7),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top Header Row with Date and Actions
+                    _buildHeaderRow(context, size, isDesktop, l10n, now),
+
+                    SizedBox(height: isDesktop ? 16 : 12),
+
+                    // Welcome Message Section
+                    _buildWelcomeSection(context, size, isDesktop, l10n),
                   ],
-                  stops: const [0.0, 0.4, 1.0],
                 ),
               ),
             ),
-          ),
-
-          // Header Content
-          SafeArea(
-            bottom: false,
-            maintainBottomViewPadding: false,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top Header Row with Date and Actions
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: size.width * 0.05,
-                    right: size.width * 0.05,
-                    top: size.height * 0.02,
-                    bottom: size.height * 0.02,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      // Date Card
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          // Day Number
-                          Container(
-                            padding: EdgeInsets.all(size.width * 0.02),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              now.day.toString(),
-                              style: TextStyle(
-                                fontSize: size.width * 0.06,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: size.width * 0.03),
-                          // Month and Hijri Date
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Gregorian Date
-                              Text(
-                                AppDateUtils.getGregorianMonthName(
-                                    now.month, l10n),
-                                style: TextStyle(
-                                  fontSize: size.width * 0.035,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: size.height * 0.005),
-                              // Hijri Date
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: size.width * 0.040,
-                                  vertical: size.height * 0.005,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  AppDateUtils.getShortFormattedHijriDate(
-                                      hijriDate, l10n),
-                                  style: TextStyle(
-                                    fontSize: size.width * 0.025,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(width: size.width * 0.03),
-                          // Info about the developer
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.info_outline,
-                                color: Colors.white,
-                                size: size.width * 0.06,
-                              ),
-                              onPressed: () {
-                                showAboutDeveloperDialog(context);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Spacer(),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          // Campus/Qibla Button
-                          Container(
-                            margin: EdgeInsets.only(right: size.width * 0.03),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.compass_calibration_rounded,
-                                color: Colors.white,
-                                size: size.width * 0.06,
-                              ),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/campus');
-                              },
-                              tooltip:
-                                  l10n?.translate('home.qibla') ?? 'القبلة',
-                            ),
-                          ),
-
-                          // Radio Button
-                          Container(
-                            margin: EdgeInsets.only(right: size.width * 0.03),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.radio_rounded,
-                                color: Colors.white,
-                                size: size.width * 0.06,
-                              ),
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/radio');
-                              },
-                              tooltip:
-                                  l10n?.translate('home.radio') ?? 'الراديو',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Welcome Message Section
-                Padding(
-                  padding: EdgeInsets.only(
-                    left: size.width * 0.05,
-                    right: size.width * 0.05,
-                    bottom: size.height * 0.03,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Welcome Text
-                      Text(
-                        l10n?.translate('home.welcome_message') ??
-                            'السلام عليكم',
-                        style: TextStyle(
-                          fontSize: size.width * 0.045,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(height: size.height * 0.01),
-                      Text(
-                        l10n?.translate('home.app_name') ?? 'وذكّر',
-                        style: TextStyle(
-                          fontSize: size.width * 0.08,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Almarai',
-                        ),
-                      ),
-
-                      // Islamic Quotes with source badge
-                      Builder(
-                        builder: (context) {
-                          final quote = IslamicQuotes.getRandomQuote();
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                quote.text,
-                                style: TextStyle(
-                                  fontSize: size.width * 0.035,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: size.height * 0.008),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: size.width * 0.028,
-                                  vertical: size.height * 0.004,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.35),
-                                    width: 1,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.black.withValues(alpha: 0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.menu_book_rounded,
-                                      size: 14,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: size.width * 0.01),
-                                    Text(
-                                      quote.source,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: size.width * 0.028,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildMosqueBackground(
-      BuildContext context, UnsplashPhoto mosqueImage) {
-    // Check if it's a network image or local asset
-    if (mosqueImage.imageUrl.startsWith('http')) {
-      return CachedNetworkImage(
-        key: ValueKey(mosqueImage.id),
-        imageUrl: mosqueImage.imageUrl,
-        fit: BoxFit.cover,
-        color: Colors.black.withValues(alpha: 0.1),
-        colorBlendMode: BlendMode.darken,
-        maxHeightDiskCache: 1500,
-        memCacheWidth: 1000,
-        cacheKey: "mosque_${mosqueImage.id}",
-        placeholder: (context, url) => Container(
+  Widget _buildHeaderRow(
+    BuildContext context,
+    Size size,
+    bool isDesktop,
+    AppLocalizations? l10n,
+    DateTime now,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Date Card - Clickable
+        _buildDateCard(context, size, isDesktop, l10n, now),
+
+        // Flexible spacer to push location to center-right and buttons to far right
+        _buildActionButtons(context, size, isDesktop),
+      ],
+    );
+  }
+
+  Widget _buildDateCard(
+    BuildContext context,
+    Size size,
+    bool isDesktop,
+    AppLocalizations? l10n,
+    DateTime now,
+  ) {
+    final iconSize = _getResponsiveIconSize(size.width, isDesktop, small: true);
+    final fontSize = _getResponsiveFontSize(size.width, isDesktop, scale: 0.85);
+    final smallFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.7,
+    );
+    final cardPadding = isDesktop ? 16.0 : size.width * 0.03;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) =>
+                HijriCalendarBottomSheet(initialDate: widget.hijriDate),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(cardPadding),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor.withValues(alpha: 0.8),
-              ],
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1.5,
             ),
           ),
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: Colors.white70,
-              strokeWidth: 2,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gregorian + Hijri date, wrapped so the visible date self-
+              // corrects at midnight even though the per-second tick no longer
+              // rebuilds the whole hero. Recomputes the Hijri date each tick
+              // rather than relying on the one-shot widget.hijriDate prop.
+              ValueListenableBuilder<DateTime>(
+                valueListenable: _now,
+                builder: (context, now, _) {
+                  final hijriNow = HijriDateTime.now();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: iconSize,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                          SizedBox(width: isDesktop ? 8 : 6),
+                          Text(
+                            '${now.day} ${AppDateUtils.getGregorianMonthName(now.month, l10n)}',
+                            style: TextStyle(
+                              fontSize: fontSize,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.mosque,
+                            size: iconSize * 0.9,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
+                          SizedBox(width: isDesktop ? 8 : 6),
+                          Text(
+                            AppDateUtils.getShortFormattedHijriDate(
+                              hijriNow,
+                              l10n,
+                            ),
+                            style: TextStyle(
+                              fontSize: smallFontSize,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         ),
-        errorWidget: (context, url, error) {
-          log('Error loading image: $error for URL: $url');
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
-                ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, Size size, bool isDesktop) {
+    final buttonSize = _getResponsiveIconSize(size.width, isDesktop);
+    final buttonPadding = isDesktop ? 12.0 : size.width * 0.022;
+    final spacing = isDesktop ? 16.0 : size.width * 0.012;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _CompactIconButton(
+          icon: Icons.info_outline,
+          size: buttonSize,
+          padding: buttonPadding,
+          onPressed: () => showAboutDeveloperDialog(context),
+        ),
+        SizedBox(width: spacing),
+        _CompactIconButton(
+          icon: Icons.compass_calibration_rounded,
+          size: buttonSize,
+          padding: buttonPadding,
+          onPressed: () => Navigator.pushNamed(context, '/campus'),
+        ),
+        SizedBox(width: spacing),
+        _CompactIconButton(
+          icon: Icons.radio_rounded,
+          size: buttonSize,
+          padding: buttonPadding,
+          onPressed: () => Navigator.pushNamed(context, '/radio'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeSection(
+    BuildContext context,
+    Size size,
+    bool isDesktop,
+    AppLocalizations? l10n,
+  ) {
+    final titleFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 1.8,
+    );
+    final subtitleFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.9,
+    );
+    final quoteFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.8,
+    );
+    final sourceFontSize = _getResponsiveFontSize(
+      size.width,
+      isDesktop,
+      scale: 0.65,
+    );
+    final iconSize = _getResponsiveIconSize(size.width, isDesktop, small: true);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Left Column: Welcome Message and Quote
+        Expanded(
+          flex: isDesktop ? 3 : 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Location Name - centered area
+              Flexible(
+                child: _LocationNameWidget(
+                  theme: theme,
+                  size: size,
+                  isDark: isDark,
+                  isDesktop: isDesktop,
+                ),
               ),
-            ),
-            child: const Icon(Icons.error, color: Colors.white),
-          );
-        },
-      );
-    } else {
-      // Local asset image
-      return Image.asset(
-        mosqueImage.imageUrl,
-        key: ValueKey(mosqueImage.id),
-        fit: BoxFit.cover,
-        color: Colors.black.withValues(alpha: 0.1),
-        colorBlendMode: BlendMode.darken,
-        errorBuilder: (context, error, stackTrace) {
-          log('Error loading asset image: $error for path: ${mosqueImage.imageUrl}');
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
-                ],
+
+              // Welcome Text — personalized with the user's name when set.
+              // Scoped BlocBuilder so only this line rebuilds on a name change,
+              // leaving the mosque hero / per-second countdown subtree untouched.
+              BlocBuilder<SettingsCubit, SettingsState>(
+                buildWhen: (prev, curr) =>
+                    curr is SettingsLoaded &&
+                    (prev is! SettingsLoaded ||
+                        prev.settings.userName != curr.settings.userName),
+                builder: (context, state) {
+                  // Fixed "السلام عليكم" (personalized with the name when set),
+                  // followed on the same line by a softer, time-aware blessing
+                  // (صباح الخيرات الكثيرات / مساء الخيرات).
+                  final salam =
+                      l10n?.translate('home.welcome_message') ?? 'السلام عليكم';
+                  final name = state is SettingsLoaded
+                      ? state.settings.userName.trim()
+                      : '';
+                  final primary = name.isEmpty
+                      ? salam
+                      : (l10n?.translate('home.welcome_message_named') ??
+                                'السلام عليكم، {name}')
+                            .replaceAll('{name}', name);
+                  final hour = DateTime.now().hour;
+                  final blessing = (hour >= 4 && hour < 12)
+                      ? (l10n?.translate('home.blessing_morning') ??
+                            'صباح الخيرات الكثيرات')
+                      : (l10n?.translate('home.blessing_evening') ??
+                            'مساء الخيرات');
+                  return Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: primary,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        TextSpan(
+                          text: '  •  $blessing',
+                          style: TextStyle(
+                            fontSize: subtitleFontSize * 0.9,
+                            color: Colors.white.withValues(alpha: 0.72),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: subtitleFontSize,
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontWeight: FontWeight.w400,
+                      height: 1.35,
+                    ),
+                  );
+                },
               ),
-            ),
-            child: const Icon(Icons.error, color: Colors.white),
-          );
-        },
-      );
+              SizedBox(height: isDesktop ? 8 : 6),
+              Text(
+                l10n?.translate('home.app_name') ?? 'وذكّر',
+                style: TextStyle(
+                  fontSize: titleFontSize,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Almarai',
+                ),
+              ),
+              SizedBox(height: isDesktop ? 16 : 12),
+
+              // Islamic Quotes with source badge
+              Builder(
+                builder: (context) {
+                  final languageCode = Localizations.localeOf(
+                    context,
+                  ).languageCode;
+                  final quoteText = languageCode == 'en'
+                      ? _quote.textEn
+                      : _quote.text;
+                  final quoteSource = languageCode == 'en'
+                      ? _quote.sourceEn
+                      : _quote.source;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        quoteText,
+                        maxLines: isDesktop ? 3 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: quoteFontSize,
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontWeight: FontWeight.w400,
+                          height: 1.5,
+                          fontFamily: languageCode == 'en'
+                              ? null
+                              : 'ScheherazadeNew',
+                        ),
+                      ),
+                      SizedBox(height: isDesktop ? 10 : 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.menu_book,
+                            size: iconSize * 0.9,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                          SizedBox(width: isDesktop ? 8 : 6),
+                          Flexible(
+                            child: Text(
+                              quoteSource,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.75),
+                                fontSize: sourceFontSize,
+                                fontWeight: FontWeight.w400,
+                                fontFamily: languageCode == 'en'
+                                    ? null
+                                    : 'Almarai',
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+
+        SizedBox(width: isDesktop ? 22 : 10),
+
+        // Right Column: Next Prayer Indicator
+        _buildNextPrayerIndicator(context, size, isDesktop, l10n),
+      ],
+    );
+  }
+
+  Widget _buildNextPrayerIndicator(
+    BuildContext context,
+    Size size,
+    bool isDesktop,
+    AppLocalizations? l10n,
+  ) {
+    return BlocBuilder<PrayerTimesCubit, PrayerTimesState>(
+      builder: (context, state) {
+        if (state is! PrayerTimesLoaded) {
+          return const SizedBox.shrink();
+        }
+
+        final prayerTimes = state.selectedPrayerTimes;
+        if (prayerTimes == null) {
+          return const SizedBox.shrink();
+        }
+
+        // Compact responsive sizing
+        final circleSize = isDesktop ? 110.0 : size.width * 0.24;
+        final strokeWidth = isDesktop ? 6.0 : size.width * 0.015;
+        final prayerNameSize = _getResponsiveFontSize(
+          size.width,
+          isDesktop,
+          scale: 0.85,
+        );
+        final timeSize = _getResponsiveFontSize(
+          size.width,
+          isDesktop,
+          scale: 1.0,
+        );
+        final labelSize = _getResponsiveFontSize(
+          size.width,
+          isDesktop,
+          scale: 0.6,
+        );
+
+        // Glass surface using the shared design tokens — keeps the next
+        // prayer card consistent with the bottom nav's glass and any future
+        // floating surfaces (overlay pill bar etc.).
+        //
+        // Only this countdown subtree listens to the per-second tick, so the
+        // mosque image / gradient / quote above don't rebuild every second.
+        return ValueListenableBuilder<DateTime>(
+          valueListenable: _now,
+          builder: (context, now, _) {
+            // Recompute the target each tick: PrayerTimesModel.nextPrayer /
+            // nextPrayerName / totalIntervalBetweenPrayers are all relative to
+            // DateTime.now(), so they must be re-read every second to roll over
+            // to the following prayer once an adhan time passes — otherwise the
+            // countdown would go negative and the name would stick on the prayer
+            // that just elapsed.
+            final nextPrayerTime = prayerTimes.nextPrayer;
+            final nextPrayerName = prayerTimes.nextPrayerName;
+            final totalInterval = prayerTimes.totalIntervalBetweenPrayers;
+            final timeUntilNext = nextPrayerTime.difference(now);
+            final progress =
+                1 - (timeUntilNext.inSeconds / totalInterval.inSeconds);
+            final hours = timeUntilNext.inHours;
+            final minutes = timeUntilNext.inMinutes.remainder(60);
+            final seconds = timeUntilNext.inSeconds.remainder(60);
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(Radii.lg),
+              child: BackdropFilter(
+                filter: GlassTokens.filterFor(GlassIntensity.medium),
+                child: Container(
+                  padding: EdgeInsets.all(
+                    isDesktop ? Spacing.md : Spacing.sm + 2,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.20),
+                        Colors.white.withValues(alpha: 0.10),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(Radii.lg),
+                    border: Border.all(
+                      color: Colors.white.withValues(
+                        alpha: GlassTokens.borderOpacity(GlassIntensity.medium),
+                      ),
+                      width: GlassTokens.borderWidth,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Compact Header with Prayer Name
+                      Column(
+                        children: [
+                          Text(
+                            l10n?.translate('home.next_prayer') ??
+                                'الصلاة القادمة',
+                            style: TextStyle(
+                              fontSize: labelSize,
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'Almarai',
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.mosque_rounded,
+                                color: Colors.white,
+                                size: prayerNameSize * 0.9,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                nextPrayerName,
+                                style: TextStyle(
+                                  fontSize: prayerNameSize,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Almarai',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: isDesktop ? 10 : 8),
+
+                      // Compact Circular Progress Indicator
+                      SizedBox(
+                        width: circleSize,
+                        height: circleSize,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Background Circle
+                            SizedBox(
+                              width: circleSize,
+                              height: circleSize,
+                              child: CircularProgressIndicator(
+                                value: 1.0,
+                                strokeWidth: strokeWidth,
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white.withValues(alpha: 0.2),
+                                ),
+                              ),
+                            ),
+                            // Progress Circle with gradient effect
+                            SizedBox(
+                              width: circleSize,
+                              height: circleSize,
+                              child: CircularProgressIndicator(
+                                value: progress.clamp(0.0, 1.0),
+                                strokeWidth: strokeWidth,
+                                backgroundColor: Colors.transparent,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                                strokeCap: StrokeCap.round,
+                              ),
+                            ),
+                            // Center Content - Minimalist Time Display
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Remaining Time - Always show H:MM:SS format
+                                Text(
+                                  '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Almarai',
+                                    // Fixed-width digits so the countdown doesn't
+                                    // jitter each second (replaces the unbundled
+                                    // 'Courier' that fell back unpredictably).
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                    height: 1.1,
+                                    letterSpacing: 0.5,
+                                  ).copyWith(fontSize: timeSize),
+                                ),
+                                SizedBox(height: 2),
+                                // Time Unit Label - Very compact
+                                Text(
+                                  l10n?.translate('home.remaining') ?? 'متبقي',
+                                  style: TextStyle(
+                                    fontSize: labelSize,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Almarai',
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Responsive sizing helpers
+  double _getResponsivePadding(double width, bool isDesktop) {
+    if (isDesktop) {
+      if (width > 1400) return 48.0;
+      if (width > 1200) return 40.0;
+      return 32.0;
     }
+    return width * 0.04; // Mobile: 4% of width
+  }
+
+  double _getResponsiveVerticalPadding(double height, bool isDesktop) {
+    if (isDesktop) {
+      return 24.0;
+    }
+    return height * 0.015; // Mobile: 1.5% of height
+  }
+
+  double _getResponsiveFontSize(
+    double width,
+    bool isDesktop, {
+    double scale = 1.0,
+  }) {
+    // Fixed base with gentle width adaptation, then clamp the result so small
+    // scales (quote/source) never fall below a legible floor — the hero text
+    // must stay readable in sunlight and for older users (a stated priority).
+    final base = isDesktop ? 16.0 : (width * 0.038).clamp(13.0, 17.0);
+    return (base * scale).clamp(12.0, 64.0);
+  }
+
+  double _getResponsiveIconSize(
+    double width,
+    bool isDesktop, {
+    bool small = false,
+  }) {
+    if (isDesktop) {
+      return small ? 18.0 : 24.0;
+    }
+    return small ? width * 0.032 : width * 0.048;
+  }
+}
+
+// Compact Icon Button Widget for Header Actions
+class _CompactIconButton extends StatelessWidget {
+  final IconData icon;
+  final double size;
+  final double padding;
+  final VoidCallback onPressed;
+
+  const _CompactIconButton({
+    required this.icon,
+    required this.size,
+    required this.padding,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(50),
+          child: Padding(
+            padding: EdgeInsets.all(padding),
+            child: Icon(icon, color: Colors.white, size: size),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Location Name Widget - listens to BlocBuilder for location updates
+class _LocationNameWidget extends StatelessWidget {
+  final ThemeData theme;
+  final Size size;
+  final bool isDark;
+  final bool isDesktop;
+
+  const _LocationNameWidget({
+    required this.theme,
+    required this.size,
+    required this.isDark,
+    required this.isDesktop,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PrayerTimesCubit, PrayerTimesState>(
+      builder: (context, state) {
+        // Only show location when prayer times are loaded
+        if (state is! PrayerTimesLoaded) {
+          return const SizedBox.shrink();
+        }
+
+        return FutureBuilder<String>(
+          future: context.read<PrayerTimesCubit>().getCurrentLocationName(),
+          builder: (context, snapshot) {
+            // Don't show if loading or no data
+            if (!snapshot.hasData || snapshot.data == null) {
+              return const SizedBox.shrink();
+            }
+
+            final locationName = snapshot.data!;
+
+            // Don't show if it's the default "location not specified" message
+            if (locationName == 'موقع غير محدد') {
+              return const SizedBox.shrink();
+            }
+
+            return Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 12.0 : size.width * 0.025,
+                vertical: isDesktop ? 8.0 : size.height * 0.008,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.location_on_rounded,
+                    size: isDesktop ? 16 : 14,
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                  SizedBox(width: isDesktop ? 6 : 4),
+                  Flexible(
+                    child: Text(
+                      locationName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w700,
+                        fontSize: isDesktop ? 13 : 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }

@@ -12,8 +12,9 @@ class AzkarRepositoryImpl extends AzkarRepository {
   Future<List<AzkarCategory>> getAllCategories() async {
     try {
       // Load the Adhkar JSON file
-      final String response =
-          await rootBundle.loadString('assets/json_data/adhkar.json');
+      final String response = await rootBundle.loadString(
+        'assets/json_data/adhkar.json',
+      );
       final List<dynamic> data = json.decode(response);
 
       List<AzkarCategory> categories = [];
@@ -37,8 +38,9 @@ class AzkarRepositoryImpl extends AzkarRepository {
   @override
   Future<AdhkarItem?> getAdhkarById(int id) async {
     try {
-      final String response =
-          await rootBundle.loadString('assets/json_data/adhkar.json');
+      final String response = await rootBundle.loadString(
+        'assets/json_data/adhkar.json',
+      );
       final List<dynamic> data = json.decode(response);
 
       // Find the specific adhkar item

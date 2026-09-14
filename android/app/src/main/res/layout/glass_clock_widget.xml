@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/glass_widget_bg"
+    android:clipToOutline="true"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <!-- Live clock (auto-ticking) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="bottom">
+
+        <TextClock
+            android:id="@+id/live_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:format12Hour="h:mm"
+            android:format24Hour="HH:mm"
+            android:textColor="#FFFFFF"
+            android:textSize="44sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/almarai"
+            android:includeFontPadding="false"/>
+
+        <TextClock
+            android:id="@+id/live_ampm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginBottom="7dp"
+            android:format12Hour="a"
+            android:format24Hour=" "
+            android:textColor="#B9C7E0"
+            android:textSize="13sp"
+            android:fontFamily="@font/almarai"/>
+    </LinearLayout>
+
+    <!-- Date line: Hijri • Gregorian -->
+    <TextView
+        android:id="@+id/clock_date_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="11 شوال  •  23 مايو"
+        android:textColor="#9FB0CE"
+        android:textSize="12sp"
+        android:fontFamily="@font/almarai"
+        android:singleLine="true"/>
+
+    <!-- Divider (FrameLayout — a plain <View> is not allowed in RemoteViews) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="11dp"
+        android:layout_marginBottom="9dp"
+        android:background="#22FFFFFF"/>
+
+    <!-- Next prayer + live countdown -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Next prayer"
+                android:textColor="#8FA3C8"
+                android:textSize="10sp"
+                android:fontFamily="@font/almarai"/>
+
+            <TextView
+                android:id="@+id/clock_next_prayer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="المغرب"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/almarai"/>
+        </LinearLayout>
+
+        <Chronometer
+            android:id="@+id/clock_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#8FB8E0"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/almarai"
+            android:gravity="end"/>
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Shared container so the WidgetKit extension can read the prayer-times /
+	     glass-widget data the Flutter app writes (HomeWidget.setAppGroupId).
+	     The SAME group id must be added to the widget extension's entitlements
+	     and to both targets' Signing & Capabilities in Xcode. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.bloom.wadhakir</string>
+	</array>
+</dict>
+</plist>

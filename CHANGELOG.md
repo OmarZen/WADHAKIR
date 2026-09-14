@@ -5,6 +5,631 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0+23] - 2026-09-14
+
+The largest release the app has had. Four planned phases — R1 through R4 — landed
+across 23 commits and 248 files, and they answer four separate complaints:
+
+- **R1 — the app should be legible, and your data should be yours.** In-app text
+  size, a contrast pass, أيام العذر, and a full encrypted backup you can carry to
+  a new phone.
+- **R2 — the adhan should arrive.** The five fard prayers moved off a Flutter
+  plugin onto Android's own `AlarmManager`, the adhan gained its own audio
+  service so «إيقاف الأذان» really stops it, and the schedule now re-arms after a
+  reboot before you have even unlocked the phone.
+- **R3 — the app should be honest about whether it is working.** A reminder health
+  screen that reads the device rather than guessing, an iOS notification budget,
+  and a download 56 MB smaller.
+- **R4 — the app should be shareable and comfortable to read.** 9:16 story cards,
+  sharing from the mushaf and eight other screens, sourced occasion cards, and a
+  choice of line spacing and Arabic face.
+
+Along the way the test suite went from about 36 tests in 4 files to **526 Dart
+tests in 40 files, plus the first 14 Kotlin tests**, and `flutter analyze` and
+`flutter test` now run on every pull request rather than only after a release tag
+had already been pushed.
+
+> **One thing to know before updating:** the fifteen adhan notification channels
+> have become two. A channel's sound is fixed when the channel is created, so
+> moving the adhan into its own audio service meant re-keying them. **If you had
+> muted or customised one of the old adhan channels in Android's notification
+> settings, that setting is gone and needs setting again.**
+
+### Added
+
+#### Reminders and the adhan (R2, R3)
+
+- **Prayer alarms are now owned by Android itself, not by a plugin.** The five
+  fard prayers are armed with `AlarmManager.setAlarmClock` — the only alarm class
+  fully exempt from Doze, App Standby and Battery Saver — so no Flutter engine
+  sits between the alarm and the adhan. The app hands Android a 60-day plan, keeps
+  the next 7 days armed, and re-arms that window from three independent places
+  (every alarm that fires, a daily 00:05 rebuild, and a six-hourly reconciliation
+  job), so the adhan keeps calling for two months without the app being opened.
+- **The adhan plays from its own audio service, so «إيقاف الأذان» really stops
+  it.** The adhan used to be the notification channel's sound, which made stopping
+  it best-effort by construction: the only lever was cancelling the notification,
+  and once another app's notification took the sound slot the button dismissed the
+  card while the adhan carried on with nothing able to stop it. A `mediaPlayback`
+  foreground service now owns the player.
+- **The adhan re-arms before you unlock your phone.** The alarm ledger moved to
+  device-protected storage, and a new direct-boot-aware receiver handles
+  `LOCKED_BOOT_COMPLETED` — so a prayer falling between a reboot and your first
+  unlock is no longer missed. The same receiver owns every other event that can
+  invalidate the schedule: boot, app update, time set, date change, locale change
+  and timezone change.
+- **The app now handles you changing timezone.** On a zone change the alarms are
+  deliberately *not* cancelled — going silent on someone who has just landed is
+  the failure this release exists to prevent — so the old plan keeps firing as a
+  floor while one quiet notice asks you to open the app. Opening it forces a fresh
+  location fix and re-plans every prayer, and the notice is taken down once that
+  succeeds.
+- **New setting: «الأذان يتجاوز الوضع الصامت»** (adhan overrides silent mode), on
+  by default. The adhan now plays on the alarm stream, so it follows the alarm
+  volume slider and sounds through silent and vibrate the way an alarm clock does.
+  With the switch off, a silenced phone gets the card and the vibration but no
+  sound. Android only; iOS decides for itself.
+- **A reminder health screen — «هل تصل تذكيراتك؟» — at the top of notification
+  settings.** It answers one question in one sentence ("your reminders are
+  arriving on time", "this device is stopping the app", "the adhan channel is
+  muted in system settings") and offers at most one thing to press. It sits above
+  the master toggle deliberately: someone who opens that page because a prayer
+  went by in silence should not have to read past six switches to find it.
+- **A button that opens your phone manufacturer's own autostart screen — and only
+  when that screen really exists.** Xiaomi, Huawei, Oppo, OnePlus, Vivo, Transsion,
+  Samsung, Meizu, Asus and Nokia each get a button labelled the way their own UI
+  names the setting. Every intent is probed against the device before a button is
+  drawn — resolved, exported, enabled, not permission-guarded — because a button
+  that reliably fails is worse than none: it is a broken app that also blames your
+  phone.
+- **The health verdict is read live** and re-read every time you return to the
+  screen, so after you change something in system settings the sentence has
+  already changed with it. Anything inferred from the delivery record waits for at
+  least three observed reminders before speaking in either direction — a green
+  tick over no evidence and an accusation over no evidence are the same mistake.
+- **When an adhan channel is muted, the button opens *that* channel.** There are
+  two — «الأذان» and «أذان الفجر» — and someone who muted Fajr and is handed the
+  other one sees a perfectly healthy channel, changes nothing, and comes back to
+  the same verdict.
+- **A local record of what the reminders actually did** — armed, arrived, arrived
+  late, arrived silently, never arrived — written partly from Android's alarm
+  receiver, which runs with the app closed. Capped at 2,000 rows, kept on the
+  device, never sent anywhere, and never shown to you as a tally or a
+  miss-counter: the screen turns it into one sentence and nothing else.
+- **A single quiet notification if the app goes ten days without being opened.**
+  Every reminder the app schedules eventually runs out, and an app that has gone
+  silent is indistinguishable from an app that is broken. The fuse is pushed
+  forward on every launch and resume, so anyone who opens the app even once a week
+  never sees it, and it fires at 10:00 local rather than inheriting whatever
+  minute you last checked Fajr at.
+- **iOS reminders are now budgeted against the 64 the system actually keeps.** iOS
+  retains only the 64 soonest-firing pending notifications and discards the rest
+  with no error and no log; with every feature on, the app was asking for about
+  63. Slots are allocated per feature in one place (prayers 25, azkar 12, fasting
+  17, wird 1, daily verse 1, the ten-day nudge 1, plus a four-slot reserve) and a
+  test holds the total under the cap.
+- **A hidden alarm-diagnostics sheet**, opened by long-pressing the version number
+  in About. It shows which alarm engine is in use and lets the native path be
+  switched back to the old plugin one — an escape hatch for a device that
+  mishandles `AlarmManager`, usable over a phone call without waiting for a
+  release.
+
+#### Backup and restore (R1)
+
+- **Backup and restore — all your data as one file.** No export path existed
+  anywhere, so a lost or replaced phone lost years of prayer log, the khatma plan,
+  every dhikr counter and all settings. A new section in Settings saves one file
+  through the OS share sheet and restores one from the file picker. An optional
+  password encrypts it with AES-256-GCM (PBKDF2-HMAC-SHA256, 120k iterations, run
+  off the UI thread); the envelope header is bound into the GCM tag so the
+  iteration count cannot be rewritten downwards.
+- **What travels is an audited allowlist**, not "everything". Ten keys are
+  deliberately left behind — most importantly the battery-optimisation "already
+  asked" gate, which would otherwise land on a new phone that then never asks for
+  its Doze exemption; App Lock's settings, which name other apps' package
+  identifiers and need three separate Android grants; the onboarding flag, which
+  would let a device skip the location request; and the calculation-method
+  auto-detect flag, which would pin the source device's country forever.
+
+#### Prayer tracking and wird (R1)
+
+- **أيام العذر — pause prayer tracking.** A quiet «إيقاف مؤقت» row at the bottom
+  of today's card starts an open-ended pause; one tap ends it. You are never asked
+  to predict how long it will last or to re-mark each morning: every day in
+  between is filled in as it arrives, including days the app was never opened.
+  While paused, today's card says no prayers are owed, no qada is accruing and
+  your chain is kept, and it shows how many days the pause has been running so a
+  forgotten one stays visible.
+- **Excused days are transparent to every statistic.** The current streak, the
+  best streak, range stats and the 30-day مداومة figure step over them instead of
+  counting them as failures — a week with two excused days reads "5 of 5", not
+  "5 of 7" — and they draw as a soft neutral tile in the monthly heatmap rather
+  than as the empty tile a missed day gets.
+- **نية الختمة — dedicate a khatma.** The wird setup screen takes an optional
+  dedication (إهداء الثواب) of up to 60 characters. It appears as one muted line
+  on the wird card every day and in the daily reminder itself, which reads «وردك
+  اليوم — إهداءً إلى …» instead of a generic line. Plans saved before this are
+  byte-identical on disk until a dedication is actually set.
+
+#### Reading comfort and accessibility (R1, R4)
+
+- **Text size, inside the app.** Settings → Appearance gains a seven-step
+  text-size control from 90% to 160%, with a live Arabic sample so the choice is
+  judged on real text rather than a percentage. Nothing in the app read the system
+  text scaler before this, so an elder user was simply told to go change their
+  phone's global display setting.
+- **Line spacing and Arabic face.** Directly under text size: three spacings
+  (متقارب 1.7 / مريح 2.0 / متباعد 2.4) and four faces (كما هو — leave each screen
+  as it is — plus المراعي, شهرزاد and عارف رقعة). It applies to the azkar detail
+  screen, the after-prayer adhkar and the ayah preview; the mushaf and the
+  generated share card keep their own typesetting. Both default to what the app
+  already rendered, so nothing moves until you choose something.
+- **The controls show you the thing they change.** Each font chip is drawn in the
+  face it offers; each spacing chip carries a small stack of rules at that
+  option's actual leading, derived from the real line height so the picture cannot
+  drift from the value; and the sample is held to a 320px measure so it always
+  breaks over more than one line — a leading you cannot see between two lines is
+  not a preview of anything.
+- **A reset for the reading settings**, shown only once there is something to
+  undo, since two rows of chips have no "off" option.
+- **Your line spacing and font choice are backed up and restored**, stored as
+  stable text ids rather than positions in a list.
+
+#### Sharing (R4)
+
+- **Long-press any ayah in the mushaf to share it.** The Quran screen had no share
+  of its own, so sending a verse meant leaving the app, finding the verse
+  elsewhere and copying it from there. A long press opens a sheet showing the
+  reference — «سورة الكهف — ١٠», in Arabic-Indic numerals — with the choice to
+  send it as a card, send it as text, or copy it.
+- **Copying or texting a verse sends the plain script**, not the Uthmani one the
+  mushaf draws. The card keeps Uthmani because the app rasterises it with its own
+  bundled font; pasted text has to survive whatever font the receiving app draws
+  it with, and several Android and WhatsApp font stacks render Uthmani diacritics
+  as empty boxes.
+- **A card for the day on the home screen, on seven occasions.** Friday, the first
+  of Ramadan, Laylat al-Qadr (27 Ramadan), Eid al-Fitr, the Day of Arafah, Eid
+  al-Adha and Ashura each put a greeting strip high on the home screen whose share
+  button sends a sourced dua as a card. **Every dua carries its narration on the
+  card itself** — أبو داود for Friday's صلاة على النبي, الترمذي for Ramadan and
+  Arafah, الترمذي وابن ماجه عن عائشة for Laylat al-Qadr, مسلم for Ashura, and an
+  athar of the Companions for both Eids. On an ordinary day the card is not there
+  at all: no empty state, no placeholder. An annual occasion outranks Friday, so
+  Eid falling on a Friday shows the Eid card.
+- **Share the day's prayer timetable.** Drawn as a real table — six rows, the five
+  fard plus sunrise, which closes Fajr's window — with every label in one column
+  and every time in another, and digits on a fixed advance width so the times form
+  a column instead of drifting. The subhead carries the city and both the Hijri
+  and Gregorian dates, because the same six times are wrong by an hour two
+  countries away. Sharing it as text sends every row, not just a title with a
+  picture attached, and paging to tomorrow before sharing sends tomorrow's times.
+- **A finished khatma can share its dedication** — «إهداءً إلى روح والدي» over
+  الأعراف ٤٣, a verse rather than one of the widely circulated khatm duas with
+  contested chains. It never carries the tally. A khatma with no dedication still
+  shares, carrying the verse alone.
+- **Share buttons on five more surfaces**: Allah's 99 names (the meaning with the
+  name as the card label), the ruqya sheet (text, reference and repetition count),
+  the after-prayer adhkar (the words and how many times, never how far through
+  them you are), and the three Quranic verse cards in Moon Phases — Yunus 10:5,
+  Al-Qamar 54:1 and Al-Baqarah 2:189 — each with its citation.
+
+### Changed
+
+- **Share cards are now 9:16 by default, with a «ستوري / منشور» switch.** The
+  app's fixed-shape cards were 4:5, which WhatsApp Status — the dominant broadcast
+  surface in this market — letterboxes with grey bars, badly enough that people
+  screenshot the app instead of using the share button built for them. 4:5 is kept
+  as «منشور» for Instagram and Facebook feeds. The switch reaches every card in
+  the app and is per-share, not remembered. A short passage card also gains a 9:16
+  floor, so a two-line dua fills a story instead of coming out nearly square,
+  while a long entry still grows past it.
+- **Fifteen adhan notification channels became two.** There used to be one channel
+  per bundled adhan with the mp3 baked in, plus two system-beep channels; now
+  there is one for Fajr and one for the other four. **If you had muted or
+  otherwise tuned one of the old channels in Android's notification settings, that
+  is lost** — a channel's sound is immutable once created, so they had to be
+  re-keyed to fall silent. The retired channels are deleted so they stop
+  cluttering your system notification settings.
+- **The home streak banner is now 30-day مداومة, not a flame.** The old banner was
+  all-or-nothing: miss one Fajr and a gold flame over a large number became a grey
+  "0" over «ابدأ سلسلتك اليوم» — a single lapse punished exactly as hard as
+  abandoning prayer. A 30-day ratio degrades instead of collapsing: one missed day
+  out of thirty reads 97%. The banner now has no state in which it reports a
+  nought; it picks one of four readings — «يوم عذر» while paused, an invitation on
+  an empty log, «ما فات يُدرَك» after three days that actually owed prayers, and
+  the 30-day figure otherwise.
+- **The persistent "next prayer" card counts down by itself now.** It used to be
+  re-posted once a second — 86,400 notification posts a day, the largest single
+  battery cost in the app — and it froze the moment you left the app, which is the
+  one time anyone looks at it. Android's own chronometer renders the countdown, so
+  it keeps counting with no app process alive; the app posts five or six times a
+  day instead.
+- **Much smaller download.** The arm64 APK — the one nearly everyone installs —
+  went from 187.3 MB to 131.1 MB, against Google Play's 200 MB cap. The eleven
+  bundled mosque photos did most of it: 52.4 MB of JPEGs, one of them 19 MB,
+  re-encoded to WebP at 1080px for 1.4 MB in total. 1080 was not a guess — the
+  share card and the home rotator already decoded them at exactly that width, so
+  every pixel above it was shipped and then thrown away.
+- **The home screen's hero is drawn in code** instead of being one of eleven
+  mosque photographs. A fixed deep-blue gradient with two soft halos and the app's
+  name «وَذَكِّرْ» (الذاريات ٥٥) set very large and faint in the corner. Because
+  every colour is now fixed, the white text on it has measured contrast: 7.36:1 at
+  the brightest point, 17.48:1 at the darkest, 11.59:1 where the wordmark sits —
+  all WCAG AAA. The old scrim had to reach 0.75 black to survive whichever picture
+  happened to be showing. It also no longer changes picture every five minutes,
+  and looks the same in light mode, dark mode and on desktop. The wordmark alone
+  ignores your text-size setting: it is a ground, and at 160% it would grow past
+  the hero and read as a heading.
+- **The next prayer now appears as your phone's next alarm** — the alarm-clock
+  icon in the status bar and the prayer in the lock screen's "next alarm" slot.
+  That is the visible cost of being fully exempt from Doze and battery saver, and
+  the honest presentation for an alert at an exact astronomical instant.
+- **A sounding adhan is no longer cut short.** Swiping the app out of Recents does
+  not kill it, the platform cannot time out a four-minute recitation, and a wake
+  lock covers playback. Audio focus is requested and its loss handled, so an
+  incoming call stops the adhan properly instead of both sounding at once.
+- **Muting the adhan channel in Android's own settings silences it completely.**
+  The playback service checks the channel before starting anything: a blocked
+  channel makes the service's notification invisible, and audio playing behind a
+  card you cannot see is an adhan with no stop button anywhere.
+- **Prayer alerts are planned sixty days ahead on Android**, up from seven. Only a
+  short window is live with the OS at any moment and the rest is stored. It is
+  deliberately not longer: every stored day is computed against your last known
+  location, and an alarm armed three months out for someone who has moved is a
+  wrong adhan rather than a missing one.
+- **The test-notification button goes down the real fire path** — the same
+  channel, card and playback service a prayer uses. Someone pressing it is asking
+  "will I actually hear this?", and the probe previously answered for a route no
+  adhan takes.
+- **Fasting reminders are scheduled in the order they will happen.** They were
+  created in the order they were written in the code, which put Ayyam al-Bid (13,
+  14, 15) ahead of the 9th and the 10th — harmless while everything got scheduled,
+  and the wrong survival order now that iOS has a fixed number of slots.
+- **Font weights were normalised to the weights the bundled fonts actually ship.**
+  125 sites asked for w500 or w600; none of Almarai, Jomhuria, ScheherazadeNew or
+  Aref Ruqaa ship those, so Flutter silently resolved them to 400 or 700 — the
+  source said one thing and the screen showed another. The most visible case was
+  the app-bar title, which asked Jomhuria for w600 and got its only weight, 400.
+- **The in-app text size multiplies your phone's font setting rather than
+  replacing it**, with the product clamped to 90%–160%. Someone who has enlarged
+  text system-wide keeps that enlargement inside Wadhakir; someone who has pushed
+  the system slider past 160% now sees the app stop there, because above that the
+  fixed-height cards clip, and clipped text is worse than small text.
+- **The after-prayer adhkar are set slightly more openly than before** — they were
+  hardcoded at 1.9 line height and now follow the reading-spacing setting, whose
+  default is 2.0. Choosing متقارب takes them tighter than they ever were.
+- **After restoring a backup the app has to be closed and reopened**, and the
+  restore screen will not let you navigate back. Every repository in the running
+  process is cache-first and still holds the data that was just replaced, so the
+  first write from any of them would silently undo the restore — logging one
+  prayer would be enough to lose the whole log.
+- **Your backup file carries the reminder record, and a restore can never read it
+  back in.** It rides outside the restored data on purpose: putting one phone's
+  delivery history onto another would have the health screen confidently diagnose
+  hardware it has never run on.
+
+### Fixed
+
+- **The adhan no longer silently degrades to an inexact alarm on Android 13+.**
+  The manifest declared only `SCHEDULE_EXACT_ALARM`, which is granted by default
+  only up to API 32 — from Android 13 the user can revoke it, and on Android 14+ a
+  fresh install or a device-to-device restore does not get it at all. When it is
+  missing, the scheduler falls back to an inexact alarm that Doze can defer. The
+  app now declares `USE_EXACT_ALARM` (auto-granted, non-revocable, explicitly
+  permitted for alarm-clock-class apps) and caps the old permission at API 32.
+- **The exact-alarm prompt opened nothing.** Reported from a device: granting
+  «التنبيهات مع التوقيت المحدد» led to a settings screen that never appeared. The
+  helper asked `permission_handler` about `SCHEDULE_EXACT_ALARM`, which this
+  release deliberately no longer declares above API 32 — so it got "denied" on
+  every Android 13/14/15/16 install, told those users their alarms were broken,
+  and sent them to a screen that cannot exist for an app holding
+  `USE_EXACT_ALARM`. The probe now asks Android itself, so the settings screen,
+  the health screen and the scheduler share one answer.
+- **Opening the app while the adhan was playing stopped it.** The reschedule sweep
+  used the plugin's `cancel()`, which dismisses a *displayed* notification — and
+  dismissing the notification that owns the in-flight channel sound stops that
+  sound. One of the most common moments to reschedule is the user opening the app
+  because they just heard the adhan.
+- **A cross-midnight Isha was destroyed at the day rollover.** An Isha computed
+  for yesterday can fall after midnight — routinely at high latitudes and in the
+  last third of Ramadan — so at the ~00:05 reschedule it was still pending. The
+  horizon started at today, so the sweep cancelled it and the rebuild never
+  re-armed it: the adhan simply never sounded.
+- **Six reminders could arrive hours late, or on the wrong day.** The
+  morning/evening azkar reminder, the Friday Al-Kahf reminder, the daily
+  inspiration, both fasting reminders and the daily wird reminder were all
+  scheduled with the plugin's inexact default, so Doze could defer them until the
+  device next woke — «أذكار الصباح» arriving at noon, and a daily-inspiration body
+  that is *today's* ayah delivered tomorrow.
+- **In Muharram, the same fast was announced twice.** With both the "9th & 10th"
+  and the special days switched on, the 9th was scheduled as both «التاسع من
+  الشهر» and «صيام تاسوعاء», and the 10th as both «العاشر» and «صيام عاشوراء» —
+  four near-identical cards arriving at the same instant. There is now one
+  reminder per day and the named fast wins. The same applies to Arafah on the 9th
+  of Dhul Hijjah.
+- **On iOS, every reminder was claiming Time-Sensitive.** A fasting advance notice
+  nine days out could break through a Focus session or Do Not Disturb with exactly
+  the same authority as the adhan, because azkar, wird, fasting and the daily
+  verse all shipped high-importance channels with the screen-wake flag, which iOS
+  reads as "this cannot wait". Only the five prayers keep it now. Android is
+  unchanged.
+- **Android 13+ never saw the one-tap notification permission prompt.** The app
+  showed a dialog of its own and then sent the user to system Settings, so the
+  cheapest grant in the whole flow was replaced by a trip through Settings — and
+  everyone who did not complete that trip ended up with notifications silently
+  off. It now asks Android directly first, and still offers Settings afterwards
+  whenever the permission is not granted, because on Android 12 and below that is
+  the only route there is.
+- **The app misread whether you had granted notification permission** after a trip
+  to Settings. `openAppSettings()` completes when the settings screen has been
+  *launched*, not when you come back, so the app usually re-read "still denied"
+  for someone who had just granted it. It now waits for an app resume, with a
+  two-minute cap.
+- **One tap on «لاحقاً» silenced the battery-optimisation prompt forever.** The
+  flag was written *before* the dialog was shown, so declining once — or being
+  interrupted — permanently retired it, and that exemption is what keeps the adhan
+  firing under Doze on aggressive OEM ROMs. It is now written after you answer and
+  records what you actually did: granted means never ask again, declined means ask
+  again in two weeks. A phone that answered the old prompt is asked exactly once
+  more, because the old flag recorded only that the dialog had been *shown*.
+- **Turning on the floating azkar during onboarding left the button spinning
+  forever.** Granting «الظهور فوق التطبيقات الأخرى» means leaving for a system
+  settings screen, and the answer to that request never came back to the page — so
+  it sat on a spinner with the toggle off however you answered. The page now
+  watches for the app returning to the foreground, re-reads the permission then,
+  and finishes switching the feature on for someone who granted it. The
+  floating-azkar settings screen had the same defect on its master toggle and both
+  «منح الصلاحية» buttons.
+- **Secondary text was unreadable outdoors.** The body/secondary text colour on
+  light surfaces measured 2.61:1 against the app background — well under the 4.5:1
+  floor — and it styles secondary text app-wide. It is now 5.95:1 in the same
+  cool-neutral hue. The same failing value was reachable through the theme's
+  tertiary colour, which is read as a text colour in eight places including the
+  prayer-times list and header. The dark theme is deliberately unchanged; it
+  already measured 6.06–10.26:1.
+- **The feature directory overflowed on every tile at large text sizes.** The grid
+  derived each cell's height from its width, and width does not change when you
+  enlarge the text — so the label grew, the cell did not, and about 10px of it was
+  painted outside the card at 160%. The grid now treats that shape as a floor and
+  asks the card how much room it needs; nothing moves at the default size. A tile
+  squeezed into too little room now drops a line of its label rather than painting
+  outside its card.
+- **The prayer-times card header overflowed by 39px at the largest text size.**
+  The title and its two action buttons were all natural width in one row; the
+  buttons cannot shrink, so the title now takes the remaining space and wraps.
+- **A shared prayer timetable could print your GPS coordinates as your city.**
+  When geocoding is unavailable and nothing was cached, the location layer returns
+  a coordinate pair like `31.20°, 29.92°` — the sender's position to about a
+  kilometre, on a card built to be broadcast. The filter now rejects anything
+  carrying a degree sign, and knows both of the layer's "unknown" strings rather
+  than only one.
+- **A shared timetable could name the wrong city.** The city was resolved once
+  when the screen opened, and the settings gear sits one icon from the share
+  button and offers «تحديث الموقع» — so you could update your location, watch the
+  times change, tap share, and send Jeddah's timetable under Cairo's name.
+- **The exported share card followed your in-app text size.** At 160% the
+  timetable's «city · date» subhead stopped fitting its two lines and ellipsized
+  the date off the image while the caption still carried it. The exported image is
+  a fixed artefact for someone else's screen, and is now pinned to normal scaling.
+- **Every shared ayah said «سورة» twice.** The guard against a doubled prefix
+  tested `startsWith('سورة')`, but `quran_library` supplies fully vowelled names —
+  «سُورَةُ ٱلْفَاتِحَةِ» — so it matched none of the 114, and every card, caption
+  and clipboard copy read «سورة سُورَةُ ٱلْفَاتِحَةِ — ١».
+- **Changing only your city's name did not refresh the notifications that print
+  it.** The reschedule's "nothing changed" signature was derived from the planned
+  instants alone, so a location update that resolved a better name without moving
+  the times — including the first successful geocode after «موقع غير محدد» — was
+  suppressed, and every prayer notification kept naming the old place.
+- **The home banner rendered Arabic-Indic numerals in the middle of an English
+  screen** — "٣/٥" regardless of the chosen language. Numerals now follow the
+  locale.
+- **The "test notification" button fired on notification id 0**, an id outside the
+  range the app owns and one that nothing ever cancels, so a stray test
+  notification could sit in the tray with no way to clear it.
+
+#### Caught in pre-release review
+
+These never reached a released build. They are recorded because most of them
+would have been hit by everyone updating from 3.3.2+22, and several were found
+only by adversarially reviewing code written in this same cycle.
+
+- **Every adhan would have fired twice for a week after this update.** Handing the
+  schedule to the native path never swept the notification plugin's already-armed
+  prayers, and the plugin re-arms its own schedule on app update with no app
+  process involved — so both owners would have held the same prayers for up to
+  twelve days. The same defect class recurred at Stage 3: alarm rows written
+  before this release still name the old sounding channels, and the app-update
+  re-arm reads them straight back, so the first Fajr after an update would have
+  posted to a sounding channel *and* started the service playing the same file.
+  Stored rows are now rewritten to the new channel as they are read.
+- **Turning the notifications master switch off would have left the adhan ringing
+  for up to sixty days.** The master toggle and "cancel all notifications" reached
+  only the notification plugin, never the new native alarm table.
+- **The iOS adhan would have gone completely silent.** iOS attaches a
+  notification's sound only when both the notification *and* its channel allow
+  sound, and the new Android channels are deliberately silent — which would have
+  killed every adhan on a platform this work was not meant to touch.
+- **The whole direct-boot re-arm would have been inert.** While the device is
+  locked Android only resolves direct-boot-aware receivers, and the alarm receiver
+  was not one — so the OS would have counted every alarm re-armed before first
+  unlock as delivered and forgotten it, with no redelivery at unlock and nothing
+  in the logs to say so.
+- **A traveller could have been left on the wrong city's times permanently.** The
+  "this schedule is stale" flag was cleared the moment it was read, while the
+  re-plan that answers it happens later through a listener that skips when
+  settings have not loaded. It is now cleared only at the point the schedule is
+  genuinely rewritten, so any failure costs a retry on the next resume.
+- **The "timezone changed" notice would never have gone away** for anyone who
+  opened the app from the launcher instead of tapping it — fixing your prayer
+  times and then continuing to stare at a card telling you to fix your prayer
+  times.
+- **The persistent countdown card could not be turned off.** The hide path was
+  guarded on a flag that starts false in every new app process, while the card is
+  owned natively and outlives that process — so switching the setting off before
+  prayer times had loaded never hid it, and the alarm receiver re-posted it after
+  every prayer forever. There was no way back short of clearing app data.
+- **The countdown would have run negative for hours** on any "X minutes before"
+  timing: it rolled forward against the notification's fire time rather than the
+  prayer itself, so the prayer about to happen was still "next".
+- **The adhan card would have vanished the moment the sound ended** — it is the
+  playback service's own notification, and the card is the reminder, not a stop
+  button with a message attached. It now outlives the sound as a dismissible
+  notification, except when you stopped it yourself.
+- **A device clock jump would have permanently deleted future prayer alarms.** The
+  native ledger pruned expired rows against "now", so a bad network time — or a
+  user setting the date forward to check something — would have wiped every row it
+  skipped past, leaving the self-healing chain with nothing to heal from.
+- **Two reschedules arriving together would have committed a plan with most of its
+  alarms missing.** A settings change, a prayer-times reload and a midnight
+  rollover can all land in the same frame, and they interleaved into the one
+  native alarm buffer. Reschedules are serialised now.
+- Falling back to the old plugin path could have armed alarms nothing could ever
+  cancel; a refused foreground start would have left an undismissible card with a
+  stop button that stopped nothing; a stale card's stop button would have silenced
+  whichever adhan was currently playing; one failure while re-arming would have
+  stranded the countdown on a prayer that had already passed; the adhan would have
+  been silent before first unlock for anyone on the default-sound option, because
+  the cached "default sound" stored the settings constant rather than the resolved
+  tone; restarting the adhan left the previous stop-watchdog armed to cut the new
+  recitation off; rotating the phone would have re-opened the prayer screen long
+  after the adhan was dismissed; and Android 12 and below could briefly have been
+  left with no route back into notification settings.
+
+### Removed
+
+- **The Islamic History screen (السيرة النبوية) is gone.** It had been unreachable
+  from anywhere in the app since launch — the entry point on the home grid was
+  commented out — while still shipping a 12.6 MB `history.json` in every download.
+  The screen, its repository, its data file and its two orphaned localisation
+  strings went with it; it is recoverable from git history if it is ever wanted
+  back.
+- The home hero's photo machinery: `unsplash_cubit`, `unsplash_state`, a
+  `Timer.periodic` firing every 300 seconds, and an `Image.asset` decode of each
+  of the eleven bundled photos. The WebP files themselves stay — they are still
+  offered as share-card backgrounds, where you pick the photo and can see the
+  result.
+- Two dead dependencies: `timezone`, never imported anywhere, and `flutter_dotenv`,
+  which loaded a `.env` file nothing ever read.
+- `criticalAlert` on Fajr notifications, which awesome_notifications 0.12 moved to
+  channel level. Nothing is lost: it was already inert on both platforms — iOS
+  needs an Apple-granted entitlement the app does not have, and Android needs a
+  notification-policy permission declared in neither the app's manifest nor the
+  plugin's.
+
+### Internal
+
+- **A pure scheduling core.** `PrayerSchedulePlanner` (settings + times + now → the
+  list of alarms to arm), a `PrayerScheduler` owning cancel-then-arm sequencing
+  over a two-method gateway, and an injectable `Clock`. Scheduling decisions
+  previously lived in three layers, each welded to the notification plugin
+  singleton and a bare `DateTime.now()`, so the subsystem whose entire job is
+  being on time had no tests at all. That gateway is also the seam the native
+  `AlarmManager` work builds on — a second implementation of two methods rather
+  than a rewrite.
+- **Dart plans, Kotlin fires.** Dart picks every instant, id, Arabic string,
+  channel key and tap payload, and Kotlin re-renders nothing — two renderers
+  drift, and a notification posted to a channel key that was never created is
+  dropped by Android with no error anywhere. A sweep is a transaction (`clear` /
+  `arm` / `commit`), so an interrupted one leaves the previous schedule armed
+  rather than a half-written one.
+- Added `androidx.work:work-runtime-ktx` 2.9.1 for a six-hourly worker that
+  reconciles the armed alarm set against the stored ledger — repair only, never a
+  delivery mechanism, and skipped while the user is still locked because its
+  database is credential-protected.
+- `FOREGROUND_SERVICE_MEDIA_PLAYBACK` is declared in the app's own manifest rather
+  than inherited from a transitive dependency, so the adhan cannot lose the
+  permission the day that dependency is replaced — a failure that would surface at
+  a prayer time, not at build time.
+- 14 vendor packages declared in `<queries>`. From Android 11 a package the app
+  has no relationship with is invisible to `PackageManager` unless named there, so
+  without them the OEM autostart probe would have returned null on every device —
+  indistinguishable from a phone that genuinely has no such screen.
+- Reading preferences reach leaf `Text` widgets through an `InheritedWidget`
+  rather than a `BlocBuilder` per call site, and spacing and font are written by a
+  single setter so no frame can render half of one preference and half of the
+  other.
+- One shared `ShareActionButton` backs every share surface added in R4, with its
+  payload built lazily at tap time — most of these sit in lists, and capturing at
+  build time is how a share button sends the item you were looking at a moment
+  ago. `SharePayload` gained `ratio`, `timetableRows` and a real `copyWith`.
+- No share button reports a tally. The khatma share sits on the completion card
+  only and carries no progress; the electronic tasbih gets no share button at all,
+  because the only thing it could send is a count. A test pins it, asserting a
+  half-finished and a finished plan produce the same card text.
+- **CI: `flutter analyze` and `flutter test` now run on every pull request.** Both
+  existed only in the release workflow, whose triggers are `push` and
+  `workflow_dispatch` — so they ran at exactly one moment in the lifecycle: after
+  a release tag had already been pushed. The analyzer also stopped walking the
+  platform and build directories.
+- **CI: an APK size gate.** `tool/check_app_size.sh` fails a build that outgrows
+  its budget and warns inside the last 5% — 140 MB against the arm64 release APK
+  on tag builds, and 380 MB against the universal debug APK on pull requests as
+  the early warning. Sizes are decimal MB so the gate, `flutter build` and Play
+  Console all report the same number. Until now the 200 MB cap was enforced by
+  Play Console at upload, after the tag was pushed and the GitHub release
+  published.
+- **CI: the native Android code has unit tests now, and CI runs them.**
+  `ReminderRulesTest.kt` covers the two native decisions that can silently tell a
+  user their phone is broken — whether an armed alarm lapsed, and which audio
+  route a firing alarm takes — in plain JUnit with no Robolectric, plus a
+  `./gradlew :app:testDebugUnitTest` step. `flutter test` never compiles Kotlin
+  and `flutter build apk` compiles it without running anything, so before this a
+  Kotlin test could not have been executed by anybody.
+- **The git hooks had never run once.** `package.json` carried a husky v4-style
+  `hooks` key while the installed dependency is husky 8, which reads a `.husky/`
+  directory that did not exist; and `commitlint --edit` would have failed with "no
+  configuration found" because `@commitlint/config-conventional` was installed
+  with no config file. Real `.husky/pre-commit` and `.husky/commit-msg` hooks and
+  a commitlint config with this repo's actual scopes replace the dead key.
+- **README and CONTRIBUTING now document `android/fix_deps_proguard.sh`**, the
+  mandatory pub-cache patch both CI workflows run and that nothing told a human
+  about — without it `flutter pub get && flutter run` fails with an opaque Gradle
+  CONFIGURATION error, and it must be re-run after anything that resolves
+  dependencies.
+- **Tests: 4 files to 40; about 36 tests to 526 Dart plus 14 Kotlin.** The climb is
+  visible in the commits: 83 → 194 → 237 → 260 → 316 → 391 → 411 → 428 → 441 →
+  464 → 503 → 518 → 526. The parts hardest to get right were extracted as pure
+  functions so they could be driven off-device: the fasting month's candidate
+  list, the ten-day nudge's fire time (tested across all 24 hours), and the whole
+  health verdict, which a test drives with a list of rows and a fixed clock. The
+  hero's contrast tests use the widget's own `relativeLuminance`, so widget and
+  test cannot drift on the formula.
+- **Two tests that could not fail were dealt with.** The reading-comfort "puts the
+  defaults back" test asserted a condition already true before the tap, and passed
+  with the button's handler deleted. The moon-verse tests passed a verse and its
+  citation in and asserted they came back out — a field shuffle that would have
+  shipped سورة يونس cited as سورة القمر with every test green. The method-channel
+  contract test derived Dart's method names from a hand-written list, which cannot
+  catch a rename on the Dart side; both ends are scanned from source now, with a
+  canary assertion so the scan cannot go quietly empty and pass vacuously.
+- Added `fake_async` so a test can prove the persistent notification starts *no*
+  timer: it posts once, elapses a full day, and asserts no further posts and zero
+  live timers — the regression guard for the old one-second `Timer.periodic`.
+- **Dependencies added:** `pointycastle` ^4.0.0 (AES-256-GCM and PBKDF2 for the
+  backup — pure Dart, so it adds no Gradle surface), `file_selector` ^1.1.0 (the
+  backup import picker, chosen over the more popular `file_picker` for being
+  first-party), `fake_async` ^1.3.1 (dev), and on Android `work-runtime-ktx` and
+  `junit`.
+- **Dependencies upgraded and repaired:** forui 0.23 → 0.26 (a replacement
+  `AppDialog` for the removed `FDialog(title/body/actions)` at 15 sites,
+  `FCard.raw` → `FCard` at 12), awesome_notifications 0.11 → 0.12.1, geocoding
+  4 → 5 (instance API), permission_handler 12 → 13, quran_library 4.2.1 → 4.3.0,
+  flutter_confetti 0.6 → 0.9.2, flutter_lints 5 → 6, the Syncfusion trio
+  34.1.29 → 34.2.6, msix 3.16.13 → 3.18.0, plus point bumps to equatable,
+  share_plus, intl, just_audio, camera, image_picker, gal, path_provider and
+  package_info_plus. `home_widget` is un-pinned back to `^0.9.4` after verifying
+  it against AGP 9.1.0 / Gradle 9.3.1 / Kotlin 2.3.21 with
+  `android.builtInKotlin=false`; `path_provider_foundation` stays pinned to 2.5.1,
+  because 2.6.0 ships an `objective_c` Dart-FFI code asset that crashes
+  `flutter test` on Xcode 26.
+
+### Version
+
+- App version bumped from `3.3.2+22` to `3.4.0+23`.
+- MSIX version bumped from `3.3.2.0` to `3.4.0.0`.
+- The About screen reads the version at runtime, so there is no hand-maintained
+  copy to update in the Arabic and English settings strings any more.
+
 ## [3.3.2+22] - 2026-07-15
 
 A reliability release. The headline is that the adhan now actually plays at

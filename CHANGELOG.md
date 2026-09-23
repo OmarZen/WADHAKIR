@@ -5,6 +5,43 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1+24] - 2026-09-23
+
+A Play policy fix. Google Play rejected `3.4.0+23` under the Families policy's
+Augmented Reality restriction: the Qibla camera mode is treated as AR, and an AR
+section in an app used by children has to open on a safety warning.
+
+### Fixed
+
+- **The Qibla camera mode now opens on a safety warning.** Before the camera
+  starts, and before its permission is even asked for, the screen reminds you of
+  two things: children should use it with a parent or another adult supervising,
+  and you should stay aware of your surroundings — don't walk while looking at
+  the screen. It shows every time the camera mode opens, not once.
+- **The camera mode's top bar sat in the middle of the screen**, over the camera
+  view, rather than at the top. It is back at the top, and its label shortens
+  instead of overflowing on a narrow phone at a large text size.
+- **The camera never came back after leaving the app.** Pulling down the
+  notification shade, switching apps or taking a call turned the camera off for
+  good, and the screen then claimed it needed the camera permission. It now
+  restarts when you return — and after you grant the permission in system
+  settings, it notices without having to be reopened.
+- Two leaks of the platform camera: one when starting the camera failed, and one
+  when it finished starting after you had already left the app.
+
+### Changed
+
+- App version `3.4.0+23` → `3.4.1+24`; MSIX version `3.4.0.0` → `3.4.1.0`.
+
+### Removed
+
+- **The unused microphone permission.** The camera plugin declares
+  `RECORD_AUDIO` for video recording. The Qibla camera never records and the app
+  never asked for it, but it still counted among the app's permissions; it is
+  no longer declared. The plugin also marked a camera as required, which would
+  have hidden the app from devices without one — it is optional again, as
+  intended.
+
 ## [3.4.0+23] - 2026-09-14
 
 The largest release the app has had. Four planned phases — R1 through R4 — landed

@@ -833,7 +833,14 @@
     "camera_permission_required": "يحتاج وضع الكاميرا إلى إذن الكاميرا",
     "camera_unavailable": "الكاميرا غير متاحة على هذا الجهاز",
     "point_camera_hint": "حرّك الهاتف حتى تتطابق العلامة مع المنتصف",
-    "align_to_kaaba": "متجه نحو القبلة"
+    "align_to_kaaba": "متجه نحو القبلة",
+    "ar_safety_title": "تنبيه للسلامة",
+    "ar_safety_supervision_title": "إشراف الوالدين",
+    "ar_safety_supervision": "على الأطفال ألّا يستخدموا وضع الكاميرا إلا بإشراف أحد الوالدين أو شخص بالغ.",
+    "ar_safety_surroundings_title": "انتبه لما حولك",
+    "ar_safety_surroundings": "لا تمشِ وعيناك على الشاشة، وتأكد أن المكان حولك خالٍ من العوائق والمخاطر.",
+    "ar_safety_continue": "فهمت، افتح الكاميرا",
+    "back_to_compass": "العودة للبوصلة"
   },
   "prayer_times": {
     "title": "مواقيت الصلاة",

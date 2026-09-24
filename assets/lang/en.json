@@ -833,7 +833,14 @@
     "camera_permission_required": "Camera mode needs camera permission",
     "camera_unavailable": "Camera is not available on this device",
     "point_camera_hint": "Move the phone until the marker meets the center",
-    "align_to_kaaba": "Facing the Qibla"
+    "align_to_kaaba": "Facing the Qibla",
+    "ar_safety_title": "Safety warning",
+    "ar_safety_supervision_title": "Parental supervision",
+    "ar_safety_supervision": "Children should use camera mode only with a parent or another adult supervising.",
+    "ar_safety_surroundings_title": "Be aware of your surroundings",
+    "ar_safety_surroundings": "Don't walk while looking at the screen, and make sure the area around you is clear of obstacles and hazards.",
+    "ar_safety_continue": "I understand, open the camera",
+    "back_to_compass": "Back to compass"
   },
   "prayer_times": {
     "title": "Prayer Times",

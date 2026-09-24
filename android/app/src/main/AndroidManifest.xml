@@ -63,6 +63,17 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <!-- camera_android_camerax declares camera.any with no android:required,
+         i.e. required — which would undo the line above and hide the app from
+         devices without a camera. -->
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false"
+        tools:replace="android:required" />
+    <!-- ...and RECORD_AUDIO, for video recording. The Qibla camera never
+         records (enableAudio: false), so a family app should not be asking
+         for the microphone. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
 
     <!-- Permissions for audio streaming -->
     <uses-permission android:name="android.permission.INTERNET" />

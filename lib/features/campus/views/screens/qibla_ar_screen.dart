@@ -18,8 +18,28 @@ const Color _alignedColor = Color(0xFF27AE60);
 /// [QiblaScreen] via `BlocProvider.value`) for the qibla bearing + compass
 /// heading — so this screen never owns or closes the cubit. It only manages the
 /// [CameraController] lifecycle.
+///
+/// ## The safety notice comes first
+///
+/// Google Play treats this screen as Augmented Reality, and because the app's
+/// audience includes children the Families policy requires a safety warning
+/// the moment the AR section starts — one that stresses parental supervision
+/// and awareness of your surroundings. Version code 23 was rejected for not
+/// having one.
+///
+/// So the screen opens on that notice, every time, and nothing touches the
+/// camera — not the permission prompt, not the preview — until the user taps
+/// through it. It is deliberately not a "don't show again" dialog: the child
+/// holding the phone today may not be the adult who dismissed it last week.
 class QiblaArScreen extends StatefulWidget {
-  const QiblaArScreen({super.key});
+  /// Resolves the camera. Injectable so a test can prove it is never called
+  /// before the safety notice is acknowledged.
+  final Future<QiblaArCameraResult> Function() prepareCamera;
+
+  const QiblaArScreen({
+    super.key,
+    this.prepareCamera = QiblaArCameraService.prepare,
+  });
 
   @override
   State<QiblaArScreen> createState() => _QiblaArScreenState();
@@ -29,7 +49,11 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     with WidgetsBindingObserver {
   CameraController? _controller;
   QiblaArAvailability _status = QiblaArAvailability.ready;
-  bool _initializing = true;
+  bool _initializing = false;
+
+  /// False until the user taps through the safety notice. The camera is not
+  /// prepared — so its permission is not even requested — before then.
+  bool _acknowledged = false;
 
   @override
   void initState() {
@@ -37,7 +61,6 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     WidgetsBinding.instance.addObserver(this);
     // AR overlay math assumes portrait; lock while this screen is visible.
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    _initCamera();
   }
 
   @override
@@ -50,22 +73,42 @@ class _QiblaArScreenState extends State<QiblaArScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) return;
+    // Nothing to release or restart until the safety notice is accepted.
+    if (!_acknowledged) return;
 
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.paused) {
-      // Release the camera while backgrounded to avoid leaks/locks.
+      // Release the camera while backgrounded to avoid leaks/locks — through
+      // setState, so no preview of a disposed controller is left on screen.
+      final controller = _controller;
+      if (controller == null) return;
+      setState(() => _controller = null);
       controller.dispose();
-      _controller = null;
     } else if (state == AppLifecycleState.resumed) {
-      _initCamera();
+      // Restart a camera released above, or look again after the user was
+      // sent to system settings. Never after a plain denial: that would put
+      // the system prompt up on every resume — and the prompt itself makes the
+      // app inactive and then resumed, so it would never stop asking.
+      final worthRetrying =
+          _status == QiblaArAvailability.ready ||
+          _status == QiblaArAvailability.permissionPermanentlyDenied;
+      if (_controller == null && !_initializing && worthRetrying) {
+        _initCamera();
+      }
     }
   }
 
+  void _acknowledgeSafetyNotice() {
+    setState(() => _acknowledged = true);
+    _initCamera();
+  }
+
   Future<void> _initCamera() async {
+    // One attempt at a time: a second would build a second controller and
+    // overwrite the first without disposing it.
+    if (_initializing) return;
     if (mounted) setState(() => _initializing = true);
-    final result = await QiblaArCameraService.prepare();
+    final result = await widget.prepareCamera();
     if (!mounted) return;
 
     if (result.status != QiblaArAvailability.ready || result.camera == null) {
@@ -85,6 +128,8 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     try {
       await controller.initialize();
     } catch (_) {
+      // initialize() allocates the platform camera before it can throw.
+      controller.dispose();
       if (!mounted) return;
       setState(() {
         _status = QiblaArAvailability.noCamera;
@@ -93,8 +138,20 @@ class _QiblaArScreenState extends State<QiblaArScreen>
       return;
     }
 
-    if (!mounted) {
+    // Finished after the app left the foreground: the lifecycle handler had
+    // no controller to release then, so release it here and let `resumed`
+    // start it again.
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    final backgrounded =
+        lifecycle != null && lifecycle != AppLifecycleState.resumed;
+    if (!mounted || backgrounded) {
       controller.dispose();
+      if (mounted) {
+        setState(() {
+          _status = QiblaArAvailability.ready;
+          _initializing = false;
+        });
+      }
       return;
     }
     setState(() {
@@ -136,12 +193,21 @@ class _QiblaArScreenState extends State<QiblaArScreen>
               },
             ),
 
-          if (!cameraReady && !_initializing) _buildFallback(context),
+          if (!_acknowledged)
+            _buildSafetyNotice(context)
+          else if (!cameraReady && !_initializing)
+            _buildFallback(context),
           if (_initializing)
             const Center(child: CircularProgressIndicator(color: Colors.white)),
 
-          // Top bar.
-          SafeArea(child: _buildTopBar(context)),
+          // Top bar. Aligned, or the expanded Stack's tight constraints
+          // would centre the Row vertically — over the middle of the screen.
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: _buildTopBar(context),
+            ),
+          ),
 
           // Bottom status badge.
           if (cameraReady)
@@ -182,26 +248,41 @@ class _QiblaArScreenState extends State<QiblaArScreen>
         children: [
           _circleButton(
             icon: Icons.arrow_back,
-            tooltip: l10n?.translate('common.close') ?? 'رجوع',
+            tooltip: l10n?.translate('common.back') ?? 'رجوع',
             onPressed: () => Navigator.of(context).pop(),
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              l10n?.translate('campus.ar_mode') ?? 'وضع الكاميرا',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontFamily: 'Almarai',
+          // Takes what the two buttons leave, so the label shortens rather
+          // than overflowing on a narrow phone at a large text size.
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              // Or the Align fills the height it is offered, and the bar with
+              // it.
+              heightFactor: 1,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  l10n?.translate('campus.ar_mode') ?? 'وضع الكاميرا',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Almarai',
+                  ),
+                ),
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 8),
           _circleButton(
             icon: Icons.explore_rounded,
             tooltip: l10n?.translate('campus.compass_mode') ?? 'البوصلة',
@@ -277,6 +358,123 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     );
   }
 
+  Widget _buildSafetyNotice(BuildContext context) {
+    final l10n = context.l10n;
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          // Clears the top bar, which is stacked above this.
+          padding: const EdgeInsets.fromLTRB(24, 72, 24, 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.health_and_safety_rounded,
+                  color: Colors.amber,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n?.translate('campus.ar_safety_title') ?? 'تنبيه للسلامة',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Almarai',
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _safetyPoint(
+                  icon: Icons.family_restroom_rounded,
+                  title:
+                      l10n?.translate('campus.ar_safety_supervision_title') ??
+                      'إشراف الوالدين',
+                  body:
+                      l10n?.translate('campus.ar_safety_supervision') ??
+                      'على الأطفال ألّا يستخدموا وضع الكاميرا إلا بإشراف أحد الوالدين أو شخص بالغ.',
+                ),
+                const SizedBox(height: 12),
+                _safetyPoint(
+                  icon: Icons.directions_walk_rounded,
+                  title:
+                      l10n?.translate('campus.ar_safety_surroundings_title') ??
+                      'انتبه لما حولك',
+                  body:
+                      l10n?.translate('campus.ar_safety_surroundings') ??
+                      'لا تمشِ وعيناك على الشاشة، وتأكد أن المكان حولك خالٍ من العوائق والمخاطر.',
+                ),
+                const SizedBox(height: 28),
+                ElevatedButton.icon(
+                  onPressed: _acknowledgeSafetyNotice,
+                  icon: const Icon(Icons.photo_camera_rounded),
+                  label: Text(
+                    l10n?.translate('campus.ar_safety_continue') ??
+                        'فهمت، افتح الكاميرا',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    l10n?.translate('campus.back_to_compass') ??
+                        'العودة للبوصلة',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _safetyPoint({
+    required IconData icon,
+    required String title,
+    required String body,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.amber, size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Almarai',
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  body,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFallback(BuildContext context) {
     final l10n = context.l10n;
     final permanently =
@@ -323,7 +521,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                l10n?.translate('campus.compass_mode') ?? 'العودة للبوصلة',
+                l10n?.translate('campus.back_to_compass') ?? 'العودة للبوصلة',
                 style: const TextStyle(color: Colors.white),
               ),
             ),

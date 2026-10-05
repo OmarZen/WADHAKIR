@@ -1,5 +1,6 @@
 package com.bloom.wadhakir
 
+import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -16,6 +17,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
+import android.view.KeyEvent
 import androidx.core.app.ServiceCompat
 
 /**
@@ -54,6 +56,13 @@ import androidx.core.app.ServiceCompat
  * silent and vibrate the way an alarm clock does. That is a deliberate,
  * user-visible change from the notification stream it used to ride, and
  * [PrayerAlarm.overrideSilent] is the switch that gives it back.
+ *
+ * ## Stopping it from the buttons
+ *
+ * The volume keys and the power key stop it — see [AdhanStopTriggers] for the
+ * service side and [interceptVolumeKey] for this app's own windows. Those stops
+ * leave the card behind, like the adhan ending on its own: the user silenced a
+ * loud phone, they did not dismiss the prayer.
  */
 class AdhanPlaybackService : Service() {
 
@@ -69,6 +78,10 @@ class AdhanPlaybackService : Service() {
 
     /** The row being played, so the card can be left behind on the way out. */
     private var currentAlarm: PrayerAlarm? = null
+
+    private val stopTriggers by lazy {
+        AdhanStopTriggers(this, handler, alarmAttributes()) { stopSelf() }
+    }
 
     private val watchdog = Runnable {
         Log.w(TAG, "Adhan exceeded ${MAX_PLAYBACK_MS}ms; stopping")
@@ -124,6 +137,7 @@ class AdhanPlaybackService : Service() {
         // watchdog in particular would otherwise still be queued and would stop
         // the NEW adhan when the OLD one's five minutes were up.
         handler.removeCallbacks(watchdog)
+        stopTriggers.release()
         releasePlayer()
 
         currentAlarm = alarm
@@ -153,6 +167,7 @@ class AdhanPlaybackService : Service() {
      */
     override fun onDestroy() {
         handler.removeCallbacks(watchdog)
+        stopTriggers.release()
         releasePlayer()
         abandonFocus()
         releaseWakeLock()
@@ -160,11 +175,16 @@ class AdhanPlaybackService : Service() {
         val alarm = currentAlarm
         if (alarm != null && !suppressCardOnExit) {
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
-            PrayerNotifier.postBuilt(
-                this,
-                alarm.id,
-                PrayerNotifier.buildAdhan(this, alarm, ongoing = false),
-            )
+            // A silent update. Without the flag, re-posting over the card that
+            // is already showing buzzed and popped it up again — right after the
+            // user pressed a button to make the phone stop, so it read as the
+            // press not working, or the adhan coming back. It only mutes an
+            // update: where the card never showed (promote failed), it still
+            // alerts.
+            val card = PrayerNotifier.buildAdhan(this, alarm, ongoing = false).apply {
+                flags = flags or Notification.FLAG_ONLY_ALERT_ONCE
+            }
+            PrayerNotifier.postBuilt(this, alarm.id, card)
         } else {
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         }
@@ -250,6 +270,10 @@ class AdhanPlaybackService : Service() {
         // corrupted resource, an OEM MediaPlayer that stalls. Without it the
         // foreground notification would sit in the tray until reboot.
         handler.postDelayed(watchdog, MAX_PLAYBACK_MS)
+
+        // Last, so it only ever listens for an adhan that is actually going to
+        // sound — every early return above has already called stopSelf.
+        stopTriggers.arm()
     }
 
     /**
@@ -377,7 +401,10 @@ class AdhanPlaybackService : Service() {
         private const val TAG = "PrayerAlarms"
         private const val WAKE_LOCK_TAG = "wadhakir:adhan"
 
-        /** Longest any bundled adhan runs is ~45s; this is a stuck-player guard. */
+        /**
+         * A stuck-player guard. The longest bundled adhan runs ~279 s
+         * (adhan_fajr_madinah), so do not lower this without checking res/raw.
+         */
         private const val MAX_PLAYBACK_MS = 5 * 60 * 1000L
 
         private const val DUCK_VOLUME = 0.25f
@@ -390,8 +417,9 @@ class AdhanPlaybackService : Service() {
         /**
          * The alarm id currently sounding, or 0.
          *
-         * Process-global because the only reader is [stop], which runs in a
-         * BroadcastReceiver in this same process, on this same main thread.
+         * Process-global because its readers — [stop], from a BroadcastReceiver,
+         * and [interceptVolumeKey], from an Activity — run in this same process,
+         * on this same main thread.
          */
         @Volatile
         private var runningId: Int = 0
@@ -402,6 +430,13 @@ class AdhanPlaybackService : Service() {
          */
         @Volatile
         private var suppressCardOnExit: Boolean = false
+
+        /**
+         * Set when a volume key-down stopped the adhan, so its repeats and its
+         * key-up are swallowed too instead of moving a volume slider after the
+         * fact. Main thread only, like every other caller of this class.
+         */
+        private var swallowVolumeKey: Boolean = false
 
         fun playIntent(context: Context, alarm: PrayerAlarm): Intent =
             Intent(context, AdhanPlaybackService::class.java).apply {
@@ -433,6 +468,42 @@ class AdhanPlaybackService : Service() {
                 context.stopService(Intent(context, AdhanPlaybackService::class.java))
             }
             return true
+        }
+
+        /**
+         * The volume keys while one of this app's own windows is in front.
+         *
+         * Call from `Activity.dispatchKeyEvent`, before `super`. The service's
+         * own listeners cannot cover this case: audio_service attaches the Quran
+         * player's media session to every [com.ryanheise.audioservice.AudioServiceActivity],
+         * so the window sends volume keys straight to that session and they never
+         * reach the adhan's — someone who opened the app *because* it was calling
+         * the adhan would press volume and watch the Quran slider move instead.
+         *
+         * Returns true when the key was this adhan's to take. The card is left
+         * behind, as for every other button.
+         */
+        fun interceptVolumeKey(context: Context, event: KeyEvent): Boolean {
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_VOLUME_UP,
+                KeyEvent.KEYCODE_VOLUME_DOWN,
+                KeyEvent.KEYCODE_VOLUME_MUTE -> Unit
+
+                else -> return false
+            }
+            if (event.action == KeyEvent.ACTION_DOWN && runningId != 0) {
+                Log.i(TAG, "Adhan stopped by volume key (in app)")
+                swallowVolumeKey = true
+                runCatching {
+                    context.stopService(Intent(context, AdhanPlaybackService::class.java))
+                }
+                return true
+            }
+            if (swallowVolumeKey) {
+                if (event.action == KeyEvent.ACTION_UP) swallowVolumeKey = false
+                return true
+            }
+            return false
         }
     }
 }

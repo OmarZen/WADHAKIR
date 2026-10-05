@@ -26,9 +26,8 @@ launch (adhan playing on app open).
   silent/vibrate, Android suppresses the sound and only the strong vibration
   fires — matching the requested "vibrate instead of sound when muted."
 - **Stop control.** Every prayer notification has a "إيقاف الأذان / Stop" action
-  button; tapping it (or dismissing the notification, or tapping to open the app)
-  stops the adhan. See note (2c) for the one remaining piece (hardware volume key
-  while fully closed).
+  button; tapping it or dismissing the notification stops the adhan. On Android
+  the hardware volume and power keys stop it too — see note (2c).
 - **BUG "adhan plays on app open" fixed.** `onDisplayed`
   (`lib/core/notifications/app_notification_listeners.dart`) now ignores any event
   whose scheduled time isn't within 90s of now (stale replays), de-dupes by id,
@@ -94,21 +93,33 @@ radio, trimmed background modes, encryption flag), localized permission strings
 (`ar/en.lproj/InfoPlist.strings`), `Podfile` (min iOS 15 + permission macros),
 `Runner.entitlements`, and hiding App-Lock / Floating-Dhikr in Settings on iOS.
 
-### 2c. Native adhan foreground service — OPTIONAL follow-up (Android)
+### 2c. Stopping the adhan with the hardware keys (Android) — DONE ✅
 
-One requested behaviour isn't covered by the channel approach: **stopping the
-adhan with the hardware volume buttons while the app is fully closed.** Nothing
-of ours runs at that moment (the OS plays the channel sound), so a volume press
-only lowers the alarm volume. Today you stop a closed-app adhan by tapping the
-notification's **Stop** button, dismissing it, or opening the app. Flip-to-mute
-and volume-to-mute work while the app is open.
+The adhan now plays from `AdhanPlaybackService` (a native mediaPlayback
+foreground service), and while it sounds the phone's own buttons stop it, with
+the app closed, the screen off, or the app open:
 
-To get true volume-key stop while closed, we'd add a native Android foreground
-service (AlarmManager → BroadcastReceiver → a MediaPlayer service with a
-MediaSession + volume ContentObserver + full-screen alert Activity). It's a
-sizeable native piece that needs on-device iteration — flagged as a follow-up so
-we don't ship untested Kotlin that could break the Android build. Say the word
-and it's the next task.
+- **Volume up / down** — two media sessions catch the key (`AdhanStopTriggers`),
+  and inside the app `MainActivity.dispatchKeyEvent` takes it before the Quran
+  player's session can.
+- **Power** — waking a dark screen stops it (except in the first 2 s, when some
+  phones light the screen for the notification itself, and when the charger
+  was just plugged or unplugged); turning a lit screen off stops it too, because
+  the service holds a lit screen on for the adhan's first minute, so a
+  screen-off can only be the user.
+- Deliberately **not** stops: a headset's play/pause (earbuds and cars send it
+  on their own), and volume changes on any stream but the alarm's (prayer-time
+  auto-silent apps and Bluetooth connections change those at prayer time).
+
+A button stop leaves the card in the tray as an ordinary dismissible
+notification; the card's **Stop** button removes it. The decision rules are in
+`AdhanStopRules` with JVM tests. To try it on a debug build without waiting for
+a prayer, `AdhanTestReceiver` (debug source set only) rings a real adhan:
+
+```bash
+adb shell am broadcast -n com.bloom.wadhakir/.AdhanTestReceiver \
+    -a com.bloom.wadhakir.debug.ADHAN_TEST --ei delay_s 15
+```
 
 ## 3. iOS home-screen widgets (WidgetKit) — extension is BUILT
 

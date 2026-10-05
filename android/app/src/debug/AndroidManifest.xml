@@ -4,4 +4,13 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application>
+        <!-- Debug-only: rings a test adhan on demand so the stop paths can be
+             exercised from adb. Exported so the shell can reach it; it never
+             exists in a release build. See AdhanTestReceiver. -->
+        <receiver
+            android:name=".AdhanTestReceiver"
+            android:exported="true" />
+    </application>
 </manifest>

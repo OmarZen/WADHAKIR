@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 
 /**
  * Restarts the native floating-dhikr foreground service after a device reboot
@@ -30,10 +31,19 @@ class BootReceiver : BroadcastReceiver() {
         val service = Intent(context, FloatingDhikrService::class.java).apply {
             this.action = FloatingDhikrService.ACTION_START
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(service)
-        } else {
-            context.startService(service)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(service)
+            } else {
+                context.startService(service)
+            }
+        } catch (e: Exception) {
+            // Android 12+ can refuse the start — seen on Android 17 when the app
+            // leaves the force-stopped state and the boot broadcast arrives
+            // without its usual exemption. Uncaught, that refusal crashed the
+            // whole process, and any adhan an alarm had just woken it for died
+            // with it. The overlay comes back the next time the app opens.
+            Log.w("BootReceiver", "Could not restart the floating dhikr", e)
         }
     }
 }

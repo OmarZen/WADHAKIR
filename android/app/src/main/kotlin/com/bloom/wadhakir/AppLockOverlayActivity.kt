@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
@@ -65,6 +66,11 @@ class AppLockOverlayActivity : AudioServiceActivity() {
     override fun onBackPressed() {
         goHome()
     }
+
+    // This screen appears in prayer windows — exactly when an adhan may be
+    // sounding — and inherits MainActivity's Quran-session volume routing.
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        AdhanPlaybackService.interceptVolumeKey(this, event) || super.dispatchKeyEvent(event)
 
     private fun goHome() {
         val homeIntent = Intent(Intent.ACTION_MAIN).apply {

@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.KeyEvent
 import androidx.core.view.WindowCompat
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -42,7 +43,12 @@ class MainActivity : AudioServiceActivity() {
         super.onNewIntent(intent)
         handleIntent(intent)
     }
-    
+
+    // A sounding adhan takes the volume keys before the Quran player's session,
+    // which audio_service has attached to this window, can swallow them.
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        AdhanPlaybackService.interceptVolumeKey(this, event) || super.dispatchKeyEvent(event)
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 

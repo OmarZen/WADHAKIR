@@ -5,6 +5,32 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.2+25] - 2026-10-05
+
+The adhan can finally be silenced with the phone's own buttons — the most common
+reason people gave for uninstalling.
+
+### Fixed
+
+- **The volume and power buttons now stop the adhan** (Android). Before, they did
+  nothing: the only way to stop a loud adhan was the notification's stop button,
+  or opening the app and closing it. Now one press stops it — with the screen off
+  or on, with the app closed or open, and even when the volume is already at its
+  highest. The prayer notification stays in the tray as a reminder, and the
+  phone no longer buzzes a second time after you silence it.
+- The adhan is not stopped by things you did not do: a prayer-time silent-mode
+  app turning the ringer down, a car or earbuds connecting, plugging in the
+  charger, or the screen timing out.
+- **A crash after the app was force-stopped.** If the floating dhikr was on,
+  reopening the app after a force-stop (or after a phone's task cleaner closed
+  it) could crash it — taking down any adhan that was just starting.
+
+### Changed
+
+- Updated packages, including the Quran library (5.0.1), forui, Syncfusion and
+  the home-screen widget plugin.
+- App version `3.4.1+24` → `3.4.2+25`; MSIX version `3.4.1.0` → `3.4.2.0`.
+
 ## [3.4.1+24] - 2026-09-23
 
 A Play policy fix. Google Play rejected `3.4.0+23` under the Families policy's

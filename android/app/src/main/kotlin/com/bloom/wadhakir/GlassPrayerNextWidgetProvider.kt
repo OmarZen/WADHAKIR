@@ -3,7 +3,6 @@ package com.bloom.wadhakir
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
-import android.graphics.BitmapFactory
 import android.util.Log
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
@@ -26,7 +25,9 @@ class GlassPrayerNextWidgetProvider : HomeWidgetProvider() {
             try {
                 val path = widgetData.getString("glass_prayer_next_image", null)
                 if (path != null && File(path).exists()) {
-                    BitmapFactory.decodeFile(path)?.let {
+                    // A widget never needs more pixels than the screen it sits on.
+                    val screen = context.resources.displayMetrics
+                    SampledBitmap.decodeFile(path, screen.widthPixels, screen.heightPixels)?.let {
                         views.setImageViewBitmap(R.id.widget_image, it)
                     }
                 }

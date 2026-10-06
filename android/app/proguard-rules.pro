@@ -1,142 +1,47 @@
-# Flutter Wrapper
--keep class io.flutter.app.** { *; }
--keep class io.flutter.plugin.** { *; }
--keep class io.flutter.util.** { *; }
--keep class io.flutter.view.** { *; }
--keep class io.flutter.** { *; }
--keep class io.flutter.plugins.** { *; }
-
-# Awesome Notifications (real Android package is me.carda.*; the old
-# com.awesome.notifications rule matched nothing). Also keep any notification
-# broadcast receivers/services so scheduled adhan/fasting/wird alarms survive
-# release minification and still fire after the device wakes/reboots.
--keep class me.carda.awesome_notifications.** { *; }
--dontwarn me.carda.awesome_notifications.**
--keep public class * extends android.content.BroadcastReceiver { *; }
--keep public class * extends android.app.Service { *; }
-
-# Just Audio & Audio Session
--keep class com.ryanheise.just_audio.** { *; }
--keep class com.ryanheise.audio_session.** { *; }
-
-# Hive
--keep class com.hivedb.** { *; }
--keep class * extends com.hivedb.** { *; }
-
-# Syncfusion
--keep class com.syncfusion.** { *; }
--dontwarn com.syncfusion.**
-
-# Quran Library
--keep class com.example.quran_library.** { *; }
-
-# Permissions Handler
--keep class com.baseflow.permissionhandler.** { *; }
-
-# Geolocator & Geocoding
--keep class com.baseflow.geolocator.** { *; }
--keep class com.baseflow.geocoding.** { *; }
-
-# Flutter Compass
--keep class com.hemanthraj.fluttercompass.** { *; }
-
-# Home Widget
--keep class es.antonborri.home_widget.** { *; }
-
-# Share Plus
--keep class dev.fluttercommunity.plus.share.** { *; }
-
-# URL Launcher
--keep class io.flutter.plugins.urllauncher.** { *; }
-
-# Connectivity Plus
--keep class dev.fluttercommunity.plus.connectivity.** { *; }
-
-# Package Info Plus
--keep class dev.fluttercommunity.plus.packageinfo.** { *; }
-# Google Play Core
--keep class com.google.android.play.core.** { *; }
--dontwarn com.google.android.play.core.**
-# Path Provider
--keep class io.flutter.plugins.pathprovider.** { *; }
-
-# Shared Preferences
--keep class io.flutter.plugins.sharedpreferences.** { *; }
-
-# SQLite
--keep class com.tekartik.sqflite.** { *; }
-
-# Volume Controller
--keep class com.yosemiteyss.flutter_volume_controller.** { *; }
-
-# Sensors Plus
--keep class dev.fluttercommunity.plus.sensors.** { *; }
-
-# HTTP
--keep class io.flutter.plugins.http.** { *; }
-
-# Cached Network Image
--keep class com.github.danielgindi.PowerFileExplorer.** { *; }
-
-# Keep all model classes (adjust package name if different)
--keep class com.bloom.wadhakir.data.models.** { *; }
--keep class com.bloom.wadhakir.domain.** { *; }
-
-# Keep native methods
--keepclassmembers class * {
-    native <methods>;
-}
-
-# Gson (for JSON serialization)
--keepattributes Signature
--keepattributes *Annotation*
--keepattributes EnclosingMethod
--dontwarn sun.misc.**
--keep class com.google.gson.** { *; }
--keep class * implements com.google.gson.TypeAdapterFactory
--keep class * implements com.google.gson.JsonSerializer
--keep class * implements com.google.gson.JsonDeserializer
-
-# Keep generic signature
--keepattributes Signature
-
-# Keep Parcelables
--keep class * implements android.os.Parcelable {
-  public static final android.os.Parcelable$Creator *;
-}
-
-# Keep Serializable
--keepclassmembers class * implements java.io.Serializable {
-    static final long serialVersionUID;
-    private static final java.io.ObjectStreamField[] serialPersistentFields;
-    private void writeObject(java.io.ObjectOutputStream);
-    private void readObject(java.io.ObjectInputStream);
-    java.lang.Object writeReplace();
-    java.lang.Object readResolve();
-}
-
-# Enums
--keepclassmembers enum * {
-    public static **[] values();
-    public static ** valueOf(java.lang.String);
-}
-
-# Android X
--keep class androidx.** { *; }
--keep interface androidx.** { *; }
--dontwarn androidx.**
-
-# Material Components
--keep class com.google.android.material.** { *; }
--dontwarn com.google.android.material.**
-
-# Kotlin
--keep class kotlin.** { *; }
--keep class kotlin.Metadata { *; }
--dontwarn kotlin.**
--keepclassmembers class **$WhenMappings {
-    <fields>;
-}
--keepclassmembers class kotlin.Metadata {
-    public <methods>;
-}
+# R8 rules for the app module.
+#
+# There are deliberately no keep rules in this file. Read this before adding one.
+#
+# Every library in the build ships the R8 rules it needs inside its own AAR —
+# AndroidX (WorkManager keeps worker names, androidx.startup its initializers),
+# Kotlin, media3, CameraX, package:jni, and awesome_notifications, whose
+# `-keep public class me.carda.** { *; }` covers its reflection and stored
+# schedules — and Flutter's Gradle plugin adds flutter_proguard_rules.pro.
+# Everything declared in AndroidManifest.xml (activities, services, receivers,
+# the eight widget providers that home_widget looks up by name) keeps its name
+# through the rules AAPT generates from the manifest. GeneratedPluginRegistrant
+# is @Keep. An audit of the app's Kotlin and every Android plugin in the build
+# (v3.4.2, October 2026) found no reflective or by-name lookup those do not
+# already cover.
+#
+# This file used to keep io.flutter.**, androidx.**, kotlin.**,
+# com.google.android.material.**, com.google.gson.**, every Service and
+# BroadcastReceiver, and a dozen plugin packages, all with { *; }. R8 could
+# then touch only 9% of the DEX, and Play Console flagged v3.4.1 with "DEX code
+# optimisation is below our threshold": optimisation, obfuscation and shrinking
+# all at 8%, against a 25% floor that Play enforces from February 2027 with
+# reduced visibility and publishing capabilities (Android Developers Blog,
+# 2026-08: android-developers.googleblog.com/2026/08/app-quality-memory-
+# optimization-secure-onboarding.html). The same keeps held on to Material's
+# BottomSheetDialog/SheetDialog and androidx's EdgeToEdge classes — unused, yet
+# reported by Play as deprecated edge-to-edge API use. Removing them took
+# coverage from 8% to about 91% and the DEX from 24 MB to 4.5 MB.
+#
+# The only Window.setStatusBarColor/setNavigationBarColor calls left are the
+# Flutter embedding's own (FlutterActivity.onCreate and
+# PlatformPlugin.setSystemChromeSystemUIOverlayStyle), both behind an
+# SDK_INT < 35 check. R8 now renames them, so a Play report may show them as
+# short names such as "pp0.onCreate" or "l8.o" (they change per build); look
+# them up in that build's mapping.txt before chasing them.
+#
+# If something genuinely needs a rule:
+#  - keep the specific class or member, never a whole package with { *; };
+#  - prefer -keepnames, -keepclassmembers or -keep,allowobfuscation over -keep;
+#  - write down next to it what looks it up by name, with file and line.
+#
+# Measure the effect. R8 writes the numbers Play reads on every minified build
+# (and into the .aab); this needs no upload key:
+#     flutter build apk --release
+#     bash tool/check_r8_stats.sh 25 local \
+#       build/app/intermediates/r8_metadata/release/minifyReleaseWithR8/r8-metadata.dat
+# The tagged release workflow runs the same check on the .aab and fails below 25%.

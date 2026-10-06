@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -201,8 +200,15 @@ class MainActivity : AudioServiceActivity() {
     private fun setWallpaperFromFile(path: String?, target: String): Boolean {
         if (path.isNullOrBlank()) return false
         return try {
-            val bitmap = BitmapFactory.decodeFile(path) ?: return false
             val wm = WallpaperManager.getInstance(applicationContext)
+            // Decode no larger than the wallpaper will be shown. The launcher's
+            // desired size is 0 or -1 when it has none, hence the screen floor.
+            val screen = resources.displayMetrics
+            val bitmap = SampledBitmap.decodeFile(
+                path,
+                maxOf(wm.desiredMinimumWidth, screen.widthPixels),
+                maxOf(wm.desiredMinimumHeight, screen.heightPixels),
+            ) ?: return false
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 val which = when (target) {
                     "home" -> WallpaperManager.FLAG_SYSTEM

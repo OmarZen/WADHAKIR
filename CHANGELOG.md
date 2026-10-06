@@ -5,6 +5,37 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.3+26] - 2026-10-06
+
+Answers the Google Play Console warnings on `3.4.1+24`, and makes the Android
+app's code about five times smaller on the way. Play's fourth note, "Edge-to-edge
+may not display for all users", stays on purpose: clearing it takes an API that
+brings the deprecated-API warning straight back, and Flutter treats the note as
+a false positive.
+
+### Fixed
+
+- **Play's "DEX code optimisation is below our threshold".** Over-broad keep
+  rules had switched the code shrinker off for almost all of the app, so Play
+  scored optimisation, obfuscation and shrinking at 8% each — under the 25% it
+  requires from February 2027. They now score about 91%. The compiled Android
+  code is 4.5 MB instead of 24 MB, and the app bundle is about 10 MB smaller.
+- **Play's "deprecated APIs for edge-to-edge" report.** The code it pointed at —
+  Material's bottom-sheet dialogs and androidx's edge-to-edge helper — was never
+  used by the app; the same rules kept it in the build. It is gone now. The only
+  such calls left are Flutter's own, and they run only below Android 15.
+- **Play's "bitmap downsampling" recommendation.** Setting a wallpaper from
+  Islamic Backgrounds, and the two glass home-screen widgets, now decode their
+  image no larger than the screen needs. The images the app makes already fit,
+  so nothing looks different; an oversized one can no longer run a low-memory
+  phone out of memory.
+
+### Changed
+
+- Tagged releases now fail when the code-shrinker coverage drops under Play's
+  25% (`tool/check_r8_stats.sh`), next to the existing size gate.
+- App version `3.4.2+25` → `3.4.3+26`; MSIX version `3.4.2.0` → `3.4.3.0`.
+
 ## [3.4.2+25] - 2026-10-05
 
 The adhan can finally be silenced with the phone's own buttons — the most common

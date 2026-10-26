@@ -43,6 +43,11 @@ class PrayerNotificationContent {
   static const String adhanChannelKey = 'prayer_adhan_v2';
   static const String fajrAdhanChannelKey = 'prayer_adhan_fajr_v2';
 
+  /// The quiet adhan card's channel: no sound, one short buzz. Posted from
+  /// Kotlin (`PrayerNotifier.postQuiet`) during a call or on a silenced phone.
+  /// Must match `PrayerNotifier.QUIET_CHANNEL_ID`.
+  static const String quietAdhanChannelKey = 'prayer_adhan_quiet_v1';
+
   /// The retired sounding channels, kept as constants for two reasons.
   ///
   /// They have to be removed by key — Android never garbage-collects a deleted

@@ -11,9 +11,10 @@ import 'package:flutter/foundation.dart';
 ///    and dispatches the payload through [NotificationRouter].
 ///  - **Cold start** (app launched from a killed state by the tap): `main()`
 ///    captures the launching action via
-///    `AwesomeNotifications().getInitialNotificationAction(...)`, then the splash
-///    calls [consume] right after it pushes the home shell — so the navigator
-///    exists before we route.
+///    `AwesomeNotifications().getInitialNotificationAction(...)`, and the home
+///    shell routes it on its first frame — the first moment there is a shell
+///    to route from. A warm tap that lands while the splash or onboarding is
+///    still up is [hold]-ed for the same hand-off.
 class PendingNotificationAction {
   PendingNotificationAction._();
 
@@ -33,6 +34,16 @@ class PendingNotificationAction {
     notifier.value = copy;
   }
 
+  /// Keep a payload for the shell without notifying [notifier].
+  ///
+  /// For the router, when a tap arrives before the shell is mounted (splash,
+  /// onboarding). Notifying would hand it straight back to the live listener,
+  /// which would dispatch it again on the next frame — every frame — until
+  /// the shell appeared. The shell consumes it on its first frame instead.
+  static void hold(Map<String, String?> payload) {
+    _pending = Map<String, String?>.from(payload);
+  }
+
   /// Take and clear the pending payload (null if none).
   static Map<String, String?>? consume() {
     final p = _pending;
@@ -41,4 +52,8 @@ class PendingNotificationAction {
   }
 
   static bool get hasPending => _pending != null;
+
+  /// The pending payload without taking it — for the shell to start on the
+  /// tab it will be routed to.
+  static Map<String, String?>? peek() => _pending;
 }

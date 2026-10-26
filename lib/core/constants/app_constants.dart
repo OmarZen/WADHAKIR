@@ -73,10 +73,14 @@ class AppConstants {
   // First-use flags for features that lack another usage signal
   static const String islamicBackgroundUsedKey = 'islamic_background_used';
 
-  // adhkar.json category titles — used as route arguments to deep-link into a
-  // specific azkar category from a notification.
+  // adhkar.json category titles — what a tapped azkar notification opens. A
+  // test checks each one is still a real category in the data.
   static const String azkarMorningEveningCategory = 'أذكار الصباح والمساء';
   static const String azkarSleepCategory = 'أذكار النوم';
+  static const String azkarWitrCategory = 'دعاء قنوت الوتر';
+  // The qiyam reminder wakes people in the last third of the night; these
+  // are the adhkar said on waking.
+  static const String azkarWakingCategory = 'أذكار الاستيقاظ من النوم';
 
   // Assets Paths
   static const String langPath = 'assets/lang/';

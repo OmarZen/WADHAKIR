@@ -51,6 +51,27 @@ object PrayerNotifier {
         postBuilt(context, alarm.id, buildAdhan(context, alarm, ongoing = false))
     }
 
+    /**
+     * Posts the QUIET adhan card: no sound, one short buzz.
+     *
+     * For a call in progress and for a silenced phone. It goes to a channel of
+     * its own because a channel's vibration is fixed at creation and the adhan
+     * channels carry the plugin's long "high" pattern (a full second, then
+     * three more) — right for an adhan that is about to play, wrong for "the
+     * prayer is in, quietly". The phone then decides even the buzz: none on
+     * silent, none where there is no motor, a buzz on vibrate.
+     *
+     * No stop button: nothing is playing.
+     */
+    fun postQuiet(context: Context, alarm: PrayerAlarm) {
+        ensureQuietChannel(context)
+        postBuilt(
+            context,
+            alarm.id,
+            buildAdhan(context, alarm, ongoing = false, quiet = true),
+        )
+    }
+
     /** Hands an already-built notification to the OS. */
     fun postBuilt(context: Context, id: Int, notification: android.app.Notification) {
         try {
@@ -80,30 +101,43 @@ object PrayerNotifier {
         context: Context,
         alarm: PrayerAlarm,
         ongoing: Boolean = true,
+        quiet: Boolean = false,
     ): android.app.Notification {
         val stop = stopIntent(context, alarm.id)
-        val builder = NotificationCompat.Builder(context, alarm.channelId)
+        val builder = NotificationCompat.Builder(
+            context,
+            if (quiet) QUIET_CHANNEL_ID else alarm.channelId,
+        )
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(alarm.title)
             .setContentText(alarm.body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(alarm.body))
-            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setPriority(
+                if (quiet) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_MAX,
+            )
             // CATEGORY_ALARM is what tells Do Not Disturb, Battery Saver and the
             // heads-up ranker that this is a time-critical alert rather than a
-            // content nudge.
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            // content nudge. The quiet card is the opposite promise — it exists
+            // because the phone asked for quiet — so it is a REMINDER, which Do
+            // Not Disturb holds back unless the user lets reminders through.
+            .setCategory(
+                if (quiet) NotificationCompat.CATEGORY_REMINDER else NotificationCompat.CATEGORY_ALARM,
+            )
             .setGroup(alarm.groupKey)
             .setWhen(alarm.fireAtEpochMs)
             .setShowWhen(true)
             .setOngoing(ongoing)
             .setAutoCancel(!ongoing)
             .setContentIntent(tapIntent(context, alarm))
-            .addAction(0, STOP_LABEL, stop)
             // Without this the platform is allowed to hold a foreground
             // service's notification back for ten seconds. Ten seconds of adhan
             // with no visible stop button is the whole defect this stage exists
             // to fix.
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+
+        if (!quiet) {
+            builder.addAction(0, STOP_LABEL, stop)
+        }
 
         if (ongoing) {
             builder.setDeleteIntent(stop)
@@ -113,7 +147,7 @@ object PrayerNotifier {
             // Pre-channel Android has nowhere else to put this. From Oreo the
             // channel carries the vibration pattern, and setting it here too
             // would buzz twice.
-            builder.setVibrate(longArrayOf(0, 500, 250, 500))
+            builder.setVibrate(if (quiet) QUIET_VIBRATION else longArrayOf(0, 500, 250, 500))
         }
 
         return builder.build()
@@ -226,6 +260,29 @@ object PrayerNotifier {
     }
 
     /**
+     * The quiet card's channel; see [postQuiet]. Declared on the Dart side as
+     * well, for the reason in this file's header.
+     */
+    fun ensureQuietChannel(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = context.getSystemService(NotificationManager::class.java) ?: return
+        if (manager.getNotificationChannel(QUIET_CHANNEL_ID) != null) return
+
+        val channel = NotificationChannel(
+            QUIET_CHANNEL_ID,
+            QUIET_CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = QUIET_CHANNEL_DESCRIPTION
+            setSound(null, null)
+            enableVibration(true)
+            vibrationPattern = QUIET_VIBRATION
+            setShowBadge(true)
+        }
+        manager.createNotificationChannel(channel)
+    }
+
+    /**
      * Whether the user has left this channel able to speak.
      *
      * Checked before starting playback, because a blocked channel makes the
@@ -311,6 +368,15 @@ object PrayerNotifier {
 
     private const val ADHAN_CHANNEL_NAME = "الأذان"
     private const val FAJR_CHANNEL_NAME = "أذان الفجر"
+
+    /** Must match `PrayerNotificationContent.quietAdhanChannelKey` in Dart. */
+    const val QUIET_CHANNEL_ID = "prayer_adhan_quiet_v1"
+    private const val QUIET_CHANNEL_NAME = "الأذان أثناء المكالمات والوضع الصامت"
+    private const val QUIET_CHANNEL_DESCRIPTION =
+        "تنبيه بدون صوت واهتزاز قصير عند دخول الصلاة أثناء مكالمة أو والهاتف صامت"
+
+    /** One ordinary buzz. Must match the Dart declaration of the channel. */
+    private val QUIET_VIBRATION = longArrayOf(0, 300)
 
     /**
      * Must match `PrayerNotificationContent.locationNoticeChannelKey` in Dart.

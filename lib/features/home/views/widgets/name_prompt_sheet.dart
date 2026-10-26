@@ -26,6 +26,11 @@ class NamePromptSheet {
 
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(AppConstants.namePromptSeenKey) ?? false) return;
+    if (!context.mounted) return;
+    // Opened straight into another screen — a tapped notification pushes one
+    // over Home on the same first frame. Ask on a later launch, over Home,
+    // rather than spending the one-time prompt where it does not belong.
+    if (ModalRoute.of(context)?.isCurrent != true) return;
     await prefs.setBool(AppConstants.namePromptSeenKey, true);
 
     if (!context.mounted) return;

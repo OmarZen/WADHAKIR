@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'notification_repository_impl_windows.dart';
@@ -138,6 +139,10 @@ class _MobileNotificationRepositoryImpl
     implements NotificationRepository, PrayerAlarmGateway {
   static const String _channelKeyFajr = 'fajr_channel';
   static const String _channelKeyPrayers = 'prayers_channel';
+
+  /// Set once [_channelKeyFajr] and [_channelKeyPrayers] have been removed.
+  static const String _retiredPrayerChannelsKey =
+      'retired_prayer_channels_removed_v1';
   // The two system-beep prayer channels retired by Stage 3 now live as
   // constants on PrayerNotificationContent, next to the adhan keys that
   // replaced them — see _legacyAdhanChannelKeys.
@@ -312,6 +317,26 @@ class _MobileNotificationRepositoryImpl
       onlyAlertOnce: true,
       icon: 'resource://drawable/ic_notification',
     ),
+    // The quiet adhan card, posted from Kotlin during a call or on a silenced
+    // phone: no sound and one ordinary buzz, which the phone may still
+    // withhold. Declared here because initialize() replaces the whole channel
+    // set; must match PrayerNotifier.ensureQuietChannel.
+    NotificationChannel(
+      channelKey: PrayerNotificationContent.quietAdhanChannelKey,
+      channelName: 'الأذان أثناء المكالمات والوضع الصامت',
+      channelDescription:
+          'تنبيه بدون صوت واهتزاز قصير عند دخول الصلاة أثناء مكالمة أو والهاتف صامت',
+      importance: NotificationImportance.High,
+      defaultColor: const Color(0xFF20497D),
+      ledColor: const Color(0xFF20497D),
+      playSound: false,
+      enableVibration: true,
+      vibrationPattern: Int64List.fromList(const [0, 300]),
+      channelShowBadge: true,
+      locked: false,
+      onlyAlertOnce: true,
+      icon: 'resource://drawable/ic_notification',
+    ),
   ];
 
   /// Silent on Android, sounding on iOS — and the asymmetry is load-bearing.
@@ -456,9 +481,12 @@ class _MobileNotificationRepositoryImpl
     // Purge the two channels retired when adhan playback moved from the Dart
     // player to per-sound channels. Android never garbage-collects a deleted
     // channel, so without this they linger in the user's system notification
-    // settings forever on upgraded installs. Safe to run every launch: nothing
-    // schedules to these keys any more, so there are no live notifications for
-    // removeChannel to close.
+    // settings forever on upgraded installs. Nothing schedules to these keys
+    // any more, so there are no live notifications for removeChannel to close.
+    //
+    // Once per install, not every launch: the two calls cost ~90 ms of every
+    // cold start in front of runApp (measured, 3.4.4), to delete channels that
+    // were already gone after the first time.
     //
     // Deliberately NOT removing the in-use channels here. removeChannel "closes
     // all current notifications on that channel" (plugin README), and
@@ -466,11 +494,16 @@ class _MobileNotificationRepositoryImpl
     // a channel with all its previous settings when you recreate it with the
     // same id (see NotificationManager.deleteNotificationChannel). The versioned
     // key on the adhan channels below is the mechanism that actually works.
-    try {
-      await AwesomeNotifications().removeChannel(_channelKeyFajr);
-      await AwesomeNotifications().removeChannel(_channelKeyPrayers);
-    } catch (e) {
-      // Channels might not exist yet, ignore error
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool(_retiredPrayerChannelsKey) ?? false)) {
+      try {
+        await AwesomeNotifications().removeChannel(_channelKeyFajr);
+        await AwesomeNotifications().removeChannel(_channelKeyPrayers);
+        // Only once both went through; a failure retries next launch.
+        await prefs.setBool(_retiredPrayerChannelsKey, true);
+      } catch (e) {
+        // Channels might not exist yet, ignore error
+      }
     }
 
     await AwesomeNotifications().initialize(

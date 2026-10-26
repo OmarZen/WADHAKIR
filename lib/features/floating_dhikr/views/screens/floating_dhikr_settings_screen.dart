@@ -63,8 +63,29 @@ class _FloatingDhikrSettingsScreenState
     // to trust the call's own return value, which reports the state from
     // BEFORE the user left — so the toggle stayed off no matter what they did
     // in Settings.
-    if (state == AppLifecycleState.resumed) _refreshPermission();
+    if (state == AppLifecycleState.resumed) _onResumed();
   }
+
+  Future<void> _onResumed() async {
+    // «إيقاف» on the notification turns the feature off while this screen
+    // waits in the background. Take that in first: the permission refresh
+    // below re-applies `_settings`, and with a stale "enabled" it would start
+    // the service the user just stopped.
+    final revision = _settingsRevision;
+    final saved = await _service.getSettings();
+    // A change the user made while that read was in flight is newer than
+    // what it read; keep theirs.
+    if (mounted &&
+        revision == _settingsRevision &&
+        !saved.enabled &&
+        _settings.enabled) {
+      setState(() => _settings = _settings.copyWith(enabled: false));
+    }
+    await _refreshPermission();
+  }
+
+  /// Bumped on every local change, so a slower read cannot undo it.
+  int _settingsRevision = 0;
 
   Future<void> _refreshPermission() async {
     final perm = await _service.hasPermission();
@@ -96,6 +117,7 @@ class _FloatingDhikrSettingsScreenState
     // (closeOverlay) inside updateSettings can occasionally hang on some
     // OEM builds; awaiting it before setState() left the Switch stuck in
     // the previous position.
+    _settingsRevision++;
     setState(() => _settings = next);
     unawaited(_service.updateSettings(next));
   }

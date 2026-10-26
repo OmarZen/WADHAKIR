@@ -331,8 +331,11 @@ class NotificationSettingsWidgets extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   l10n?.translate('settings.adhan_override_silent_subtitle') ??
-                      'يُرفع الأذان بمستوى صوت المنبّه حتى لو كان الهاتف صامتاً، '
-                          'مثل المنبّه تماماً. أوقِفه لتحترم التنبيهات الوضع الصامت.',
+                      'عند تشغيله يُرفع الأذان بصوت المنبّه حتى لو كان الهاتف '
+                          'صامتاً. وعند إيقافه (الافتراضي) يحترم الأذان الوضع '
+                          'الصامت والاهتزاز و«عدم الإزعاج»: إشعار بلا صوت مع '
+                          'اهتزاز قصير إن سمح الهاتف. ولا يُرفع الأذان أبداً '
+                          'أثناء مكالمة.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 12,

@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.core.content.ContextCompat
 
 /**
  * DEBUG BUILDS ONLY — rings a real adhan on demand, so the stop paths can be
@@ -20,7 +19,13 @@ import androidx.core.content.ContextCompat
  *     adb shell am broadcast -n com.bloom.wadhakir/.AdhanTestReceiver \
  *         -a com.bloom.wadhakir.debug.ADHAN_TEST --ei delay_s 15
  *
- * Optional: `--es sound adhan_makkah_haram` (a `res/raw` name).
+ * Optional: `--es sound adhan_makkah_haram` (a `res/raw` name), and
+ * `--ez override_silent true` for «يتجاوز الوضع الصامت» (off by default, like
+ * the app since 3.4.4).
+ *
+ * It fires through [PrayerAlarmReceiver.soundAdhan], the same decision a real
+ * prayer gets — so a call, silent, vibrate or Do Not Disturb send it down the
+ * quiet path here too.
  *
  * Plays on the "other four" channel with a fixed id far outside every real
  * range, and never touches the alarm ledger, so it cannot disturb the
@@ -52,7 +57,7 @@ class AdhanTestReceiver : BroadcastReceiver() {
             soundRes = intent.getStringExtra(EXTRA_SOUND) ?: "adhan_makkah_haram",
             prayerAtEpochMs = fireAt,
             prayerName = "الظهر",
-            overrideSilent = true,
+            overrideSilent = intent.getBooleanExtra(EXTRA_OVERRIDE_SILENT, false),
             payload = emptyMap(),
         )
 
@@ -74,16 +79,8 @@ class AdhanTestReceiver : BroadcastReceiver() {
     private fun fire(context: Context, intent: Intent) {
         val alarm = intent.getStringExtra(AdhanPlaybackService.EXTRA_ALARM_JSON)
             ?.let(PrayerAlarm::fromJsonString) ?: return
-        PrayerNotifier.ensureChannel(context, alarm)
-        try {
-            ContextCompat.startForegroundService(
-                context,
-                AdhanPlaybackService.playIntent(context, alarm),
-            )
-            Log.i(TAG, "Test adhan fired")
-        } catch (e: Exception) {
-            Log.e(TAG, "Test adhan could not start the service", e)
-        }
+        val outcome = PrayerAlarmReceiver.soundAdhan(context, alarm)
+        Log.i(TAG, "Test adhan fired: $outcome")
     }
 
     companion object {
@@ -94,6 +91,7 @@ class AdhanTestReceiver : BroadcastReceiver() {
 
         private const val EXTRA_DELAY_S = "delay_s"
         private const val EXTRA_SOUND = "sound"
+        private const val EXTRA_OVERRIDE_SILENT = "override_silent"
 
         /** Outside every documented id range; see PrayerNotifier.LOCATION_NOTICE_ID. */
         private const val TEST_ID = 4242

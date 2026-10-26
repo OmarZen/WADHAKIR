@@ -8,6 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:quran_library/quran_library.dart';
 import 'package:forui/forui.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:wadhakir/core/app/onscreen_gate.dart';
 import 'package:wadhakir/core/app/restart_required.dart';
 import 'package:wadhakir/core/routes/app_router.dart';
 import 'package:wadhakir/core/notifications/app_notification_listeners.dart';
@@ -78,6 +79,10 @@ import 'package:wadhakir/features/daily_inspiration/cubit/daily_inspiration_cubi
 import 'package:wadhakir/data/repositories/azkar_reminder_settings_repository_impl.dart';
 import 'package:wadhakir/features/azkar_reminders/cubit/azkar_reminders_cubit.dart';
 import 'package:wadhakir/features/azkar_reminders/cubit/azkar_reminders_state.dart';
+import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/data/models/prayer_times_model.dart';
+import 'package:wadhakir/features/app_lock/services/app_lock_hadith_quotes_service.dart';
+import 'package:wadhakir/features/app_lock/services/app_lock_monitor_config.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_platform_service.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_prayer_window.dart';
 import 'package:wadhakir/features/floating_dhikr/service/floating_dhikr_overlay_entry.dart';
@@ -95,6 +100,9 @@ void main() async {
   // Initialize widgets binding and preserve splash screen
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  // Watching from the start, so the glass widgets' first render already knows
+  // whether there is a surface to snapshot with. See OnscreenGate.
+  OnscreenGate.start();
 
   // Diagnostic hook for the framework warning
   //   "ListTile background color or ink splashes may be invisible."
@@ -177,7 +185,7 @@ void main() async {
   AppNotificationListeners.register();
 
   // If a notification tap launched the app from a killed state, capture it so
-  // the splash can route to the right page once the navigator is mounted.
+  // the home shell can route to the right page on its first frame.
   try {
     final launchAction = await AwesomeNotifications()
         .getInitialNotificationAction(removeFromActionEvents: true)
@@ -387,7 +395,7 @@ class MyApp extends StatelessWidget {
   final GetSalahLogStreamUseCase getSalahLogStreamUseCase;
   final ClearSalahLogUseCase clearSalahLogUseCase;
 
-  final _appLockPrayerSync = _AppLockPrayerSync(const AppLockPlatformService());
+  final _appLockPrayerSync = _AppLockPrayerSync.instance;
 
   MyApp({
     super.key,
@@ -683,7 +691,7 @@ class _GlassWidgetResumeRefresherState
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Warm taps (app alive): route the tapped notification once the frame is
-    // ready. Cold-start taps are consumed by the splash instead.
+    // ready. Cold-start taps are consumed by the home shell instead.
     PendingNotificationAction.notifier.addListener(_onPendingNotification);
 
     // Arm the reminder floor here as well as on resume. A cold start is already
@@ -740,6 +748,9 @@ class _GlassWidgetResumeRefresherState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       NotificationRouter.dispatch(payload);
     });
+    // A post-frame callback does not ask for a frame. On a screen with nothing
+    // animating, the tap would otherwise wait until the user touched it.
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   @override
@@ -790,6 +801,17 @@ class _GlassWidgetResumeRefresherState
     // ignore: unawaited_futures
     _recordPendingReminders();
 
+    // «إيقاف» on the floating-dhikr notification turns the feature off, and
+    // reading the settings is what takes that in. On a warm resume main()
+    // does not run again, so bootstrap() never would.
+    // ignore: unawaited_futures
+    FloatingDhikrService.instance.getSettings();
+
+    // Same for the app lock's "Turn Off", and the moment to bring the lock
+    // back if Android killed it while the app was away.
+    // ignore: unawaited_futures
+    _AppLockPrayerSync.instance.onResumed(context);
+
     final prayerCubit = context.read<PrayerTimesCubit>();
 
     // If the day rolled over while the app was backgrounded, silently recompute
@@ -825,15 +847,46 @@ class _AppLockPrayerSync {
 
   _AppLockPrayerSync(this._platformService);
 
+  /// One for the app: the settings listeners and the resume hook must share
+  /// the "already pushed this window" memory.
+  static final _AppLockPrayerSync instance = _AppLockPrayerSync(
+    const AppLockPlatformService(),
+  );
+
+  /// After the app comes back: forget what was pushed (a monitor Android
+  /// killed meanwhile has forgotten it too), then push and ensure again.
+  Future<void> onResumed(BuildContext context) async {
+    _lastEnabled = false;
+    await sync(context);
+  }
+
   Future<void> sync(BuildContext context) async {
-    final settingsState = context.read<SettingsCubit>().state;
+    final settingsCubit = context.read<SettingsCubit>();
+    final settingsState = settingsCubit.state;
     final prayerState = context.read<PrayerTimesCubit>().state;
 
-    if (settingsState is! SettingsLoaded || prayerState is! PrayerTimesLoaded) {
-      return;
+    if (settingsState is! SettingsLoaded) return;
+    final appLockSettings = settingsState.settings.appLockSettings;
+
+    // "Turn Off" on the lock notification stops the native monitor, but the
+    // switch is saved here. Taken in before anything waits on prayer times:
+    // left unread while they load, a later read would switch off a lock the
+    // user has turned back on since. Save "off" first, then acknowledge, so a
+    // reader that dies in between leaves the marker for the next one. Saving
+    // emits SettingsLoaded again, which lands back here disabled.
+    if (await _userStoppedFromNotification()) {
+      if (appLockSettings.enabled) {
+        await settingsCubit.toggleAppLock(false);
+        // Harmless when the monitor is already stopped, which it is unless
+        // something started it after the "Turn Off".
+        await _stopMonitor();
+      }
+      await _acknowledgeUserStop();
+      if (appLockSettings.enabled) return;
     }
 
-    final appLockSettings = settingsState.settings.appLockSettings;
+    if (prayerState is! PrayerTimesLoaded) return;
+
     if (!appLockSettings.enabled ||
         appLockSettings.lockedAppPackageNames.isEmpty) {
       _lastEnabled = false;
@@ -843,27 +896,136 @@ class _AppLockPrayerSync {
     final now = DateTime.now();
     final dateKey = DateTime(now.year, now.month, now.day);
     final todayTimes = prayerState.prayerTimes[dateKey];
-    if (todayTimes == null) return;
+    final window = todayTimes == null
+        ? null
+        : AppLockPrayerWindow.fromPrayerTimes(todayTimes, now);
 
-    final window = AppLockPrayerWindow.fromPrayerTimes(todayTimes, now);
-    if (window == null) return;
+    if (window != null) {
+      final windowStartMs = window.windowStart.millisecondsSinceEpoch;
+      final nextPrayerMs = window.nextPrayerStart.millisecondsSinceEpoch;
 
-    final windowStartMs = window.windowStart.millisecondsSinceEpoch;
-    final nextPrayerMs = window.nextPrayerStart.millisecondsSinceEpoch;
+      final unchanged =
+          _lastEnabled &&
+          _lastWindowStartMs == windowStartMs &&
+          _lastNextPrayerMs == nextPrayerMs;
+      if (!unchanged) {
+        _lastEnabled = true;
+        _lastWindowStartMs = windowStartMs;
+        _lastNextPrayerMs = nextPrayerMs;
 
-    if (_lastEnabled &&
-        _lastWindowStartMs == windowStartMs &&
-        _lastNextPrayerMs == nextPrayerMs) {
-      return;
+        await _platformService.updatePrayerWindow(
+          prayerWindowStartMs: windowStartMs,
+          nextPrayerStartMs: nextPrayerMs,
+        );
+      }
     }
 
-    _lastEnabled = true;
-    _lastWindowStartMs = windowStartMs;
-    _lastNextPrayerMs = nextPrayerMs;
+    // After the window, so a monitor started here starts with it.
+    await _ensureMonitorRunning(settingsState.settings, todayTimes);
+  }
 
-    await _platformService.updatePrayerWindow(
-      prayerWindowStartMs: windowStartMs,
-      nextPrayerStartMs: nextPrayerMs,
+  /// Brings the monitor back if Android killed it.
+  ///
+  /// It used to come back from a kill as an empty service that monitored
+  /// nothing, and nothing in the app ever restarted it: the lock was
+  /// silently off until the user toggled it in settings. Native keeps the
+  /// last START config, so usually this only has to ask. Foreground only:
+  /// that is when Android allows starting a foreground service.
+  Future<void> _ensureMonitorRunning(
+    AppSettingsModel settings,
+    PrayerTimesModel? today,
+  ) async {
+    if (!Platform.isAndroid) return;
+    if (WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    try {
+      if (await _platformService.ensureLockMonitor()) return;
+      if (await _platformService.isLockMonitorRunning()) return;
+      await _startFromSettings(settings, today);
+    } catch (_) {
+      // The next resume asks again.
+    }
+  }
+
+  /// A full start, for a monitor with nothing saved to restore from.
+  ///
+  /// Versions before 3.4.4 never saved one, and an app update stops the
+  /// monitor, so without this every user who updated with the lock on would
+  /// see the switch on and nothing locked. Same after restoring a backup.
+  /// The texts are built in the app's language, as the settings screen does.
+  Future<void> _startFromSettings(
+    AppSettingsModel settings,
+    PrayerTimesModel? today,
+  ) async {
+    final lock = settings.appLockSettings;
+    final permissions = await _platformService.getPermissionStatus();
+    if (!permissions.usageAccessGranted || !permissions.overlayGranted) return;
+
+    final languageCode = settings.languageCode;
+    final l10n = AppLocalizations(Locale(languageCode));
+    await l10n.load();
+    final isArabic = languageCode == 'ar';
+    final now = DateTime.now();
+    final quotes = await AppLockMonitorConfig.quotes(
+      const AppLockHadithQuotesService(),
+      useArabic: isArabic,
     );
+    final window = AppLockMonitorConfig.window(today, now);
+    final isDark = switch (settings.themeMode) {
+      ThemeMode.dark => true,
+      ThemeMode.light => false,
+      ThemeMode.system =>
+        WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark,
+    };
+
+    await _platformService.startLockMonitor(
+      lockedPackages: lock.lockedAppPackageNames,
+      overlayMessage: quotes.initialMessage,
+      overlayTexts: AppLockMonitorConfig.overlayTexts(
+        l10n,
+        referenceText: quotes.initialReference,
+        prayerName: AppLockMonitorConfig.prayerName(
+          today,
+          now,
+          isArabic: isArabic,
+          l10n: l10n,
+        ),
+      ),
+      overlayMessages: quotes.overlayMessages,
+      overlayReferences: quotes.overlayReferences,
+      lockDurationMinutes: lock.lockDurationMinutes,
+      emergencyBypassEnabled: lock.emergencyBypassEnabled,
+      overlayIsDark: isDark,
+      prayerWindowStartMs: window.windowStartMs,
+      nextPrayerStartMs: window.nextPrayerStartMs,
+    );
+  }
+
+  Future<void> _stopMonitor() async {
+    try {
+      await _platformService.stopLockMonitor();
+    } catch (_) {
+      // Nothing running to stop.
+    }
+  }
+
+  Future<bool> _userStoppedFromNotification() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await _platformService.peekUserStop();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _acknowledgeUserStop() async {
+    try {
+      await _platformService.ackUserStop();
+    } catch (_) {
+      // Left set, it is taken in again on the next sync. Harmless: saving
+      // "off" twice changes nothing.
+    }
   }
 }

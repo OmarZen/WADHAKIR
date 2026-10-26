@@ -25,7 +25,7 @@ class AzkarCategoryByTitleScreen extends StatelessWidget {
           );
         }
         final categories = snapshot.data ?? const <AzkarCategory>[];
-        final match = _find(categories);
+        final match = find(categories, title);
         if (match == null) {
           return Scaffold(
             appBar: AppBar(),
@@ -37,7 +37,9 @@ class AzkarCategoryByTitleScreen extends StatelessWidget {
     );
   }
 
-  AzkarCategory? _find(List<AzkarCategory> categories) {
+  /// The category titled [title], tolerating small differences between the
+  /// data and the link. Shared with the notification router.
+  static AzkarCategory? find(List<AzkarCategory> categories, String title) {
     for (final c in categories) {
       if (c.title == title) return c;
     }

@@ -24,12 +24,13 @@ class PrayerNotificationSettings extends Equatable {
   /// Whether the adhan sounds through a silenced phone.
   ///
   /// On Android the adhan plays from a foreground service on
-  /// `AudioAttributes.USAGE_ALARM`, so it follows the ALARM slider and ignores
-  /// silent and vibrate mode the way an alarm clock does. That is what the
-  /// `USE_EXACT_ALARM` exemption is for and almost certainly what a prayer app
-  /// should do — but it is a change people notice on day one, so it has a
-  /// switch. False makes the fire path post the adhan card, and vibrate, but
-  /// play nothing while the ringer is off.
+  /// `AudioAttributes.USAGE_ALARM`, which could sound through silent and
+  /// vibrate the way an alarm clock does. Until 3.4.4 that was the default;
+  /// users asked for the phone's own rules instead, so it is now OFF by default
+  /// and `AppSettingsRepositoryImpl` turned it off once for every existing
+  /// install. Off, a silenced phone (ringer, vibrate or Do Not Disturb) gets a
+  /// quiet card with one short buzz. On, the adhan sounds anyway. Never during
+  /// a call, whichever way this is set.
   ///
   /// Modelled per prayer for symmetry with everything else here; the settings
   /// screen writes all five together, the same way the adhan picker does.
@@ -42,7 +43,7 @@ class PrayerNotificationSettings extends Equatable {
     required this.sound,
     required this.vibration,
     this.customSoundPath,
-    this.overrideSilentMode = true,
+    this.overrideSilentMode = false,
   });
 
   factory PrayerNotificationSettings.defaultSettings() {
@@ -52,7 +53,7 @@ class PrayerNotificationSettings extends Equatable {
       sound: NotificationSound.defaultSound,
       vibration: true,
       customSoundPath: null,
-      overrideSilentMode: true,
+      overrideSilentMode: false,
     );
   }
 
@@ -95,10 +96,9 @@ class PrayerNotificationSettings extends Equatable {
       sound: NotificationSound.values[json['sound'] as int? ?? 0],
       vibration: json['vibration'] as bool? ?? true,
       customSoundPath: json['customSoundPath'] as String?,
-      // Absent on every install that predates Stage 3, which is all of them.
-      // Defaulting to true is what makes the new alarm-clock behaviour the
-      // default the user chose, rather than something only new installs get.
-      overrideSilentMode: json['overrideSilentMode'] as bool? ?? true,
+      // Absent on installs that predate Stage 3. Off by default since 3.4.4:
+      // the adhan respects a silenced phone unless the user asks otherwise.
+      overrideSilentMode: json['overrideSilentMode'] as bool? ?? false,
     );
   }
 
@@ -147,6 +147,16 @@ class NotificationSettingsModel extends Equatable {
       ishaSettings: PrayerNotificationSettings.defaultSettings(),
     );
   }
+
+  /// «يتجاوز الوضع الصامت» set the same way on all five prayers — modelled
+  /// per prayer, always written together.
+  NotificationSettingsModel withOverrideSilentMode(bool enabled) => copyWith(
+    fajrSettings: fajrSettings.copyWith(overrideSilentMode: enabled),
+    dhuhrSettings: dhuhrSettings.copyWith(overrideSilentMode: enabled),
+    asrSettings: asrSettings.copyWith(overrideSilentMode: enabled),
+    maghribSettings: maghribSettings.copyWith(overrideSilentMode: enabled),
+    ishaSettings: ishaSettings.copyWith(overrideSilentMode: enabled),
+  );
 
   NotificationSettingsModel copyWith({
     bool? masterEnabled,

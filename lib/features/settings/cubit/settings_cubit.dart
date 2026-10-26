@@ -291,23 +291,7 @@ class SettingsCubit extends Cubit<SettingsState> {
         (state as SettingsLoaded).settings.notificationSettings;
 
     await setNotificationSettings(
-      notificationSettings.copyWith(
-        fajrSettings: notificationSettings.fajrSettings.copyWith(
-          overrideSilentMode: enabled,
-        ),
-        dhuhrSettings: notificationSettings.dhuhrSettings.copyWith(
-          overrideSilentMode: enabled,
-        ),
-        asrSettings: notificationSettings.asrSettings.copyWith(
-          overrideSilentMode: enabled,
-        ),
-        maghribSettings: notificationSettings.maghribSettings.copyWith(
-          overrideSilentMode: enabled,
-        ),
-        ishaSettings: notificationSettings.ishaSettings.copyWith(
-          overrideSilentMode: enabled,
-        ),
-      ),
+      notificationSettings.withOverrideSilentMode(enabled),
     );
   }
 

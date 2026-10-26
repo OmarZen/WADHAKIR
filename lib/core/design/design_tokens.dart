@@ -2,6 +2,7 @@
 /// single `package:wadhakir/core/design/design_tokens.dart` import.
 library;
 
+export 'accent.dart';
 export 'breakpoints.dart';
 export 'glass.dart';
 export 'motion.dart';

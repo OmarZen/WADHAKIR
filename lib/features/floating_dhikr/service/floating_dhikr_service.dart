@@ -31,12 +31,51 @@ class FloatingDhikrService {
   List<String>? _dhikrPool;
   DhikrSource? _loadedPoolSource;
 
-  /// iOS doesn't permit drawing over other apps.
-  bool get isSupported => !kIsWeb && Platform.isAndroid;
+  /// Tests run on the host, where [Platform.isAndroid] is false.
+  @visibleForTesting
+  static bool? debugSupportedOverride;
 
+  /// iOS doesn't permit drawing over other apps.
+  bool get isSupported =>
+      debugSupportedOverride ?? (!kIsWeb && Platform.isAndroid);
+
+  /// The saved settings, after taking in a «إيقاف» from the notification.
+  ///
+  /// «إيقاف» turns the feature off, but it can only tell the native service:
+  /// the switch is saved here, and native code must not write Flutter's
+  /// preferences. So native leaves a marker and every reader of the settings
+  /// passes through this method, which saves "off" and only then
+  /// acknowledges the marker. Before, the next app start read "enabled" and
+  /// put the pill straight back.
   Future<FloatingDhikrSettings> getSettings() async {
-    _settings = await _repo.load();
+    var settings = await _repo.load();
+    if (await _userStoppedFromNotification()) {
+      if (settings.enabled) {
+        settings = settings.copyWith(enabled: false);
+        await _repo.save(settings);
+      }
+      await _acknowledgeUserStop();
+    }
+    _settings = settings;
     return _settings;
+  }
+
+  Future<bool> _userStoppedFromNotification() async {
+    if (!isSupported) return false;
+    try {
+      return await _channel.invokeMethod<bool>('peekUserStop') ?? false;
+    } catch (e) {
+      dev.log('peekUserStop error: $e', name: _logName);
+      return false;
+    }
+  }
+
+  Future<void> _acknowledgeUserStop() async {
+    try {
+      await _channel.invokeMethod('ackUserStop');
+    } catch (e) {
+      dev.log('ackUserStop error: $e', name: _logName);
+    }
   }
 
   /// Persist new settings and (re)start or stop the native service.

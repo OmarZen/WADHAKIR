@@ -108,7 +108,13 @@ class BackupKeys {
       BackupValueType.string,
       BackupSection.worship,
     ),
-    // Electronic tasbih: current count, lifetime total, chosen target.
+    // Electronic tasbih (see TasbihRepository). From 3.4.4 the counts live in
+    // `electronic_tasbih_state_v2`, one entry per dhikr. The three legacy
+    // keys stay allowlisted and are still written: `_total` is the lifetime
+    // total as it always was, and `_counter` / `_target` mirror the selected
+    // dhikr, so a backup restored into an older build still shows a count.
+    // A backup from before 3.4.4 has no state_v2; restoring it removes ours
+    // and the tasbih migrates from the legacy keys again, as it should.
     BackupKeySpec(
       'electronic_tasbih_counter',
       BackupValueType.integer,
@@ -122,6 +128,11 @@ class BackupKeys {
     BackupKeySpec(
       'electronic_tasbih_target',
       BackupValueType.integer,
+      BackupSection.worship,
+    ),
+    BackupKeySpec(
+      'electronic_tasbih_state_v2',
+      BackupValueType.string,
       BackupSection.worship,
     ),
   ];
@@ -203,6 +214,16 @@ class BackupKeys {
       BackupValueType.string,
       BackupSection.settings,
     ),
+    // Travels WITH notification_settings, because it says what the blob's
+    // «يتجاوز الوضع الصامت» means. A backup from 3.4.3 or earlier has no flag,
+    // and its `true` is only the old default — restoring it removes the flag
+    // here, so the one-time reset in AppSettingsRepositoryImpl runs again. A
+    // newer backup carries the flag, and its `true` is the user's own choice.
+    BackupKeySpec(
+      'adhan_respects_silent_migrated_v1',
+      BackupValueType.boolean,
+      BackupSection.settings,
+    ),
     // Morning/evening/witr/sleep/duha/qiyam/Kahf/after-prayer reminders.
     BackupKeySpec(
       'azkar_reminder_settings',
@@ -227,6 +248,14 @@ class BackupKeys {
     // behaviour as revoking it on the source device.
     BackupKeySpec(
       'floating_dhikr_settings_v1',
+      BackupValueType.string,
+      BackupSection.settings,
+    ),
+    // The tasbih's mode and switches (vibrate, click, auto-advance, keep the
+    // screen on). Named `electronic_tasbih_*` rather than `tasbih_*`, which
+    // the per-dhikr `tasbih_` prefix would swallow as an integer counter.
+    BackupKeySpec(
+      'electronic_tasbih_prefs_v1',
       BackupValueType.string,
       BackupSection.settings,
     ),

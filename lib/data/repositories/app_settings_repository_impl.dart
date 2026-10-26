@@ -15,6 +15,9 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
   final SharedPreferences _sharedPreferences;
   AppSettingsModel? _cachedSettings;
 
+  /// Set once the one-time "adhan respects silent mode" reset has run.
+  static const _adhanRespectsSilentKey = 'adhan_respects_silent_migrated_v1';
+
   AppSettingsRepositoryImpl(this._sharedPreferences);
 
   @override
@@ -52,6 +55,19 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
       }
     } else {
       notificationSettings = NotificationSettingsModel.defaultSettings();
+    }
+
+    // Once per install, 3.4.4: the adhan stops sounding through a silenced
+    // phone by default. «يتجاوز الوضع الصامت» used to default to on and was
+    // written into every saved blob, so the new default alone would reach only
+    // new installs. Turned off for everyone once; the switch stays for anyone
+    // who wants the alarm-clock behaviour back. The prayer plan's key includes
+    // this flag, so the next schedule carries it to the native alarms. The
+    // flag travels in backups with the blob — see BackupKeys.
+    final resetSilentOverride =
+        !(_sharedPreferences.getBool(_adhanRespectsSilentKey) ?? false);
+    if (resetSilentOverride) {
+      notificationSettings = notificationSettings.withOverrideSilentMode(false);
     }
 
     // Get app lock settings
@@ -113,6 +129,18 @@ class AppSettingsRepositoryImpl implements AppSettingsRepository {
     );
 
     _settingsController.add(_cachedSettings!);
+
+    // Written after the cache is filled, so a concurrent caller finds the
+    // cache instead of a half-built load that would run the reset again.
+    if (resetSilentOverride) {
+      if (notificationSettingsJson != null) {
+        await _sharedPreferences.setString(
+          AppConstants.notificationSettingsKey,
+          jsonEncode(_cachedSettings!.notificationSettings.toJson()),
+        );
+      }
+      await _sharedPreferences.setBool(_adhanRespectsSilentKey, true);
+    }
     return _cachedSettings!;
   }
 

@@ -1,365 +1,265 @@
-import 'dart:math' as math;
+import 'dart:ui' show AppExitResponse;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:forui/forui.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wadhakir/core/platform/platform_utils.dart';
-import 'package:wadhakir/core/localization/app_localizations.dart';
-import 'package:wadhakir/core/widgets/celebration.dart';
-import 'package:wadhakir/core/widgets/app_dialog.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:wadhakir/core/app_theme/app_theme.dart'
+    show kOverlayStyleLightIcons;
+import 'package:wadhakir/core/design/design_tokens.dart';
+import 'package:wadhakir/core/ui/islamic_decorations.dart';
+import 'package:wadhakir/core/widgets/branded_header.dart';
 
+import '../../cubit/tasbih_cubit.dart';
+import '../../cubit/tasbih_state.dart';
+import '../../data/tasbih_models.dart';
+import '../../data/tasbih_repository.dart';
+import '../../services/tasbih_feedback.dart';
+import '../tasbih_look.dart';
+import '../tasbih_strings.dart';
+import '../widgets/dhikr_carousel.dart';
+import '../widgets/modes/beads_mode.dart';
+import '../widgets/modes/focus_mode.dart';
+import '../widgets/modes/ring_mode.dart';
+import '../widgets/modes/tap_mode.dart';
+import '../widgets/tasbih_action_pill.dart';
+import '../widgets/tasbih_mode_selector.dart';
+import '../widgets/tasbih_stat_chips.dart';
+
+/// السبحة: count adhkar four ways — beads, a button, a ring of dots, or a
+/// dark focus screen.
+///
+/// Owns the [TasbihCubit] and everything tied to this screen's lifetime:
+/// saving when the app goes to the background, reapplying keep-screen-on when
+/// it comes back, and letting the screen sleep again on the way out.
 class ElectronicTasbihScreen extends StatefulWidget {
-  const ElectronicTasbihScreen({super.key});
+  const ElectronicTasbihScreen({
+    super.key,
+    this.feedback,
+    this.repository,
+    this.now,
+  });
+
+  /// Test seams. In the app all three are left null.
+  final TasbihFeedback? feedback;
+  final TasbihRepository? repository;
+  final DateTime Function()? now;
 
   @override
   State<ElectronicTasbihScreen> createState() => _ElectronicTasbihScreenState();
 }
 
 class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
-    with TickerProviderStateMixin {
-  int _counter = 0;
-  int _totalCounter = 0;
-  int _target = 33;
-  bool _isPressed = false;
-
-  late AnimationController _beadController;
-  late AnimationController _counterAnimController;
-  late Animation<double> _beadAnimation;
-  late Animation<double> _counterScaleAnimation;
-
-  static const String _counterKey = 'electronic_tasbih_counter';
-  static const String _totalCounterKey = 'electronic_tasbih_total';
-  static const String _targetKey = 'electronic_tasbih_target';
+    with WidgetsBindingObserver {
+  late final TasbihFeedback _feedback =
+      widget.feedback ?? TasbihFeedback.forPlatform();
+  late final TasbihCubit _cubit = TasbihCubit(
+    repository: widget.repository ?? TasbihRepository(),
+    feedback: _feedback,
+    now: widget.now,
+  );
 
   @override
   void initState() {
     super.initState();
-    _loadCounters();
-
-    // Bead rotation animation
-    _beadController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _beadAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _beadController, curve: Curves.easeOut));
-
-    // Counter scale animation
-    _counterAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _counterScaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _counterAnimController, curve: Curves.easeOut),
-    );
+    WidgetsBinding.instance.addObserver(this);
+    _cubit.load();
   }
 
   @override
   void dispose() {
-    _beadController.dispose();
-    _counterAnimController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    if (_feedback.supportsKeepScreenOn) _feedback.setKeepScreenOn(false);
+    _feedback.release();
+    _cubit.close();
     super.dispose();
   }
 
-  Future<void> _loadCounters() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _counter = prefs.getInt(_counterKey) ?? 0;
-      _totalCounter = prefs.getInt(_totalCounterKey) ?? 0;
-      _target = prefs.getInt(_targetKey) ?? 33;
-    });
-  }
-
-  Future<void> _saveCounters() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_counterKey, _counter);
-    await prefs.setInt(_totalCounterKey, _totalCounter);
-    await prefs.setInt(_targetKey, _target);
-  }
-
-  void _incrementCounter() {
-    HapticFeedback.mediumImpact();
-    setState(() {
-      _counter++;
-      _totalCounter++;
-      _isPressed = true;
-    });
-
-    _beadController.forward(from: 0);
-    _counterAnimController.forward().then((_) {
-      _counterAnimController.reverse();
-    });
-
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        setState(() => _isPressed = false);
-      }
-    });
-
-    if (_counter >= _target) {
-      HapticFeedback.heavyImpact();
-      _showCompletionDialog();
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _cubit.refreshDay();
+        // Every time, not only on a change: the activity can be recreated
+        // under the cached engine (MainActivity is an AudioServiceActivity),
+        // and a new window starts without the flag.
+        _applyScreenOn(_cubit.state);
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        _cubit.flush();
     }
-
-    _saveCounters();
   }
 
-  void _resetCounter() {
-    HapticFeedback.lightImpact();
-    setState(() {
-      _counter = 0;
-    });
-    _saveCounters();
+  /// Closing the window on Windows asks here, and the process ends straight
+  /// after, with no pause on the way, so the debounced taps (up to half a
+  /// second of counting) are written now or never.
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    await _cubit.flush();
+    return AppExitResponse.exit;
   }
 
-  void _resetTotalCounter() {
-    HapticFeedback.lightImpact();
-    setState(() {
-      _counter = 0;
-      _totalCounter = 0;
-    });
-    _saveCounters();
+  void _applyScreenOn(TasbihState state) {
+    if (!_feedback.supportsKeepScreenOn || state.loading) return;
+    _feedback.setKeepScreenOn(state.wantsScreenOn);
   }
 
-  void _showCompletionDialog() {
-    final l10n = context.l10n;
-    // Reward hitting the tasbih target with a confetti burst alongside the
-    // existing celebration dialog.
-    Celebration.burst(context);
-    showFDialog(
-      context: context,
-      builder: (context, style, animation) {
-        final theme = Theme.of(context);
-        return AppDialog(
-          title: Row(
-            children: [
-              Icon(
-                Icons.celebration_outlined,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l10n?.translate('tasbih.completion_title') ?? 'مبارك!',
-                style: TextStyle(color: theme.colorScheme.primary),
-              ),
-            ],
-          ),
-          body: Text(
-            l10n?.translate('tasbih.completion_message') ??
-                'أحسنت! لقد أكملت $_target تسبيحة',
-          ),
-          actions: [
-            FButton(
-              onPress: () {
-                Navigator.of(context).pop();
-                _resetCounter();
-              },
-              child: Text(l10n?.translate('tasbih.continue') ?? 'متابعة'),
-            ),
-          ],
-        );
-      },
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider.value(
+      value: _cubit,
+      child: BlocListener<TasbihCubit, TasbihState>(
+        listenWhen: (a, b) =>
+            a.loading != b.loading || a.wantsScreenOn != b.wantsScreenOn,
+        listener: (_, state) => _applyScreenOn(state),
+        child: const _TasbihView(),
+      ),
     );
   }
+}
 
-  void _changeTarget() {
-    final l10n = context.l10n;
-    showFDialog(
-      context: context,
-      builder: (context, style, animation) {
-        int tempTarget = _target;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AppDialog(
-              title: Text(
-                l10n?.translate('tasbih.change_target') ?? 'تغيير الهدف',
-              ),
-              // FDialog (forui) provides no Material ancestor, so the
-              // FilterChip + TextField below need one or they throw
-              // "No Material widget found".
-              body: Material(
-                type: MaterialType.transparency,
-                child: ConstrainedBox(
-                  // Bound the body height so the keyboard (resizeToAvoidInsets)
-                  // can't collapse it into an overflow; scroll instead.
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.5,
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n?.translate('tasbih.select_target') ??
-                              'اختر عدد التسبيحات',
-                        ),
-                        const SizedBox(height: 20),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          alignment: WrapAlignment.center,
-                          children: [33, 99, 100, 1000].map((value) {
-                            final isSelected = tempTarget == value;
-                            return FilterChip(
-                              label: Text('$value'),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setDialogState(() {
-                                  tempTarget = value;
-                                });
-                              },
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText:
-                                l10n?.translate('tasbih.custom_target') ??
-                                'عدد مخصص',
-                            border: const OutlineInputBorder(),
-                          ),
-                          onChanged: (value) {
-                            final parsed = int.tryParse(value);
-                            if (parsed != null && parsed > 0) {
-                              setDialogState(() {
-                                tempTarget = parsed;
-                              });
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                FButton(
-                  onPress: () {
-                    setState(() {
-                      _target = tempTarget;
-                      if (_counter > _target) _counter = 0;
-                    });
-                    _saveCounters();
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(l10n?.translate('tasbih.save') ?? 'حفظ'),
-                ),
-                FButton(
-                  onPress: () => Navigator.of(context).pop(),
-                  variant: FButtonVariant.outline,
-                  child: Text(l10n?.translate('tasbih.cancel') ?? 'إلغاء'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+class _TasbihView extends StatelessWidget {
+  const _TasbihView();
+
+  /// On a keyboard (Windows, or a phone with one) Space and Enter count, and
+  /// the arrows change the dhikr. Only reached while the screen itself has
+  /// the focus — see the `Focus` below — and marked handled, so the app's
+  /// default shortcuts do not act on the same key as well.
+  KeyEventResult _onKey(BuildContext context, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final cubit = context.read<TasbihCubit>();
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.space ||
+        key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      cubit.increment();
+      return KeyEventResult.handled;
+    }
+    // The arrows follow the carousel: its next dhikr lies to the left in
+    // Arabic and to the right in English.
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final bool forward;
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      forward = rtl;
+    } else if (key == LogicalKeyboardKey.arrowRight) {
+      forward = !rtl;
+    } else {
+      return KeyEventResult.ignored;
+    }
+    if (forward) {
+      cubit.next();
+    } else {
+      cubit.previous();
+    }
+    return KeyEventResult.handled;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = context.l10n;
-    final isDark = theme.brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-    final isDesktop = PlatformUtils.isDesktop;
+    final (mode, loading) = context.select<TasbihCubit, (TasbihMode, bool)>(
+      (c) => (c.state.mode, c.state.loading),
+    );
+    final focus = mode == TasbihMode.focus;
+    final look = TasbihLook.of(context, focus: focus);
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    final title = TasbihStrings.tr(context, 'tasbih.title');
 
-    final progress = _target > 0 ? (_counter / _target).clamp(0.0, 1.0) : 0.0;
-
-    // Single hero counter sized off the smaller of width/height so it never
-    // dominates a wide screen or overflows a short one. Clamped to a calm range.
-    final double heroDiameter = <double>[
-      size.width * 0.66,
-      size.height * 0.40,
-      300.0,
-    ].reduce((a, b) => a < b ? a : b).clamp(220.0, 300.0).toDouble();
-
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          l10n?.translate('home.electronic_tasbih') ?? 'مسبحة إلكترونية',
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              showFDialog(
-                context: context,
-                builder: (context, style, animation) => AppDialog(
-                  title: Text(
-                    l10n?.translate('tasbih.about_title') ?? 'عن المسبحة',
-                  ),
-                  body: Text(
-                    l10n?.translate('tasbih.about_description') ??
-                        'المسبحة الإلكترونية تساعدك على عد التسبيحات والأذكار بسهولة.\n\nاضغط على الزر الأوسط للتسبيح.\n\nيمكنك تغيير الهدف وإعادة ضبط العداد من خلال الأزرار في الأسفل.',
-                  ),
-                  actions: [
-                    FButton(
-                      onPress: () => Navigator.pop(context),
-                      child: Text(l10n?.translate('tasbih.close') ?? 'إغلاق'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: isDesktop ? 600 : double.infinity,
+    // In focus mode the header turns dark with the screen. BrandedHeader
+    // paints from colorScheme.primary, so a local theme is all it takes.
+    final header = focus
+        ? Theme(
+            data: theme.copyWith(
+              colorScheme: theme.colorScheme.copyWith(
+                primary: look.background,
+                onPrimary: Colors.white,
+              ),
             ),
-            child: Column(
+            child: BrandedHeader(title: title),
+          )
+        : BrandedHeader(title: title);
+
+    // Light status-bar icons: the top of this screen is always dark (the
+    // brand header, or the whole screen in focus mode). Without this the
+    // Scaffold inherits dark icons, which vanish against both.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: kOverlayStyleLightIcons,
+      child: Scaffold(
+        backgroundColor: look.background,
+        // Autofocused, so the keys count from the moment the screen opens.
+        // But a key that bubbles up from a button the user has tabbed to is
+        // that button's: Space on «إعادة ضبط» must open its dialog, not
+        // count, and the arrows must still move the focus between buttons.
+        body: Focus(
+          autofocus: true,
+          onKeyEvent: (node, event) => node.hasPrimaryFocus
+              ? _onKey(context, event)
+              : KeyEventResult.ignored,
+          child: AnimatedContainer(
+            duration: reduce ? Duration.zero : Motion.slow,
+            curve: Motion.standard,
+            color: look.background,
+            child: Stack(
               children: [
-                Expanded(
-                  // One hero counter + a stats card, centered with generous
-                  // whitespace. Scrolls only if a short screen can't fit it.
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      return SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight,
-                          ),
-                          child: IntrinsicHeight(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24.0,
-                                vertical: 16.0,
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  // Single hero: progress ring + count + tap
-                                  // target, framed by a subtle bead accent.
-                                  _buildHeroCounter(
-                                    theme,
-                                    progress,
-                                    heroDiameter,
+                // The brand's lattice, faint, in place of the reference
+                // mockups' mosque silhouettes.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: IslamicPatternPainter(
+                          color: focus ? Colors.white : look.accent,
+                          opacity: focus ? 0.06 : 0.05,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Column(
+                  children: [
+                    header,
+                    Expanded(
+                      child: SafeArea(
+                        top: false,
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 600),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    Spacing.lg,
+                                    Spacing.md,
+                                    Spacing.lg,
+                                    Spacing.sm,
                                   ),
-                                  const SizedBox(height: 36),
-                                  _buildStatisticsCard(theme, l10n, isDark),
-                                ],
-                              ),
+                                  child: TasbihModeSelector(look: look),
+                                ),
+                                Expanded(
+                                  child: loading
+                                      ? const SizedBox.expand()
+                                      : _CountingArea(
+                                          mode: mode,
+                                          look: look,
+                                          reduceMotion: reduce,
+                                        ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: Spacing.sm,
+                                    bottom: Spacing.md,
+                                  ),
+                                  child: TasbihActionPill(look: look),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
-
-                // Bottom action buttons
-                _buildBottomActions(theme, l10n, isDark),
               ],
             ),
           ),
@@ -367,299 +267,98 @@ class _ElectronicTasbihScreenState extends State<ElectronicTasbihScreen>
       ),
     );
   }
+}
 
-  /// The single focal element: a circular progress ring + a tappable inner
-  /// disc showing the live count, framed by a subtle rotating bead accent.
-  /// Replaces the old bead-circle + counter-pill + button stack so nothing
-  /// crowds or overlaps.
-  Widget _buildHeroCounter(ThemeData theme, double progress, double diameter) {
-    final cs = theme.colorScheme;
-    final reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final ringSize = diameter * 0.88;
-    final innerSize = diameter * 0.64;
+/// Everything between the selector and the pill.
+class _CountingArea extends StatelessWidget {
+  const _CountingArea({
+    required this.mode,
+    required this.look,
+    required this.reduceMotion,
+  });
 
-    return SizedBox(
-      width: diameter,
-      height: diameter,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Subtle bead accent framing the ring (keeps the tasbih identity).
-          _buildBeadRing(theme, diameter),
+  final TasbihMode mode;
+  final TasbihLook look;
+  final bool reduceMotion;
 
-          // Progress toward the target.
-          SizedBox(
-            width: ringSize,
-            height: ringSize,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0, end: progress),
-              duration: reduceMotion
-                  ? Duration.zero
-                  : const Duration(milliseconds: 400),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => CircularProgressIndicator(
-                value: value,
-                strokeWidth: 9,
-                strokeCap: StrokeCap.round,
-                backgroundColor: cs.primary.withValues(alpha: 0.12),
-                valueColor: AlwaysStoppedAnimation<Color>(cs.primary),
-              ),
-            ),
-          ),
+  /// Ring and focus count a tap anywhere — their hint says so. Tap mode counts
+  /// on its button, and beads on the string, each with its own recogniser.
+  bool get _tapAnywhere => mode == TasbihMode.ring || mode == TasbihMode.focus;
 
-          // Tappable inner disc with the live count.
-          Semantics(
-            button: true,
-            label: context.l10n?.translate('tasbih.tap') ?? 'اضغط',
-            child: GestureDetector(
-              onTap: _incrementCounter,
-              child: AnimatedScale(
-                scale: _isPressed ? 0.96 : 1.0,
-                duration: const Duration(milliseconds: 110),
-                curve: Curves.easeOut,
-                child: Container(
-                  width: innerSize,
-                  height: innerSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [cs.primary, cs.primary.withValues(alpha: 0.82)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cs.primary.withValues(alpha: 0.35),
-                        blurRadius: 24,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ScaleTransition(
-                          scale: _counterScaleAnimation,
-                          child: Text(
-                            '$_counter',
-                            style: TextStyle(
-                              fontSize: diameter * 0.24,
-                              height: 1,
-                              fontWeight: FontWeight.bold,
-                              color: cs.onPrimary,
-                              fontFamily: 'Almarai',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '/ $_target',
-                          style: TextStyle(
-                            fontSize: diameter * 0.075,
-                            color: cs.onPrimary.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          context.l10n?.translate('tasbih.tap_to_count') ??
-                              'اضغط للتسبيح',
-                          style: TextStyle(
-                            fontSize: diameter * 0.05,
-                            color: cs.onPrimary.withValues(alpha: 0.65),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+  /// Below this height for the whole area — a small phone at a large text
+  /// size — the parts tighten: a smaller dhikr, a smaller count, the chips'
+  /// text capped. Measured, not guessed from the device, so a tablet in split
+  /// screen gets it too.
+  static const double compactBelow = 470;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _build(context, compact: constraints.maxHeight < compactBelow),
     );
   }
 
-  /// Subtle ring of 33 small beads that rotates slightly on each tap — frames
-  /// the progress ring without competing with the count.
-  Widget _buildBeadRing(ThemeData theme, double diameter) {
-    final cs = theme.colorScheme;
-    final center = diameter / 2;
-    final radius = diameter / 2 - 5;
-    return AnimatedBuilder(
-      animation: _beadAnimation,
-      builder: (context, _) {
-        final rotation = _beadAnimation.value * (2 * math.pi / 33);
-        return SizedBox(
-          width: diameter,
-          height: diameter,
-          child: Stack(
-            children: List.generate(33, (index) {
-              final angle = (index * 2 * math.pi / 33) + rotation;
-              final active = index < (_counter % 33);
-              final beadSize = active ? 5.0 : 4.0;
-              return Positioned(
-                left: center + radius * math.cos(angle) - beadSize / 2,
-                top: center + radius * math.sin(angle) - beadSize / 2,
-                child: Container(
-                  width: beadSize,
-                  height: beadSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: cs.primary.withValues(alpha: active ? 0.55 : 0.18),
-                  ),
-                ),
-              );
-            }),
-          ),
-        );
-      },
-    );
-  }
+  Widget _build(BuildContext context, {required bool compact}) {
+    final cubit = context.read<TasbihCubit>();
+    final body = switch (mode) {
+      TasbihMode.beads => BeadsModeBody(look: look, compact: compact),
+      TasbihMode.tap => TapModeBody(look: look),
+      TasbihMode.ring => RingModeBody(look: look),
+      TasbihMode.focus => FocusModeBody(look: look),
+    };
 
-  Widget _buildStatisticsCard(
-    ThemeData theme,
-    AppLocalizations? l10n,
-    bool isDark,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary.withValues(alpha: 0.08),
-            theme.colorScheme.primary.withValues(alpha: 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem(
-            theme,
-            icon: Icons.all_inclusive,
-            label: l10n?.translate('tasbih.total') ?? 'الإجمالي',
-            value: '$_totalCounter',
-          ),
-          Container(
-            width: 1,
-            height: 32,
-            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-          ),
-          _buildStatItem(
-            theme,
-            icon: Icons.flag_outlined,
-            label: l10n?.translate('tasbih.target') ?? 'الهدف',
-            value: '$_target',
-          ),
-          Container(
-            width: 1,
-            height: 32,
-            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-          ),
-          _buildStatItem(
-            theme,
-            icon: Icons.trending_up,
-            label: l10n?.translate('tasbih.progress') ?? 'التقدم',
-            value: '${(_target > 0 ? (_counter / _target * 100).toInt() : 0)}%',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(
-    ThemeData theme, {
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Column(
+    final column = Column(
       children: [
-        Icon(icon, color: theme.colorScheme.primary, size: 20),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
+        DhikrCarousel(look: look, compact: compact),
+        DhikrSubtitle(look: look, compact: compact),
+        const SizedBox(height: Spacing.sm),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: reduceMotion ? Duration.zero : Motion.base,
+            child: KeyedSubtree(key: ValueKey(mode), child: body),
           ),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+        const SizedBox(height: Spacing.sm),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
+          child: MediaQuery.withClampedTextScaling(
+            maxScaleFactor: compact ? 1.2 : 1.6,
+            child: mode == TasbihMode.focus
+                ? TasbihFocusHint(
+                    look: look,
+                    screenStaysOn: cubit.feedback.supportsKeepScreenOn,
+                  )
+                : TasbihStatChips(look: look),
           ),
         ),
       ],
     );
-  }
 
-  Widget _buildBottomActions(
-    ThemeData theme,
-    AppLocalizations? l10n,
-    bool isDark,
-  ) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.only(bottom: 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: FButton(
-                onPress: _resetCounter,
-                variant: FButtonVariant.outline,
-                prefix: const Icon(Icons.refresh, size: 18),
-                child: Text(l10n?.translate('tasbih.reset') ?? 'إعادة ضبط'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: FButton(
-                onPress: _changeTarget,
-                prefix: const Icon(Icons.edit_outlined, size: 18),
-                child: Text(
-                  l10n?.translate('tasbih.change_target') ?? 'تغيير الهدف',
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: _resetTotalCounter,
-              icon: const Icon(Icons.delete_outline, size: 20),
-              tooltip:
-                  l10n?.translate('tasbih.reset_total') ?? 'إعادة ضبط الكل',
-              style: IconButton.styleFrom(
-                foregroundColor: theme.colorScheme.error,
-              ),
-            ),
-          ],
-        ),
+    // In ring and focus, one opaque detector over the whole area, carousel
+    // included: a clean tap counts, a horizontal drag still pages the
+    // carousel (its own recogniser wins the arena once the finger moves past
+    // the slop).
+    //
+    // The same Semantics and detector in every mode, with the tap switched
+    // off where it does not belong. Wrapping the column only in some modes
+    // would change the widget above it on a mode switch, and Flutter would
+    // rebuild everything under it from scratch: the carousel, the subtitle
+    // with a «اكتملت الدورة N» still showing, and the switcher whose
+    // cross-fade is the whole point of the switch.
+    final tapAnywhere = _tapAnywhere;
+    return Semantics(
+      button: tapAnywhere ? true : null,
+      label: tapAnywhere
+          ? TasbihStrings.tr(context, 'tasbih.hint_anywhere')
+          : null,
+      onTap: tapAnywhere ? cubit.increment : null,
+      child: GestureDetector(
+        behavior: tapAnywhere
+            ? HitTestBehavior.opaque
+            : HitTestBehavior.deferToChild,
+        onTap: tapAnywhere ? cubit.increment : null,
+        child: column,
       ),
     );
   }

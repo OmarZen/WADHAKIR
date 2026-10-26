@@ -13,7 +13,7 @@ PlannedPrayerNotification _planned({
   NotificationTiming timing = NotificationTiming.onTime,
   String? customSoundPath,
   bool vibration = true,
-  bool overrideSilentMode = true,
+  bool overrideSilentMode = false,
   DateTime? prayerTime,
 }) {
   final at = prayerTime ?? DateTime(2026, 3, 14, 11, 58);
@@ -137,27 +137,27 @@ void main() {
   });
 
   group('silent-mode override', () {
-    test('defaults to the alarm-clock behaviour', () {
-      expect(PrayerNotificationContent.of(_planned()).overrideSilent, isTrue);
+    test('defaults to respecting silent mode (3.4.4)', () {
+      expect(PrayerNotificationContent.of(_planned()).overrideSilent, isFalse);
       expect(
         PrayerNotificationSettings.defaultSettings().overrideSilentMode,
-        isTrue,
-      );
-    });
-
-    test('carries the user turning it off', () {
-      expect(
-        PrayerNotificationContent.of(
-          _planned(overrideSilentMode: false),
-        ).overrideSilent,
         isFalse,
       );
     });
 
-    test('an install that predates the setting keeps the new default', () {
-      // Every existing install has a settings blob with no such key. Reading it
-      // as false would silently opt the whole install base OUT of the behaviour
-      // the release was built to deliver.
+    test('carries the user turning it on', () {
+      expect(
+        PrayerNotificationContent.of(
+          _planned(overrideSilentMode: true),
+        ).overrideSilent,
+        isTrue,
+      );
+    });
+
+    test('an install that predates the setting respects silent mode', () {
+      // A settings blob with no such key is from before Stage 3. Since 3.4.4
+      // the default is to respect a silenced phone, and the blobs that DO
+      // carry `true` are reset once by AppSettingsRepositoryImpl.
       final restored = PrayerNotificationSettings.fromJson({
         'enabled': true,
         'timing': 0,
@@ -166,7 +166,7 @@ void main() {
         'customSoundPath': null,
       });
 
-      expect(restored.overrideSilentMode, isTrue);
+      expect(restored.overrideSilentMode, isFalse);
     });
 
     test('survives a JSON round trip in both positions', () {

@@ -1,209 +1,325 @@
 import 'dart:async';
-import 'dart:math' as math;
-import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:vector_math/vector_math.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:wadhakir/core/geo/heading_math.dart';
+import 'package:wadhakir/core/geo/qibla_geodesy.dart';
+import 'package:wadhakir/core/platform/platform_utils.dart';
 import 'package:wadhakir/data/models/qibla_model.dart';
 import 'package:wadhakir/domain/repositories/qibla_repository.dart';
+import 'package:wadhakir/features/campus/services/qibla_platform_bridge.dart';
 
+/// The platform-backed [QiblaRepository].
+///
+/// See the interface for the rules (inert constructor, one prompting method,
+/// read-only `prayer_times_*`). Platform split:
+/// * **Android**: flutter_compass heading (magnetic) + declination and
+///   magnetometer accuracy from [QiblaPlatformBridge].
+/// * **iOS**: flutter_compass heading (already true north) with its own,
+///   meaningful accuracy; no bridge.
+/// * **Desktop**: location and geometry only. No compass, no tilt; the
+///   screen offers Map, Shadow and Sun/Moon there.
 class QiblaRepositoryImpl implements QiblaRepository {
-  // Coordinates of Kaaba in Mecca
-  final double kaabaLatitude = 21.422487;
-  final double kaabaLongitude = 39.826206;
+  /// The prayer-times feature's keys. Read here, written only by
+  /// `PrayerTimesRepositoryImpl`.
+  static const String lastLatitudeKey = 'prayer_times_last_latitude';
+  static const String lastLongitudeKey = 'prayer_times_last_longitude';
+  static const String lastLocationNameKey = 'prayer_times_last_location_name';
 
-  // Stream controllers
-  final StreamController<QiblaModel> _qiblaStreamController =
-      StreamController<QiblaModel>.broadcast();
-  StreamSubscription<CompassEvent>? _compassSubscription;
-  Position? _currentPosition;
-  bool _isCompassAvailable = false;
-  String? _compassErrorMessage;
+  /// How close the saved prayer-times location must be for its city name to
+  /// label this fix. Wider than a city, narrower than a region: a saved
+  /// "Cairo" is fine for Giza, wrong for Alexandria.
+  static const double cachedNameRadiusKm = 30;
 
-  QiblaRepositoryImpl() {
-    _initializeQibla();
-  }
+  static const Duration geocodeTimeLimit = Duration(seconds: 5);
 
-  /// Check if compass is available on this device
+  /// The Android native half (declination, magnetometer). Injectable for
+  /// tests; unused off Android.
+  final QiblaPlatformBridge bridge;
+  final Future<SharedPreferences> Function() _prefs;
+
+  /// Created on first use: constructing one spins up a platform instance, and
+  /// the constructor promises to do nothing.
+  Geocoding? _geocoding;
+
+  QiblaRepositoryImpl({
+    this.bridge = const MethodChannelQiblaBridge(),
+    Future<SharedPreferences> Function()? prefs,
+  }) : _prefs = prefs ?? SharedPreferences.getInstance;
+
+  // --- Location --------------------------------------------------------------
+
   @override
-  bool get isCompassAvailable => _isCompassAvailable;
-
-  /// Get the compass error message if compass is not available
-  @override
-  String? get compassErrorMessage => _compassErrorMessage;
-
-  Future<void> _initializeQibla() async {
-    // Check compass availability first before doing anything
-    await _checkCompassAvailability();
-
-    // Only initialize location if compass is available
-    if (_isCompassAvailable) {
-      await _initLocation();
-    }
-  }
-
-  Future<void> _checkCompassAvailability() async {
+  Future<LocationAccess> checkLocationAccess() async {
     try {
-      // Check if platform supports compass sensor
-      if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
-        _isCompassAvailable = false;
-        _compassErrorMessage =
-            'Compass sensor is not available on this platform. '
-            'This feature requires a device with a magnetometer sensor (typically mobile phones and tablets).';
-        return;
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        return LocationAccess.serviceOff;
       }
-
-      // Check if compass events stream is available
-      _isCompassAvailable = FlutterCompass.events != null;
-      if (_isCompassAvailable) {
-        _initCompass();
-      } else {
-        _compassErrorMessage =
-            'Compass sensor not available on this device. '
-            'Your device may not have a magnetometer sensor.';
-      }
+      return _mapPermission(await Geolocator.checkPermission());
     } catch (e) {
-      debugPrint('Error checking compass availability: $e');
-      _isCompassAvailable = false;
-      _compassErrorMessage = 'Unable to access compass sensor: $e';
+      debugPrint('Qibla checkLocationAccess failed: $e');
+      return LocationAccess.denied;
     }
   }
 
   @override
-  Stream<QiblaModel> getQiblaDirection() {
-    return _qiblaStreamController.stream;
+  Future<LocationAccess> requestLocationAccess() async {
+    try {
+      // No prompt with the service off: granting would still give no fix,
+      // and the user would be asked again once they switch it on.
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        return LocationAccess.serviceOff;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.unableToDetermine) {
+        permission = await Geolocator.requestPermission();
+      }
+      return _mapPermission(permission);
+    } catch (e) {
+      debugPrint('Qibla requestLocationAccess failed: $e');
+      return LocationAccess.denied;
+    }
+  }
+
+  static LocationAccess _mapPermission(LocationPermission permission) {
+    switch (permission) {
+      case LocationPermission.always:
+      case LocationPermission.whileInUse:
+        return LocationAccess.granted;
+      case LocationPermission.deniedForever:
+        return LocationAccess.deniedForever;
+      case LocationPermission.denied:
+      case LocationPermission.unableToDetermine:
+        return LocationAccess.denied;
+    }
   }
 
   @override
-  Future<void> requestPermissions() async {
+  Future<QiblaFix?> provisionalFix() async {
     try {
-      await _checkLocationPermission();
-      if (_currentPosition == null) {
-        await _initLocation();
-      }
+      final last = await Geolocator.getLastKnownPosition();
+      if (last != null) return _fromPosition(last, QiblaFixSource.lastKnown);
     } catch (e) {
-      _qiblaStreamController.addError('Permission error: $e');
-      rethrow;
+      // Unsupported on some platforms; the cached prayer location covers it.
+      debugPrint('Qibla getLastKnownPosition failed: $e');
     }
+    return cachedPrayerFix();
   }
 
-  Future<void> _initLocation() async {
+  @override
+  Future<QiblaFix?> cachedPrayerFix() async {
     try {
-      await _checkLocationPermission();
-      _currentPosition = await Geolocator.getCurrentPosition(
-        locationSettings: LocationSettings(accuracy: LocationAccuracy.high),
-      );
-      _updateQiblaDirection(null);
-    } catch (e) {
-      // Handle location error
-      debugPrint('Error getting location: $e');
-      _qiblaStreamController.addError('Location error: $e');
-    }
-  }
-
-  Future<bool> _checkLocationPermission() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled
-      _qiblaStreamController.addError('Location services are disabled');
-      return false;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, try again next time.
-        _qiblaStreamController.addError('Location permissions denied');
-        return false;
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are permanently denied, handle accordingly.
-      _qiblaStreamController.addError(
-        'Location permissions are permanently denied, please enable in app settings',
-      );
-      return false;
-    }
-
-    return true;
-  }
-
-  void _initCompass() {
-    if (!_isCompassAvailable || FlutterCompass.events == null) {
-      // Device does not support compass
-      _qiblaStreamController.addError('Compass not available on this device');
-      return;
-    }
-
-    try {
-      _compassSubscription = FlutterCompass.events!.listen(
-        (CompassEvent event) {
-          _updateQiblaDirection(event);
-        },
-        onError: (error) {
-          debugPrint('Compass error: $error');
-          _qiblaStreamController.addError('Compass error: $error');
-        },
+      final prefs = await _prefs();
+      final lat = prefs.getDouble(lastLatitudeKey);
+      final lng = prefs.getDouble(lastLongitudeKey);
+      if (!_validCoordinates(lat, lng)) return null;
+      return QiblaFix(
+        latitude: lat!,
+        longitude: lng!,
+        source: QiblaFixSource.cached,
       );
     } catch (e) {
-      debugPrint('Error initializing compass: $e');
-      _qiblaStreamController.addError('Error initializing compass: $e');
+      debugPrint('Qibla cachedPrayerFix failed: $e');
+      return null;
     }
   }
 
-  void _updateQiblaDirection(CompassEvent? compassEvent) {
-    if (_currentPosition == null) return;
-
+  @override
+  Future<QiblaFix> currentFix({
+    Duration timeLimit = const Duration(seconds: 12),
+  }) async {
     try {
-      // Calculate Qibla direction
-      double qiblaDirection = _calculateQiblaDirection(
-        _currentPosition!.latitude,
-        _currentPosition!.longitude,
-      );
-
-      // Add new Qibla model to stream
-      _qiblaStreamController.add(
-        QiblaModel(
-          latitude: _currentPosition!.latitude,
-          longitude: _currentPosition!.longitude,
-          qiblaDirection: qiblaDirection,
-          compassDirection: compassEvent?.heading ?? 0.0,
+      final position = await Geolocator.getCurrentPosition(
+        // Medium is a few hundred metres at worst, which moves the qibla
+        // bearing by nothing a compass can show, and it arrives without
+        // waiting for a GPS lock indoors.
+        locationSettings: LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: timeLimit,
         ),
-      );
-    } catch (e) {
-      debugPrint('Error updating Qibla direction: $e');
+        // Belt and braces: not every platform implementation honours
+        // timeLimit, and an unbounded wait is the one thing this flow
+        // cannot have.
+      ).timeout(timeLimit + const Duration(seconds: 3));
+      return _fromPosition(position, QiblaFixSource.gps);
+    } on LocationServiceDisabledException {
+      throw const LocationAccessException(LocationAccess.serviceOff);
+    } on PermissionDeniedException {
+      throw const LocationAccessException(LocationAccess.denied);
     }
   }
 
-  double _calculateQiblaDirection(double latitude, double longitude) {
-    double latRad = radians(latitude);
-    double longRad = radians(longitude);
-    double kaabaLatRad = radians(kaabaLatitude);
-    double kaabaLongRad = radians(kaabaLongitude);
+  QiblaFix _fromPosition(Position p, QiblaFixSource source) => QiblaFix(
+    latitude: p.latitude,
+    longitude: p.longitude,
+    accuracyM: p.accuracy > 0 ? p.accuracy : null,
+    // 0 is how most platforms say "no altitude".
+    altitudeM: p.altitude != 0 ? p.altitude : null,
+    timestamp: p.timestamp,
+    source: source,
+  );
 
-    // Formula to calculate Qibla direction
-    double y = math.sin(kaabaLongRad - longRad);
-    double x =
-        math.cos(latRad) * math.tan(kaabaLatRad) -
-        math.sin(latRad) * math.cos(kaabaLongRad - longRad);
+  @override
+  Future<String?> placeName(QiblaFix fix) async {
+    try {
+      final prefs = await _prefs();
+      final cached = cachedNameNear(
+        fix: fix,
+        cachedLatitude: prefs.getDouble(lastLatitudeKey),
+        cachedLongitude: prefs.getDouble(lastLongitudeKey),
+        cachedName: prefs.getString(lastLocationNameKey),
+      );
+      if (cached != null) return cached;
+    } catch (e) {
+      debugPrint('Qibla cached place name failed: $e');
+    }
 
-    double qiblaRad = math.atan2(y, x);
-    // Convert to degrees and normalize
-    double qiblaDegrees = degrees(qiblaRad);
-
-    // Normalize to 0-360
-    return (qiblaDegrees + 360) % 360;
+    // Reverse geocoding is Android/iOS only in the geocoding plugin.
+    if (!PlatformUtils.isMobile) return null;
+    try {
+      final placemarks = await (_geocoding ??= Geocoding())
+          .placemarkFromCoordinates(fix.latitude, fix.longitude)
+          .timeout(geocodeTimeLimit);
+      if (placemarks.isEmpty) return null;
+      final p = placemarks.first;
+      // Same preference order as the prayer-times header, so the two screens
+      // name the same place the same way.
+      for (final candidate in [
+        p.locality,
+        p.subAdministrativeArea,
+        p.administrativeArea,
+      ]) {
+        final name = candidate?.trim();
+        if (name != null && name.isNotEmpty) return name;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Qibla reverse geocoding failed: $e');
+      return null;
+    }
   }
 
-  void dispose() {
-    _compassSubscription?.cancel();
-    _qiblaStreamController.close();
+  /// The saved prayer-times city name, when the saved coordinates are within
+  /// [cachedNameRadiusKm] of [fix]; else null. Pure, for tests.
+  @visibleForTesting
+  static String? cachedNameNear({
+    required QiblaFix fix,
+    required double? cachedLatitude,
+    required double? cachedLongitude,
+    required String? cachedName,
+  }) {
+    final name = cachedName?.trim();
+    if (name == null || name.isEmpty) return null;
+    if (!_validCoordinates(cachedLatitude, cachedLongitude)) return null;
+    final km = QiblaGeodesy.distanceKm(
+      fix.point,
+      GeoPoint(cachedLatitude!, cachedLongitude!),
+    );
+    return km <= cachedNameRadiusKm ? name : null;
+  }
+
+  static bool _validCoordinates(double? lat, double? lng) =>
+      lat != null &&
+      lng != null &&
+      lat.isFinite &&
+      lng.isFinite &&
+      lat.abs() <= 90 &&
+      lng.abs() <= 180;
+
+  @override
+  Future<bool> openAppSettings() async {
+    try {
+      return await Geolocator.openAppSettings();
+    } catch (e) {
+      debugPrint('Qibla openAppSettings failed: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> openLocationSettings() async {
+    try {
+      return await Geolocator.openLocationSettings();
+    } catch (e) {
+      debugPrint('Qibla openLocationSettings failed: $e');
+      return false;
+    }
+  }
+
+  // --- Sensors ---------------------------------------------------------------
+
+  @override
+  Future<bool> hasMagnetometer() async {
+    if (PlatformUtils.isAndroid) return bridge.hasMagnetometer();
+    // Every iPhone has one; an iPad without one simply sends no headings,
+    // which the cubit treats as "calibrate", not "missing".
+    if (PlatformUtils.isIOS) return true;
+    return false;
+  }
+
+  @override
+  Stream<HeadingSample> headingStream({bool camera = false}) {
+    if (!PlatformUtils.isMobile) return const Stream.empty();
+    if (camera && PlatformUtils.isAndroid) return _cameraHeadingOrCompass();
+    return _compassHeading();
+  }
+
+  /// The camera's own heading, or the compass's if this phone cannot give
+  /// one (no rotation-vector sensor, or the bridge is missing).
+  Stream<HeadingSample> _cameraHeadingOrCompass() async* {
+    try {
+      await for (final degrees in bridge.cameraHeading()) {
+        yield HeadingSample(heading: degrees);
+      }
+    } catch (e) {
+      debugPrint('Qibla camera heading unavailable, using the compass: $e');
+      yield* _compassHeading();
+    }
+  }
+
+  Stream<HeadingSample> _compassHeading() {
+    final events = FlutterCompass.events;
+    if (events == null) return const Stream.empty();
+    final trustAccuracy = PlatformUtils.isIOS;
+    // headingForCameraMode is deliberately not read: it is always 0 on
+    // Android, and magnetic (not true) on iOS, so switching to it at 45°
+    // would jump the needle by the local declination.
+    return events.map(
+      (e) => HeadingSample(
+        heading: e.heading,
+        accuracyDegrees: trustAccuracy ? e.accuracy : null,
+      ),
+    );
+  }
+
+  @override
+  Stream<CompassAccuracyLevel> magnetometerAccuracy() {
+    if (!PlatformUtils.isAndroid) return const Stream.empty();
+    return bridge.magnetometerAccuracy();
+  }
+
+  @override
+  Future<double> declination(QiblaFix fix) async {
+    // iOS hands flutter_compass CLHeading.trueHeading: already corrected.
+    if (!PlatformUtils.isAndroid) return 0;
+    return bridge.declination(
+      latitude: fix.latitude,
+      longitude: fix.longitude,
+      altitudeM: fix.altitudeM ?? 0,
+    );
+  }
+
+  @override
+  Stream<TiltSample> tiltStream() {
+    // sensors_plus has no desktop implementation.
+    if (!PlatformUtils.isMobile) return const Stream.empty();
+    return accelerometerEventStream(
+      samplingPeriod: SensorInterval.gameInterval,
+    ).map((e) => TiltSample(e.x, e.y, e.z));
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_core/core.dart';
+import 'package:wadhakir/core/constants/app_constants.dart';
 import 'package:wadhakir/core/design/design_tokens.dart';
 import 'package:wadhakir/core/utils/date_utils.dart';
 import '../../../../core/constants/islamic_quotes.dart';
@@ -256,7 +257,8 @@ class _WelcomeSectionWidgetState extends State<WelcomeSectionWidget> {
           icon: Icons.compass_calibration_rounded,
           size: buttonSize,
           padding: buttonPadding,
-          onPressed: () => Navigator.pushNamed(context, '/campus'),
+          onPressed: () =>
+              Navigator.pushNamed(context, AppConstants.campusRoute),
         ),
         SizedBox(width: spacing),
         _CompactIconButton(

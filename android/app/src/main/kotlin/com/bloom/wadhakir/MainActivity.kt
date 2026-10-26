@@ -59,6 +59,11 @@ class MainActivity : AudioServiceActivity() {
         // activity on the cached engine, which re-applies keep-screen-on.
         TasbihFeedbackBridge.register(this, flutterEngine.dartExecutor.binaryMessenger)
 
+        // Qibla: magnetic declination, whether there is a magnetometer, the
+        // magnetometer's own calibration accuracy, and where the camera
+        // points (AR).
+        QiblaBridge.register(this, flutterEngine.dartExecutor.binaryMessenger)
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, widgetChannel).setMethodCallHandler { call, result ->
             // Method channel for Flutter to receive navigation commands
             result.success(null)

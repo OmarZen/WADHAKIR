@@ -1,23 +1,33 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:wadhakir/core/localization/app_localizations.dart';
-import 'package:wadhakir/features/campus/cubit/qibla_cubit.dart';
-import 'package:wadhakir/features/campus/cubit/qibla_state.dart';
 import 'package:wadhakir/features/campus/services/qibla_ar_camera_service.dart';
-import 'package:wadhakir/features/campus/views/widgets/qibla_ar_overlay.dart';
+import 'package:wadhakir/features/campus/views/qibla_strings.dart';
 
-const Color _alignedColor = Color(0xFF27AE60);
+/// Builds a layer in the camera preview's own frame: [frame] is the unscaled
+/// preview size, and the layer is scaled and cropped together with the
+/// picture, so anything drawn in it stays on the same pixels of the floor.
+typedef QiblaArFrameBuilder = Widget Function(BuildContext context, Size frame);
 
-/// AR Qibla mode: a live camera preview with the qibla marker drawn on top.
+/// AR Qibla mode: the live camera preview with a guide drawn over it.
 ///
-/// Reuses the existing [QiblaCubit] stream (provided by the host
-/// [QiblaScreen] via `BlocProvider.value`) for the qibla bearing + compass
-/// heading — so this screen never owns or closes the cubit. It only manages the
-/// [CameraController] lifecycle.
+/// It runs in two ways:
+/// * **Embedded** (`embedded: true`), as the Qibla screen's AR tab. The host
+///   passes the overlays and callbacks, pads the top of the [MediaQuery] by
+///   its tab strip so nothing covers the notice, and is told through
+///   [onArActiveChanged] when the preview is live.
+/// * **Route** (the defaults), pushed on its own with a back bar. Without
+///   overlays it is just the notice and the preview.
+///
+/// This screen never reads the qibla cubit: not in `initState`, not in
+/// `dispose`, not in the notice or the fallbacks. The safety test pumps it
+/// with no cubit at all, and a cubit read in `dispose` would also run while
+/// the host is tearing down. Everything cubit-shaped arrives through the
+/// constructor; the overlays (which may read it) are built only once the
+/// camera is live.
 ///
 /// ## The safety notice comes first
 ///
@@ -36,9 +46,34 @@ class QiblaArScreen extends StatefulWidget {
   /// before the safety notice is acknowledged.
   final Future<QiblaArCameraResult> Function() prepareCamera;
 
+  /// Hosted as a tab: no back bar of its own (the host has the header and the
+  /// tab strip), and [onExit] instead of popping a route.
+  final bool embedded;
+
+  /// «العودة للبوصلة» / «استخدم البوصلة بدلًا من ذلك». Null pops the route.
+  final VoidCallback? onExit;
+
+  /// True once the preview is live; false when the camera is released while
+  /// this screen stays mounted (the app went to the background). Never
+  /// called from `dispose`: a host switching tabs stands AR down itself.
+  final ValueChanged<bool>? onArActiveChanged;
+
+  /// Drawn inside the preview's frame (see [QiblaArFrameBuilder]), e.g. the
+  /// prayer rug. Built only while the camera is live.
+  final QiblaArFrameBuilder? previewOverlayBuilder;
+
+  /// Drawn over the preview in screen space, inside the safe area: guidance,
+  /// the steady step, the result panel. Built only while the camera is live.
+  final WidgetBuilder? overlayBuilder;
+
   const QiblaArScreen({
     super.key,
     this.prepareCamera = QiblaArCameraService.prepare,
+    this.embedded = false,
+    this.onExit,
+    this.onArActiveChanged,
+    this.previewOverlayBuilder,
+    this.overlayBuilder,
   });
 
   @override
@@ -60,14 +95,23 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // AR overlay math assumes portrait; lock while this screen is visible.
+    _mounted++;
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
+
+  /// AR views alive right now. Leaving AR and coming straight back
+  /// cross-fades two of them, and the old one's dispose must not unlock
+  /// the orientation the new one has just locked.
+  static int _mounted = 0;
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    _mounted--;
+    if (_mounted == 0) {
+      SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    }
     super.dispose();
   }
 
@@ -84,6 +128,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
       if (controller == null) return;
       setState(() => _controller = null);
       controller.dispose();
+      widget.onArActiveChanged?.call(false);
     } else if (state == AppLifecycleState.resumed) {
       // Restart a camera released above, or look again after the user was
       // sent to system settings. Never after a plain denial: that would put
@@ -103,12 +148,33 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     _initCamera();
   }
 
+  void _exit() {
+    final onExit = widget.onExit;
+    if (onExit != null) {
+      onExit();
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _initCamera() async {
     // One attempt at a time: a second would build a second controller and
     // overwrite the first without disposing it.
     if (_initializing) return;
     if (mounted) setState(() => _initializing = true);
-    final result = await widget.prepareCamera();
+    final QiblaArCameraResult result;
+    try {
+      result = await widget.prepareCamera();
+    } catch (_) {
+      // A permission request already running, or a camera service error.
+      // Uncaught, `_initializing` stayed true and the spinner never stopped.
+      if (!mounted) return;
+      setState(() {
+        _status = QiblaArAvailability.noCamera;
+        _initializing = false;
+      });
+      return;
+    }
     if (!mounted) return;
 
     if (result.status != QiblaArAvailability.ready || result.camera == null) {
@@ -159,6 +225,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
       _status = QiblaArAvailability.ready;
       _initializing = false;
     });
+    widget.onArActiveChanged?.call(true);
   }
 
   @override
@@ -166,6 +233,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     final controller = _controller;
     final cameraReady =
         controller != null && controller.value.isInitialized && !_initializing;
+    final overlay = widget.overlayBuilder;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -177,21 +245,8 @@ class _QiblaArScreenState extends State<QiblaArScreen>
           else
             const ColoredBox(color: Colors.black),
 
-          if (cameraReady)
-            BlocBuilder<QiblaCubit, QiblaState>(
-              builder: (context, state) {
-                if (state is QiblaLoaded) {
-                  return Positioned.fill(
-                    child: QiblaArOverlay(
-                      qiblaDirection: state.qiblaModel.qiblaDirection,
-                      compassDirection: state.qiblaModel.compassDirection,
-                      isAligned: state.isAligned,
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+          if (cameraReady && overlay != null)
+            SafeArea(child: Builder(builder: overlay)),
 
           if (!_acknowledged)
             _buildSafetyNotice(context)
@@ -202,19 +257,12 @@ class _QiblaArScreenState extends State<QiblaArScreen>
 
           // Top bar. Aligned, or the expanded Stack's tight constraints
           // would centre the Row vertically — over the middle of the screen.
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: _buildTopBar(context),
-            ),
-          ),
-
-          // Bottom status badge.
-          if (cameraReady)
+          // Embedded, the host's header and tab strip take its place.
+          if (!widget.embedded)
             SafeArea(
               child: Align(
-                alignment: Alignment.bottomCenter,
-                child: _buildBottomBadge(context),
+                alignment: Alignment.topCenter,
+                child: _buildTopBar(context),
               ),
             ),
         ],
@@ -222,21 +270,35 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     );
   }
 
+  /// The preview, scaled to COVER the screen (cropping the overflow) rather
+  /// than letterboxed, with [QiblaArScreen.previewOverlayBuilder] drawn
+  /// inside the same scaled child so it moves and crops with the picture.
   Widget _cameraPreview(CameraController controller) {
-    final size = MediaQuery.of(context).size;
-    return ClipRect(
-      child: OverflowBox(
-        maxWidth: double.infinity,
-        maxHeight: double.infinity,
-        child: FittedBox(
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: size.width,
-            height: size.width * controller.value.aspectRatio,
-            child: CameraPreview(controller),
+    final frameBuilder = widget.previewOverlayBuilder;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        // `aspectRatio` is the sensor's width / height (landscape), so in
+        // portrait the picture is width × width·ratio.
+        final frame = Size(width, width * controller.value.aspectRatio);
+        return ClipRect(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox.fromSize(
+              size: frame,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CameraPreview(controller),
+                  if (frameBuilder != null) frameBuilder(context, frame),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -249,7 +311,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
           _circleButton(
             icon: Icons.arrow_back,
             tooltip: l10n?.translate('common.back') ?? 'رجوع',
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _exit,
           ),
           const SizedBox(width: 8),
           // Takes what the two buttons leave, so the label shortens rather
@@ -286,7 +348,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
           _circleButton(
             icon: Icons.explore_rounded,
             tooltip: l10n?.translate('campus.compass_mode') ?? 'البوصلة',
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _exit,
           ),
         ],
       ),
@@ -311,60 +373,15 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     );
   }
 
-  Widget _buildBottomBadge(BuildContext context) {
-    final l10n = context.l10n;
-    return BlocBuilder<QiblaCubit, QiblaState>(
-      builder: (context, state) {
-        final aligned = state is QiblaLoaded && state.isAligned;
-        final text = aligned
-            ? (l10n?.translate('campus.align_to_kaaba') ?? 'متجه نحو القبلة')
-            : (l10n?.translate('campus.point_camera_hint') ??
-                  'حرّك الهاتف حتى تتطابق العلامة مع المنتصف');
-        return Container(
-          margin: const EdgeInsets.only(bottom: 28),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: BoxDecoration(
-            color: aligned
-                ? _alignedColor.withValues(alpha: 0.9)
-                : Colors.black.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                aligned
-                    ? Icons.check_circle_rounded
-                    : Icons.my_location_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  text,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: 'Almarai',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildSafetyNotice(BuildContext context) {
     final l10n = context.l10n;
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          // Clears the top bar, which is stacked above this.
-          padding: const EdgeInsets.fromLTRB(24, 72, 24, 24),
+          // Clears the route's top bar, which is stacked above this. Embedded
+          // there is no bar: the host already moved the safe area below its
+          // tab strip.
+          padding: EdgeInsets.fromLTRB(24, widget.embedded ? 24 : 72, 24, 24),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: Column(
@@ -418,7 +435,7 @@ class _QiblaArScreenState extends State<QiblaArScreen>
                 ),
                 const SizedBox(height: 12),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: _exit,
                   child: Text(
                     l10n?.translate('campus.back_to_compass') ??
                         'العودة للبوصلة',
@@ -475,6 +492,9 @@ class _QiblaArScreenState extends State<QiblaArScreen>
     );
   }
 
+  /// The camera is off: «الكاميرا غير مفعّلة», why it is needed, what the
+  /// camera is (and is not) used for, a way to turn it on, and the compass as
+  /// the way out.
   Widget _buildFallback(BuildContext context) {
     final l10n = context.l10n;
     final permanently =
@@ -487,45 +507,114 @@ class _QiblaArScreenState extends State<QiblaArScreen>
         : (l10n?.translate('campus.camera_permission_required') ??
               'يحتاج وضع الكاميرا إلى إذن الكاميرا');
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              noCamera
-                  ? Icons.videocam_off_rounded
-                  : Icons.no_photography_rounded,
-              color: Colors.white70,
-              size: 64,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            if (!noCamera)
-              ElevatedButton.icon(
-                onPressed: permanently ? () => openAppSettings() : _initCamera,
-                icon: Icon(permanently ? Icons.settings : Icons.refresh),
-                label: Text(
-                  permanently
-                      ? (l10n?.translate('campus.settings') ?? 'الإعدادات')
-                      : (l10n?.translate('campus.retry') ?? 'إعادة المحاولة'),
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(24, widget.embedded ? 24 : 72, 24, 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  noCamera
+                      ? Icons.videocam_off_rounded
+                      : Icons.no_photography_rounded,
+                  color: Colors.white70,
+                  size: 56,
                 ),
-              ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                l10n?.translate('campus.back_to_compass') ?? 'العودة للبوصلة',
-                style: const TextStyle(color: Colors.white),
-              ),
+                const SizedBox(height: 16),
+                if (!noCamera) ...[
+                  Text(
+                    QiblaStrings.tr(
+                      context,
+                      'qibla.ar.camera_off_title',
+                      'الكاميرا غير مفعّلة',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Almarai',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'Almarai',
+                  ),
+                ),
+                if (!noCamera) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    QiblaStrings.tr(
+                      context,
+                      'qibla.ar.privacy',
+                      'نرسم سجادة صلاة افتراضية فوق صورة الكاميرا الحيّة، ولا نلتقط أي صور ولا نحفظها.',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      height: 1.5,
+                      fontFamily: 'Almarai',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Material, like the notice's own button: this screen is
+                  // also pumped with no forui theme above it (the safety
+                  // test), where FButton cannot build.
+                  ElevatedButton.icon(
+                    onPressed: permanently
+                        ? () => openAppSettings()
+                        : _initCamera,
+                    icon: Icon(
+                      permanently
+                          ? Icons.settings_rounded
+                          : Icons.photo_camera_rounded,
+                    ),
+                    label: Text(
+                      permanently
+                          ? QiblaStrings.tr(
+                              context,
+                              'qibla.ar.open_settings',
+                              'فتح الإعدادات',
+                            )
+                          : QiblaStrings.tr(
+                              context,
+                              'qibla.ar.allow_camera',
+                              'السماح بالكاميرا',
+                            ),
+                    ),
+                  ),
+                ] else
+                  const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _exit,
+                  child: Text(
+                    QiblaStrings.tr(
+                      context,
+                      'qibla.ar.use_compass_instead',
+                      'استخدم البوصلة بدلًا من ذلك',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'Almarai',
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

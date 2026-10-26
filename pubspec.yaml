@@ -58,7 +58,10 @@ dependencies:
   flutter_compass: ^0.8.1
   geolocator: ^14.1.1
   geocoding: ^5.0.0
-  vector_math: ^2.4.3
+  # Qibla map tab: OpenStreetMap tiles (online; attribution must stay
+  # visible per the OSMF tile policy). Pure Dart, no Gradle surface.
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
   adhan_dart: ^2.0.1
   syncfusion_flutter_datepicker: ^35.1.37
   syncfusion_flutter_core: ^35.1.37
@@ -89,6 +92,10 @@ dependencies:
   flutter_volume_controller: ^2.0.2
   # Live camera preview behind the AR Qibla overlay (Feature: Qibla AR mode).
   camera: ^0.12.1
+  # Phone tilt for the AR prayer rug. 7.1.1 minimum: 7.1.0 skips the Kotlin
+  # Gradle Plugin on AGP 9 while we keep android.builtInKotlin=false.
+  # No Windows implementation, so every call is behind PlatformUtils.isMobile.
+  sensors_plus: ^7.1.1
   flutter_native_splash: ^2.4.8
   url_launcher: ^6.3.3
   http: ^1.6.0

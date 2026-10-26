@@ -158,6 +158,12 @@ class MainActivity : AudioServiceActivity() {
                 "isLockMonitorRunning" -> {
                     result.success(AppLockMonitorService.isRunning)
                 }
+                "ensureLockMonitor" -> result.success(ensureLockMonitor())
+                "peekUserStop" -> result.success(AppLockMonitorService.hasUserStop(this))
+                "ackUserStop" -> {
+                    AppLockMonitorService.clearUserStop(this)
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -180,6 +186,11 @@ class MainActivity : AudioServiceActivity() {
                     result.success(null)
                 }
                 "isRunning" -> result.success(FloatingDhikrService.isEnabled(this))
+                "peekUserStop" -> result.success(FloatingDhikrService.hasUserStop(this))
+                "ackUserStop" -> {
+                    FloatingDhikrService.clearUserStop(this)
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -444,6 +455,34 @@ class MainActivity : AudioServiceActivity() {
             startForegroundService(serviceIntent)
         } else {
             startService(serviceIntent)
+        }
+    }
+
+    /**
+     * Starts the lock monitor from its saved config if it should be running
+     * and is not. Returns whether it started one.
+     *
+     * Android kills the process now and then; the monitor's sticky restart
+     * tries to restore itself, but Android 15 refuses that from the
+     * background, and before 3.4.4 the restart came back with nothing to
+     * monitor at all. Dart calls this while the app is in the foreground,
+     * where starting a foreground service is allowed, so opening the app is
+     * enough to bring the lock back.
+     */
+    private fun ensureLockMonitor(): Boolean {
+        if (AppLockMonitorService.isRunning) return false
+        if (!AppLockMonitorService.hasSavedConfig(this)) return false
+        val intent = AppLockMonitorService.restoreStartIntent(this)
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent)
+            } else {
+                startService(intent)
+            }
+            true
+        } catch (e: Exception) {
+            // Not in the foreground after all; the next resume tries again.
+            false
         }
     }
 

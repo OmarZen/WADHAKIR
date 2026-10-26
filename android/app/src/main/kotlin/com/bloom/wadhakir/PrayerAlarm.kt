@@ -59,12 +59,13 @@ data class PrayerAlarm(
      */
     val prayerName: String,
     /**
-     * Whether the adhan should sound while the ringer is silent.
+     * Whether the adhan should sound while the phone is silenced.
      *
-     * True — the default — makes it behave like an alarm clock, which is what
-     * `AudioAttributes.USAGE_ALARM` gives it. False makes it respect a silenced
-     * phone: the card still posts and the channel still vibrates, but no audio
-     * plays and no playback service is started.
+     * False — the default since 3.4.4 — respects a silenced phone: the quiet
+     * card posts, but no audio plays and no playback service is started. True
+     * makes it behave like an alarm clock, which is what
+     * `AudioAttributes.USAGE_ALARM` gives it. Never consulted during a call;
+     * see [ReminderRules.adhanRoute].
      */
     val overrideSilent: Boolean,
     val payload: Map<String, String>,
@@ -101,7 +102,15 @@ data class PrayerAlarm(
         private const val KEY_SOUND_RES = "soundRes"
         private const val KEY_PRAYER_AT = "prayerAtEpochMs"
         private const val KEY_PRAYER_NAME = "prayerName"
-        private const val KEY_OVERRIDE_SILENT = "overrideSilent"
+        /**
+         * Renamed in 3.4.4 ("overrideSilent" before). Rows armed by 3.4.3 or
+         * earlier carry the old key holding the old default, `true`, which
+         * nobody chose. They keep re-arming from this ledger after a Play
+         * update until the app is next opened and Dart reschedules — so they
+         * must read as "respect silent" from the moment the update lands, and
+         * only a row written by 3.4.4+ can say otherwise.
+         */
+        private const val KEY_OVERRIDE_SILENT = "overrideSilent_v2"
         private const val KEY_PAYLOAD = "payload"
 
         /**
@@ -137,7 +146,7 @@ data class PrayerAlarm(
                 // [prayerAtEpochMs].
                 prayerAtEpochMs = (args["prayerAtEpochMs"] as? Number)?.toLong() ?: fireAt,
                 prayerName = args["prayerName"] as? String ?: "",
-                overrideSilent = args["overrideSilent"] as? Boolean ?: true,
+                overrideSilent = args["overrideSilent"] as? Boolean ?: false,
                 payload = payload,
             )
         }
@@ -174,11 +183,12 @@ data class PrayerAlarm(
                 // between installing the update and the app next opening:
                 // the countdown target degrades to the fire instant, the
                 // persistent roll-forward skips rows with no Arabic name rather
-                // than rendering "Fajr", and the adhan keeps the alarm-clock
-                // behaviour that is the new default.
+                // than rendering "Fajr", and the adhan respects a silenced
+                // phone — see KEY_OVERRIDE_SILENT for why that also covers
+                // every row 3.4.3 armed.
                 prayerAtEpochMs = json.optLong(KEY_PRAYER_AT, 0L).takeIf { it > 0L } ?: fireAt,
                 prayerName = json.optString(KEY_PRAYER_NAME, ""),
-                overrideSilent = json.optBoolean(KEY_OVERRIDE_SILENT, true),
+                overrideSilent = json.optBoolean(KEY_OVERRIDE_SILENT, false),
                 payload = payload,
             )
         }

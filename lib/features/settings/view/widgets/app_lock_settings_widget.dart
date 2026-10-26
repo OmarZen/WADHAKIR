@@ -5,10 +5,11 @@ import 'package:forui/forui.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
 import 'package:wadhakir/data/models/app_lock_settings_model.dart';
 import 'package:wadhakir/data/models/app_settings_model.dart';
+import 'package:wadhakir/data/models/prayer_times_model.dart';
 import 'package:wadhakir/features/app_lock/models/app_lock_permission_status.dart';
 import 'package:wadhakir/features/app_lock/models/installed_app_model.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_hadith_quotes_service.dart';
-import 'package:wadhakir/features/app_lock/services/app_lock_prayer_window.dart';
+import 'package:wadhakir/features/app_lock/services/app_lock_monitor_config.dart';
 import 'package:wadhakir/features/app_lock/services/app_lock_platform_service.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_cubit.dart';
 import 'package:wadhakir/features/pray_times/cubit/prayer_times_state.dart';
@@ -871,56 +872,19 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     );
   }
 
-  _PrayerWindowPayload _currentPrayerWindowPayload() {
+  AppLockWindowPayload _currentPrayerWindowPayload() =>
+      AppLockMonitorConfig.window(_todayPrayerTimes(), DateTime.now());
+
+  PrayerTimesModel? _todayPrayerTimes() {
     final state = context.read<PrayerTimesCubit>().state;
-    if (state is! PrayerTimesLoaded) {
-      return const _PrayerWindowPayload(0, 0);
-    }
-
+    if (state is! PrayerTimesLoaded) return null;
     final now = DateTime.now();
-    final dateKey = DateTime(now.year, now.month, now.day);
-    final todayTimes = state.prayerTimes[dateKey];
-    if (todayTimes == null) {
-      return const _PrayerWindowPayload(0, 0);
-    }
-
-    final window = AppLockPrayerWindow.fromPrayerTimes(todayTimes, now);
-    if (window == null) {
-      return const _PrayerWindowPayload(0, 0);
-    }
-
-    return _PrayerWindowPayload(
-      window.windowStart.millisecondsSinceEpoch,
-      window.nextPrayerStart.millisecondsSinceEpoch,
-    );
+    return state.prayerTimes[DateTime(now.year, now.month, now.day)];
   }
 
-  Future<_OverlayQuotePayload> _buildOverlayQuotePayload({
+  Future<AppLockOverlayQuotes> _buildOverlayQuotePayload({
     required bool useArabic,
-  }) async {
-    final quotes = await _quotesService.getAllQuotes(useArabic: useArabic);
-    final messages = quotes
-        .map((q) => q.message.trim())
-        .where((m) => m.isNotEmpty)
-        .toList();
-    final references = quotes.map((q) => q.reference.trim()).toList();
-
-    if (messages.isEmpty) {
-      return const _OverlayQuotePayload(
-        initialMessage: 'Use this time in something beneficial.',
-        initialReference: '',
-        overlayMessages: ['Use this time in something beneficial.'],
-        overlayReferences: [''],
-      );
-    }
-
-    return _OverlayQuotePayload(
-      initialMessage: messages.first,
-      initialReference: references.isNotEmpty ? references.first : '',
-      overlayMessages: messages,
-      overlayReferences: references,
-    );
-  }
+  }) => AppLockMonitorConfig.quotes(_quotesService, useArabic: useArabic);
 
   AppLockSettingsModel _currentAppLockSettings() {
     final currentState = widget.cubit.state;
@@ -930,47 +894,13 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     return widget.settings.appLockSettings;
   }
 
-  String _currentPrayerName(AppLocalizations? l10n) {
-    final state = context.read<PrayerTimesCubit>().state;
-    if (state is! PrayerTimesLoaded) {
-      return l10n?.translate('settings.app_lock_prayer_name_fallback') ??
-          'Prayer time';
-    }
-
-    final now = DateTime.now();
-    final dateKey = DateTime(now.year, now.month, now.day);
-    final todayTimes = state.prayerTimes[dateKey];
-    if (todayTimes == null) {
-      return l10n?.translate('settings.app_lock_prayer_name_fallback') ??
-          'Prayer time';
-    }
-
-    final window = AppLockPrayerWindow.fromPrayerTimes(todayTimes, now);
-    if (window == null) {
-      return l10n?.translate('settings.app_lock_prayer_name_fallback') ??
-          'Prayer time';
-    }
-
-    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    if (window.windowStart == todayTimes.fajr) {
-      return isArabic ? 'الفجر' : 'Fajr';
-    }
-    if (window.windowStart == todayTimes.dhuhr) {
-      return isArabic ? 'الظهر' : 'Dhuhr';
-    }
-    if (window.windowStart == todayTimes.asr) {
-      return isArabic ? 'العصر' : 'Asr';
-    }
-    if (window.windowStart == todayTimes.maghrib) {
-      return isArabic ? 'المغرب' : 'Maghrib';
-    }
-    if (window.windowStart == todayTimes.isha) {
-      return isArabic ? 'العشاء' : 'Isha';
-    }
-
-    return l10n?.translate('settings.app_lock_prayer_name_fallback') ??
-        'Prayer time';
-  }
+  String _currentPrayerName(AppLocalizations? l10n) =>
+      AppLockMonitorConfig.prayerName(
+        _todayPrayerTimes(),
+        DateTime.now(),
+        isArabic: Localizations.localeOf(context).languageCode == 'ar',
+        l10n: l10n,
+      );
 
   Map<String, String> _overlayTexts(
     BuildContext context, {
@@ -988,37 +918,11 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
     AppLocalizations? l10n, {
     String? referenceText,
     String? prayerName,
-  }) {
-    return <String, String>{
-      'title':
-          l10n?.translate('settings.app_lock_overlay_title_text') ??
-          'Valuable time',
-      'reference': referenceText ?? '',
-      'prayerName':
-          prayerName ??
-          (l10n?.translate('settings.app_lock_prayer_name_fallback') ??
-              'Prayer time'),
-      'goHome':
-          l10n?.translate('settings.app_lock_overlay_go_home') ??
-          'Return to home',
-      'completedPrayer':
-          l10n?.translate('settings.app_lock_overlay_completed_prayer') ??
-          'I completed prayer',
-      'holdBypass':
-          l10n?.translate('settings.app_lock_overlay_hold_bypass') ??
-          'Hold 3 seconds for emergency bypass',
-      'keepHolding':
-          l10n?.translate('settings.app_lock_overlay_keep_holding') ??
-          'Keep holding...',
-      'holdReady':
-          l10n?.translate('settings.app_lock_overlay_hold_ready') ??
-          'Hold complete. Confirm to unlock for 10 seconds.',
-      'confirmBypass':
-          l10n?.translate('settings.app_lock_overlay_confirm_bypass') ??
-          'Confirm emergency bypass',
-      'cancel': l10n?.translate('common.cancel') ?? 'Cancel',
-    };
-  }
+  }) => AppLockMonitorConfig.overlayTexts(
+    l10n,
+    referenceText: referenceText,
+    prayerName: prayerName,
+  );
 
   String _durationValueFromMinutes(int? minutes) {
     if (minutes == null) return _durationUntilConfirm;
@@ -1086,25 +990,4 @@ class _AppLockSettingsWidgetState extends State<AppLockSettingsWidget> {
       ),
     );
   }
-}
-
-class _OverlayQuotePayload {
-  final String initialMessage;
-  final String initialReference;
-  final List<String> overlayMessages;
-  final List<String> overlayReferences;
-
-  const _OverlayQuotePayload({
-    required this.initialMessage,
-    required this.initialReference,
-    required this.overlayMessages,
-    required this.overlayReferences,
-  });
-}
-
-class _PrayerWindowPayload {
-  final int windowStartMs;
-  final int nextPrayerStartMs;
-
-  const _PrayerWindowPayload(this.windowStartMs, this.nextPrayerStartMs);
 }

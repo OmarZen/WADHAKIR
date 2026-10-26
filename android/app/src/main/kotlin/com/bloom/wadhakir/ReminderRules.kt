@@ -65,7 +65,10 @@ object ReminderRules {
         /** The channel is blocked; post nothing and record it. */
         MUTED,
 
-        /** The phone is silenced and the user left the override off: card only. */
+        /** A call is in progress or ringing: quiet card, whatever the override says. */
+        IN_CALL,
+
+        /** The phone is silenced and the user left the override off: quiet card. */
         SILENT_CARD,
 
         /** Start the playback service. */
@@ -80,7 +83,13 @@ object ReminderRules {
      * notification is an adhan with no stop button anywhere — that has to be
      * caught first, whatever the ringer says.
      *
-     * Both quiet routes are the user's own doing rather than a failure, which
+     * A call comes next, and beats the override. Alarm-stream audio is mixed
+     * into the call, the call holds audio focus so the adhan cannot take it,
+     * and the volume keys belong to the call — users reported an adhan playing
+     * over their conversation with nothing on the phone able to stop it. Nobody
+     * turning on «يتجاوز الوضع الصامت» meant that.
+     *
+     * The quiet routes are the user's own doing rather than a failure, which
      * is why they are kept apart: a verdict that merged them would tell someone
      * who silenced their own phone that their channel is blocked, and send them
      * to fix a setting that was never touched.
@@ -89,8 +98,10 @@ object ReminderRules {
         channelAllowsAlert: Boolean,
         overrideSilent: Boolean,
         ringerSilenced: Boolean,
+        inCall: Boolean,
     ): AdhanRoute = when {
         !channelAllowsAlert -> AdhanRoute.MUTED
+        inCall -> AdhanRoute.IN_CALL
         !overrideSilent && ringerSilenced -> AdhanRoute.SILENT_CARD
         else -> AdhanRoute.PLAY
     }
@@ -98,6 +109,7 @@ object ReminderRules {
     /** The ledger's `o` value for [route], before a play attempt is made. */
     fun outcomeFor(route: AdhanRoute): String = when (route) {
         AdhanRoute.MUTED -> OUTCOME_MUTED
+        AdhanRoute.IN_CALL -> OUTCOME_IN_CALL
         AdhanRoute.SILENT_CARD -> OUTCOME_SILENT
         AdhanRoute.PLAY -> OUTCOME_SOUNDED
     }
@@ -108,6 +120,7 @@ object ReminderRules {
     const val OUTCOME_SOUNDED = "sounded"
     const val OUTCOME_MUTED = "muted"
     const val OUTCOME_SILENT = "silent"
+    const val OUTCOME_IN_CALL = "in_call"
     const val OUTCOME_REFUSED = "refused"
     const val OUTCOME_ORPHAN = "orphan"
 }

@@ -203,6 +203,16 @@ class BackupKeys {
       BackupValueType.string,
       BackupSection.settings,
     ),
+    // Travels WITH notification_settings, because it says what the blob's
+    // «يتجاوز الوضع الصامت» means. A backup from 3.4.3 or earlier has no flag,
+    // and its `true` is only the old default — restoring it removes the flag
+    // here, so the one-time reset in AppSettingsRepositoryImpl runs again. A
+    // newer backup carries the flag, and its `true` is the user's own choice.
+    BackupKeySpec(
+      'adhan_respects_silent_migrated_v1',
+      BackupValueType.boolean,
+      BackupSection.settings,
+    ),
     // Morning/evening/witr/sleep/duha/qiyam/Kahf/after-prayer reminders.
     BackupKeySpec(
       'azkar_reminder_settings',

@@ -655,7 +655,7 @@
     "persistent_notification_subtitle": "Show a persistent notification displaying the next prayer time and remaining time",
     "persistent_notification_mobile_only": "This feature is available on mobile only",
     "adhan_override_silent": "Adhan overrides silent mode",
-    "adhan_override_silent_subtitle": "The adhan sounds at alarm volume even when the phone is silenced, just like an alarm clock. Turn this off to let reminders respect silent mode.",
+    "adhan_override_silent_subtitle": "When on, the adhan sounds at alarm volume even when the phone is silenced. When off (the default), it respects silent, vibrate and Do Not Disturb: a notification with no sound and a short vibration if the phone allows one. The adhan never sounds during a call.",
     "test_notification_subtitle": "Send a test notification to verify the system works on your phone",
     "sending_test_notification": "Sending test notification...",
     "test_notification_sent": "Test notification sent! Check your phone notifications",
@@ -1336,7 +1336,7 @@
     "silent_delivery": "The reminder arrives, but the adhan does not play on this device.",
     "nothing_scheduled": "The system is not holding any scheduled reminder right now. Open the app to reschedule them.",
     "at_capacity": "Scheduled reminders have reached the system limit, so the furthest ones may not arrive. Open the app every few days.",
-    "healthy_silent": "Your reminders arrive on time, but silently — your phone is on silent and «override silent mode» is off.",
+    "healthy_silent": "Your reminders arrive on time, but silently — your phone was on silent or in a call.",
     "healthy_scheduled": "Your reminders are scheduled and held by the system."
   },
   "share": {

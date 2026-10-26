@@ -429,8 +429,8 @@ class ReminderHealth {
     // --- what counts as healthy, per platform -------------------------------
 
     if (evidence.observations >= minimumEvidence) {
-      // Every delivery in the window arrived silently because the user has
-      // silenced their phone and «يتجاوز الوضع الصامت» is off. Nothing is
+      // Every delivery in the window arrived quietly because the phone was
+      // silenced (and «يتجاوز الوضع الصامت» is off) or in a call. Nothing is
       // wrong — but "your reminders arrive on time" alone would be a strange
       // thing to read after a fortnight of hearing nothing, and this is the one
       // screen where a user comes asking exactly that. Say both halves.
@@ -438,8 +438,8 @@ class ReminderHealth {
         return verdict(
           ReminderHealthStatus.healthy,
           'reminder_health.healthy_silent',
-          'تذكيراتك تصل في وقتها، لكنها بلا صوت لأن هاتفك صامت '
-              'و«يتجاوز الوضع الصامت» مُطفأ.',
+          'تذكيراتك تصل في وقتها، لكنها بلا صوت لأن هاتفك كان صامتاً '
+              'أو في مكالمة.',
           ReminderHealthAction.none,
         );
       }
@@ -558,7 +558,10 @@ class ReminderHealth {
               sounded++;
             case ReminderFireOutcome.muted:
               muted++;
+            // A call is the same kind of quiet delivery as a silenced phone:
+            // on time, deliberately without sound, and nothing to fix.
             case ReminderFireOutcome.silent:
+            case ReminderFireOutcome.inCall:
               silenced++;
             case ReminderFireOutcome.refused:
               refused++;

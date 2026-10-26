@@ -3,7 +3,6 @@ package com.bloom.wadhakir
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.media.AudioManager
 import android.util.Log
 import androidx.core.content.ContextCompat
 
@@ -127,85 +126,6 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
     }
 
     /**
-     * Starts the adhan, or posts the card alone when it should not sound.
-     *
-     * Three things can send it down the quiet path, and all three are the user's
-     * own doing rather than a failure:
-     *
-     *  * the channel is blocked — a service playing audio behind an invisible
-     *    notification is an adhan with no stop button anywhere;
-     *  * the phone is silenced and they turned «يتجاوز الوضع الصامت» off;
-     *  * the platform refuses the foreground start.
-     *
-     * Only the last is a degradation, and it is narrow: the background-start
-     * exemption is granted by the exact alarm itself, and
-     * [PrayerAlarmScheduler] uses `setAlarmClock` wherever it is allowed to.
-     * What is left is Android 12 and 12L with `SCHEDULE_EXACT_ALARM` revoked,
-     * where the alarm has already degraded to inexact. The card still posts and
-     * the channel still vibrates.
-     *
-     * Returns which of the four happened, for the reminder ledger. The three
-     * quiet outcomes are kept distinct rather than collapsed into "did not
-     * sound" because only one of them is a fault: a verdict that counted a
-     * user's own silenced phone as a delivery failure would tell them their
-     * device is broken for doing what they asked.
-     */
-    private fun soundAdhan(context: Context, alarm: PrayerAlarm): String {
-        PrayerNotifier.ensureChannel(context, alarm)
-
-        // The choice between the three routes is in ReminderRules, which has no
-        // Android types and is therefore the only part of this decision a JUnit
-        // test can reach. Everything left here is the doing, not the deciding.
-        val route = ReminderRules.adhanRoute(
-            channelAllowsAlert = PrayerNotifier.channelAllowsAlert(context, alarm.channelId),
-            overrideSilent = alarm.overrideSilent,
-            ringerSilenced = isRingerSilenced(context),
-        )
-
-        when (route) {
-            ReminderRules.AdhanRoute.MUTED -> {
-                Log.i(TAG, "Channel ${alarm.channelId} is muted; not sounding alarm ${alarm.id}")
-                return ReminderRules.outcomeFor(route)
-            }
-
-            ReminderRules.AdhanRoute.SILENT_CARD -> {
-                PrayerNotifier.post(context, alarm)
-                return ReminderRules.outcomeFor(route)
-            }
-
-            ReminderRules.AdhanRoute.PLAY -> Unit
-        }
-
-        return try {
-            ContextCompat.startForegroundService(
-                context,
-                AdhanPlaybackService.playIntent(context, alarm),
-            )
-            ReminderRules.outcomeFor(route)
-        } catch (e: Exception) {
-            Log.e(TAG, "Foreground start refused for alarm ${alarm.id}; card only", e)
-            PrayerNotifier.post(context, alarm)
-            ReminderRules.OUTCOME_REFUSED
-        }
-    }
-
-    /**
-     * Whether the ringer is off.
-     *
-     * Wrapped, and defaulting to "not silenced", because this runs before the
-     * first unlock: a reader that threw here would take the adhan down with it,
-     * and the failure this release exists to prevent is silence.
-     */
-    private fun isRingerSilenced(context: Context): Boolean = try {
-        when (context.getSystemService(AudioManager::class.java)?.ringerMode) {
-            AudioManager.RINGER_MODE_SILENT, AudioManager.RINGER_MODE_VIBRATE -> true
-            else -> false
-        }
-    } catch (_: Exception) {
-        false
-    }
-
-    /**
      * The «إيقاف الأذان» button, and the swipe that dismisses the card.
      *
      * Stopping the service is what actually silences the adhan now. The cancel
@@ -252,5 +172,79 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         const val ACTION_STOP = "com.bloom.wadhakir.PRAYER_ALARM_STOP"
 
         const val EXTRA_ALARM_ID = "alarm_id"
+
+        /**
+         * Starts the adhan, or posts the card alone when it should not sound.
+         * Shared with the debug build's AdhanTestReceiver, so the test tool
+         * goes through exactly this decision.
+         *
+         * Four things can send it down a quiet path, and the first three are the
+         * user's own doing rather than a failure:
+         *
+         *  * the channel is blocked — a service playing audio behind an invisible
+         *    notification is an adhan with no stop button anywhere;
+         *  * a call is ringing or in progress;
+         *  * the phone is silenced (ringer, vibrate or Do Not Disturb) and
+         *    «يتجاوز الوضع الصامت» is off, which it is by default since 3.4.4;
+         *  * the platform refuses the foreground start.
+         *
+         * The call and silenced routes post the QUIET card: no sound, one short
+         * buzz, and the phone decides even that — no vibration on silent or where
+         * there is no motor, a buzz on vibrate.
+         *
+         * Only the last is a degradation, and it is narrow: the background-start
+         * exemption is granted by the exact alarm itself, and
+         * [PrayerAlarmScheduler] uses `setAlarmClock` wherever it is allowed to.
+         * What is left is Android 12 and 12L with `SCHEDULE_EXACT_ALARM` revoked,
+         * where the alarm has already degraded to inexact. The card still posts and
+         * the channel still vibrates.
+         *
+         * Returns which happened, for the reminder ledger. The quiet outcomes are
+         * kept distinct rather than collapsed into "did not sound" because only one
+         * of them is a fault: a verdict that counted a user's own silenced phone as
+         * a delivery failure would tell them their device is broken for doing what
+         * they asked.
+         */
+        internal fun soundAdhan(context: Context, alarm: PrayerAlarm): String {
+            PrayerNotifier.ensureChannel(context, alarm)
+
+            // The choice between the routes is in ReminderRules, which has no
+            // Android types and is therefore the only part of this decision a JUnit
+            // test can reach. Everything left here is the doing, not the deciding.
+            val route = ReminderRules.adhanRoute(
+                channelAllowsAlert = PrayerNotifier.channelAllowsAlert(context, alarm.channelId),
+                overrideSilent = alarm.overrideSilent,
+                ringerSilenced = PhoneQuiet.isSilenced(context),
+                inCall = PhoneQuiet.isInCall(context),
+            )
+
+            when (route) {
+                ReminderRules.AdhanRoute.MUTED -> {
+                    Log.i(TAG, "Channel ${alarm.channelId} is muted; not sounding alarm ${alarm.id}")
+                    return ReminderRules.outcomeFor(route)
+                }
+
+                ReminderRules.AdhanRoute.IN_CALL,
+                ReminderRules.AdhanRoute.SILENT_CARD -> {
+                    Log.i(TAG, "Alarm ${alarm.id}: $route; quiet card only")
+                    PrayerNotifier.postQuiet(context, alarm)
+                    return ReminderRules.outcomeFor(route)
+                }
+
+                ReminderRules.AdhanRoute.PLAY -> Unit
+            }
+
+            return try {
+                ContextCompat.startForegroundService(
+                    context,
+                    AdhanPlaybackService.playIntent(context, alarm),
+                )
+                ReminderRules.outcomeFor(route)
+            } catch (e: Exception) {
+                Log.e(TAG, "Foreground start refused for alarm ${alarm.id}; card only", e)
+                PrayerNotifier.post(context, alarm)
+                ReminderRules.OUTCOME_REFUSED
+            }
+        }
     }
 }

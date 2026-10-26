@@ -130,7 +130,12 @@ class _BackupScreenState extends State<BackupScreen> {
         // write from its stale cache. Closing that needs cache invalidation
         // across every repository, which is what the planned dependency-
         // injection cleanup makes possible.
-        final locked = state is BackupRestored;
+        //
+        // Also held while a backup or restore is running: the cubit lives in
+        // this route, so leaving it mid-restore would close the cubit under a
+        // restore that keeps writing, and the restart screen would never come.
+        // This also stops a tapped notification popping the screen.
+        final locked = state is BackupRestored || state is BackupInProgress;
 
         return PopScope(
           canPop: !locked,

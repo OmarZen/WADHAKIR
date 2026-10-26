@@ -20,6 +20,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -30,6 +31,8 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.CopyOnWriteArraySet
 
 class AppLockMonitorService : Service() {
@@ -78,6 +81,15 @@ class AppLockMonitorService : Service() {
         const val EXTRA_LOCK_DURATION_MINUTES = "lock_duration_minutes"
         const val EXTRA_EMERGENCY_BYPASS_ENABLED = "emergency_bypass_enabled"
 
+        /** Set on the notification's "Turn Off" only; see [hasUserStop]. */
+        const val EXTRA_FROM_NOTIFICATION = "from_notification"
+
+        /**
+         * A START that carries no config of its own: rebuild it from the saved
+         * one when the service handles it. See [restoreStartIntent].
+         */
+        const val EXTRA_RESTORE = "restore_saved_config"
+
         private const val CHANNEL_ID = "app_lock_monitor_channel"
         private const val NOTIFICATION_ID = 8011
         private const val UNTIL_CONFIRM_SAFETY_CAP_MINUTES = 60
@@ -89,6 +101,162 @@ class AppLockMonitorService : Service() {
         @Volatile
         var isRunning: Boolean = false
             private set
+
+        private const val TAG = "AppLockMonitorService"
+        private const val PREFS = "app_lock_native"
+        private const val KEY_CONFIG = "start_config"
+        private const val KEY_USER_STOP = "stoppedByUser"
+        private const val KEY_PRAYER_COMPLETED_UNTIL = "prayerCompletedUntilMs"
+
+        private val STRING_EXTRAS = listOf(
+            EXTRA_OVERLAY_MESSAGE,
+            EXTRA_OVERLAY_TITLE_TEXT,
+            EXTRA_OVERLAY_REFERENCE_TEXT,
+            EXTRA_OVERLAY_PRAYER_NAME,
+            EXTRA_GO_HOME_BUTTON_TEXT,
+            EXTRA_COMPLETED_PRAYER_BUTTON_TEXT,
+            EXTRA_HOLD_BYPASS_TEXT,
+            EXTRA_KEEP_HOLDING_TEXT,
+            EXTRA_HOLD_READY_TEXT,
+            EXTRA_CONFIRM_BYPASS_TEXT,
+            EXTRA_CANCEL_TEXT,
+        )
+        private val LIST_EXTRAS = listOf(
+            EXTRA_LOCKED_PACKAGES,
+            EXTRA_OVERLAY_MESSAGES,
+            EXTRA_OVERLAY_REFERENCES,
+        )
+        private val BOOLEAN_EXTRAS = listOf(EXTRA_OVERLAY_IS_DARK, EXTRA_EMERGENCY_BYPASS_ENABLED)
+        private val LONG_EXTRAS = listOf(EXTRA_PRAYER_WINDOW_START_MS, EXTRA_NEXT_PRAYER_START_MS)
+
+        /**
+         * Whether a START config is saved, i.e. the lock was started and not
+         * turned off since. Only START creates one and STOP removes it, so a
+         * late update can never bring back a lock the user switched off.
+         */
+        fun hasSavedConfig(context: Context): Boolean =
+            prefs(context).getString(KEY_CONFIG, null) != null
+
+        /**
+         * An ACTION_START intent rebuilt from the saved config, or null when
+         * nothing is saved.
+         *
+         * The config only ever arrived as intent extras, so when Android killed
+         * the process and restarted this START_STICKY service it came back with
+         * a null intent and nothing to monitor. The texts in it are the
+         * localized ones Dart built from `context.l10n`; native code cannot
+         * build them, so they are kept rather than recomputed.
+         */
+        fun restoredStartIntent(context: Context): Intent? {
+            val raw = prefs(context).getString(KEY_CONFIG, null) ?: return null
+            val json = try {
+                JSONObject(raw)
+            } catch (e: Exception) {
+                Log.w(TAG, "Discarding unreadable saved config", e)
+                return null
+            }
+            return Intent(context, AppLockMonitorService::class.java).apply {
+                action = ACTION_START
+                for (key in STRING_EXTRAS) {
+                    if (json.has(key)) putExtra(key, json.optString(key))
+                }
+                for (key in LIST_EXTRAS) {
+                    val array = json.optJSONArray(key) ?: continue
+                    putStringArrayListExtra(
+                        key,
+                        ArrayList((0 until array.length()).map { array.optString(it) }),
+                    )
+                }
+                for (key in BOOLEAN_EXTRAS) {
+                    if (json.has(key)) putExtra(key, json.optBoolean(key))
+                }
+                for (key in LONG_EXTRAS) {
+                    if (json.has(key)) putExtra(key, json.optLong(key))
+                }
+                if (json.has(EXTRA_LOCK_DURATION_MINUTES)) {
+                    // 0 is how "until I confirm" travels; see the START branch.
+                    putExtra(EXTRA_LOCK_DURATION_MINUTES, json.optInt(EXTRA_LOCK_DURATION_MINUTES))
+                }
+            }
+        }
+
+        /**
+         * The intent that brings the monitor back from its saved config.
+         *
+         * Deliberately empty: the service reads the saved config when it
+         * handles this, not when the app sends it. Reading it here raced the
+         * prayer-window update the app sends just before; whichever reached
+         * the service second decided which window the lock used.
+         */
+        fun restoreStartIntent(context: Context): Intent =
+            Intent(context, AppLockMonitorService::class.java).apply {
+                action = ACTION_START
+                putExtra(EXTRA_RESTORE, true)
+            }
+
+        /**
+         * True once the user has pressed "Turn Off" on the notification, until
+         * Dart acknowledges it. Same contract as
+         * [FloatingDhikrService.hasUserStop]: the switch lives in Dart's
+         * settings, which native code must not write, so Dart saves "off" and
+         * then calls [clearUserStop].
+         */
+        fun hasUserStop(context: Context): Boolean =
+            prefs(context).getBoolean(KEY_USER_STOP, false)
+
+        fun clearUserStop(context: Context) {
+            prefs(context).edit().remove(KEY_USER_STOP).apply()
+        }
+
+        private fun prefs(context: Context) =
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
+        /** Writes the extras [intent] carries over the saved config. */
+        private fun saveExtras(context: Context, intent: Intent, base: JSONObject) {
+            for (key in STRING_EXTRAS) {
+                intent.getStringExtra(key)?.let { base.put(key, it) }
+            }
+            for (key in LIST_EXTRAS) {
+                intent.getStringArrayListExtra(key)?.let { base.put(key, JSONArray(it)) }
+            }
+            for (key in BOOLEAN_EXTRAS) {
+                if (intent.hasExtra(key)) base.put(key, intent.getBooleanExtra(key, false))
+            }
+            for (key in LONG_EXTRAS) {
+                if (intent.hasExtra(key)) base.put(key, intent.getLongExtra(key, 0L))
+            }
+            if (intent.hasExtra(EXTRA_LOCK_DURATION_MINUTES)) {
+                base.put(EXTRA_LOCK_DURATION_MINUTES, intent.getIntExtra(EXTRA_LOCK_DURATION_MINUTES, 0))
+            }
+            prefs(context).edit().putString(KEY_CONFIG, base.toString()).apply()
+        }
+
+        private fun saveStartConfig(context: Context, intent: Intent) {
+            saveExtras(context, intent, JSONObject())
+            // Turned on again: an earlier "Turn Off" no longer speaks for the
+            // user. Left set, Dart would read it later and switch the lock
+            // the user just turned on back off.
+            prefs(context).edit().remove(KEY_USER_STOP).apply()
+        }
+
+        /** Folds an update into the saved config. Never creates one. */
+        private fun mergeIntoSavedConfig(context: Context, intent: Intent) {
+            val raw = prefs(context).getString(KEY_CONFIG, null) ?: return
+            val base = try {
+                JSONObject(raw)
+            } catch (_: Exception) {
+                return
+            }
+            saveExtras(context, intent, base)
+        }
+
+        private fun forgetConfig(context: Context, userTurnedOff: Boolean) {
+            val edit = prefs(context).edit()
+                .remove(KEY_CONFIG)
+                .remove(KEY_PRAYER_COMPLETED_UNTIL)
+            if (userTurnedOff) edit.putBoolean(KEY_USER_STOP, true)
+            edit.apply()
+        }
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -244,50 +412,131 @@ class AppLockMonitorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
-            ACTION_START -> {
-                val packages = intent.getStringArrayListExtra(EXTRA_LOCKED_PACKAGES) ?: arrayListOf()
-                lockedPackages.clear()
-                lockedPackages.addAll(packages.filterNot(::shouldSkipBlockingPackage))
-                overlayMessage = intent.getStringExtra(EXTRA_OVERLAY_MESSAGE)
-                    ?: overlayMessage
-                applyOverlayTextConfig(intent)
-                applyOverlayTheme(intent)
-                applyPrayerWindowConfig(intent)
-                applyOverlayQuotes(intent)
-                lockDurationMinutes =
-                    if (intent.hasExtra(EXTRA_LOCK_DURATION_MINUTES)) {
-                        val rawDuration = intent.getIntExtra(EXTRA_LOCK_DURATION_MINUTES, 0)
-                        if (rawDuration > 0) rawDuration else null
-                    } else {
-                        lockDurationMinutes
-                    }
-                emergencyBypassEnabled =
-                    intent.getBooleanExtra(
-                        EXTRA_EMERGENCY_BYPASS_ENABLED,
-                        emergencyBypassEnabled,
-                    )
-                globallyBypassedUntilMs = 0L
-                temporarilyAllowedPackage = null
-                lockStartedAtMs = 0L
-                lockExpiresAtMs = 0L
-
-                // Android 14+ (API 34) requires a foreground-service type to
-                // be supplied (matching the manifest's specialUse type), else
-                // startForeground throws MissingForegroundServiceTypeException.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    startForeground(
-                        NOTIFICATION_ID,
-                        buildNotification(),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
-                    )
+        val restoreStart = intent?.action == ACTION_START &&
+            intent.getBooleanExtra(EXTRA_RESTORE, false)
+        val delivery = when (intent?.action) {
+            null -> ServiceStartRules.Delivery.STICKY_RESTART
+            // The app asking for the saved config: the same as the system's
+            // restart, decided against the config as it is now.
+            ACTION_START ->
+                if (restoreStart) {
+                    ServiceStartRules.Delivery.STICKY_RESTART
                 } else {
-                    startForeground(NOTIFICATION_ID, buildNotification())
+                    ServiceStartRules.Delivery.START
                 }
-                startMonitoringLoop()
-                isRunning = true
+            ACTION_STOP -> ServiceStartRules.Delivery.STOP
+            ACTION_UPDATE_PACKAGES, ACTION_UPDATE_CONFIG, ACTION_UPDATE_PRAYER_WINDOW ->
+                ServiceStartRules.Delivery.UPDATE
+            // Nothing sends anything else. Treat it like a restart rather than
+            // reaching the old fall-through that returned START_STICKY.
+            else -> ServiceStartRules.Delivery.STICKY_RESTART
+        }
+        val step = ServiceStartRules.appLock(delivery, isRunning, hasSavedConfig(this))
+
+        return when (step) {
+            ServiceStartRules.AppLockStep.START -> {
+                saveStartConfig(this, intent!!)
+                startMonitoring(intent, startId, step)
             }
 
+            ServiceStartRules.AppLockStep.RESTORE -> {
+                val restored = restoredStartIntent(this)
+                    ?: return stopStartedForeground(startId, restoreStart)
+                startMonitoring(restored, startId, step)
+            }
+
+            ServiceStartRules.AppLockStep.APPLY_UPDATE -> {
+                mergeIntoSavedConfig(this, intent!!)
+                applyUpdate(intent)
+                START_STICKY
+            }
+
+            ServiceStartRules.AppLockStep.SAVE_UPDATE_AND_STOP -> {
+                // The app pushes its next start from this config (Dart's
+                // ensureLockMonitor on resume), so the change is not lost.
+                mergeIntoSavedConfig(this, intent!!)
+                stopWithoutRestart(startId)
+            }
+
+            ServiceStartRules.AppLockStep.STOP -> {
+                if (delivery == ServiceStartRules.Delivery.STOP) {
+                    forgetConfig(
+                        this,
+                        userTurnedOff = ServiceStartRules.stopIsUserTurnOff(
+                            intent!!.getBooleanExtra(EXTRA_FROM_NOTIFICATION, false),
+                        ),
+                    )
+                }
+                stopMonitoringLoop()
+                hideOverlayIfNeeded()
+                lockExpiresAtMs = 0L
+                stopStartedForeground(startId, restoreStart)
+            }
+        }
+    }
+
+    /**
+     * Stops; first goes foreground if this start came through
+     * startForegroundService (the app's restore). Android requires that
+     * call even from a service that is about to stop, and crashes the app
+     * when it is missing.
+     */
+    private fun stopStartedForeground(startId: Int, startedForeground: Boolean): Int {
+        if (startedForeground) startInForeground()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        return stopWithoutRestart(startId)
+    }
+
+    /** Applies a START config, goes foreground and starts the loop. */
+    private fun startMonitoring(
+        intent: Intent,
+        startId: Int,
+        step: ServiceStartRules.AppLockStep,
+    ): Int {
+        val packages = intent.getStringArrayListExtra(EXTRA_LOCKED_PACKAGES) ?: arrayListOf()
+        lockedPackages.clear()
+        lockedPackages.addAll(packages.filterNot(::shouldSkipBlockingPackage))
+        overlayMessage = intent.getStringExtra(EXTRA_OVERLAY_MESSAGE)
+            ?: overlayMessage
+        applyOverlayTextConfig(intent)
+        applyOverlayTheme(intent)
+        applyPrayerWindowConfig(intent)
+        applyOverlayQuotes(intent)
+        lockDurationMinutes =
+            if (intent.hasExtra(EXTRA_LOCK_DURATION_MINUTES)) {
+                val rawDuration = intent.getIntExtra(EXTRA_LOCK_DURATION_MINUTES, 0)
+                if (rawDuration > 0) rawDuration else null
+            } else {
+                lockDurationMinutes
+            }
+        emergencyBypassEnabled =
+            intent.getBooleanExtra(
+                EXTRA_EMERGENCY_BYPASS_ENABLED,
+                emergencyBypassEnabled,
+            )
+        globallyBypassedUntilMs = 0L
+        temporarilyAllowedPackage = null
+        lockStartedAtMs = 0L
+        lockExpiresAtMs = 0L
+        // "I completed prayer" lasts until the next prayer. Kept on disk so a
+        // monitor restored after a kill does not lock the apps again.
+        val completedUntil = prefs(this).getLong(KEY_PRAYER_COMPLETED_UNTIL, 0L)
+        prayerCompletedUntilMs =
+            if (completedUntil > System.currentTimeMillis()) completedUntil else 0L
+
+        val wentForeground = startInForeground()
+        if (!ServiceStartRules.appLockSticky(step, wentForeground)) {
+            // The config stays saved: the app restarts the monitor from it
+            // the next time it is opened (ensureLockMonitor).
+            return stopWithoutRestart(startId)
+        }
+        startMonitoringLoop()
+        isRunning = true
+        return START_STICKY
+    }
+
+    private fun applyUpdate(intent: Intent) {
+        when (intent.action) {
             ACTION_UPDATE_PACKAGES -> {
                 val packages = intent.getStringArrayListExtra(EXTRA_LOCKED_PACKAGES) ?: arrayListOf()
                 lockedPackages.clear()
@@ -320,18 +569,48 @@ class AppLockMonitorService : Service() {
             ACTION_UPDATE_PRAYER_WINDOW -> {
                 applyPrayerWindowConfig(intent)
             }
-
-            ACTION_STOP -> {
-                stopMonitoringLoop()
-                hideOverlayIfNeeded()
-                lockExpiresAtMs = 0L
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-                isRunning = false
-            }
         }
+    }
 
-        return START_STICKY
+    /**
+     * Goes foreground, or returns false when the platform refuses.
+     *
+     * A restart after Android killed the process happens with no activity
+     * visible, and Android 12+ refuses startForeground from the background
+     * with ForegroundServiceStartNotAllowedException. Holding
+     * SYSTEM_ALERT_WINDOW (which the lock needs anyway) exempts the app on
+     * 12-14 but not on 15+. Uncaught, the refusal crashes the process, as it
+     * did for [FloatingDhikrService] on 3.4.3.
+     */
+    private fun startInForeground(): Boolean = try {
+        // Android 14+ (API 34) requires a foreground-service type to be
+        // supplied (matching the manifest's specialUse type), else
+        // startForeground throws MissingForegroundServiceTypeException.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(
+                NOTIFICATION_ID,
+                buildNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, buildNotification())
+        }
+        true
+    } catch (e: Exception) {
+        Log.w(TAG, "Could not go foreground", e)
+        false
+    }
+
+    /**
+     * Stops without asking to be restarted. `stopSelf(startId)`, not
+     * `stopSelf()`: a START the app queued meanwhile keeps the service alive
+     * to handle it, instead of being torn down under it.
+     */
+    private fun stopWithoutRestart(startId: Int): Int {
+        stopMonitoringLoop()
+        isRunning = false
+        stopSelf(startId)
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {
@@ -622,6 +901,9 @@ class AppLockMonitorService : Service() {
                 temporarilyAllowedPackage = currentBlockedPackage
                 val now = System.currentTimeMillis()
                 prayerCompletedUntilMs = if (nextPrayerStartMs > now) nextPrayerStartMs else 0L
+                prefs(this@AppLockMonitorService).edit()
+                    .putLong(KEY_PRAYER_COMPLETED_UNTIL, prayerCompletedUntilMs)
+                    .apply()
                 hideOverlayIfNeeded()
             }
         }
@@ -961,6 +1243,7 @@ class AppLockMonitorService : Service() {
 
         val stopIntent = Intent(this, AppLockMonitorService::class.java).apply {
             action = ACTION_STOP
+            putExtra(EXTRA_FROM_NOTIFICATION, true)
         }
         val stopPendingIntent = PendingIntent.getService(
             this,

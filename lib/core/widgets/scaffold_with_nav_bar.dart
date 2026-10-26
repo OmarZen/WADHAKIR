@@ -7,6 +7,9 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:wadhakir/features/radio/cubit/radio_cubit.dart';
 import 'package:wadhakir/features/radio/cubit/radio_state.dart';
 import 'package:wadhakir/core/localization/app_localizations.dart';
+import 'package:wadhakir/core/notifications/notification_router.dart';
+import 'package:wadhakir/core/notifications/pending_notification_action.dart';
+import 'package:wadhakir/core/routes/app_shell.dart';
 import '../../features/settings/view/screens/settings_screen.dart';
 import 'package:wadhakir/features/home/views/screens/home_screen.dart';
 import 'package:wadhakir/features/quran/views/screens/quran_screen.dart';
@@ -22,8 +25,13 @@ class ScaffoldWithNavBar extends StatefulWidget {
 
 class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     with SingleTickerProviderStateMixin {
-  int _selectedIndex = 0;
   late AnimationController _animationController;
+
+  /// The tab lives in [AppShell] so the notification router can switch it.
+  int get _selectedIndex => AppShell.tab.value.index;
+
+  /// This shell's route, registered with [AppShell] while mounted.
+  Route<dynamic>? _route;
   bool _showRadioPlayer = true;
 
   bool _hasSetupRadioListener = false;
@@ -37,11 +45,33 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
       duration: const Duration(milliseconds: 300),
     );
     _animationController.forward();
+
+    // A fresh shell starts on Home — or, when opened by a notification tap, on
+    // the tab that tap is about to route to, so Home is not built (and its
+    // one-time prompts not spent) only to be left on the next frame. The
+    // listener is added after, so this does not count as a tab change.
+    final pending = PendingNotificationAction.peek();
+    AppShell.tab.value = pending == null
+        ? AppTab.home
+        : NotificationDestination.forPayload(pending)?.tab ?? AppTab.home;
+    AppShell.tab.addListener(_onTabChanged);
+
+    // A notification tapped before the shell existed — a cold start, or during
+    // onboarding — was held for it. Routed once this first frame is up.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) NotificationRouter.consumePending();
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    final route = ModalRoute.of(context);
+    if (route != null && !identical(route, _route)) {
+      _route = route;
+      AppShell.attach(route);
+    }
 
     // Setup RadioCubit listener only once
     if (!_hasSetupRadioListener) {
@@ -60,17 +90,19 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
 
   @override
   void dispose() {
+    AppShell.tab.removeListener(_onTabChanged);
+    final route = _route;
+    if (route != null) AppShell.detach(route);
     _radioSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
   }
 
-  void _onItemTapped(int index) {
-    if (_selectedIndex == index) return;
+  void _onItemTapped(int index) => AppShell.tab.value = AppTab.values[index];
 
-    setState(() {
-      _selectedIndex = index;
-    });
+  void _onTabChanged() {
+    if (!mounted) return;
+    setState(() {});
 
     // Trigger animation when changing tabs
     _animationController.reset();
@@ -166,112 +198,122 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar>
     // Navigation items
     // (kept for reference if switching packages later)
 
-    return Scaffold(
-      body: FadeTransition(
-        opacity: _animationController,
-        child: _buildCurrentScreen(),
-      ),
-      extendBody: true,
-      bottomSheet: BlocBuilder<RadioCubit, RadioState>(
-        builder: (context, state) {
-          // Hide widget if not in RadioLoaded state, or current is null, or _showRadioPlayer is false
-          if (state is! RadioLoaded ||
-              state.current == null ||
-              !_showRadioPlayer) {
-            return const SizedBox.shrink();
-          }
-          return Container(
-            color: Colors.transparent,
-            child: RadioPlayerBar(
-              onClose: () async {
-                final cubit = context.read<RadioCubit>();
-                await cubit.stop();
-                setState(() {
-                  _showRadioPlayer = false;
-                });
-              },
+    // Back on any tab but Home goes to Home first; only Home lets the app
+    // close. The shell is the root route, so without this the first back
+    // press anywhere in the bar exited the app.
+    return PopScope(
+      canPop: AppShell.tab.value == AppTab.home,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) AppShell.tab.value = AppTab.home;
+      },
+      child: Scaffold(
+        body: FadeTransition(
+          opacity: _animationController,
+          child: _buildCurrentScreen(),
+        ),
+        extendBody: true,
+        bottomSheet: BlocBuilder<RadioCubit, RadioState>(
+          builder: (context, state) {
+            // Hide widget if not in RadioLoaded state, or current is null, or _showRadioPlayer is false
+            if (state is! RadioLoaded ||
+                state.current == null ||
+                !_showRadioPlayer) {
+              return const SizedBox.shrink();
+            }
+            return Container(
+              color: Colors.transparent,
+              child: RadioPlayerBar(
+                onClose: () async {
+                  final cubit = context.read<RadioCubit>();
+                  await cubit.stop();
+                  setState(() {
+                    _showRadioPlayer = false;
+                  });
+                },
+              ),
+            );
+          },
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: size.width * 0.04,
+              right: size.width * 0.04,
+              bottom: size.height * 0.018,
             ),
-          );
-        },
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: size.width * 0.04,
-            right: size.width * 0.04,
-            bottom: size.height * 0.018,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: navBackground,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.18,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: navBackground,
+                    borderRadius: BorderRadius.circular(22),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.18,
+                        ),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                    ],
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      width: 1.2,
                     ),
-                  ],
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    width: 1.2,
                   ),
-                ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.04,
-                  vertical: size.height * 0.008,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(
-                      index: 0,
-                      icon: const Icon(Icons.home_rounded, size: 22),
-                      label: l10n?.translate('nav_bar.home') ?? 'الرئيسية',
-                      activeColor: activeColor,
-                      inactiveColor: inactiveColor,
-                      size: size,
-                    ),
-                    _buildNavItem(
-                      index: 1,
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedQuran01,
-                        color: _selectedIndex == 1
-                            ? activeColor
-                            : inactiveColor,
-                        size: 22,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.04,
+                    vertical: size.height * 0.008,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildNavItem(
+                        index: 0,
+                        icon: const Icon(Icons.home_rounded, size: 22),
+                        label: l10n?.translate('nav_bar.home') ?? 'الرئيسية',
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        size: size,
                       ),
-                      label: l10n?.translate('nav_bar.quran') ?? 'المصحف',
-                      activeColor: activeColor,
-                      inactiveColor: inactiveColor,
-                      size: size,
-                    ),
-                    _buildNavItem(
-                      index: 2,
-                      icon: const Icon(
-                        Icons.format_list_bulleted_rounded,
-                        size: 22,
+                      _buildNavItem(
+                        index: 1,
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedQuran01,
+                          color: _selectedIndex == 1
+                              ? activeColor
+                              : inactiveColor,
+                          size: 22,
+                        ),
+                        label: l10n?.translate('nav_bar.quran') ?? 'المصحف',
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        size: size,
                       ),
-                      label: l10n?.translate('nav_bar.azkar') ?? 'الاذكار',
-                      activeColor: activeColor,
-                      inactiveColor: inactiveColor,
-                      size: size,
-                    ),
-                    _buildNavItem(
-                      index: 3,
-                      icon: const Icon(Icons.settings_rounded, size: 22),
-                      label: l10n?.translate('nav_bar.settings') ?? 'الإعدادات',
-                      activeColor: activeColor,
-                      inactiveColor: inactiveColor,
-                      size: size,
-                    ),
-                  ],
+                      _buildNavItem(
+                        index: 2,
+                        icon: const Icon(
+                          Icons.format_list_bulleted_rounded,
+                          size: 22,
+                        ),
+                        label: l10n?.translate('nav_bar.azkar') ?? 'الاذكار',
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        size: size,
+                      ),
+                      _buildNavItem(
+                        index: 3,
+                        icon: const Icon(Icons.settings_rounded, size: 22),
+                        label:
+                            l10n?.translate('nav_bar.settings') ?? 'الإعدادات',
+                        activeColor: activeColor,
+                        inactiveColor: inactiveColor,
+                        size: size,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

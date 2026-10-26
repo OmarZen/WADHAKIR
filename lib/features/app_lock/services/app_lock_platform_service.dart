@@ -137,4 +137,23 @@ class AppLockPlatformService {
     final running = await _channel.invokeMethod<bool>('isLockMonitorRunning');
     return running ?? false;
   }
+
+  /// Starts the monitor from the config native saved at its last start, if
+  /// it is not running. Call only while the app is in the foreground: that
+  /// is when Android allows starting a foreground service.
+  Future<bool> ensureLockMonitor() async {
+    final started = await _channel.invokeMethod<bool>('ensureLockMonitor');
+    return started ?? false;
+  }
+
+  /// True once "Turn Off" was pressed on the lock notification and not yet
+  /// acknowledged with [ackUserStop].
+  Future<bool> peekUserStop() async {
+    final stopped = await _channel.invokeMethod<bool>('peekUserStop');
+    return stopped ?? false;
+  }
+
+  Future<void> ackUserStop() async {
+    await _channel.invokeMethod('ackUserStop');
+  }
 }

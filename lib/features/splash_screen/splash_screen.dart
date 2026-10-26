@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import '../../core/localization/app_localizations.dart';
-import 'package:wadhakir/core/notifications/notification_router.dart';
+import 'package:wadhakir/core/notifications/pending_notification_action.dart';
 import 'package:wadhakir/core/widgets/scaffold_with_nav_bar.dart';
 import 'package:wadhakir/features/onboarding/view/screens/onboarding_screen.dart';
 import 'package:wadhakir/features/settings/cubit/settings_cubit.dart';
@@ -20,6 +20,11 @@ const Color _splashBottom = Color(0xFF0D1122); // deep navy
 ///
 /// Navigation is gated on readiness (intro animation done AND settings loaded)
 /// rather than a fixed timer, so the app moves on as soon as it can.
+///
+/// Short on purpose. Settings are loaded by the splash's first frame (measured
+/// on 3.4.3: ~10 ms after runApp), so the intro was the only thing anyone
+/// waited for — 1.4 s of it, then a 0.5 s fade. It is now 0.65 s and 0.25 s,
+/// and skipped outright when a notification tap is waiting to be routed.
 class WadhakirSplashScreen extends StatefulWidget {
   const WadhakirSplashScreen({super.key});
 
@@ -50,7 +55,7 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 650),
     );
 
     // Logo fade in (0-30%)
@@ -111,6 +116,16 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
     // Start immediately — no artificial pre-delay.
     _controller.forward();
 
+    // Opened by tapping a notification: the person wants that screen, not the
+    // intro. Go as soon as settings allow — after this first frame, because
+    // the navigator cannot be pushed to from initState.
+    if (PendingNotificationAction.hasPending) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _animationDone = true;
+        _maybeNavigate();
+      });
+    }
+
     // Hand off from the native splash on the first frame so there's no white
     // flash between the OS splash and this Dart splash.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -128,16 +143,6 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
       if (_navigated || !mounted || _settingsReady) return;
       _navigated = true;
       _goTo(const ScaffoldWithNavBar());
-      _consumePendingNotification();
-    });
-  }
-
-  /// Route a notification tap that launched the app from a killed state, now
-  /// that the home shell is on the navigator. Only meaningful when we land on
-  /// the shell (a deep-link tap can't precede onboarding completion).
-  void _consumePendingNotification() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      NotificationRouter.consumePending();
     });
   }
 
@@ -152,12 +157,13 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
   void _maybeNavigate() {
     if (_navigated || !_animationDone || !_settingsReady || !mounted) return;
     _navigated = true;
+    // A notification tap that launched the app is routed by the shell on its
+    // first frame — see ScaffoldWithNavBar.
     _goTo(
       _onboardingCompleted
           ? const ScaffoldWithNavBar()
           : const OnboardingScreen(),
     );
-    if (_onboardingCompleted) _consumePendingNotification();
   }
 
   void _goTo(Widget destination) {
@@ -170,7 +176,7 @@ class _WadhakirSplashScreenState extends State<WadhakirSplashScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 250),
       ),
     );
   }

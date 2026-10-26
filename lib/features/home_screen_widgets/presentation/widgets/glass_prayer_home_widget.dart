@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' show ImageFilter;
 
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:syncfusion_flutter_core/core.dart';
+import 'package:wadhakir/core/app/onscreen_gate.dart';
 import 'package:wadhakir/data/models/prayer_times_model.dart';
 
 /// Renders the two "glass" prayer widgets (Prayer Detail + Prayer Next) as
@@ -15,7 +17,12 @@ import 'package:wadhakir/data/models/prayer_times_model.dart';
 /// *faux-glass* dark gradient card (not a real [BackdropFilter]) — it matches
 /// the screenshots and is theme-independent. The countdown is a snapshot at
 /// render time; it refreshes whenever prayer times recompute or the app is
-/// resumed (renderFlutterWidget can't run while the app is fully backgrounded).
+/// resumed.
+///
+/// Renders only run while the app is on screen ([OnscreenGate]): a snapshot
+/// with no surface crashes the engine on Impeller's OpenGL ES backend, and
+/// prayer times also recompute in the background. A render asked for then waits
+/// for the next time the app is on screen.
 class GlassPrayerHomeWidget {
   static const String detailWidgetProvider = 'GlassPrayerDetailWidgetProvider';
   static const String nextWidgetProvider = 'GlassPrayerNextWidgetProvider';
@@ -26,8 +33,17 @@ class GlassPrayerHomeWidget {
   static const Size _detailSize = Size(360, 172);
   static const Size _nextSize = Size(360, 172);
 
+  /// The newest render still waiting for the app to come on screen. A newer
+  /// one replaces it: only the latest prayer times are worth drawing.
+  static PrayerTimesModel? _deferred;
+
   static Future<void> updateGlassWidgets(PrayerTimesModel model) async {
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) return;
+
+    if (!OnscreenGate.instance.isOnscreen) {
+      _defer(model);
+      return;
+    }
 
     try {
       final vm = _buildViewModel(model);
@@ -45,6 +61,13 @@ class GlassPrayerHomeWidget {
         logicalSize: _detailSize,
         pixelRatio: 3.0,
       );
+
+      // That render waited on the raster thread; the app may have left since,
+      // and a newer model may already be waiting — that one wins.
+      if (!OnscreenGate.instance.isOnscreen) {
+        if (_deferred == null) _defer(model);
+        return;
+      }
 
       await HomeWidget.renderFlutterWidget(
         Directionality(
@@ -75,6 +98,17 @@ class GlassPrayerHomeWidget {
     } catch (e) {
       debugPrint('❌ Error updating glass prayer widgets: $e');
     }
+  }
+
+  static void _defer(PrayerTimesModel model) {
+    final alreadyWaiting = _deferred != null;
+    _deferred = model;
+    if (alreadyWaiting) return;
+    OnscreenGate.instance.whenOnscreen(() {
+      final next = _deferred;
+      _deferred = null;
+      if (next != null) unawaited(updateGlassWidgets(next));
+    });
   }
 
   static _GlassVM _buildViewModel(PrayerTimesModel model) {

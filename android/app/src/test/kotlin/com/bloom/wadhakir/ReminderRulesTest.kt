@@ -126,6 +126,7 @@ class ReminderRulesTest {
                 channelAllowsAlert = true,
                 overrideSilent = true,
                 ringerSilenced = false,
+                inCall = false,
             ),
         )
     }
@@ -144,6 +145,7 @@ class ReminderRulesTest {
                         channelAllowsAlert = false,
                         overrideSilent = overrideSilent,
                         ringerSilenced = silenced,
+                        inCall = false,
                     ),
                 )
             }
@@ -158,19 +160,22 @@ class ReminderRulesTest {
                 channelAllowsAlert = true,
                 overrideSilent = false,
                 ringerSilenced = true,
+                inCall = false,
             ),
         )
     }
 
     @Test
     fun `the override is what makes a silenced phone still sound`() {
-        // «يتجاوز الوضع الصامت», on by default. This is the whole point of it.
+        // «يتجاوز الوضع الصامت», off by default since 3.4.4. This is the whole
+        // point of it.
         assertEquals(
             ReminderRules.AdhanRoute.PLAY,
             ReminderRules.adhanRoute(
                 channelAllowsAlert = true,
                 overrideSilent = true,
                 ringerSilenced = true,
+                inCall = false,
             ),
         )
     }
@@ -183,6 +188,40 @@ class ReminderRulesTest {
                 channelAllowsAlert = true,
                 overrideSilent = false,
                 ringerSilenced = false,
+                inCall = false,
+            ),
+        )
+    }
+
+    @Test
+    fun `a call keeps the adhan quiet even with the override on`() {
+        // The reported bug: an adhan on the alarm stream over a phone call, with
+        // the volume keys belonging to the call and nothing able to stop it.
+        for (overrideSilent in listOf(true, false)) {
+            for (silenced in listOf(true, false)) {
+                assertEquals(
+                    "inCall must win over overrideSilent=$overrideSilent silenced=$silenced",
+                    ReminderRules.AdhanRoute.IN_CALL,
+                    ReminderRules.adhanRoute(
+                        channelAllowsAlert = true,
+                        overrideSilent = overrideSilent,
+                        ringerSilenced = silenced,
+                        inCall = true,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `a blocked channel still wins over a call`() {
+        assertEquals(
+            ReminderRules.AdhanRoute.MUTED,
+            ReminderRules.adhanRoute(
+                channelAllowsAlert = false,
+                overrideSilent = true,
+                ringerSilenced = false,
+                inCall = true,
             ),
         )
     }
@@ -200,6 +239,10 @@ class ReminderRulesTest {
             ReminderRules.outcomeFor(ReminderRules.AdhanRoute.SILENT_CARD),
         )
         assertEquals(
+            ReminderRules.OUTCOME_IN_CALL,
+            ReminderRules.outcomeFor(ReminderRules.AdhanRoute.IN_CALL),
+        )
+        assertEquals(
             ReminderRules.OUTCOME_SOUNDED,
             ReminderRules.outcomeFor(ReminderRules.AdhanRoute.PLAY),
         )
@@ -213,6 +256,7 @@ class ReminderRulesTest {
         assertEquals("sounded", ReminderRules.OUTCOME_SOUNDED)
         assertEquals("muted", ReminderRules.OUTCOME_MUTED)
         assertEquals("silent", ReminderRules.OUTCOME_SILENT)
+        assertEquals("in_call", ReminderRules.OUTCOME_IN_CALL)
         assertEquals("refused", ReminderRules.OUTCOME_REFUSED)
         assertEquals("orphan", ReminderRules.OUTCOME_ORPHAN)
     }

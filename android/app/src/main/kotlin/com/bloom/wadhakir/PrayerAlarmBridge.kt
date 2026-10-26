@@ -5,7 +5,6 @@ import android.media.RingtoneManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.Executors
@@ -167,7 +166,10 @@ object PrayerAlarmBridge {
                 // trusting it, and a probe that takes a different route than the
                 // real thing proves nothing: this deliberately goes through the
                 // same channel, the same notification builder and the same
-                // playback service an actual prayer does.
+                // playback service an actual prayer does — and, since 3.4.4,
+                // the same decision: on a silenced phone or during a call the
+                // test shows the quiet card a prayer would, not an adhan that
+                // the real thing would never play.
                 //
                 // Starting the foreground service from here is unrestricted —
                 // the app is in the foreground, since the user just tapped a
@@ -179,18 +181,11 @@ object PrayerAlarmBridge {
                     if (alarm == null) {
                         result.error("PRAYER_ALARM_BAD_ARGS", "testAdhan needs a renderable alarm", null)
                     } else {
-                        PrayerNotifier.ensureChannel(appContext, alarm)
-                        try {
-                            ContextCompat.startForegroundService(
-                                appContext,
-                                AdhanPlaybackService.playIntent(appContext, alarm),
-                            )
-                            result.success(true)
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Test adhan could not start the service", e)
-                            PrayerNotifier.post(appContext, alarm)
-                            result.success(false)
-                        }
+                        // False sends Dart to the plugin fallback, so only for
+                        // a refused start: every other outcome has already put
+                        // up its card, and a second one would duplicate it.
+                        val outcome = PrayerAlarmReceiver.soundAdhan(appContext, alarm)
+                        result.success(outcome != ReminderRules.OUTCOME_REFUSED)
                     }
                 }
 

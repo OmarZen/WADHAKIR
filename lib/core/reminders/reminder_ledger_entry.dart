@@ -68,6 +68,11 @@ enum ReminderFireOutcome {
   /// the user's explicit choice.
   silent('silent'),
 
+  /// A call was ringing or in progress. Quiet card only, whatever the override
+  /// says — an adhan on the alarm stream over a conversation could not be
+  /// stopped from the phone. Like [silent], the phone working as asked.
+  inCall('in_call'),
+
   /// The platform refused the foreground service start. Card only, and the one
   /// outcome here that is a genuine degradation.
   refused('refused'),

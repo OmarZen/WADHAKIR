@@ -52,10 +52,10 @@ import androidx.core.app.ServiceCompat
  *
  * ## Volume
  *
- * `USAGE_ALARM`, so the adhan follows the ALARM slider and sounds through
- * silent and vibrate the way an alarm clock does. That is a deliberate,
- * user-visible change from the notification stream it used to ride, and
- * [PrayerAlarm.overrideSilent] is the switch that gives it back.
+ * `USAGE_ALARM`, so the adhan follows the ALARM slider. Whether it may sound
+ * at all on a silenced phone is decided before this service starts: since
+ * 3.4.4 it does not, unless the user turns [PrayerAlarm.overrideSilent] on, and
+ * during a call it never does — see [ReminderRules.adhanRoute].
  *
  * ## Stopping it from the buttons
  *
@@ -78,6 +78,9 @@ class AdhanPlaybackService : Service() {
 
     /** The row being played, so the card can be left behind on the way out. */
     private var currentAlarm: PrayerAlarm? = null
+
+    /** A call was in progress at start: nothing played, the quiet card stays. */
+    private var quietExit = false
 
     private val stopTriggers by lazy {
         AdhanStopTriggers(this, handler, alarmAttributes()) { stopSelf() }
@@ -144,7 +147,25 @@ class AdhanPlaybackService : Service() {
         runningId = alarm.id
         suppressCardOnExit = false
 
-        if (!promote(alarm.id, PrayerNotifier.buildAdhan(this, alarm))) {
+        // The receiver has already routed around a call; this catches one that
+        // began in the moment between the two. It matters because requestFocus
+        // deliberately ignores a refusal, and a call is exactly when focus is
+        // refused — the adhan would otherwise play over the conversation, with
+        // the volume keys belonging to the call and unable to stop it.
+        //
+        // Decided BEFORE going foreground: the platform requires the promotion
+        // even for a service about to stop, and promoting on the loud card
+        // would already have rung its long buzz through the call. So the
+        // promotion is on the quiet card, and it is the one left behind.
+        quietExit = PhoneQuiet.isInCall(this)
+        if (quietExit) PrayerNotifier.ensureQuietChannel(this)
+
+        if (!promote(alarm.id, PrayerNotifier.buildAdhan(this, alarm, quiet = quietExit))) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        if (quietExit) {
+            Log.i(TAG, "A call is in progress; not playing alarm ${alarm.id}")
             stopSelf()
             return START_NOT_STICKY
         }
@@ -181,7 +202,12 @@ class AdhanPlaybackService : Service() {
             // press not working, or the adhan coming back. It only mutes an
             // update: where the card never showed (promote failed), it still
             // alerts.
-            val card = PrayerNotifier.buildAdhan(this, alarm, ongoing = false).apply {
+            val card = PrayerNotifier.buildAdhan(
+                this,
+                alarm,
+                ongoing = false,
+                quiet = quietExit,
+            ).apply {
                 flags = flags or Notification.FLAG_ONLY_ALERT_ONCE
             }
             PrayerNotifier.postBuilt(this, alarm.id, card)

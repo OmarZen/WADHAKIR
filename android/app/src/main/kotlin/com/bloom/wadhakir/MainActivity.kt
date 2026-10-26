@@ -55,6 +55,10 @@ class MainActivity : AudioServiceActivity() {
         // by tapping an adhan needs it up before Dart asks for the pending tap.
         PrayerAlarmBridge.register(this, flutterEngine.dartExecutor.binaryMessenger)
 
+        // Tasbih: keep-screen-on, click, vibration. Re-registered for every
+        // activity on the cached engine, which re-applies keep-screen-on.
+        TasbihFeedbackBridge.register(this, flutterEngine.dartExecutor.binaryMessenger)
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, widgetChannel).setMethodCallHandler { call, result ->
             // Method channel for Flutter to receive navigation commands
             result.success(null)

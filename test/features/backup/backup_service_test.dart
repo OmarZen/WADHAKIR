@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wadhakir/features/backup/models/backup_envelope.dart';
 import 'package:wadhakir/features/backup/services/backup_keys.dart';
 import 'package:wadhakir/features/backup/services/backup_service.dart';
+import 'package:wadhakir/features/tasbih/data/tasbih_repository.dart';
 
 /// A fixed instant, because the envelope carries `exportedAt` and a test that
 /// reads the wall clock is a test that fails at midnight.
@@ -154,6 +155,114 @@ void main() {
       final dynamicKey = BackupKeys.specFor('tasbih_99');
       expect(dynamicKey, isNotNull);
       expect(dynamicKey!.section, BackupSection.worship);
+    });
+  });
+
+  group('the 3.4.4 tasbih', () {
+    const stateJson =
+        '{"v":2,"selected":"la_hawla","day":"2026-03-14","todayTotal":40,'
+        '"dhikr":{"la_hawla":{"c":7,"t":100,"r":0}}}';
+    const prefsJson =
+        '{"mode":"beads","vibrate":true,"sound":false,'
+        '"autoAdvance":true,"keepScreenOn":true}';
+
+    test('its two blobs are allowlisted as strings, in their sections', () {
+      final state = BackupKeys.specFor(TasbihRepository.stateKey);
+      expect(state, isNotNull);
+      expect(state!.type, BackupValueType.string);
+      expect(state.section, BackupSection.worship);
+
+      final prefs = BackupKeys.specFor(TasbihRepository.prefsKey);
+      expect(prefs, isNotNull);
+      expect(prefs!.type, BackupValueType.string);
+      expect(prefs.section, BackupSection.settings);
+
+      // The legacy keys are still allowlisted, still integers: they are what
+      // an older build reads back.
+      for (final key in [
+        TasbihRepository.legacyCounterKey,
+        TasbihRepository.legacyTargetKey,
+        TasbihRepository.legacyTotalKey,
+      ]) {
+        expect(BackupKeys.specFor(key)?.type, BackupValueType.integer);
+        expect(BackupKeys.specFor(key)?.section, BackupSection.worship);
+      }
+    });
+
+    test('round-trips, and is not counted as a per-dhikr counter', () async {
+      final original = <String, Object>{
+        TasbihRepository.stateKey: stateJson,
+        TasbihRepository.prefsKey: prefsJson,
+        TasbihRepository.legacyCounterKey: 7,
+        TasbihRepository.legacyTargetKey: 100,
+        TasbihRepository.legacyTotalKey: 4821,
+      };
+      final envelope = BackupEnvelope.decode(
+        BackupService(await _prefsWith(original))
+            .buildEnvelope(appVersion: '3.4.4+27', exportedAt: _exportedAt)
+            .encode(),
+      );
+
+      final summary = BackupService(
+        await _prefsWith({}),
+      ).summarize(envelope.data);
+      expect(summary.dhikrCounters, 0);
+      expect(summary.keysBySection[BackupSection.worship], 4);
+      expect(summary.keysBySection[BackupSection.settings], 1);
+
+      final target = BackupService(await _prefsWith({}));
+      final report = await target.restore(envelope);
+      expect(report.written, original.length);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(TasbihRepository.stateKey), stateJson);
+      expect(prefs.getString(TasbihRepository.prefsKey), prefsJson);
+      expect(prefs.getInt(TasbihRepository.legacyTotalKey), 4821);
+
+      final stored = await TasbihRepository(prefs).load(DateTime(2026, 3, 14));
+      expect(stored.migrated, isFalse);
+      expect(stored.snapshot.selected.id, 'la_hawla');
+      expect(stored.snapshot.selected.count, 7);
+      expect(stored.lifetimeTotal, 4821);
+    });
+
+    test('restoring a pre-3.4.4 backup brings back the old counter', () async {
+      // That backup has no state_v2. Restore replaces, so ours is removed,
+      // and the tasbih migrates from the legacy keys it does carry.
+      final prefs = await _prefsWith({
+        TasbihRepository.stateKey: stateJson,
+        TasbihRepository.prefsKey: prefsJson,
+      });
+      await BackupService(prefs).restore(
+        BackupEnvelope(
+          schemaVersion: 1,
+          appVersion: '3.4.3+26',
+          exportedAt: _exportedAt,
+          data: const {
+            'electronic_tasbih_counter': BackupValue(
+              BackupValueType.integer,
+              21,
+            ),
+            'electronic_tasbih_target': BackupValue(
+              BackupValueType.integer,
+              33,
+            ),
+            'electronic_tasbih_total': BackupValue(
+              BackupValueType.integer,
+              900,
+            ),
+          },
+        ),
+      );
+      expect(prefs.containsKey(TasbihRepository.stateKey), isFalse);
+      expect(prefs.containsKey(TasbihRepository.prefsKey), isFalse);
+
+      final stored = await TasbihRepository(prefs).load(DateTime(2026, 3, 14));
+      expect(stored.migrated, isTrue);
+      expect(stored.snapshot.items.first.id, 'subhan_allah');
+      expect(stored.snapshot.items.first.count, 21);
+      expect(stored.snapshot.items.first.target, 33);
+      expect(stored.lifetimeTotal, 900);
     });
   });
 

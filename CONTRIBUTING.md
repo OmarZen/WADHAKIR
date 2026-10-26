@@ -18,6 +18,8 @@ bash android/fix_deps_proguard.sh
    the pristine copy each time — so the patch has to be re-applied after any
    command that resolves dependencies. Without it the Android build fails
    during Gradle configuration with no indication that a patch is missing.
+   The same script also stops `quran_library` from loading a recitation over
+   the network on every app start (`tool/patch_quran_library_audio.sh`).
 
 4. *(Optional)* Install the local git hooks, which run format, analyze and
    tests before each commit and lint the commit message:

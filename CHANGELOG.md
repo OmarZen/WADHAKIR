@@ -5,6 +5,58 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.4+27] - 2026-10-26
+
+Fixes the most common crash on Play, makes the adhan respect a phone on silent,
+and brings a new Tasbih and a new Qibla screen.
+
+### Added
+
+- **A new Tasbih (السبحة).** Four ways to count: drag beads along a string,
+  tap a round button, tap anywhere around a ring of beads, or a dark focus mode
+  that keeps the screen on. Swipe between eight adhkar, each with its own count
+  and target (33, 99, 100 or your own number); the next dhikr can follow
+  automatically when a round is done. "Today" and "round" counters sit under
+  the count, and a quiet click and a light vibration can be turned on or off.
+  Your existing count, target and total carry over.
+- **A new Qibla (اتجاه القبلة)** with five ways to find the qibla:
+  - **Compass** — now corrected for magnetic declination (it pointed a few
+    degrees off on Android), with a clear "turn N° right/left", a sign when you
+    face the qibla, and a calibration guide when the sensor is unsure.
+  - **Map** — a street map with the line from where you are to the Kaaba,
+    the distance and the bearing (needs an internet connection).
+  - **Camera (الواقع المعزز)** — a virtual prayer rug over the camera view that
+    turns with you until it faces the qibla. Nothing is recorded or saved.
+  - **Shadow** and **Sun / Moon** — find the qibla from a stick's shadow or
+    from where the sun or moon is, without any compass.
+
+### Fixed
+
+- **The most common crash on Play** (`libflutter.so`, about two thirds of all
+  crash reports): home-screen prayer widgets were drawn while the app had no
+  screen to draw on. They now wait until it does.
+- **A crash when the floating dhikr restarted in the background** on Android
+  12 and later.
+- **The adhan respects silent mode, vibrate, Do Not Disturb and calls.** On a
+  silenced phone or during a call it shows a quiet card with a short vibration
+  instead of sounding. "Override silent mode" now starts off; you can still
+  turn it on.
+- **«إيقاف» on the floating dhikr notification now turns it off for good.**
+  Before, it came back the next time the app was opened.
+- **"Preview now" with the floating dhikr off** no longer leaves its
+  notification in the status bar until the phone restarts the app.
+- **App lock keeps working after Android closes the app in the background.**
+  Before, it silently stopped locking until it was switched off and on again.
+  Its notification's "Turn Off" now sticks too.
+- Tapping a reminder opens the right place: azkar reminders open that azkar
+  category, Surah Al-Kahf opens the Quran at surah 18.
+- The back button returns to Home from any tab instead of closing the app.
+
+### Changed
+
+- Faster start: about 2.3 s to a usable Home instead of about 3.2 s.
+- App version `3.4.3+26` → `3.4.4+27`; MSIX version `3.4.3.0` → `3.4.4.0`.
+
 ## [3.4.3+26] - 2026-10-06
 
 Answers the Google Play Console warnings on `3.4.1+24`, and makes the Android

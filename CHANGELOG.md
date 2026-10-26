@@ -5,6 +5,22 @@ All notable changes to Wadhakir will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5+28] - 2026-10-26
+
+Replaces 3.4.4+27 and includes everything in it, with one more fix.
+
+### Fixed
+
+- **The Quran player no longer downloads a recitation every time the app
+  opens.** The Quran library prepared the last-played surah over the network
+  at every launch, whether or not you opened the Quran: up to about a minute
+  of audio, and an error when offline. Recitations now load only when you
+  press play.
+
+### Changed
+
+- App version `3.4.4+27` → `3.4.5+28`; MSIX version `3.4.4.0` → `3.4.5.0`.
+
 ## [3.4.4+27] - 2026-10-26
 
 Fixes the most common crash on Play, makes the adhan respect a phone on silent,

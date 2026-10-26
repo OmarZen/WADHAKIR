@@ -43,3 +43,8 @@ for gradle in "$PUB_CACHE_DIR"/hosted/*/quran_library-*/android/build.gradle; do
 done
 
 [ "$found" = 1 ] || echo "No quran_library found in pub-cache — run 'flutter pub get' first."
+
+# The second quran_library patch rides on this script because everything that
+# builds the app already runs it (CI, README, CONTRIBUTING): stop the package
+# loading a recitation over the network on every app start. See that script.
+bash "$(dirname "$0")/../tool/patch_quran_library_audio.sh"

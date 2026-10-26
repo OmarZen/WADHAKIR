@@ -96,6 +96,12 @@ flutter run
 >
 > Skipping it produces a Gradle **configuration** failure with no hint that a
 > patch is missing. Both CI workflows run it; nothing runs it for you locally.
+>
+> It also runs `tool/patch_quran_library_audio.sh`, which stops
+> `quran_library` 5.0.1 from loading a recitation over the network on every
+> app start. Skipping that one fails nothing: the app just downloads audio
+> nobody asked for, so check the script's `✓ patched` / `already patched`
+> line before a release build.
 
 ## Build and verify
 
